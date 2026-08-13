@@ -2256,10 +2256,12 @@ async function executeTAAction() {
 /* ── Manage Groups & Statuses ── */
 var _inforTab = 'groups';
 var _inforData = { groups: [], statuses: [] };
+var _inforPendingDel = null;
 
 function openInforSettings() {
   document.getElementById('lrInforBg').classList.add('open');
   _inforTab = 'groups';
+  _inforPendingDel = null;
   document.getElementById('lrInforTabG').className = 'lr-infor-tab active';
   document.getElementById('lrInforTabS').className = 'lr-infor-tab';
   loadInforData();
@@ -2267,9 +2269,11 @@ function openInforSettings() {
 function closeInforSettings() {
   document.getElementById('lrInforBg').classList.remove('open');
   document.getElementById('lrInforNewVal').value = '';
+  _inforPendingDel = null;
 }
 function switchInforTab(tab) {
   _inforTab = tab;
+  _inforPendingDel = null;
   document.getElementById('lrInforTabG').className = 'lr-infor-tab' + (tab === 'groups' ? ' active' : '');
   document.getElementById('lrInforTabS').className = 'lr-infor-tab' + (tab === 'statuses' ? ' active' : '');
   renderInforList();
@@ -2291,8 +2295,16 @@ function renderInforList() {
   var items = _inforData[_inforTab] || [];
   document.getElementById('lrInforList').innerHTML = items.length
     ? items.map(function(v) {
+        var safe = v.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        if (v === _inforPendingDel) {
+          return '<div class="lr-infor-item" style="background:rgba(239,68,68,.08)">' +
+            '<span style="color:#ef4444;font-weight:600">លុប: ' + esc(v) + '?</span>' +
+            '<button onclick="deleteInforItemConfirm()" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;margin-left:4px">យល់ព្រម</button>' +
+            '<button onclick="deleteInforItemCancel()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;margin-left:4px">ទេ</button>' +
+            '</div>';
+        }
         return '<div class="lr-infor-item"><span>' + esc(v) + '</span>' +
-          '<button class="lr-infor-del" onclick="deleteInforItem(\'' + v.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">លុប</button></div>';
+          '<button class="lr-infor-del" onclick="deleteInforItem(\'' + safe + '\')">លុប</button></div>';
       }).join('')
     : '<div style="padding:14px 16px;color:var(--muted);font-size:13px">មិនមានទិន្នន័យ</div>';
 }
@@ -2307,7 +2319,6 @@ function _refreshOpenFormDropdowns() {
 async function addInforItem() {
   var val = (document.getElementById('lrInforNewVal').value || '').trim();
   if (!val) return toast('⚠️ សូមបញ្ចូលឈ្មោះ!');
-  if (!confirm('បន្ថែម "' + val + '" ?\nតើអ្នកប្រាកដឬ?')) return;
   try {
     var res = await CamboAPI.post({ action: 'helen_infor_add', type: _inforTab, value: val });
     if (res && res.ok) {
@@ -2320,8 +2331,18 @@ async function addInforItem() {
     } else { toast('❌ ' + (res.message || 'Error')); }
   } catch(e) { toast('❌ Server error'); }
 }
-async function deleteInforItem(val) {
-  if (!confirm('លុប "' + val + '" ?\nតើអ្នកប្រាកដឬ?')) return;
+function deleteInforItem(val) {
+  _inforPendingDel = val;
+  renderInforList();
+}
+function deleteInforItemCancel() {
+  _inforPendingDel = null;
+  renderInforList();
+}
+async function deleteInforItemConfirm() {
+  var val = _inforPendingDel;
+  if (!val) return;
+  _inforPendingDel = null;
   try {
     var res = await CamboAPI.post({ action: 'helen_infor_delete', type: _inforTab, value: val });
     if (res && res.ok) {
