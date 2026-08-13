@@ -11,6 +11,7 @@
       'index.html':     { title: t('Dashboard','Dashboard'),   subtitle: t('ការវិភាគ និងទិដ្ឋភាពទូទៅ','Analytics & overview') },
       'loan-list.html':    { title: t('បញ្ជីកម្ចី','Loan List'),     subtitle: t('តារាង និងការគ្រប់គ្រងអ្នកខ្ចីសរុប','Borrower list and full management') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
+      'users.html':     { title: t('គ្រប់គ្រង Users','User Management'), subtitle: t('បន្ថែម កែ លុប អ្នកប្រើប្រាស់','Add, edit and remove system users') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },
     };
   }
@@ -25,6 +26,7 @@
     globe:    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
     bell:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
     facebook: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+    users:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   };
 
   function getCurrentPage() {
@@ -39,9 +41,14 @@
     return rootPages.includes(getCurrentPage()) ? '' : '../';
   }
 
+  function getAuthRole() {
+    try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a ? (a.role||'') : ''; } catch(e) { return ''; }
+  }
+
   function buildSidebar() {
     const cur  = getCurrentPage();
     const base = getBase();
+    const role = getAuthRole();
     function link(page, icon, label, danger) {
       const pageName = page.split('/').pop();
       const active   = cur === pageName ? 'sb-active' : '';
@@ -77,6 +84,7 @@
           ${link('index.html', ic.dashboard, t('Dashboard','Dashboard'))}
           ${link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List'))}
           ${link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder'))}
+          ${role === 'Admin' ? link('pages/users.html', ic.users, t('Users','Users')) : ''}
         </ul>
       </nav>
 
@@ -131,6 +139,7 @@
   function buildBottomNav() {
     const cur  = getCurrentPage();
     const base = getBase();
+    const role = getAuthRole();
     function bnItem(page, icon, label) {
       const pageName = page.split('/').pop();
       const active   = cur === pageName ? 'sb-bn-active' : '';
@@ -143,6 +152,7 @@
       ${bnItem('index.html',              ic.dashboard, t('Dashboard','Dashboard'))}
       ${bnItem('pages/loan-list.html',    ic.loanlist,  t('កម្ចី','Loans'))}
       ${bnItem('pages/fb-id-finder.html', ic.facebook,  t('FB ID','FB ID'))}
+      ${role === 'Admin' ? bnItem('pages/users.html', ic.users, t('Users','Users')) : ''}
     </nav>`;
   }
 

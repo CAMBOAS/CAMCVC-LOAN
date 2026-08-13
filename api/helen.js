@@ -261,6 +261,66 @@ export default async function handler(req, res) {
       return res.json({ ok: r.affectedRows > 0, message: r.affectedRows > 0 ? 'Deleted' : 'Not found' });
     }
 
+    /* ── User list (Admin only) ── */
+    if (action === 'helen_user_list') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const [users] = await db().query(
+        'SELECT username, role, display_name, exp_date, status FROM helen_users ORDER BY id'
+      );
+      return res.json({ ok:true, users });
+    }
+
+    /* ── User add (Admin only) ── */
+    if (action === 'helen_user_add') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const u = String(body.username||'').trim();
+      const p = String(body.pin||'').trim();
+      if (!u || !p) return res.json({ ok:false, message:'Username និង PIN ត្រូវការ' });
+      try {
+        await db().query(
+          'INSERT INTO helen_users (username, pin, role, display_name, exp_date, status) VALUES (?,?,?,?,?,?)',
+          [u, p, String(body.role||'Staff Loan'), String(body.display_name||u).trim(),
+           body.exp_date||null, body.status||'active']
+        );
+      } catch(e) {
+        if (e.code === 'ER_DUP_ENTRY') return res.json({ ok:false, message:'Username "'+u+'" មានរួចហើយ' });
+        throw e;
+      }
+      return res.json({ ok:true });
+    }
+
+    /* ── User update (Admin only) ── */
+    if (action === 'helen_user_update') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const u = String(body.username||'').trim();
+      if (!u) return res.json({ ok:false, message:'Username required' });
+      const p = String(body.pin||'').trim();
+      if (p) {
+        await db().query(
+          'UPDATE helen_users SET pin=?,role=?,display_name=?,exp_date=?,status=? WHERE username=?',
+          [p, String(body.role||'Staff Loan'), String(body.display_name||u).trim(),
+           body.exp_date||null, body.status||'active', u]
+        );
+      } else {
+        await db().query(
+          'UPDATE helen_users SET role=?,display_name=?,exp_date=?,status=? WHERE username=?',
+          [String(body.role||'Staff Loan'), String(body.display_name||u).trim(),
+           body.exp_date||null, body.status||'active', u]
+        );
+      }
+      return res.json({ ok:true });
+    }
+
+    /* ── User delete (Admin only, cannot delete self) ── */
+    if (action === 'helen_user_delete') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const u = String(body.username||'').trim();
+      if (!u) return res.json({ ok:false, message:'Username required' });
+      if (u === _bu) return res.json({ ok:false, message:'មិនអាចលុប Account ខ្លួនឯងបាន' });
+      await db().query('DELETE FROM helen_users WHERE username=?', [u]);
+      return res.json({ ok:true });
+    }
+
     return res.json({ ok:false, message:'Unknown action: ' + action });
 
   } catch(err) {
