@@ -717,7 +717,7 @@ setInterval(function(){ HelenAuth.check(); }, 60000);
 /* ── Notifications ── */
 async function loadNotif() {
   try {
-    var r = await CamboAPI.post('/api/helen', { action:'helen_notif_get' });
+    var r = await CamboAPI.post({ action:'helen_notif_get' });
     if (!r.ok) return;
     var en = r.enabled || [];
     document.getElementById('nt_add').checked    = en.includes('add');
@@ -736,7 +736,7 @@ async function saveNotif() {
   if (document.getElementById('nt_edit').checked)   enabled.push('edit');
   if (document.getElementById('nt_delete').checked) enabled.push('delete');
   try {
-    var r = await CamboAPI.post('/api/helen', { action:'helen_notif_save', enabled });
+    var r = await CamboAPI.post({ action:'helen_notif_save', enabled });
     if (r.ok) {
       st.style.color = 'var(--success,#4ade80)';
       st.textContent = 'Saved';
