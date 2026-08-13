@@ -198,8 +198,9 @@ export default async function handler(req, res) {
 
     /* ── Add loan ── */
     if (action === 'helen_loan_add') {
-      const l   = body.loan || {};
-      const key = l.DateTime || new Date().toISOString();
+      const l = body.loan || {};
+      const datePart = l.DateTime ? l.DateTime.substring(0, 10) : new Date().toISOString().substring(0, 10);
+      const key = datePart + 'T' + new Date().toISOString().substring(11);
       await db().query(
         `INSERT INTO helen_loans
            (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid)
