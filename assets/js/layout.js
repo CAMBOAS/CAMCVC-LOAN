@@ -11,7 +11,7 @@
       'index.html':     { title: t('Dashboard','Dashboard'),   subtitle: t('ការវិភាគ និងទិដ្ឋភាពទូទៅ','Analytics & overview') },
       'loan-list.html':    { title: t('បញ្ជីកម្ចី','Loan List'),     subtitle: t('តារាង និងការគ្រប់គ្រងអ្នកខ្ចីសរុប','Borrower list and full management') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
-      'users.html':     { title: t('គ្រប់គ្រង Users','User Management'), subtitle: t('បន្ថែម កែ លុប អ្នកប្រើប្រាស់','Add, edit and remove system users') },
+      'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },
     };
   }
@@ -84,7 +84,7 @@
           ${link('index.html', ic.dashboard, t('Dashboard','Dashboard'))}
           ${link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List'))}
           ${link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder'))}
-          ${role === 'Admin' ? link('pages/users.html', ic.users, t('Users','Users')) : ''}
+          ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
         </ul>
       </nav>
 
@@ -152,7 +152,7 @@
       ${bnItem('index.html',              ic.dashboard, t('Dashboard','Dashboard'))}
       ${bnItem('pages/loan-list.html',    ic.loanlist,  t('កម្ចី','Loans'))}
       ${bnItem('pages/fb-id-finder.html', ic.facebook,  t('FB ID','FB ID'))}
-      ${role === 'Admin' ? bnItem('pages/users.html', ic.users, t('Users','Users')) : ''}
+      ${role === 'Admin' ? bnItem('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
     </nav>`;
   }
 
