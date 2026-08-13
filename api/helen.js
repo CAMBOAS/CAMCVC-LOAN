@@ -262,7 +262,7 @@ export default async function handler(req, res) {
          l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'']
       );
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
-      if ((await isNotifEnabled('add')) || (await isWatched(_bu))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
+      if ((await isWatched(_bu)) && (await isNotifEnabled('add'))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
       return res.json({ ok:true });
     }
 
@@ -283,7 +283,7 @@ export default async function handler(req, res) {
          l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'', key]
       );
       const [updated] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [newKey]);
-      if ((await isNotifEnabled('edit')) || (await isWatched(_bu))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }
+      if ((await isWatched(_bu)) && (await isNotifEnabled('edit'))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }
       return res.json({ ok:true, message:'Updated' });
     }
 
@@ -293,7 +293,7 @@ export default async function handler(req, res) {
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!rows.length) return res.json({ ok:false, message:'Row not found' });
       await db().query('UPDATE helen_loans SET deleted_at=NOW() WHERE loan_key=?', [key]);
-      if ((await isNotifEnabled('delete')) || (await isWatched(_bu))) { try { await sendTelegram(rows[0], 'delete', actor); } catch(e) {} }
+      if ((await isWatched(_bu)) && (await isNotifEnabled('delete'))) { try { await sendTelegram(rows[0], 'delete', actor); } catch(e) {} }
       return res.json({ ok:true, message:'Deleted' });
     }
 
