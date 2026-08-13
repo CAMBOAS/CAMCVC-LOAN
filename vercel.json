@@ -1,8 +1,5 @@
 {
   "functions": {
     "api/helen.js": { "maxDuration": 30 }
-  },
-  "rewrites": [
-    { "source": "/api/helen", "destination": "/api/helen" }
-  ]
+  }
 }
