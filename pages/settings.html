@@ -147,6 +147,32 @@
     .um-empty { text-align:center; padding:48px 24px; color:var(--muted); font-size:13px }
 
     .um-tbl-footer { padding:10px 14px; font-size:11.5px; color:var(--muted); border-top:1px solid rgba(148,163,184,.08); flex-shrink:0 }
+
+    /* ── Tab bar ── */
+    .st-tabs { display:flex; gap:3px; flex-shrink:0; background:rgba(148,163,184,.07); border-radius:13px; padding:4px; overflow-x:auto }
+    .st-tabs::-webkit-scrollbar { display:none }
+    .st-tab { display:flex; align-items:center; gap:6px; padding:8px 15px; border-radius:10px; border:none; background:transparent; color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:.18s; white-space:nowrap; flex-shrink:0 }
+    .st-tab:hover { color:var(--text); background:rgba(148,163,184,.1) }
+    .st-tab.st-tab-active { background:var(--card); color:var(--text); box-shadow:0 2px 10px rgba(0,0,0,.15) }
+    .st-tab svg { opacity:.7 }
+    .st-tab.st-tab-active svg { opacity:1 }
+
+    /* ── Tab panels ── */
+    .st-panel { display:none; flex-direction:column; gap:8px; flex:1; min-height:0 }
+    .st-panel.st-panel-active { display:flex }
+    @media (max-width:768px) { .st-panel.st-panel-active { flex:unset } }
+
+    /* ── Panel toolbar ── */
+    .st-panel-toolbar { display:flex; align-items:center; gap:10px; flex-shrink:0 }
+    .st-panel-title { font-size:13px; font-weight:700; color:var(--muted); flex:1 }
+
+    /* ── Coming soon ── */
+    .st-cs-wrap { flex:1; display:flex; align-items:center; justify-content:center }
+    .st-cs { text-align:center; padding:40px 24px; max-width:320px; margin:0 auto }
+    .st-cs-icon { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px }
+    .st-cs-title { font-size:16px; font-weight:800; color:var(--text); margin-bottom:6px }
+    .st-cs-sub { font-size:13px; color:var(--muted); line-height:1.6 }
+    .st-cs-badge { display:inline-block; margin-top:14px; padding:4px 12px; border-radius:20px; background:rgba(124,92,255,.12); color:#a78bfa; font-size:11.5px; font-weight:700 }
   </style>
 </head>
 <body class="background">
@@ -169,14 +195,31 @@
         </div>
       </div>
 
-      <!-- ══ Section: User Management ══ -->
-      <div class="st-section">
+      <!-- ══ Tab bar ══ -->
+      <div class="st-tabs">
+        <button class="st-tab st-tab-active" onclick="switchTab(0,this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          User Management
+        </button>
+        <button class="st-tab" onclick="switchTab(1,this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Groups & Statuses
+        </button>
+        <button class="st-tab" onclick="switchTab(2,this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          App Config
+        </button>
+        <button class="st-tab" onclick="switchTab(3,this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Notifications
+        </button>
+      </div>
 
-        <div class="st-section-hdr">
-          <div class="st-section-icon">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <div class="st-section-title">User Management</div>
+      <!-- ══ Panel 0: User Management ══ -->
+      <div class="st-panel st-panel-active" id="stPanel0">
+
+        <div class="st-panel-toolbar">
+          <div class="st-panel-title">Manage system users — add, edit, or remove accounts</div>
           <button class="st-section-add" onclick="openAddModal()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add New User
@@ -230,9 +273,49 @@
           <div class="um-tbl-footer" id="umFooter"></div>
         </div>
 
-      </div><!-- /st-section -->
+      </div><!-- /Panel 0 -->
 
-      <!-- Future sections go here -->
+      <!-- ══ Panel 1: Groups & Statuses ══ -->
+      <div class="st-panel" id="stPanel1">
+        <div class="st-cs-wrap">
+          <div class="st-cs">
+            <div class="st-cs-icon" style="background:rgba(245,158,11,.12)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            </div>
+            <div class="st-cs-title">Groups & Statuses</div>
+            <div class="st-cs-sub">Manage loan groups and borrower status labels used across the system.</div>
+            <span class="st-cs-badge">Coming Soon</span>
+          </div>
+        </div>
+      </div><!-- /Panel 1 -->
+
+      <!-- ══ Panel 2: App Config ══ -->
+      <div class="st-panel" id="stPanel2">
+        <div class="st-cs-wrap">
+          <div class="st-cs">
+            <div class="st-cs-icon" style="background:rgba(6,182,212,.12)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            </div>
+            <div class="st-cs-title">App Config</div>
+            <div class="st-cs-sub">Configure system-wide settings such as currency, date format, and display preferences.</div>
+            <span class="st-cs-badge">Coming Soon</span>
+          </div>
+        </div>
+      </div><!-- /Panel 2 -->
+
+      <!-- ══ Panel 3: Notifications ══ -->
+      <div class="st-panel" id="stPanel3">
+        <div class="st-cs-wrap">
+          <div class="st-cs">
+            <div class="st-cs-icon" style="background:rgba(124,92,255,.12)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="st-cs-title">Notifications</div>
+            <div class="st-cs-sub">Set up Telegram alerts, expiry reminders, and other notification preferences.</div>
+            <span class="st-cs-badge">Coming Soon</span>
+          </div>
+        </div>
+      </div><!-- /Panel 3 -->
 
     </div><!-- /st-wrap -->
   </div>
@@ -545,6 +628,14 @@ document.addEventListener('keydown', function(e) {
   }
   if (e.key === 'Enter' && document.getElementById('umModalBg').classList.contains('open')) saveUser();
 });
+
+/* ── Tab switcher ── */
+function switchTab(idx, btn) {
+  document.querySelectorAll('.st-tab').forEach(function(t){ t.classList.remove('st-tab-active'); });
+  document.querySelectorAll('.st-panel').forEach(function(p){ p.classList.remove('st-panel-active'); });
+  btn.classList.add('st-tab-active');
+  document.getElementById('stPanel'+idx).classList.add('st-panel-active');
+}
 
 setInterval(function(){ HelenAuth.check(); }, 60000);
 
