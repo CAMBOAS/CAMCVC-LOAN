@@ -378,6 +378,28 @@
                 <span class="nt-slider"></span>
               </label>
             </div>
+
+            <div class="nt-item">
+              <div class="nt-item-info">
+                <div class="nt-item-label">User Login</div>
+                <div class="nt-item-desc">Send alert when someone successfully logs in</div>
+              </div>
+              <label class="nt-toggle">
+                <input type="checkbox" id="nt_login">
+                <span class="nt-slider"></span>
+              </label>
+            </div>
+
+            <div class="nt-item">
+              <div class="nt-item-info">
+                <div class="nt-item-label">Failed Login Attempts</div>
+                <div class="nt-item-desc">Send alert after 2 or more wrong username or PIN attempts</div>
+              </div>
+              <label class="nt-toggle">
+                <input type="checkbox" id="nt_login_fail">
+                <span class="nt-slider"></span>
+              </label>
+            </div>
           </div>
 
           <!-- Footer -->
@@ -720,9 +742,11 @@ async function loadNotif() {
     var r = await CamboAPI.post({ action:'helen_notif_get' });
     if (!r.ok) return;
     var en = r.enabled || [];
-    document.getElementById('nt_add').checked    = en.includes('add');
-    document.getElementById('nt_edit').checked   = en.includes('edit');
-    document.getElementById('nt_delete').checked = en.includes('delete');
+    document.getElementById('nt_add').checked        = en.includes('add');
+    document.getElementById('nt_edit').checked       = en.includes('edit');
+    document.getElementById('nt_delete').checked     = en.includes('delete');
+    document.getElementById('nt_login').checked      = en.includes('login');
+    document.getElementById('nt_login_fail').checked = en.includes('login_fail');
   } catch(e) {}
 }
 
@@ -732,9 +756,11 @@ async function saveNotif() {
   btn.disabled = true;
   st.textContent = '';
   var enabled = [];
-  if (document.getElementById('nt_add').checked)    enabled.push('add');
-  if (document.getElementById('nt_edit').checked)   enabled.push('edit');
-  if (document.getElementById('nt_delete').checked) enabled.push('delete');
+  if (document.getElementById('nt_add').checked)        enabled.push('add');
+  if (document.getElementById('nt_edit').checked)       enabled.push('edit');
+  if (document.getElementById('nt_delete').checked)     enabled.push('delete');
+  if (document.getElementById('nt_login').checked)      enabled.push('login');
+  if (document.getElementById('nt_login_fail').checked) enabled.push('login_fail');
   try {
     var r = await CamboAPI.post({ action:'helen_notif_save', enabled });
     if (r.ok) {

@@ -86,6 +86,26 @@ async function sendTelegram(loan, action, actorName, oldLoan) {
   } catch(e) {}
 }
 
+async function sendTelegramEvent(evtType, data) {
+  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
+  const now = new Date().toLocaleString('km-KH', { timeZone:'Asia/Phnom_Penh', hour12:true });
+  let msg = '';
+  if (evtType === 'login') {
+    msg = `🔑 *User Login*\n━━━━━━━━━━━━━━━\n👤 ឈ្មោះ: ${data.name||data.username||'—'}\n👨‍💼 Role: ${data.role||'—'}\n⏰ ${now}`;
+  } else if (evtType === 'login_fail') {
+    const reasons = { wrong:'ឈ្មោះ/PIN ខុស', expired:'គណនីផុតកំណត់' };
+    msg = `⚠️ *Failed Login*\n━━━━━━━━━━━━━━━\n👤 Username: ${data.username||'—'}\n🔢 Attempt: ${data.attempt||'—'}\n❌ Reason: ${reasons[data.reason]||data.reason||'—'}\n⏰ ${now}`;
+  }
+  if (!msg) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TG_CHAT_ID, text: msg, parse_mode: 'Markdown' }),
+    });
+  } catch(e) {}
+}
+
 /* ── Notification check ── */
 async function isNotifEnabled(type) {
   const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="notif"');
@@ -147,10 +167,16 @@ export default async function handler(req, res) {
       if (!v)          return res.json({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
       if (v.expired)   return res.json({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
       db().query('UPDATE helen_users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
+      if (await isNotifEnabled('login')) { try { await sendTelegramEvent('login', { name:v.name, role:v.role, username:v.username }); } catch(e) {} }
       return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate });
     }
 
-    if (action === 'helen_login_alert') return res.json({ ok:true });
+    if (action === 'helen_login_alert') {
+      if (await isNotifEnabled('login_fail')) {
+        try { await sendTelegramEvent('login_fail', { username:body.username, reason:body.reason, attempt:body.attempt }); } catch(e) {}
+      }
+      return res.json({ ok:true });
+    }
 
     /* ── Auth check for all write/read actions ── */
     const _bu = String((body.auth&&body.auth.u)||body.u||'').trim();
@@ -342,7 +368,7 @@ export default async function handler(req, res) {
     /* ── Notif settings save (Admin only) ── */
     if (action === 'helen_notif_save') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
-      const types = Array.isArray(body.enabled) ? body.enabled.filter(t => ['add','edit','delete'].includes(t)) : [];
+      const types = Array.isArray(body.enabled) ? body.enabled.filter(t => ['add','edit','delete','login','login_fail'].includes(t)) : [];
       await db().query('DELETE FROM helen_infor WHERE type="notif"');
       await db().query('INSERT INTO helen_infor (type, value) VALUES ("notif", "__configured__")');
       for (const t of types) {
