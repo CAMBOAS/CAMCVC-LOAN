@@ -428,12 +428,19 @@ export default async function handler(req, res) {
       if (!CLD_CLOUD || !CLD_KEY || !CLD_SEC) return res.json({ ok:false, message:'Cloudinary not configured' });
       const b64 = body.data;
       if (!b64) return res.json({ ok:false, message:'No image data' });
+      /* Convert data URI to Blob so FormData sends a proper file part */
+      const commaIdx = b64.indexOf(',');
+      const meta     = commaIdx > -1 ? b64.slice(0, commaIdx) : '';
+      const rawB64   = commaIdx > -1 ? b64.slice(commaIdx + 1) : b64;
+      const mime     = (meta.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+      const buf      = Buffer.from(rawB64, 'base64');
+      const blob     = new Blob([buf], { type: mime });
       const timestamp = Math.floor(Date.now() / 1000);
       const folder    = 'helen-loan';
       const signStr   = `folder=${folder}&timestamp=${timestamp}${CLD_SEC}`;
       const signature = crypto.createHash('sha1').update(signStr).digest('hex');
       const form = new FormData();
-      form.append('file',      b64);
+      form.append('file',      blob, 'upload.jpg');
       form.append('api_key',   CLD_KEY);
       form.append('timestamp', String(timestamp));
       form.append('folder',    folder);
