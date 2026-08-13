@@ -361,12 +361,12 @@ function fmtDate(d) {
 
 function onlineBadge(ls) {
   if (!ls) return '<span class="um-ol um-ol-off"><span class="um-ol-dot"></span>Offline</span>';
-  var ms  = Date.now() - new Date(ls).getTime();
+  var ms  = Date.now() - new Date(ls.replace(' ', 'T') + 'Z').getTime();
   var min = Math.floor(ms / 60000);
   var hr  = Math.floor(ms / 3600000);
   var day = Math.floor(ms / 86400000);
   if (min < 5) return '<span class="um-ol um-ol-on"><span class="um-ol-dot"></span>Online</span>';
-  var ago = min < 60 ? min + ' min ago' : hr < 24 ? hr + ' hr ago' : day + ' d ago';
+  var ago = min < 60 ? min + ' min ago' : hr < 24 ? hr + ' hr ago' : day + ' days ago';
   return '<span class="um-ol um-ol-off"><span class="um-ol-dot"></span>' + ago + '</span>';
 }
 
