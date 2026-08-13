@@ -3,10 +3,14 @@
  * Replaces Google Apps Script backend.
  */
 
-import mysql from 'mysql2/promise';
+import mysql  from 'mysql2/promise';
+import crypto from 'crypto';
 
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
 const TG_CHAT_ID   = process.env.TG_CHAT_ID   || '';
+const CLD_CLOUD    = process.env.CLOUDINARY_CLOUD_NAME   || '';
+const CLD_KEY      = process.env.CLOUDINARY_API_KEY      || '';
+const CLD_SEC      = process.env.CLOUDINARY_API_SECRET   || '';
 
 /* ── DB connection pool ── */
 let pool;
@@ -40,6 +44,7 @@ function rowToLoan(r) {
     ID:          r.social_id    || '',
     FBID:        r.fbid         || '',
     photo_url:   r.photo_url    || '',
+    photos:      (() => { try { if (!r.photos) return []; if (Array.isArray(r.photos)) return r.photos; return JSON.parse(r.photos) || []; } catch(e) { return []; } })(),
   };
 }
 
@@ -253,13 +258,14 @@ export default async function handler(req, res) {
       const l = body.loan || {};
       const datePart = l.DateTime ? l.DateTime.substring(0, 10) : new Date().toISOString().substring(0, 10);
       const key = datePart + 'T' + new Date().toISOString().substring(11);
+      const photosJson = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
       await db().query(
         `INSERT INTO helen_loans
-           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photos)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [key, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
-         l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'']
+         l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'', photosJson]
       );
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('add'))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
@@ -411,6 +417,27 @@ export default async function handler(req, res) {
         await db().query('INSERT INTO helen_infor (type, value) VALUES ("watch_user", ?)', [u.trim()]);
       }
       return res.json({ ok:true });
+    }
+
+    /* ── Upload photo to Cloudinary ── */
+    if (action === 'helen_upload_photo') {
+      if (!CLD_CLOUD || !CLD_KEY || !CLD_SEC) return res.json({ ok:false, message:'Cloudinary not configured' });
+      const b64 = body.data;
+      if (!b64) return res.json({ ok:false, message:'No image data' });
+      const timestamp = Math.floor(Date.now() / 1000);
+      const folder    = 'helen-loan';
+      const signStr   = `folder=${folder}&timestamp=${timestamp}${CLD_SEC}`;
+      const signature = crypto.createHash('sha1').update(signStr).digest('hex');
+      const form = new FormData();
+      form.append('file',      b64);
+      form.append('api_key',   CLD_KEY);
+      form.append('timestamp', String(timestamp));
+      form.append('folder',    folder);
+      form.append('signature', signature);
+      const r    = await fetch(`https://api.cloudinary.com/v1_1/${CLD_CLOUD}/image/upload`, { method:'POST', body: form });
+      const data = await r.json();
+      if (data.secure_url) return res.json({ ok:true, url: data.secure_url });
+      return res.json({ ok:false, message: data.error?.message || 'Upload failed' });
     }
 
     return res.json({ ok:false, message:'Unknown action: ' + action });

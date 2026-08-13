@@ -471,6 +471,18 @@
     .lr-datepick-wrap input[type="date"] { position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; border:none; padding:0; margin:0; font-size:16px }
     [data-theme="light"] .lr-datepick-wrap { border-color:rgba(124,92,255,.2); background:rgba(124,92,255,.04) }
     [data-theme="light"] .lr-datepick-txt { color:#1e293b }
+    /* ── Photo upload ── */
+    .lr-photo-wrap { display:flex; flex-direction:column; gap:8px }
+    .lr-photo-grid { display:flex; flex-wrap:wrap; gap:8px }
+    .lr-photo-thumb { position:relative; width:72px; height:72px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,.2); border:1px solid rgba(148,163,184,.15); flex-shrink:0 }
+    .lr-photo-thumb img { width:100%; height:100%; object-fit:cover; display:block }
+    .lr-photo-thumb-rm { position:absolute; top:2px; right:2px; background:rgba(0,0,0,.65); border:none; color:#fff; border-radius:50%; width:18px; height:18px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0 }
+    .lr-photo-add-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px dashed rgba(124,92,255,.4); border-radius:10px; cursor:pointer; font-size:12px; color:rgba(124,92,255,.9); background:rgba(124,92,255,.06); transition:.15s; user-select:none }
+    .lr-photo-add-btn:hover { border-color:rgba(124,92,255,.7); background:rgba(124,92,255,.12) }
+    .lr-photo-view-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px }
+    .lr-photo-view-thumb { width:72px; height:72px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,.2); border:1px solid rgba(148,163,184,.15); cursor:pointer; flex-shrink:0 }
+    .lr-photo-view-thumb img { width:100%; height:100%; object-fit:cover; display:block }
+    /* ── / Photo upload ── */
     .lr-add-footer { padding:16px 24px 20px; border-top:1px solid rgba(148,163,200,.1); display:flex; gap:10px; justify-content:flex-end; background:rgba(148,163,200,.03); border-radius:0 0 24px 24px }
     .lr-add-cancel { padding:10px 22px; border-radius:12px; border:1.5px solid rgba(148,163,184,.18); background:transparent; color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.18s }
     .lr-add-cancel:hover { background:rgba(148,163,184,.1) }
@@ -2081,7 +2093,16 @@ function openAddModal() {
     +'</div>'
     +'</div></div>'
     +'</div></div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">'+svgNote+' Note</div><textarea class="lr-add-input" id="af_Note" placeholder="Add a note..." style="min-height:56px"></textarea></div>';
+    +'<div class="lr-add-field"><div class="lr-add-label">'+svgNote+' Note</div><textarea class="lr-add-input" id="af_Note" placeholder="Add a note..." style="min-height:56px"></textarea></div>'
+    +'<div class="lr-add-field" style="margin-top:4px">'
+    +'<div class="lr-add-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Photos <span style="opacity:.45;font-size:11px;font-weight:400">(max 5)</span></div>'
+    +'<div class="lr-photo-wrap">'
+    +'<div class="lr-photo-grid" id="af_PhotoGrid"></div>'
+    +'<label class="lr-photo-add-btn" id="af_PhotoAddBtn">'
+    +'<input type="file" id="af_PhotoInput" accept="image/*" multiple style="display:none" onchange="onPhotoSelect(event)">'
+    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Photos'
+    +'</label>'
+    +'</div></div>';
 
   document.getElementById('lrAddModalBg').classList.add('open');
   updateFBID('af');
@@ -2112,6 +2133,7 @@ function closeUnsavedBg() {
 function closeAddModalForce() {
   document.getElementById('lrUnsavedBg').classList.remove('open');
   document.getElementById('lrAddModalBg').classList.remove('open');
+  clearAddPhotos();
 }
 
 /* ── Trash Modal (HelenLoanT) ── */
@@ -2355,6 +2377,70 @@ async function deleteInforItemConfirm() {
   } catch(e) { toast('❌ Server error'); }
 }
 
+/* ── Photo upload helpers ── */
+var _addPhotos = [];
+
+function compressPhoto(file) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      URL.revokeObjectURL(url);
+      var MAX = 1024, w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', 0.78));
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
+function renderAddPhotos() {
+  var grid = document.getElementById('af_PhotoGrid');
+  var addBtn = document.getElementById('af_PhotoAddBtn');
+  if (!grid) return;
+  grid.innerHTML = _addPhotos.map(function(p, i) {
+    return '<div class="lr-photo-thumb">'
+      + '<img src="' + p.preview + '">'
+      + '<button type="button" class="lr-photo-thumb-rm" onclick="removeAddPhoto(' + i + ')">×</button>'
+      + '</div>';
+  }).join('');
+  if (addBtn) addBtn.style.display = _addPhotos.length >= 5 ? 'none' : '';
+}
+
+function removeAddPhoto(i) {
+  _addPhotos.splice(i, 1);
+  renderAddPhotos();
+}
+
+async function onPhotoSelect(event) {
+  var files = Array.from(event.target.files || []);
+  event.target.value = '';
+  var remaining = 5 - _addPhotos.length;
+  if (remaining <= 0) return;
+  files = files.slice(0, remaining);
+  for (var i = 0; i < files.length; i++) {
+    var b64 = await compressPhoto(files[i]);
+    if (b64) _addPhotos.push({ b64: b64, preview: b64 });
+  }
+  renderAddPhotos();
+}
+
+function clearAddPhotos() {
+  _addPhotos = [];
+  var grid = document.getElementById('af_PhotoGrid');
+  if (grid) grid.innerHTML = '';
+  var addBtn = document.getElementById('af_PhotoAddBtn');
+  if (addBtn) addBtn.style.display = '';
+}
+/* ── / Photo upload helpers ── */
+
 async function saveAdd() {
   var fullName = document.getElementById('af_FullName').value.trim();
   var status   = document.getElementById('af_Status').value;
@@ -2384,6 +2470,21 @@ async function saveAdd() {
     ID:          document.getElementById('af_ID').value.trim(),
     FBID:        document.getElementById('af_FBID').value.trim(),
   };
+
+  /* Upload photos to Cloudinary first */
+  var photoUrls = [];
+  if (_addPhotos.length > 0) {
+    btn.innerHTML = '<span style="opacity:.8">Uploading photos ' + 0 + '/' + _addPhotos.length + '…</span>';
+    for (var pi = 0; pi < _addPhotos.length; pi++) {
+      btn.innerHTML = '<span style="opacity:.8">Uploading photo ' + (pi+1) + '/' + _addPhotos.length + '…</span>';
+      try {
+        var ur = await CamboAPI.post({ action:'helen_upload_photo', data: _addPhotos[pi].b64 });
+        if (ur.ok && ur.url) photoUrls.push(ur.url);
+      } catch(e) {}
+    }
+  }
+  loan.photos = photoUrls;
+
   var _addBtnHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg> Save';
   try {
     var res = await Promise.race([
@@ -2504,7 +2605,13 @@ function openEditModal(loan) {
     +'</div>'
     +'</div></div>'
     +'</div></div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">'+svgNote+' Note</div><textarea class="lr-add-input" id="ef_Note" placeholder="Add a note..." style="min-height:56px">'+esc(loan.Note||'')+'</textarea></div>';
+    +'<div class="lr-add-field"><div class="lr-add-label">'+svgNote+' Note</div><textarea class="lr-add-input" id="ef_Note" placeholder="Add a note..." style="min-height:56px">'+esc(loan.Note||'')+'</textarea></div>'
+    +(loan.photos && loan.photos.length
+      ? '<div class="lr-add-field" style="margin-top:4px"><div class="lr-add-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Photos</div>'
+        +'<div class="lr-photo-view-grid">'
+        + loan.photos.map(function(url){ return '<div class="lr-photo-view-thumb" onclick="window.open(\''+esc(url)+'\',\'_blank\')"><img src="'+esc(url)+'" loading="lazy"></div>'; }).join('')
+        +'</div></div>'
+      : '');
 
   document.getElementById('lrModalBg').classList.add('open');
   updateFBID('ef');
