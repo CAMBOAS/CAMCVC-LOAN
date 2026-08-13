@@ -280,14 +280,17 @@ export default async function handler(req, res) {
       const [old] = await db().query('SELECT * FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!old.length) return res.json({ ok:false, message:'Row not found' });
       const newKey = l.DateTime || key;
+      const photosJsonU = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
       await db().query(
         `UPDATE helen_loans SET
            loan_key=?,full_name=?,national_id=?,dob=?,phone=?,gender=?,loan_group=?,
-           money=?,loan_status=?,note=?,fb_name=?,fb_url=?,social_media=?,social_id=?,fbid=?
+           money=?,loan_status=?,note=?,fb_name=?,fb_url=?,social_media=?,social_id=?,fbid=?,
+           photo_url=?,photos=?
          WHERE loan_key=? AND deleted_at IS NULL`,
         [newKey, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
-         l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'', key]
+         l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'',
+         l.photo_url||null, photosJsonU, key]
       );
       const [updated] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [newKey]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('edit'))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }
