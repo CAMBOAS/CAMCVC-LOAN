@@ -482,6 +482,14 @@
     .lr-photo-view-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px }
     .lr-photo-view-thumb { width:72px; height:72px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,.2); border:1px solid rgba(148,163,184,.15); cursor:pointer; flex-shrink:0 }
     .lr-photo-view-thumb img { width:100%; height:100%; object-fit:cover; display:block }
+    .lr-drag-over { border-color:rgba(124,92,255,.75) !important; background:rgba(124,92,255,.1) !important }
+    /* ── Avatar ── */
+    .lr-avatar { width:28px; height:28px; border-radius:50%; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; font-size:10px; font-weight:800; vertical-align:middle; margin-right:7px; line-height:1 }
+    .lr-avatar img { width:100%; height:100%; object-fit:cover; display:block }
+    /* ── Profile photo upload ── */
+    .lr-profile-wrap { position:relative; width:100%; height:88px; border:1.5px dashed rgba(124,92,255,.35); border-radius:12px; background:rgba(124,92,255,.04); cursor:pointer; display:flex; align-items:center; justify-content:center; overflow:hidden; transition:.15s; box-sizing:border-box }
+    .lr-profile-wrap:hover { border-color:rgba(124,92,255,.65); background:rgba(124,92,255,.09) }
+    .lr-profile-placeholder { display:flex; flex-direction:column; align-items:center; gap:5px; color:rgba(124,92,255,.7); font-size:11px; font-weight:600; pointer-events:none }
     /* ── / Photo upload ── */
     .lr-add-footer { padding:16px 24px 20px; border-top:1px solid rgba(148,163,200,.1); display:flex; gap:10px; justify-content:flex-end; background:rgba(148,163,200,.03); border-radius:0 0 24px 24px }
     .lr-add-cancel { padding:10px 22px; border-radius:12px; border:1.5px solid rgba(148,163,184,.18); background:transparent; color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.18s }
@@ -1200,7 +1208,7 @@ function renderTable() {
     var trClass = isPaint ? ' class="lr-row-paint"' : isHL ? ' class="lr-row-highlight"' : isGroup ? ' class="lr-row-group"' : isMonth ? ' class="lr-row-month"' : '';
     return '<tr'+trClass+'>'
       + '<td style="color:var(--muted);font-size:11px">'+esc(String(i+1))+'</td>'
-      + '<td style="font-weight:700"><span class="lr-name-link" data-dt="'+esc(l.DateTime||'')+'">'+esc(l.FullName||'—')+'</span></td>'
+      + '<td style="font-weight:700"><span class="lr-name-link" data-dt="'+esc(l.DateTime||'')+'" style="display:inline-flex;align-items:center">'+avatarHtml(l)+esc(l.FullName||'—')+'</span></td>'
       + '<td style="font-family:monospace;font-size:11.5px;color:#60a5fa">'+esc(l.NationalID||'—')+'</td>'
       + '<td style="font-size:11px;color:var(--muted)">'+esc(l.DOB||'—')+'</td>'
       + '<td style="font-size:12px"><a href="tel:'+esc(l.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(l.Phone||'—')+'</a></td>'
@@ -1266,6 +1274,7 @@ function renderCards(arr) {
     return '<div class="lr-mob-card lr-name-link" data-dt="'+esc(l.DateTime||'')+'">'
       + '<div class="lr-mob-r1">'
         + '<span class="lr-mob-num">#'+esc(String(l._idx||i+1))+'</span>'
+        + avatarHtml(l)
         + '<span class="lr-mob-name">'+esc(l.FullName||'—')+'</span>'
         + statusTag(l.Status)
         + '<button class="lr-del-btn lr-mob-del" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="Delete" onclick="event.stopPropagation()">'+_svgDel16+'</button>'
@@ -2093,10 +2102,22 @@ function openAddModal() {
     +'</div>'
     +'</div></div>'
     +'</div></div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">'+svgNote+' Note</div><textarea class="lr-add-input" id="af_Note" placeholder="Add a note..." style="min-height:56px"></textarea></div>'
-    +'<div class="lr-add-field" style="margin-top:4px">'
-    +'<div class="lr-add-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Photos <span style="opacity:.45;font-size:11px;font-weight:400">(max 5)</span></div>'
-    +'<div class="lr-photo-wrap">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">'
+    +'<div>'
+    +'<div class="lr-add-label">'+svgNote+' Note</div>'
+    +'<textarea class="lr-add-input" id="af_Note" placeholder="Add a note..." style="min-height:88px;height:88px;resize:none;box-sizing:border-box"></textarea>'
+    +'</div>'
+    +'<div>'
+    +'<div class="lr-add-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile Photo <span style="opacity:.45;font-size:10px;font-weight:400">(avatar in list)</span></div>'
+    +'<div class="lr-profile-wrap" id="af_ProfileWrap" onclick="document.getElementById(\'af_ProfileInput\').click()" ondragover="event.preventDefault();this.classList.add(\'lr-drag-over\')" ondrop="onProfileDrop(event);this.classList.remove(\'lr-drag-over\')" ondragleave="this.classList.remove(\'lr-drag-over\')">'
+    +'<input type="file" id="af_ProfileInput" accept="image/*" style="display:none" onchange="onProfileSelect(event)">'
+    +'<div id="af_ProfilePreview"><div class="lr-profile-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Click or drag photo</span></div></div>'
+    +'</div>'
+    +'</div>'
+    +'</div>'
+    +'<div class="lr-add-field" style="margin-top:8px">'
+    +'<div class="lr-add-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Additional Photos <span style="opacity:.45;font-size:10px;font-weight:400">(max 5 · drag &amp; drop or click)</span></div>'
+    +'<div class="lr-photo-wrap" ondragover="event.preventDefault();this.classList.add(\'lr-drag-over\')" ondrop="onPhotoDrop(event);this.classList.remove(\'lr-drag-over\')" ondragleave="this.classList.remove(\'lr-drag-over\')" style="border:1.5px dashed transparent;border-radius:12px;padding:6px;transition:.15s">'
     +'<div class="lr-photo-grid" id="af_PhotoGrid"></div>'
     +'<label class="lr-photo-add-btn" id="af_PhotoAddBtn">'
     +'<input type="file" id="af_PhotoInput" accept="image/*" multiple style="display:none" onchange="onPhotoSelect(event)">'
@@ -2378,6 +2399,22 @@ async function deleteInforItemConfirm() {
 }
 
 /* ── Photo upload helpers ── */
+/* ── Avatar helpers ── */
+function nameColor(name) {
+  var cs = ['#7c5cff','#06b6d4','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899','#3b82f6'];
+  var s = 0; for (var i = 0; i < (name||'').length; i++) s += (name||'').charCodeAt(i);
+  return cs[s % cs.length];
+}
+function avatarHtml(l) {
+  var src = l.photo_url || (l.photos && l.photos[0]) || '';
+  if (src) return '<span class="lr-avatar" style="border:1.5px solid rgba(255,255,255,.12);flex-shrink:0"><img src="'+esc(src)+'" loading="lazy"></span>';
+  var name = l.FullName || '?';
+  var parts = name.trim().split(/\s+/);
+  var init = parts.length >= 2 ? (parts[0][0]+parts[parts.length-1][0]).toUpperCase() : (name[0]||'?').toUpperCase();
+  return '<span class="lr-avatar" style="background:'+nameColor(name)+';color:#fff;flex-shrink:0">'+esc(init)+'</span>';
+}
+/* ── / Avatar helpers ── */
+
 var _addPhotos = [];
 
 function compressPhoto(file) {
@@ -2438,8 +2475,61 @@ function clearAddPhotos() {
   if (grid) grid.innerHTML = '';
   var addBtn = document.getElementById('af_PhotoAddBtn');
   if (addBtn) addBtn.style.display = '';
+  clearProfilePhoto();
 }
 /* ── / Photo upload helpers ── */
+
+/* ── Profile photo ── */
+var _profilePhoto = null;
+function renderProfilePhoto() {
+  var wrap = document.getElementById('af_ProfileWrap');
+  var prev = document.getElementById('af_ProfilePreview');
+  if (!prev) return;
+  if (_profilePhoto) {
+    prev.innerHTML = '<img src="'+_profilePhoto.preview+'" style="width:100%;height:100%;object-fit:cover;display:block">'
+      +'<button type="button" onclick="event.stopPropagation();clearProfilePhoto()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0">×</button>';
+    if (wrap) { wrap.style.padding='0'; wrap.style.border='none'; }
+  } else {
+    prev.innerHTML = '<div class="lr-profile-placeholder">'
+      +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+      +'<span>Click or drag photo</span></div>';
+    if (wrap) { wrap.style.padding=''; wrap.style.border=''; }
+  }
+}
+async function onProfileSelect(event) {
+  var file = event.target.files[0]; event.target.value = '';
+  if (!file) return;
+  var b64 = await compressPhoto(file);
+  if (!b64) return;
+  _profilePhoto = { b64: b64, preview: b64 };
+  renderProfilePhoto();
+}
+async function onProfileDrop(event) {
+  event.preventDefault();
+  var file = (event.dataTransfer.files||[])[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  var b64 = await compressPhoto(file);
+  if (!b64) return;
+  _profilePhoto = { b64: b64, preview: b64 };
+  renderProfilePhoto();
+}
+function clearProfilePhoto() { _profilePhoto = null; renderProfilePhoto(); }
+/* ── / Profile photo ── */
+
+/* ── Photos drag & drop ── */
+async function onPhotoDrop(event) {
+  event.preventDefault();
+  var files = Array.from(event.dataTransfer.files||[]).filter(function(f){ return f.type.startsWith('image/'); });
+  if (!files.length) return;
+  var remaining = 5 - _addPhotos.length;
+  files = files.slice(0, remaining);
+  for (var i = 0; i < files.length; i++) {
+    var b64 = await compressPhoto(files[i]);
+    if (b64) _addPhotos.push({ b64: b64, preview: b64 });
+  }
+  renderAddPhotos();
+}
+/* ── / Photos drag & drop ── */
 
 async function saveAdd() {
   var fullName = document.getElementById('af_FullName').value.trim();
@@ -2471,10 +2561,20 @@ async function saveAdd() {
     FBID:        document.getElementById('af_FBID').value.trim(),
   };
 
-  /* Upload photos to Cloudinary first */
+  /* Upload profile photo */
+  var profileUrl = '';
+  if (_profilePhoto) {
+    btn.innerHTML = '<span style="opacity:.8">Uploading profile photo…</span>';
+    try {
+      var pur = await CamboAPI.post({ action:'helen_upload_photo', data: _profilePhoto.b64 });
+      if (pur.ok && pur.url) profileUrl = pur.url;
+    } catch(e) {}
+  }
+  loan.photo_url = profileUrl;
+
+  /* Upload additional photos to Cloudinary */
   var photoUrls = [];
   if (_addPhotos.length > 0) {
-    btn.innerHTML = '<span style="opacity:.8">Uploading photos ' + 0 + '/' + _addPhotos.length + '…</span>';
     for (var pi = 0; pi < _addPhotos.length; pi++) {
       btn.innerHTML = '<span style="opacity:.8">Uploading photo ' + (pi+1) + '/' + _addPhotos.length + '…</span>';
       try {

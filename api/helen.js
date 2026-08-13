@@ -261,11 +261,12 @@ export default async function handler(req, res) {
       const photosJson = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
       await db().query(
         `INSERT INTO helen_loans
-           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photos)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photo_url,photos)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [key, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
-         l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'', photosJson]
+         l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'',
+         l.photo_url||null, photosJson]
       );
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('add'))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
