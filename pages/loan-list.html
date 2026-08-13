@@ -2146,7 +2146,7 @@ async function toggleTrashMode() {
   document.getElementById('lrTbody').innerHTML = '<tr><td colspan="16" class="lr-loading">កំពុងផ្ទុក Trash...</td></tr>';
   try {
     var data = await Promise.race([
-      CamboAPI.get({ action: 'helen_loan_trash' }),
+      CamboAPI.post({ action: 'helen_loan_list_trash' }),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
     _trashLoans = (data.ok && Array.isArray(data.loans)) ? data.loans : [];
