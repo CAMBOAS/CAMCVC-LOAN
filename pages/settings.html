@@ -360,7 +360,7 @@ function fmtDate(d) {
 }
 
 function onlineBadge(ls) {
-  if (!ls) return '<span style="color:var(--muted);font-size:12px">—</span>';
+  if (!ls) return '<span class="um-ol um-ol-off"><span class="um-ol-dot"></span>Offline</span>';
   var ms  = Date.now() - new Date(ls).getTime();
   var min = Math.floor(ms / 60000);
   var hr  = Math.floor(ms / 3600000);
