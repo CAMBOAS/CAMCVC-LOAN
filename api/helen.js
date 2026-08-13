@@ -95,6 +95,16 @@ async function sendTelegramEvent(evtType, data) {
   } else if (evtType === 'login_fail') {
     const reasons = { wrong:'ឈ្មោះ/PIN ខុស', expired:'គណនីផុតកំណត់' };
     msg = `⚠️ *Failed Login*\n━━━━━━━━━━━━━━━\n👤 Username: ${data.username||'—'}\n🔢 Attempt: ${data.attempt||'—'}\n❌ Reason: ${reasons[data.reason]||data.reason||'—'}\n⏰ ${now}`;
+  } else if (evtType === 'user') {
+    const icons  = { add:'👤', edit:'✏️', delete:'🗑' };
+    const titles = { add:'New User Added', edit:'User Updated', delete:'User Deleted' };
+    const byWord  = data.act === 'add' ? 'Added' : data.act === 'edit' ? 'Updated' : 'Deleted';
+    const actor  = data.actor ? `\n─────────────────\n${byWord} by: ${data.actor}` : '';
+    if (data.act === 'delete') {
+      msg = `${icons.delete} *User Deleted*\n━━━━━━━━━━━━━━━\nUsername: ${data.username||'—'}${actor}\n⏰ ${now}`;
+    } else {
+      msg = `${icons[data.act]||'👤'} *${titles[data.act]||'User Action'}*\n━━━━━━━━━━━━━━━\nUsername: ${data.username||'—'}\nName: ${data.display_name||'—'}\nRole: ${data.role||'—'}\nStatus: ${data.status||'—'}${actor}\n⏰ ${now}`;
+    }
   }
   if (!msg) return;
   try {
@@ -322,6 +332,7 @@ export default async function handler(req, res) {
         if (e.code === 'ER_DUP_ENTRY') return res.json({ ok:false, message:'Username "'+u+'" មានរួចហើយ' });
         throw e;
       }
+      if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'add', username:u, display_name:String(body.display_name||u).trim(), role:String(body.role||'Staff Loan'), status:body.status||'active', actor }); } catch(e) {} }
       return res.json({ ok:true });
     }
 
@@ -344,6 +355,7 @@ export default async function handler(req, res) {
            body.exp_date||null, body.status||'active', u]
         );
       }
+      if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'edit', username:u, display_name:String(body.display_name||u).trim(), role:String(body.role||'Staff Loan'), status:body.status||'active', actor }); } catch(e) {} }
       return res.json({ ok:true });
     }
 
@@ -354,6 +366,7 @@ export default async function handler(req, res) {
       if (!u) return res.json({ ok:false, message:'Username required' });
       if (u === _bu) return res.json({ ok:false, message:'មិនអាចលុប Account ខ្លួនឯងបាន' });
       await db().query('DELETE FROM helen_users WHERE username=?', [u]);
+      if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'delete', username:u, actor }); } catch(e) {} }
       return res.json({ ok:true });
     }
 
@@ -362,13 +375,13 @@ export default async function handler(req, res) {
       const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="notif"');
       const configured = rows.some(r => r.value === '__configured__');
       const enabled = rows.filter(r => r.value !== '__configured__').map(r => r.value);
-      return res.json({ ok:true, configured, enabled: configured ? enabled : ['add','edit','delete'] });
+      return res.json({ ok:true, configured, enabled: configured ? enabled : ['add','edit','delete','login','login_fail','user'] });
     }
 
     /* ── Notif settings save (Admin only) ── */
     if (action === 'helen_notif_save') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
-      const types = Array.isArray(body.enabled) ? body.enabled.filter(t => ['add','edit','delete','login','login_fail'].includes(t)) : [];
+      const types = Array.isArray(body.enabled) ? body.enabled.filter(t => ['add','edit','delete','login','login_fail','user'].includes(t)) : [];
       await db().query('DELETE FROM helen_infor WHERE type="notif"');
       await db().query('INSERT INTO helen_infor (type, value) VALUES ("notif", "__configured__")');
       for (const t of types) {

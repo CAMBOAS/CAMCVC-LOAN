@@ -400,6 +400,17 @@
                 <span class="nt-slider"></span>
               </label>
             </div>
+
+            <div class="nt-item">
+              <div class="nt-item-info">
+                <div class="nt-item-label">User Management</div>
+                <div class="nt-item-desc">Send alert when a user account is added, edited, or deleted</div>
+              </div>
+              <label class="nt-toggle">
+                <input type="checkbox" id="nt_user">
+                <span class="nt-slider"></span>
+              </label>
+            </div>
           </div>
 
           <!-- Footer -->
@@ -747,6 +758,7 @@ async function loadNotif() {
     document.getElementById('nt_delete').checked     = en.includes('delete');
     document.getElementById('nt_login').checked      = en.includes('login');
     document.getElementById('nt_login_fail').checked = en.includes('login_fail');
+    document.getElementById('nt_user').checked       = en.includes('user');
   } catch(e) {}
 }
 
@@ -761,6 +773,7 @@ async function saveNotif() {
   if (document.getElementById('nt_delete').checked)     enabled.push('delete');
   if (document.getElementById('nt_login').checked)      enabled.push('login');
   if (document.getElementById('nt_login_fail').checked) enabled.push('login_fail');
+  if (document.getElementById('nt_user').checked)       enabled.push('user');
   try {
     var r = await CamboAPI.post({ action:'helen_notif_save', enabled });
     if (r.ok) {
