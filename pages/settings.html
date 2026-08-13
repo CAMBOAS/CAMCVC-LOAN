@@ -413,6 +413,24 @@
             </div>
           </div>
 
+          <!-- User Watch card -->
+          <div class="glass-card nt-card">
+            <div class="nt-card-hdr">
+              <div class="nt-card-hdr-row">
+                <div class="nt-card-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+                <div>
+                  <div class="nt-card-title">User Activity Watch</div>
+                  <div class="nt-card-sub">Always alert when selected users perform any loan action (overrides event toggles)</div>
+                </div>
+              </div>
+            </div>
+            <div id="ntWatchList">
+              <div class="nt-item" style="opacity:.5"><div class="nt-item-info"><div class="nt-item-desc">Loading users…</div></div></div>
+            </div>
+          </div>
+
           <!-- Footer -->
           <div class="nt-footer">
             <button class="nt-save-btn" id="ntSaveBtn" onclick="saveNotif()">
@@ -748,17 +766,46 @@ function switchTab(idx, btn) {
 setInterval(function(){ HelenAuth.check(); }, 60000);
 
 /* ── Notifications ── */
+function _esc(s) {
+  return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+}
+
 async function loadNotif() {
   try {
-    var r = await CamboAPI.post({ action:'helen_notif_get' });
-    if (!r.ok) return;
-    var en = r.enabled || [];
-    document.getElementById('nt_add').checked        = en.includes('add');
-    document.getElementById('nt_edit').checked       = en.includes('edit');
-    document.getElementById('nt_delete').checked     = en.includes('delete');
-    document.getElementById('nt_login').checked      = en.includes('login');
-    document.getElementById('nt_login_fail').checked = en.includes('login_fail');
-    document.getElementById('nt_user').checked       = en.includes('user');
+    var results = await Promise.all([
+      CamboAPI.post({ action:'helen_notif_get' }),
+      CamboAPI.post({ action:'helen_user_list' }),
+      CamboAPI.post({ action:'helen_watch_get' })
+    ]);
+    var rNotif = results[0], rUsers = results[1], rWatch = results[2];
+
+    if (rNotif.ok) {
+      var en = rNotif.enabled || [];
+      document.getElementById('nt_add').checked        = en.includes('add');
+      document.getElementById('nt_edit').checked       = en.includes('edit');
+      document.getElementById('nt_delete').checked     = en.includes('delete');
+      document.getElementById('nt_login').checked      = en.includes('login');
+      document.getElementById('nt_login_fail').checked = en.includes('login_fail');
+      document.getElementById('nt_user').checked       = en.includes('user');
+    }
+
+    if (rUsers.ok && rWatch.ok) {
+      var watched = rWatch.watched || [];
+      var html = '';
+      (rUsers.users || []).forEach(function(u) {
+        var chk = watched.includes(u.username) ? ' checked' : '';
+        html += '<div class="nt-item">'
+          + '<div class="nt-item-info">'
+          + '<div class="nt-item-label">' + _esc(u.display_name || u.username) + '</div>'
+          + '<div class="nt-item-desc">' + _esc(u.role) + ' · ' + _esc(u.username) + '</div>'
+          + '</div>'
+          + '<label class="nt-toggle">'
+          + '<input type="checkbox" class="nt-watch-cb" data-user="' + _esc(u.username) + '"' + chk + '>'
+          + '<span class="nt-slider"></span>'
+          + '</label></div>';
+      });
+      document.getElementById('ntWatchList').innerHTML = html || '<div class="nt-item"><div class="nt-item-info" style="opacity:.5"><div class="nt-item-desc">No users found</div></div></div>';
+    }
   } catch(e) {}
 }
 
@@ -774,14 +821,20 @@ async function saveNotif() {
   if (document.getElementById('nt_login').checked)      enabled.push('login');
   if (document.getElementById('nt_login_fail').checked) enabled.push('login_fail');
   if (document.getElementById('nt_user').checked)       enabled.push('user');
+  var watched = [];
+  document.querySelectorAll('.nt-watch-cb:checked').forEach(function(cb){ watched.push(cb.dataset.user); });
   try {
-    var r = await CamboAPI.post({ action:'helen_notif_save', enabled });
-    if (r.ok) {
+    var results = await Promise.all([
+      CamboAPI.post({ action:'helen_notif_save', enabled }),
+      CamboAPI.post({ action:'helen_watch_save', watched })
+    ]);
+    var ok = results[0].ok && results[1].ok;
+    if (ok) {
       st.style.color = 'var(--success,#4ade80)';
       st.textContent = 'Saved';
     } else {
       st.style.color = 'var(--danger,#f87171)';
-      st.textContent = r.message || 'Failed';
+      st.textContent = results[0].message || results[1].message || 'Failed';
     }
   } catch(e) {
     st.style.color = 'var(--danger,#f87171)';

@@ -124,6 +124,12 @@ async function isNotifEnabled(type) {
   return rows.some(r => r.value === type);
 }
 
+async function isWatched(username) {
+  if (!username) return false;
+  const [rows] = await db().query('SELECT 1 FROM helen_infor WHERE type="watch_user" AND value=? LIMIT 1', [username]);
+  return rows.length > 0;
+}
+
 /* ── Auth ── */
 async function validateAuth(u, p) {
   if (!u || !p) return null;
@@ -256,7 +262,7 @@ export default async function handler(req, res) {
          l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'']
       );
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
-      if (await isNotifEnabled('add')) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
+      if ((await isNotifEnabled('add')) || (await isWatched(_bu))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
       return res.json({ ok:true });
     }
 
@@ -277,7 +283,7 @@ export default async function handler(req, res) {
          l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'', key]
       );
       const [updated] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [newKey]);
-      if (await isNotifEnabled('edit')) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }
+      if ((await isNotifEnabled('edit')) || (await isWatched(_bu))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }
       return res.json({ ok:true, message:'Updated' });
     }
 
@@ -287,7 +293,7 @@ export default async function handler(req, res) {
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!rows.length) return res.json({ ok:false, message:'Row not found' });
       await db().query('UPDATE helen_loans SET deleted_at=NOW() WHERE loan_key=?', [key]);
-      if (await isNotifEnabled('delete')) { try { await sendTelegram(rows[0], 'delete', actor); } catch(e) {} }
+      if ((await isNotifEnabled('delete')) || (await isWatched(_bu))) { try { await sendTelegram(rows[0], 'delete', actor); } catch(e) {} }
       return res.json({ ok:true, message:'Deleted' });
     }
 
@@ -386,6 +392,23 @@ export default async function handler(req, res) {
       await db().query('INSERT INTO helen_infor (type, value) VALUES ("notif", "__configured__")');
       for (const t of types) {
         await db().query('INSERT INTO helen_infor (type, value) VALUES ("notif", ?)', [t]);
+      }
+      return res.json({ ok:true });
+    }
+
+    /* ── Watch user list get ── */
+    if (action === 'helen_watch_get') {
+      const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="watch_user"');
+      return res.json({ ok:true, watched: rows.map(r => r.value) });
+    }
+
+    /* ── Watch user list save (Admin only) ── */
+    if (action === 'helen_watch_save') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
+      const usernames = Array.isArray(body.watched) ? body.watched.filter(u => typeof u === 'string' && u.trim()) : [];
+      await db().query('DELETE FROM helen_infor WHERE type="watch_user"');
+      for (const u of usernames) {
+        await db().query('INSERT INTO helen_infor (type, value) VALUES ("watch_user", ?)', [u.trim()]);
       }
       return res.json({ ok:true });
     }
