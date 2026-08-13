@@ -16,6 +16,7 @@ function db() {
     waitForConnections: true,
     connectionLimit: 5,
     ssl: { rejectUnauthorized: false },
+    dateStrings: true,
   });
   return pool;
 }
