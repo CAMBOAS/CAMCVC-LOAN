@@ -138,6 +138,7 @@ export default async function handler(req, res) {
       const v = await validateAuth(String(body.username||'').trim(), String(body.pin||'').trim());
       if (!v)          return res.json({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
       if (v.expired)   return res.json({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
+      db().query('UPDATE helen_users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
       return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate });
     }
 
@@ -149,6 +150,7 @@ export default async function handler(req, res) {
     const _bv = await validateAuth(_bu, _bp);
     if (!_bv || _bv.expired) return res.json({ ok:false, message:'auth_required', code:401 });
     const actor = _bv.name || '';
+    db().query('UPDATE helen_users SET last_seen=NOW() WHERE username=?', [_bu]).catch(()=>{});
 
     /* ── All data (loans + infor) ── */
     if (action === 'helen_all') {
@@ -265,7 +267,7 @@ export default async function handler(req, res) {
     if (action === 'helen_user_list') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const [users] = await db().query(
-        'SELECT username, role, display_name, exp_date, status FROM helen_users ORDER BY id'
+        'SELECT username, role, display_name, exp_date, status, last_seen FROM helen_users ORDER BY id'
       );
       return res.json({ ok:true, users });
     }

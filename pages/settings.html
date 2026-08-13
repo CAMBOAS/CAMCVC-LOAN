@@ -134,6 +134,15 @@
     .st-denied.show { display:flex }
     .st-denied-icon { width:64px; height:64px; border-radius:20px; background:rgba(239,68,68,.12); display:flex; align-items:center; justify-content:center; margin:0 auto }
 
+    /* ── Online / last-seen badge ── */
+    .um-ol { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; white-space:nowrap }
+    .um-ol-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0 }
+    .um-ol-on  { color:#10b981 }
+    .um-ol-on  .um-ol-dot { background:#10b981; box-shadow:0 0 6px rgba(16,185,129,.7); animation:olPulse 1.6s ease-in-out infinite }
+    .um-ol-off { color:#ef4444 }
+    .um-ol-off .um-ol-dot { background:#ef4444 }
+    @keyframes olPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+
     /* ── Empty state ── */
     .um-empty { text-align:center; padding:48px 24px; color:var(--muted); font-size:13px }
 
@@ -209,11 +218,12 @@
                   <th>PIN</th>
                   <th>ផុតកំណត់</th>
                   <th>ស្ថានភាព</th>
+                  <th>Online</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="umTbody">
-                <tr><td colspan="8" class="um-empty">កំពុងផ្ទុក...</td></tr>
+                <tr><td colspan="9" class="um-empty">កំពុងផ្ទុក...</td></tr>
               </tbody>
             </table>
           </div>
@@ -349,6 +359,17 @@ function fmtDate(d) {
   return p[2]+'/'+p[1]+'/'+p[0];
 }
 
+function onlineBadge(ls) {
+  if (!ls) return '<span style="color:var(--muted);font-size:12px">—</span>';
+  var ms  = Date.now() - new Date(ls).getTime();
+  var min = Math.floor(ms / 60000);
+  var hr  = Math.floor(ms / 3600000);
+  var day = Math.floor(ms / 86400000);
+  if (min < 5) return '<span class="um-ol um-ol-on"><span class="um-ol-dot"></span>Online</span>';
+  var ago = min < 60 ? min + ' នាទីមុន' : hr < 24 ? hr + ' ម៉ោងមុន' : day + ' ថ្ងៃមុន';
+  return '<span class="um-ol um-ol-off"><span class="um-ol-dot"></span>' + ago + '</span>';
+}
+
 function expBadge(d) {
   if (!d) return '<span style="color:var(--muted);font-size:12px">—</span>';
   var ms   = new Date(String(d).substring(0,10)+'T23:59:59').getTime();
@@ -363,7 +384,7 @@ function expBadge(d) {
 function renderTable() {
   var tbody = document.getElementById('umTbody');
   if (!_users.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="um-empty">មិនមាន User ទេ</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="um-empty">មិនមាន User ទេ</td></tr>';
     return;
   }
   tbody.innerHTML = _users.map(function(u, i) {
@@ -394,6 +415,7 @@ function renderTable() {
       + '<td style="letter-spacing:.12em;font-size:12px;color:var(--muted)">••••</td>'
       + '<td>'+expBadge(u.exp_date)+'</td>'
       + '<td><span class="um-status '+(u.status==='active'?'um-status-active':'um-status-inactive')+'"><span class="um-status-dot"></span>'+esc(u.status||'inactive')+'</span></td>'
+      + '<td>'+onlineBadge(u.last_seen)+'</td>'
       + actHtml
       + '</tr>';
   }).join('');
