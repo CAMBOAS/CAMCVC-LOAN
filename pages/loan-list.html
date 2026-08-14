@@ -2635,7 +2635,9 @@ function renderSocialLinks(prefix) {
     +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">FB Name</div>'
     +'<input class="lr-add-input" id="'+prefix+'_sl_name_'+i+'" placeholder="Facebook name..." value="'+esc(sl.name||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'name\',this.value)"></div>'
     +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">URL</div>'
-    +'<input class="lr-add-input" id="'+prefix+'_sl_url_'+i+'" placeholder="https://..." value="'+esc(sl.url||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'url\',this.value)"></div>'
+    +'<div class="lr-fbid-wrap"><input class="lr-add-input" id="'+prefix+'_sl_url_'+i+'" placeholder="https://..." value="'+esc(sl.url||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'url\',this.value)" style="flex:1">'
+    +'<button type="button" class="lr-copy-btn" onclick="openSLURL(\''+prefix+'\','+i+')" title="Open URL">'+_svgLink+'</button>'
+    +'</div></div>'
     +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">Social Media</div>'
     +'<select class="lr-add-input" id="'+prefix+'_sl_platform_'+i+'" onchange="updateSLFBID(\''+prefix+'\','+i+')">'+_slPlatformOpts(sl.platform)+'</select></div>'
     +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">ID</div>'
@@ -2664,6 +2666,7 @@ function updateSLFBID(prefix, i) {
 
 function copySLFBID(prefix, i) { copyFBID(prefix+'_sl_fbid_'+i); }
 function openSLFBID(prefix, i) { openFBID(prefix+'_sl_fbid_'+i); }
+function openSLURL(prefix, i)  { openFBID(prefix+'_sl_url_'+i); }
 
 function _slUpdate(prefix, i, key, val) {
   var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
