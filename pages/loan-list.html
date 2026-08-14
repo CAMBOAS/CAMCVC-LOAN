@@ -300,6 +300,13 @@
     .lr-tbl-footer { display:flex; align-items:center; justify-content:space-between; padding:10px 18px 14px; font-size:12px; color:var(--muted); background:rgba(39,39,42,.97); margin:0 -18px; border-top:1px solid rgba(148,163,200,.08) }
     [data-theme="light"] .lr-tbl-footer { background:var(--card,rgba(255,255,255,.92)) }
 
+    /* Paid toggle */
+    .lr-paid-btn { border:none; background:rgba(148,163,184,.1); color:var(--muted); border-radius:6px; width:28px; height:22px; font-size:13px; font-weight:700; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
+    .lr-paid-btn:hover { background:rgba(34,197,94,.15); color:#4ade80 }
+    .lr-paid-btn.lr-paid-yes { background:rgba(34,197,94,.15); color:#4ade80 }
+    .lr-paid-btn.lr-paid-yes:hover { background:rgba(239,68,68,.12); color:#f87171 }
+    [data-theme="light"] .lr-paid-btn.lr-paid-yes { background:rgba(34,197,94,.12); color:#15803d }
+
     /* Tags */
     .tag { display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; border:none; background:none; white-space:nowrap; letter-spacing:.04em; text-align:center; padding:0 }
     .tag-m   { color:#22d3ee }
@@ -593,27 +600,27 @@
         background-attachment:local,local,scroll,scroll;
       }
 
-      /* ── Keep: # Name NID Group Status; hide the rest ── */
+      /* ── Keep: # Name NID Group Status Paid; hide the rest ── */
       .lr-tbl thead th:nth-child(4),
       .lr-tbl thead th:nth-child(5),
       .lr-tbl thead th:nth-child(6),
       .lr-tbl thead th:nth-child(8),
-      .lr-tbl thead th:nth-child(10),
       .lr-tbl thead th:nth-child(11),
       .lr-tbl thead th:nth-child(12),
       .lr-tbl thead th:nth-child(13),
       .lr-tbl thead th:nth-child(14),
       .lr-tbl thead th:nth-child(15),
+      .lr-tbl thead th:nth-child(16),
       .lr-tbl tbody td:nth-child(4),
       .lr-tbl tbody td:nth-child(5),
       .lr-tbl tbody td:nth-child(6),
       .lr-tbl tbody td:nth-child(8),
-      .lr-tbl tbody td:nth-child(10),
       .lr-tbl tbody td:nth-child(11),
       .lr-tbl tbody td:nth-child(12),
       .lr-tbl tbody td:nth-child(13),
       .lr-tbl tbody td:nth-child(14),
-      .lr-tbl tbody td:nth-child(15) { display:none }
+      .lr-tbl tbody td:nth-child(15),
+      .lr-tbl tbody td:nth-child(16) { display:none }
       /* Let table size to content so scroll works */
       .lr-tbl { min-width:0; width:100% }
 
@@ -800,6 +807,7 @@
                   <th onclick="sortTable('Groups')">Group</th>
                   <th onclick="sortTable('Money')" style="text-align:right">Amount ($)</th>
                   <th onclick="sortTable('Status')">Status</th>
+                  <th onclick="sortTable('Paid')" style="text-align:center">Paid</th>
                   <th onclick="sortTable('_date')">Date</th>
                   <th>Note</th>
                   <th onclick="sortTable('FBName')">FB Name</th>
@@ -1066,7 +1074,7 @@ async function loadData(opts) {
   if (_refreshBtn) _refreshBtn.classList.add('spinning');
 
   document.getElementById('lrTbody').innerHTML =
-    '<tr><td colspan="'+ (_trashMode ? 16 : 15) +'" class="lr-loading">កំពុងផ្ទុកទិន្នន័យ...</td></tr>';
+    '<tr><td colspan="'+ (_trashMode ? 17 : 16) +'" class="lr-loading">កំពុងផ្ទុកទិន្នន័យ...</td></tr>';
 
   var fetchedData = null;
   for (var attempt = 0; attempt < 2; attempt++) {
@@ -1220,7 +1228,7 @@ function sortTable(col) {
   else { _sortCol = col; _sortAsc = true; }
   document.querySelectorAll('.lr-tbl thead th').forEach(function(th){ th.className=''; });
   var ths = document.querySelectorAll('.lr-tbl thead th');
-  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','_date','_note','FBName','_url','ID','FBID'];
+  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','Paid','_date','_note','FBName','_url','ID','FBID'];
   var idx = colMap.indexOf(col);
   if (idx >= 0 && ths[idx]) ths[idx].className = _sortAsc ? 'sort-asc' : 'sort-desc';
   renderTable();
@@ -1228,7 +1236,7 @@ function sortTable(col) {
 
 function sortAndRender() {
   var ths = document.querySelectorAll('.lr-tbl thead th');
-  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','_date','_note','FBName','_url','ID','FBID'];
+  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','Paid','_date','_note','FBName','_url','ID','FBID'];
   var idx = colMap.indexOf(_sortCol);
   if (idx >= 0 && ths[idx]) ths[idx].className = _sortAsc ? 'sort-asc' : 'sort-desc';
   renderTable();
@@ -1246,7 +1254,7 @@ function renderTable() {
   });
 
   if (!arr.length) {
-    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="'+ (_trashMode ? 16 : 15) +'" class="lr-loading">មិនមានទិន្នន័យ</td></tr>';
+    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="'+ (_trashMode ? 17 : 16) +'" class="lr-loading">មិនមានទិន្នន័យ</td></tr>';
     document.getElementById('lrFootInfo').textContent = '0 borrowers';
     document.getElementById('lrFootCount').textContent = '';
     return;
@@ -1271,6 +1279,7 @@ function renderTable() {
       + '<td style="font-size:12px">'+esc(l.Groups||'—')+'</td>'
       + '<td style="text-align:right">'+moneyHtml+'</td>'
       + '<td>'+statusTag(l.Status)+'</td>'
+      + '<td style="text-align:center"><button class="lr-paid-btn'+(l.Paid?' lr-paid-yes':'')+'" data-dt="'+esc(l.DateTime||'')+'" title="'+(l.Paid?'Paid — click to unmark':'Not paid — click to mark paid')+'">'+(l.Paid?'✓':'—')+'</button></td>'
       + '<td style="font-size:11px;color:var(--muted)">'+fmtDate(l.DateTime)+'</td>'
       + '<td style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(l.Note||'')+'">'+esc(l.Note||'—')+'</td>'
       + '<td style="font-size:11px;color:var(--text);white-space:nowrap">'+esc(l.FBName||'—')+'</td>'
@@ -2238,7 +2247,7 @@ async function toggleTrashMode() {
   _trashMode = true;
   document.getElementById('lrTrashBanner').style.display = 'flex';
   document.getElementById('lrActionTh').style.display = '';
-  document.getElementById('lrTbody').innerHTML = '<tr><td colspan="16" class="lr-loading">កំពុងផ្ទុក Trash...</td></tr>';
+  document.getElementById('lrTbody').innerHTML = '<tr><td colspan="17" class="lr-loading">កំពុងផ្ទុក Trash...</td></tr>';
   try {
     var data = await Promise.race([
       CamboAPI.post({ action: 'helen_loan_list_trash' }),
@@ -2248,7 +2257,7 @@ async function toggleTrashMode() {
     _trashLoans.forEach(function(l,i){ l._idx = i+1; });
     applyFilter();
   } catch(e) {
-    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="16" class="lr-loading">❌ មិនអាចភ្ជាប់ Server</td></tr>';
+    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="17" class="lr-loading">❌ មិនអាចភ្ជាប់ Server</td></tr>';
   }
 }
 
@@ -3253,7 +3262,24 @@ document.getElementById('lrKpiRow').addEventListener('click', function(e) {
 
 /* lrStatusCard / lrGroupBars / lrMonthList removed — listeners skipped */
 
+async function togglePaid(btn, dt) {
+  btn.disabled = true;
+  var res = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:dt });
+  if (res && res.ok) {
+    var loan = _allLoans.find(function(x){ return x.DateTime===dt; });
+    if (loan) loan.Paid = res.paid;
+    btn.classList.toggle('lr-paid-yes', !!res.paid);
+    btn.textContent = res.paid ? '✓' : '—';
+    btn.title = res.paid ? 'Paid — click to unmark' : 'Not paid — click to mark paid';
+  } else {
+    toast('❌ ' + ((res&&res.message)||'Error'), true);
+  }
+  btn.disabled = false;
+}
+
 document.getElementById('lrTbody').addEventListener('click', function(e) {
+  var paidBtn = e.target.closest('.lr-paid-btn');
+  if (paidBtn) { togglePaid(paidBtn, paidBtn.getAttribute('data-dt')); return; }
   var nameEl = e.target.closest('.lr-name-link');
   if (nameEl) {
     var dt = nameEl.getAttribute('data-dt');
