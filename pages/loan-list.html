@@ -845,14 +845,23 @@ var _sortAsc    = true;
 
 /* ── Helpers ── */
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+var _smDomains = {
+  'Facebook':'facebook.com/','Instagram':'instagram.com/','Telegram':'t.me/',
+  'TikTok':'tiktok.com/','YouTube':'youtube.com/','Twitter / X':'x.com/',
+  'Line':'line.me/','WhatsApp':'wa.me/','Website':'','Phone':'','Other':''
+};
+function _smToUrl(platform, id) {
+  if (!id) return '';
+  var domain = _smDomains[platform];
+  if (domain === undefined) return platform + id;
+  return domain + id;
+}
 function updateFBID(prefix) {
   var sm   = document.getElementById(prefix+'_FacebookCom');
   var idEl = document.getElementById(prefix+'_ID');
   var fb   = document.getElementById(prefix+'_FBID');
   if (!sm || !idEl || !fb) return;
-  var smVal = sm.value.trim();
-  var idVal = idEl.value.trim();
-  fb.value  = idVal ? smVal + idVal : '';
+  fb.value = _smToUrl(sm.value.trim(), idEl.value.trim());
 }
 var _svgCopy  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 var _svgCheck = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -2511,7 +2520,7 @@ function updateSLFBID(prefix, i) {
   if (!platformEl || !idEl || !fbidEl) return;
   var smVal = platformEl.value.trim();
   var idVal = idEl.value.trim();
-  var fbid  = idVal ? smVal + idVal : '';
+  var fbid  = _smToUrl(smVal, idVal);
   fbidEl.value = fbid;
   var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
   if (arr[i]) { arr[i].platform = smVal; arr[i].id = idVal; arr[i].fbid = fbid; }
