@@ -41,6 +41,14 @@ async function ensurePaidCol() {
   _paidColReady = true;
 }
 
+/* ── One-time migration: add photo_url column to helen_users if absent ── */
+let _userPhotoColReady = false;
+async function ensureUserPhotoCol() {
+  if (_userPhotoColReady) return;
+  try { await db().query('ALTER TABLE helen_users ADD COLUMN photo_url VARCHAR(500) DEFAULT NULL'); } catch(e) {}
+  _userPhotoColReady = true;
+}
+
 /* ── Map DB row → frontend loan object ── */
 function rowToLoan(r) {
   return {
@@ -433,6 +441,54 @@ export default async function handler(req, res) {
       await db().query('DELETE FROM helen_users WHERE username=?', [u]);
       if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'delete', username:u, actor }); } catch(e) {} }
       return res.json({ ok:true });
+    }
+
+    /* ── Self update profile (any authenticated user) ── */
+    if (action === 'helen_user_self_update') {
+      const type = String(body.type || '').trim();
+
+      if (type === 'photo') {
+        await ensureUserPhotoCol();
+        const photoUrl = String(body.photo_url || '').trim();
+        await db().query('UPDATE helen_users SET photo_url=? WHERE username=?', [photoUrl || null, _bu]);
+        return res.json({ ok: true });
+      }
+
+      if (type === 'profile' || type === 'pin') {
+        const currentPin = String(body.current_pin || '').trim();
+        if (!currentPin) return res.json({ ok: false, message: 'PIN បច្ចុប្បន្នត្រូវការ' });
+        const [pinRow] = await db().query(
+          'SELECT pin FROM helen_users WHERE username=? AND status="active"', [_bu]
+        );
+        if (!pinRow.length || pinRow[0].pin !== currentPin) return res.json({ ok: false, message: 'PIN មិនត្រូវ' });
+
+        if (type === 'pin') {
+          const newPin = String(body.new_pin || '').trim();
+          if (!newPin) return res.json({ ok: false, message: 'PIN ថ្មីត្រូវការ' });
+          await db().query('UPDATE helen_users SET pin=? WHERE username=?', [newPin, _bu]);
+          return res.json({ ok: true });
+        }
+
+        if (type === 'profile') {
+          const displayName = String(body.display_name || '').trim();
+          const newUsername = String(body.new_username || '').trim();
+          if (!displayName && (!newUsername || newUsername === _bu))
+            return res.json({ ok: false, message: 'គ្មានព័ត៌មានត្រូវធ្វើបច្ចុប្បន្ន' });
+          if (newUsername && newUsername !== _bu) {
+            const [ex] = await db().query('SELECT 1 FROM helen_users WHERE username=?', [newUsername]);
+            if (ex.length) return res.json({ ok: false, message: 'Username "'+newUsername+'" មានរួចហើយ' });
+            await db().query(
+              'UPDATE helen_users SET username=?, display_name=? WHERE username=?',
+              [newUsername, displayName || _bv.name || _bu, _bu]
+            );
+            return res.json({ ok: true, username: newUsername, display_name: displayName || _bv.name || _bu });
+          }
+          await db().query('UPDATE helen_users SET display_name=? WHERE username=?', [displayName, _bu]);
+          return res.json({ ok: true, username: _bu, display_name: displayName });
+        }
+      }
+
+      return res.json({ ok: false, message: 'Invalid type' });
     }
 
     /* ── Notif settings get ── */

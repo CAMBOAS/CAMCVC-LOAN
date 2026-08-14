@@ -116,10 +116,14 @@
             else if (_d <= 3)_exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:4px">'+_d+' ថ្ងៃ</span>';
             else             _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(16,185,129,.13);color:#10b981;margin-left:4px">'+_d+' ថ្ងៃ</span>';
           }
-          var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowLogoutModal&&window._hlShowLogoutModal()" title="ចាកចេញ"' : '';
+          var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowProfileModal&&window._hlShowProfileModal()" title="ព័ត៌មានគណនី"' : '';
+          var _photo = localStorage.getItem('helen_user_photo') || '';
+          var _avatarInner = _photo
+            ? '<img src="'+_photo+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+            : '<img src="'+base+'images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display=\'none\';this.parentNode.textContent=\'HL\'">';
           return '<div class="sb-user-card" id="sbUserRow"'+_onclick+'>'
             +'<div class="sb-user-avatar sb-user-avatar-img" id="sbUserAvatar">'
-            +'<img src="'+base+'images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display=\'none\';this.parentNode.textContent=\'HL\'">'
+            +_avatarInner
             +'</div>'
             +'<div class="sb-user-info">'
             +'<div class="sb-user-name" id="sbUserName">'+_name+'</div>'
@@ -195,6 +199,230 @@
     };
   }
   window._hlShowLogoutModal = showLogoutModal;
+
+  function _updateSidebarAvatar(url) {
+    var el = document.getElementById('sbUserAvatar');
+    if (!el) return;
+    if (url) {
+      el.innerHTML = '<img src="'+url+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    } else {
+      var base = getBase();
+      el.innerHTML = '<img src="'+base+'images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display=\'none\';this.parentNode.textContent=\'HL\'">';
+    }
+  }
+
+  function showProfileModal() {
+    var existing = document.getElementById('hlProfileModal');
+    if (existing) existing.remove();
+
+    var _a = null;
+    try { _a = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e){}
+    if (!_a) return;
+
+    var isDark  = document.documentElement.getAttribute('data-theme') !== 'light';
+    var cardBg  = isDark ? 'rgba(15,23,42,.97)' : 'rgba(255,255,255,.98)';
+    var textPri = isDark ? '#f1f5f9' : '#0f172a';
+    var textSec = isDark ? '#94a3b8' : '#64748b';
+    var inputBg = isDark ? 'rgba(30,41,59,.8)' : 'rgba(248,250,252,1)';
+    var inputBdr = isDark ? 'rgba(148,163,184,.2)' : 'rgba(203,213,225,1)';
+    var divBdr  = isDark ? 'rgba(148,163,184,.12)' : 'rgba(203,213,225,.6)';
+
+    var photoUrl = localStorage.getItem('helen_user_photo') || '';
+    var avatarInner = photoUrl
+      ? '<img src="'+photoUrl+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      : '<span style="font-size:26px;font-weight:800;color:#a78bfa">'+(_a.name||_a.u||'HL').charAt(0).toUpperCase()+'</span>';
+
+    var m = document.createElement('div');
+    m.id = 'hlProfileModal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:hlFadeIn .15s ease;padding:20px;box-sizing:border-box';
+
+    m.innerHTML = '<style>@keyframes hlFadeIn{from{opacity:0}to{opacity:1}}@keyframes hlSlideUp{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes hlSpin{to{transform:rotate(360deg)}}</style>'
+      + '<div id="hlProfileCard" style="background:'+cardBg+';border:1px solid rgba(124,92,255,.2);border-radius:22px;padding:28px 24px 24px;width:100%;max-width:360px;box-shadow:0 24px 64px rgba(0,0,0,.45);animation:hlSlideUp .18s ease;position:relative;max-height:calc(100vh - 40px);overflow-y:auto;box-sizing:border-box">'
+
+      /* close */
+      + '<button id="hlProfClose" style="position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;border:1px solid '+inputBdr+';background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:'+textSec+';font-size:16px;line-height:1;font-family:inherit">✕</button>'
+
+      /* title */
+      + '<div style="font-size:15px;font-weight:800;color:'+textPri+';margin-bottom:20px;text-align:center">គណនីរបស់ខ្ញុំ</div>'
+
+      /* avatar */
+      + '<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:22px">'
+      + '<div id="hlProfAvatarWrap" style="position:relative;width:78px;height:78px;cursor:pointer" title="ផ្លាស់ប្ដូររូប">'
+      + '<div id="hlProfAvatarCircle" style="width:78px;height:78px;border-radius:50%;background:rgba(124,92,255,.12);border:2.5px solid rgba(124,92,255,.35);display:flex;align-items:center;justify-content:center;overflow:hidden">'
+      + avatarInner
+      + '</div>'
+      + '<div style="position:absolute;bottom:1px;right:1px;width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(124,58,237,.5)">'
+      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+      + '</div>'
+      + '</div>'
+      + '<input type="file" id="hlProfFileInput" accept="image/*" style="display:none">'
+      + '<div id="hlProfPhotoStatus" style="font-size:11px;color:'+textSec+';margin-top:7px;min-height:16px;text-align:center"></div>'
+      + '</div>'
+
+      /* display name */
+      + '<div style="margin-bottom:13px">'
+      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">ឈ្មោះបង្ហាញ</label>'
+      + '<input id="hlProfDisplayName" type="text" value="'+(_a.name||'').replace(/[<>"&]/g,function(c){return{'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c];})+'" placeholder="ឈ្មោះបង្ហាញ" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
+      + '</div>'
+
+      /* username */
+      + '<div style="margin-bottom:18px">'
+      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">ឈ្មោះចូលប្រព័ន្ធ</label>'
+      + '<input id="hlProfUsername" type="text" value="'+(_a.u||'').replace(/[<>"&]/g,function(c){return{'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c];})+'" placeholder="Username" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
+      + '</div>'
+
+      /* divider */
+      + '<div style="border-top:1px solid '+divBdr+';margin:0 0 16px"></div>'
+
+      /* new pin */
+      + '<div style="margin-bottom:18px">'
+      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">PIN ថ្មី <span style="font-weight:400;opacity:.65">(ស្រេចចិត្ត)</span></label>'
+      + '<input id="hlProfNewPin" type="password" placeholder="PIN ថ្មី..." autocomplete="new-password" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
+      + '</div>'
+
+      /* divider */
+      + '<div style="border-top:1px solid '+divBdr+';margin:0 0 16px"></div>'
+
+      /* current pin */
+      + '<div style="margin-bottom:18px">'
+      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">PIN បច្ចុប្បន្ន <span style="color:#ef4444">*</span></label>'
+      + '<input id="hlProfCurrentPin" type="password" placeholder="PIN បច្ចុប្បន្ន..." autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
+      + '<div style="font-size:11px;color:'+textSec+';margin-top:4px">ត្រូវការ PIN ដើម្បីកែប្រែឈ្មោះ ឬ PIN</div>'
+      + '</div>'
+
+      /* error */
+      + '<div id="hlProfError" style="font-size:12.5px;color:#ef4444;margin-bottom:12px;min-height:18px;text-align:center"></div>'
+
+      /* save */
+      + '<button id="hlProfSave" style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(124,58,237,.35)">រក្សាទុក</button>'
+      + '</div>';
+
+    document.body.appendChild(m);
+
+    document.getElementById('hlProfClose').onclick = function() { m.remove(); };
+    m.addEventListener('click', function(e) { if (e.target === m) m.remove(); });
+
+    /* Avatar click → file picker → upload */
+    document.getElementById('hlProfAvatarWrap').onclick = function() {
+      document.getElementById('hlProfFileInput').click();
+    };
+
+    document.getElementById('hlProfFileInput').addEventListener('change', function(e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      var statusEl = document.getElementById('hlProfPhotoStatus');
+      statusEl.style.color = textSec;
+      statusEl.textContent = 'កំពុងបង្ហោះ...';
+      var reader = new FileReader();
+      reader.onload = async function(ev) {
+        try {
+          var api = window.CamboAPI;
+          if (!api) { statusEl.textContent = 'CamboAPI not found'; return; }
+          var auth = null;
+          try { auth = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(ee){}
+          var r = await api.post({ action:'helen_upload_photo', auth:auth, data: ev.target.result });
+          if (!r || !r.ok) { statusEl.textContent = 'បរាជ័យ: '+(r&&r.message||'Error'); return; }
+          var r2 = await api.post({ action:'helen_user_self_update', auth:auth, type:'photo', photo_url: r.url });
+          if (!r2 || !r2.ok) { statusEl.textContent = 'បរាជ័យ: '+(r2&&r2.message||'Error'); return; }
+          localStorage.setItem('helen_user_photo', r.url);
+          var circle = document.getElementById('hlProfAvatarCircle');
+          if (circle) circle.innerHTML = '<img src="'+r.url+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+          _updateSidebarAvatar(r.url);
+          statusEl.style.color = '#22c55e';
+          statusEl.textContent = 'រូបបានផ្លាស់ប្ដូររួច!';
+          setTimeout(function() { statusEl.textContent = ''; }, 2500);
+        } catch(err) {
+          statusEl.textContent = 'Error: ' + err.message;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    /* Save button */
+    document.getElementById('hlProfSave').onclick = async function() {
+      var btn = this;
+      var errEl = document.getElementById('hlProfError');
+      errEl.textContent = '';
+
+      var displayName  = document.getElementById('hlProfDisplayName').value.trim();
+      var newUsername  = document.getElementById('hlProfUsername').value.trim();
+      var newPin       = document.getElementById('hlProfNewPin').value.trim();
+      var currentPin   = document.getElementById('hlProfCurrentPin').value.trim();
+
+      var origName = _a.name || '';
+      var origUser = _a.u   || '';
+
+      var nameChanged = displayName && displayName !== origName;
+      var userChanged = newUsername  && newUsername  !== origUser;
+      var pinChanged  = !!newPin;
+
+      if (!nameChanged && !userChanged && !pinChanged) {
+        errEl.textContent = 'មិនមានព័ត៌មានត្រូវផ្លាស់ប្ដូរ';
+        return;
+      }
+      if (!currentPin) {
+        errEl.textContent = 'សូមបញ្ចូល PIN បច្ចុប្បន្ន';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:hlSpin .65s linear infinite;vertical-align:middle;margin-top:-2px"></span>';
+
+      var api = window.CamboAPI;
+      if (!api) { errEl.textContent = 'CamboAPI not found'; btn.disabled=false; btn.textContent='រក្សាទុក'; return; }
+
+      function freshAuth() {
+        try { return JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(ee) { return null; }
+      }
+
+      try {
+        if (nameChanged || userChanged) {
+          var r = await api.post({
+            action:'helen_user_self_update', auth: freshAuth(),
+            type:'profile',
+            display_name: nameChanged ? displayName : origName,
+            new_username: userChanged ? newUsername : '',
+            current_pin: currentPin
+          });
+          if (!r || !r.ok) {
+            errEl.textContent = (r&&r.message) || 'Save failed';
+            btn.disabled = false; btn.textContent = 'រក្សាទុក'; return;
+          }
+          var auth2 = freshAuth() || {};
+          if (nameChanged) auth2.name = r.display_name || displayName;
+          if (userChanged)  auth2.u   = r.username     || newUsername;
+          localStorage.setItem('helenAuth', JSON.stringify(auth2));
+          var nameEl = document.getElementById('sbUserName');
+          if (nameEl) nameEl.textContent = auth2.name || auth2.u;
+        }
+
+        if (pinChanged) {
+          var r2 = await api.post({
+            action:'helen_user_self_update', auth: freshAuth(),
+            type:'pin',
+            current_pin: currentPin,
+            new_pin: newPin
+          });
+          if (!r2 || !r2.ok) {
+            errEl.textContent = (r2&&r2.message) || 'PIN change failed';
+            btn.disabled = false; btn.textContent = 'រក្សាទុក'; return;
+          }
+          var auth3 = freshAuth() || {};
+          auth3.p = newPin;
+          localStorage.setItem('helenAuth', JSON.stringify(auth3));
+        }
+
+        btn.style.cssText = 'width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:default';
+        btn.textContent = '✓ រួចរាល់';
+        setTimeout(function() { m.remove(); }, 900);
+
+      } catch(err) {
+        errEl.textContent = 'Error: ' + err.message;
+        btn.disabled = false; btn.textContent = 'រក្សាទុក';
+      }
+    };
+  }
+  window._hlShowProfileModal = showProfileModal;
 
   function initSidebarToggle(sidebar) {
     var btn = document.getElementById('sbToggleBtn');
