@@ -342,6 +342,20 @@
       backdrop-filter:blur(12px); z-index:9999; transform:translateY(20px); opacity:0; transition:.3s; pointer-events:none }
     .toast.show { transform:translateY(0); opacity:1 }
     .toast.err  { background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.3); color:#fca5a5 }
+    /* Save button spinner */
+    .lr-btn-spinner { display:inline-block; width:16px; height:16px; border:2.5px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:lr-spin .65s linear infinite; flex-shrink:0 }
+    /* Save success alert */
+    @keyframes lr-check-pop { 0%{transform:scale(0)} 65%{transform:scale(1.22)} 100%{transform:scale(1)} }
+    .lr-save-alert { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.82); opacity:0; z-index:10001; pointer-events:none;
+      transition:opacity .2s, transform .28s cubic-bezier(.34,1.56,.64,1);
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+      background:var(--card); border:1px solid rgba(34,197,94,.28); border-radius:22px;
+      padding:30px 44px; box-shadow:0 20px 56px rgba(0,0,0,.5); min-width:190px }
+    .lr-save-alert.show { transform:translate(-50%,-50%) scale(1); opacity:1 }
+    .lr-save-alert-icon { width:54px; height:54px; border-radius:50%; background:rgba(34,197,94,.12); border:2px solid rgba(34,197,94,.35); display:flex; align-items:center; justify-content:center }
+    .lr-save-alert.show .lr-save-alert-icon { animation:lr-check-pop .32s cubic-bezier(.34,1.56,.64,1) both }
+    .lr-save-alert-text { font-size:14px; font-weight:800; color:var(--text); letter-spacing:.01em; white-space:nowrap }
+    [data-theme="light"] .lr-save-alert { background:#fff; box-shadow:0 20px 56px rgba(0,0,0,.15) }
 
     /* Edit Modal */
     .lr-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px }
@@ -858,6 +872,10 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="lr-save-alert" id="lrSaveAlert">
+  <div class="lr-save-alert-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+  <div class="lr-save-alert-text">Saved Successfully!</div>
+</div>
 
 <script src="../assets/js/layout.js?v=1"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
@@ -965,6 +983,14 @@ function toast(msg, err) {
   el.textContent=msg; el.className='toast'+(err?' err':'');
   void el.offsetWidth; el.classList.add('show');
   setTimeout(function(){ el.classList.remove('show'); }, 3200);
+}
+function showSaveAlert() {
+  var el = document.getElementById('lrSaveAlert');
+  if (!el) return;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 1600);
 }
 
 /* ── Status tag ── */
@@ -2947,7 +2973,7 @@ async function saveAdd() {
   if (!status)   { toast('⚠️ Please select a Status', true); document.getElementById('af_Status').focus(); return; }
 
   var btn = document.getElementById('lrAddBtn');
-  btn.disabled = true; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:lr-spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Saving...';
+  btn.disabled = true; btn.innerHTML = '<span class="lr-btn-spinner"></span>';
 
   var dateVal = document.getElementById('af_DateTime').value.trim();
   var customDT = dateVal ? (parseDMY(dateVal) || dateVal) + 'T00:00:00' : '';
@@ -2969,7 +2995,6 @@ async function saveAdd() {
   /* Upload profile photo */
   var profileUrl = '';
   if (_profilePhoto) {
-    btn.innerHTML = '<span style="opacity:.8">Uploading profile photo…</span>';
     try {
       var pur = await CamboAPI.post({ action:'helen_upload_photo', data: _profilePhoto.b64 });
       if (pur.ok && pur.url) profileUrl = pur.url;
@@ -2982,7 +3007,6 @@ async function saveAdd() {
   if (_addPhotos.length > 0) {
     for (var pi = 0; pi < _addPhotos.length; pi++) {
       var pItem = _addPhotos[pi];
-      btn.innerHTML = '<span style="opacity:.8">Uploading ' + (pItem.isVideo ? 'video' : 'photo') + ' ' + (pi+1) + '/' + _addPhotos.length + '…</span>';
       try {
         if (pItem.isVideo) {
           var vUrl = await uploadDirectToCloudinary(pItem.file);
@@ -3003,8 +3027,8 @@ async function saveAdd() {
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 30000); })
     ]);
     if (res && res.ok) {
-      toast('✅ Added successfully');
       closeAddModalForce();
+      showSaveAlert();
       invalidateLocalCache_();
       /* Optimistic update — no reload needed */
       var newEntry = Object.assign({}, loan, {
@@ -3020,8 +3044,8 @@ async function saveAdd() {
     }
   } catch(e) {
     if (location.protocol === 'file:' && e.message !== 'timeout') {
-      toast('✅ Added successfully');
       closeAddModalForce();
+      showSaveAlert();
       invalidateLocalCache_();
       var newEntry = Object.assign({}, loan, {
         DateTime: loan.DateTime || today_ymd() + 'T00:00:00',
@@ -3158,7 +3182,7 @@ async function saveEdit() {
   if (!_editLoan) return;
   var btn = document.getElementById('lrSaveBtn');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving…';
+  btn.innerHTML = '<span class="lr-btn-spinner"></span>';
   var newDate = document.getElementById('ef_DateTime').value.trim();
   var updated = {
     DateTime:    _editLoan.DateTime,
@@ -3178,7 +3202,6 @@ async function saveEdit() {
   /* Upload profile photo if changed */
   var finalProfileUrl = _editProfileRemoved ? '' : (_editProfileNew ? null : _editProfileUrl);
   if (_editProfileNew && _editProfileNew.b64) {
-    btn.innerHTML = '<span style="opacity:.8">Uploading profile photo…</span>';
     try {
       var pur = await CamboAPI.post({ action:'helen_upload_photo', data: _editProfileNew.b64 });
       finalProfileUrl = (pur.ok && pur.url) ? pur.url : _editProfileUrl;
@@ -3191,7 +3214,6 @@ async function saveEdit() {
   if (_editNewPhotos.length > 0) {
     for (var epi = 0; epi < _editNewPhotos.length; epi++) {
       var epItem = _editNewPhotos[epi];
-      btn.innerHTML = '<span style="opacity:.8">Uploading ' + (epItem.isVideo ? 'video' : 'photo') + ' ' + (epi+1) + '/' + _editNewPhotos.length + '…</span>';
       try {
         if (epItem.isVideo) {
           var evUrl = await uploadDirectToCloudinary(epItem.file);
@@ -3212,13 +3234,13 @@ async function saveEdit() {
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 30000); })
     ]);
     if (res && res.ok) {
-      toast('✅ Saved successfully');
       invalidateLocalCache_();
       /* Optimistic update — patch local object, re-render immediately */
       Object.assign(_editLoan, updated);
       _editLoan._date = (updated.DateTime || _editLoan.DateTime || '').split('T')[0];
       btn.disabled = false; btn.innerHTML = _saveBtnHTML;
       closeEditModal();
+      showSaveAlert();
       populateFilters(); applyFilter(); renderCharts();
     } else {
       toast('❌ ' + ((res && res.message) || 'Update failed'), true);
@@ -3226,12 +3248,12 @@ async function saveEdit() {
     }
   } catch(e) {
     if (location.protocol === 'file:' && e.message !== 'timeout') {
-      toast('✅ Saved successfully');
       invalidateLocalCache_();
       Object.assign(_editLoan, updated);
       _editLoan._date = (updated.DateTime || _editLoan.DateTime || '').split('T')[0];
       btn.disabled = false; btn.innerHTML = _saveBtnHTML;
       closeEditModal();
+      showSaveAlert();
       populateFilters(); applyFilter(); renderCharts();
     } else {
       toast(e.message === 'timeout' ? '⏱️ Request timeout — សូម Try Again' : '❌ Network error', true);
