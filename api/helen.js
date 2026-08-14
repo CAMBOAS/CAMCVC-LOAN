@@ -384,8 +384,9 @@ export default async function handler(req, res) {
     /* ── User list (Admin only) ── */
     if (action === 'helen_user_list') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      await ensureUserPhotoCol();
       const [users] = await db().query(
-        'SELECT username, role, display_name, exp_date, status, last_seen FROM helen_users ORDER BY id'
+        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url FROM helen_users ORDER BY id'
       );
       return res.json({ ok:true, users });
     }
