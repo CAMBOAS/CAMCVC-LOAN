@@ -247,11 +247,11 @@
 
       /* avatar */
       + '<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:22px">'
-      + '<div id="hlProfAvatarWrap" style="position:relative;width:78px;height:78px;cursor:pointer" title="ផ្លាស់ប្ដូររូប">'
-      + '<div id="hlProfAvatarCircle" style="width:78px;height:78px;border-radius:50%;background:rgba(124,92,255,.12);border:2.5px solid rgba(124,92,255,.35);display:flex;align-items:center;justify-content:center;overflow:hidden">'
+      + '<div id="hlProfAvatarWrap" style="position:relative;width:78px;height:78px">'
+      + '<div id="hlProfAvatarCircle" style="width:78px;height:78px;border-radius:50%;background:rgba(124,92,255,.12);border:2.5px solid rgba(124,92,255,.35);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:'+(photoUrl?'zoom-in':'default')+'" title="'+(photoUrl?'មើលរូប':'')+'"">'
       + avatarInner
       + '</div>'
-      + '<div style="position:absolute;bottom:1px;right:1px;width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(124,58,237,.5)">'
+      + '<div id="hlProfCamBadge" style="position:absolute;bottom:1px;right:1px;width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(124,58,237,.5);cursor:pointer" title="ផ្លាស់ប្ដូររូប">'
       + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
       + '</div>'
       + '</div>'
@@ -302,10 +302,22 @@
     document.getElementById('hlProfClose').onclick = function() { m.remove(); };
     m.addEventListener('click', function(e) { if (e.target === m) m.remove(); });
 
-    /* Avatar click → file picker → upload */
-    document.getElementById('hlProfAvatarWrap').onclick = function() {
+    /* Avatar circle click → preview current photo */
+    document.getElementById('hlProfAvatarCircle').addEventListener('click', function() {
+      var url = localStorage.getItem('helen_user_photo') || '';
+      if (!url) return;
+      var prev = document.createElement('div');
+      prev.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);cursor:zoom-out;animation:hlFadeIn .15s ease';
+      prev.innerHTML = '<img src="'+url+'" style="max-width:88vw;max-height:88vh;border-radius:16px;object-fit:contain;box-shadow:0 24px 64px rgba(0,0,0,.8)">';
+      prev.onclick = function() { prev.remove(); };
+      document.body.appendChild(prev);
+    });
+
+    /* Camera badge click → file picker */
+    document.getElementById('hlProfCamBadge').addEventListener('click', function(e) {
+      e.stopPropagation();
       document.getElementById('hlProfFileInput').click();
-    };
+    });
 
     document.getElementById('hlProfFileInput').addEventListener('change', function(e) {
       var file = e.target.files && e.target.files[0];
@@ -326,7 +338,11 @@
           if (!r2 || !r2.ok) { statusEl.textContent = 'បរាជ័យ: '+(r2&&r2.message||'Error'); return; }
           localStorage.setItem('helen_user_photo', r.url);
           var circle = document.getElementById('hlProfAvatarCircle');
-          if (circle) circle.innerHTML = '<img src="'+r.url+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+          if (circle) {
+            circle.innerHTML = '<img src="'+r.url+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+            circle.style.cursor = 'zoom-in';
+            circle.title = 'មើលរូប';
+          }
           _updateSidebarAvatar(r.url);
           statusEl.style.color = '#22c55e';
           statusEl.textContent = 'រូបបានផ្លាស់ប្ដូររួច!';
