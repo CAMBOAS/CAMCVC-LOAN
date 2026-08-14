@@ -519,10 +519,10 @@
     .lr-sl-tab:hover { border-color:rgba(124,92,255,.45); background:rgba(124,92,255,.1); color:#a78bfa }
     .lr-sl-tab.active { border-color:rgba(124,92,255,.7); background:rgba(124,92,255,.18); color:#c4b5fd }
     .lr-sl-card { position:relative }
-    .lr-sl-card-rm { position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:6px; border:1px solid rgba(239,68,68,.35); background:rgba(239,68,68,.08); color:#f87171; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; font-weight:300; line-height:1; padding:0; transition:.13s; z-index:1 }
-    .lr-sl-card-rm:hover { background:rgba(239,68,68,.22); border-color:rgba(239,68,68,.65) }
-    .lr-sl-add { display:inline-flex; align-items:center; gap:4px; padding:4px 11px; border:1.5px solid rgba(124,92,255,.35); border-radius:20px; cursor:pointer; font-size:12px; font-weight:700; color:#a78bfa; background:rgba(124,92,255,.08); transition:.13s; user-select:none }
-    .lr-sl-add:hover { border-color:rgba(124,92,255,.65); background:rgba(124,92,255,.15); color:#c4b5fd }
+    .lr-sl-add { width:26px; height:26px; border-radius:8px; border:1.5px solid rgba(124,92,255,.35); background:rgba(124,92,255,.08); color:#a78bfa; font-size:18px; font-weight:400; line-height:1; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.13s; flex-shrink:0; padding:0; user-select:none }
+    .lr-sl-add:hover { border-color:rgba(124,92,255,.65); background:rgba(124,92,255,.18); color:#c4b5fd }
+    .lr-sl-rm { width:26px; height:26px; border-radius:8px; border:1.5px solid rgba(239,68,68,.3); background:rgba(239,68,68,.07); color:#f87171; font-size:18px; font-weight:400; line-height:1; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.13s; flex-shrink:0; padding:0; user-select:none }
+    .lr-sl-rm:hover { border-color:rgba(239,68,68,.6); background:rgba(239,68,68,.18) }
     .lr-sl-empty { font-size:11px; color:var(--muted); opacity:.55; padding:4px 0 2px; font-style:italic }
     /* ── / Social Links ── */
     .lr-add-footer { padding:16px 24px 20px; border-top:1px solid rgba(148,163,200,.1); display:flex; gap:10px; justify-content:flex-end; background:rgba(148,163,200,.03); border-radius:0 0 24px 24px }
@@ -2609,7 +2609,10 @@ function renderSocialLinks(prefix) {
   arr.forEach(function(_, idx) {
     tabsHtml += '<button type="button" class="lr-sl-tab'+(idx===activeTab?' active':'')+'" onclick="switchSLTab(\''+prefix+'\','+idx+')">'+(idx+1)+'</button>';
   });
-  tabsHtml += '<button type="button" class="lr-sl-add" onclick="addSocialLink(\''+prefix+'\')">± Add</button>';
+  tabsHtml += '<button type="button" class="lr-sl-add" onclick="addSocialLink(\''+prefix+'\')" title="Add Social Link">+</button>';
+  if (arr.length > 0) {
+    tabsHtml += '<button type="button" class="lr-sl-rm" onclick="removeSocialLink(\''+prefix+'\','+activeTab+')" title="Remove">−</button>';
+  }
   tabsHtml += '</div>';
 
   if (!arr.length) { el.innerHTML = tabsHtml; return; }
@@ -2618,7 +2621,6 @@ function renderSocialLinks(prefix) {
   var i  = activeTab;
   el.innerHTML = tabsHtml
     +'<div class="lr-sec-box lr-sl-card" style="padding:10px 12px 10px;margin-bottom:0">'
-    +'<button type="button" class="lr-sl-card-rm" onclick="removeSocialLink(\''+prefix+'\','+i+')" title="Remove">−</button>'
     +'<div class="lr-add-grid" style="margin-bottom:0">'
     +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">FB Name</div>'
     +'<input class="lr-add-input" id="'+prefix+'_sl_name_'+i+'" placeholder="Facebook name..." value="'+esc(sl.name||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'name\',this.value)"></div>'
