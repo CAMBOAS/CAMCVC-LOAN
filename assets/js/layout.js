@@ -243,15 +243,15 @@
       + '<button id="hlProfClose" style="position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;border:1px solid '+inputBdr+';background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:'+textSec+';font-size:16px;line-height:1;font-family:inherit">✕</button>'
 
       /* title */
-      + '<div style="font-size:15px;font-weight:800;color:'+textPri+';margin-bottom:20px;text-align:center">គណនីរបស់ខ្ញុំ</div>'
+      + '<div style="font-size:15px;font-weight:800;color:'+textPri+';margin-bottom:20px;text-align:center">My Account</div>'
 
       /* avatar */
       + '<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:22px">'
       + '<div id="hlProfAvatarWrap" style="position:relative;width:78px;height:78px">'
-      + '<div id="hlProfAvatarCircle" style="width:78px;height:78px;border-radius:50%;background:rgba(124,92,255,.12);border:2.5px solid rgba(124,92,255,.35);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:'+(photoUrl?'zoom-in':'default')+'" title="'+(photoUrl?'មើលរូប':'')+'"">'
+      + '<div id="hlProfAvatarCircle" style="width:78px;height:78px;border-radius:50%;background:rgba(124,92,255,.12);border:2.5px solid rgba(124,92,255,.35);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:'+(photoUrl?'zoom-in':'default')+'" title="'+(photoUrl?'View photo':'')+'"">'
       + avatarInner
       + '</div>'
-      + '<div id="hlProfCamBadge" style="position:absolute;bottom:1px;right:1px;width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(124,58,237,.5);cursor:pointer" title="ផ្លាស់ប្ដូររូប">'
+      + '<div id="hlProfCamBadge" style="position:absolute;bottom:1px;right:1px;width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(124,58,237,.5);cursor:pointer" title="Change photo">'
       + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
       + '</div>'
       + '</div>'
@@ -261,13 +261,13 @@
 
       /* display name */
       + '<div style="margin-bottom:13px">'
-      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">ឈ្មោះបង្ហាញ</label>'
-      + '<input id="hlProfDisplayName" type="text" value="'+(_a.name||'').replace(/[<>"&]/g,function(c){return{'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c];})+'" placeholder="ឈ្មោះបង្ហាញ" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
+      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">DISPLAY NAME</label>'
+      + '<input id="hlProfDisplayName" type="text" value="'+(_a.name||'').replace(/[<>"&]/g,function(c){return{'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c];})+'" placeholder="Display name" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
       + '</div>'
 
       /* username */
       + '<div style="margin-bottom:18px">'
-      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">ឈ្មោះចូលប្រព័ន្ធ</label>'
+      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">USERNAME</label>'
       + '<input id="hlProfUsername" type="text" value="'+(_a.u||'').replace(/[<>"&]/g,function(c){return{'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c];})+'" placeholder="Username" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
       + '</div>'
 
@@ -276,8 +276,8 @@
 
       /* new pin */
       + '<div style="margin-bottom:18px">'
-      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">PIN ថ្មី <span style="font-weight:400;opacity:.65">(ស្រេចចិត្ត)</span></label>'
-      + '<input id="hlProfNewPin" type="password" placeholder="PIN ថ្មី..." autocomplete="new-password" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
+      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">NEW PIN <span style="font-weight:400;opacity:.65">(optional)</span></label>'
+      + '<input id="hlProfNewPin" type="password" placeholder="New PIN..." autocomplete="new-password" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
       + '</div>'
 
       /* divider */
@@ -285,16 +285,16 @@
 
       /* current pin */
       + '<div style="margin-bottom:18px">'
-      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">PIN បច្ចុប្បន្ន <span style="color:#ef4444">*</span></label>'
-      + '<input id="hlProfCurrentPin" type="password" placeholder="PIN បច្ចុប្បន្ន..." autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
-      + '<div style="font-size:11px;color:'+textSec+';margin-top:4px">ត្រូវការ PIN ដើម្បីកែប្រែឈ្មោះ ឬ PIN</div>'
+      + '<label style="display:block;font-size:11.5px;font-weight:700;color:'+textSec+';margin-bottom:5px;letter-spacing:.03em">CURRENT PIN <span style="color:#ef4444">*</span></label>'
+      + '<input id="hlProfCurrentPin" type="password" placeholder="Current PIN..." autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid '+inputBdr+';background:'+inputBg+';color:'+textPri+';font-size:13px;font-family:inherit;outline:none">'
+      + '<div style="font-size:11px;color:'+textSec+';margin-top:4px">Required to change name or PIN</div>'
       + '</div>'
 
       /* error */
       + '<div id="hlProfError" style="font-size:12.5px;color:#ef4444;margin-bottom:12px;min-height:18px;text-align:center"></div>'
 
       /* save */
-      + '<button id="hlProfSave" style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(124,58,237,.35)">រក្សាទុក</button>'
+      + '<button id="hlProfSave" style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(124,58,237,.35)">Save</button>'
       + '</div>';
 
     document.body.appendChild(m);
@@ -324,7 +324,7 @@
       if (!file) return;
       var statusEl = document.getElementById('hlProfPhotoStatus');
       statusEl.style.color = textSec;
-      statusEl.textContent = 'កំពុងបង្ហោះ...';
+      statusEl.textContent = 'Uploading...';
       var reader = new FileReader();
       reader.onload = async function(ev) {
         try {
@@ -333,19 +333,19 @@
           var auth = null;
           try { auth = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(ee){}
           var r = await api.post({ action:'helen_upload_photo', auth:auth, data: ev.target.result });
-          if (!r || !r.ok) { statusEl.textContent = 'បរាជ័យ: '+(r&&r.message||'Error'); return; }
+          if (!r || !r.ok) { statusEl.textContent = 'Failed: '+(r&&r.message||'Error'); return; }
           var r2 = await api.post({ action:'helen_user_self_update', auth:auth, type:'photo', photo_url: r.url });
-          if (!r2 || !r2.ok) { statusEl.textContent = 'បរាជ័យ: '+(r2&&r2.message||'Error'); return; }
+          if (!r2 || !r2.ok) { statusEl.textContent = 'Failed: '+(r2&&r2.message||'Error'); return; }
           localStorage.setItem('helen_user_photo', r.url);
           var circle = document.getElementById('hlProfAvatarCircle');
           if (circle) {
             circle.innerHTML = '<img src="'+r.url+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
             circle.style.cursor = 'zoom-in';
-            circle.title = 'មើលរូប';
+            circle.title = 'View photo';
           }
           _updateSidebarAvatar(r.url);
           statusEl.style.color = '#22c55e';
-          statusEl.textContent = 'រូបបានផ្លាស់ប្ដូររួច!';
+          statusEl.textContent = 'Photo updated!';
           setTimeout(function() { statusEl.textContent = ''; }, 2500);
         } catch(err) {
           statusEl.textContent = 'Error: ' + err.message;
@@ -373,11 +373,11 @@
       var pinChanged  = !!newPin;
 
       if (!nameChanged && !userChanged && !pinChanged) {
-        errEl.textContent = 'មិនមានព័ត៌មានត្រូវផ្លាស់ប្ដូរ';
+        errEl.textContent = 'Nothing to change';
         return;
       }
       if (!currentPin) {
-        errEl.textContent = 'សូមបញ្ចូល PIN បច្ចុប្បន្ន';
+        errEl.textContent = 'Enter your current PIN';
         return;
       }
 
@@ -385,7 +385,7 @@
       btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:hlSpin .65s linear infinite;vertical-align:middle;margin-top:-2px"></span>';
 
       var api = window.CamboAPI;
-      if (!api) { errEl.textContent = 'CamboAPI not found'; btn.disabled=false; btn.textContent='រក្សាទុក'; return; }
+      if (!api) { errEl.textContent = 'CamboAPI not found'; btn.disabled=false; btn.textContent='Save'; return; }
 
       function freshAuth() {
         try { return JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(ee) { return null; }
@@ -402,7 +402,7 @@
           });
           if (!r || !r.ok) {
             errEl.textContent = (r&&r.message) || 'Save failed';
-            btn.disabled = false; btn.textContent = 'រក្សាទុក'; return;
+            btn.disabled = false; btn.textContent = 'Save'; return;
           }
           var auth2 = freshAuth() || {};
           if (nameChanged) auth2.name = r.display_name || displayName;
@@ -421,7 +421,7 @@
           });
           if (!r2 || !r2.ok) {
             errEl.textContent = (r2&&r2.message) || 'PIN change failed';
-            btn.disabled = false; btn.textContent = 'រក្សាទុក'; return;
+            btn.disabled = false; btn.textContent = 'Save'; return;
           }
           var auth3 = freshAuth() || {};
           auth3.p = newPin;
@@ -429,12 +429,12 @@
         }
 
         btn.style.cssText = 'width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:default';
-        btn.textContent = '✓ រួចរាល់';
+        btn.textContent = '✓ Done';
         setTimeout(function() { m.remove(); }, 900);
 
       } catch(err) {
         errEl.textContent = 'Error: ' + err.message;
-        btn.disabled = false; btn.textContent = 'រក្សាទុក';
+        btn.disabled = false; btn.textContent = 'Save';
       }
     };
   }
