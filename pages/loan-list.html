@@ -479,6 +479,20 @@
     .lr-photo-thumb-rm { position:absolute; top:2px; right:2px; background:rgba(0,0,0,.65); border:none; color:#fff; border-radius:50%; width:18px; height:18px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0 }
     .lr-photo-add-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px dashed rgba(124,92,255,.4); border-radius:10px; cursor:pointer; font-size:12px; color:rgba(124,92,255,.9); background:rgba(124,92,255,.06); transition:.15s; user-select:none }
     .lr-photo-add-btn:hover { border-color:rgba(124,92,255,.7); background:rgba(124,92,255,.12) }
+    .lr-photo-thumb { cursor:pointer }
+    .lr-profile-view { position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,.58); border:none; color:#fff; border-radius:6px; width:26px; height:26px; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:.15s; z-index:2; padding:0 }
+    .lr-profile-wrap:hover .lr-profile-view { opacity:1 }
+    /* ── Lightbox ── */
+    .lr-lightbox { position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,.93); display:flex; align-items:center; justify-content:center }
+    .lr-lb-media { max-width:90vw; max-height:88vh; object-fit:contain; border-radius:8px; display:block }
+    .lr-lb-btn { position:absolute; background:rgba(255,255,255,.13); border:none; color:#fff; border-radius:50%; width:42px; height:42px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.15s; padding:0 }
+    .lr-lb-btn:hover { background:rgba(255,255,255,.28) }
+    .lr-lb-close { top:14px; right:14px }
+    .lr-lb-dl    { top:14px; right:64px }
+    .lr-lb-prev  { left:14px; top:50%; transform:translateY(-50%); font-size:24px; font-weight:300; line-height:1 }
+    .lr-lb-next  { right:14px; top:50%; transform:translateY(-50%); font-size:24px; font-weight:300; line-height:1 }
+    .lr-lb-counter { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,.5); font-size:12px; pointer-events:none; white-space:nowrap }
+    /* ── / Lightbox ── */
     .lr-photo-view-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px }
     .lr-photo-view-thumb { width:72px; height:72px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,.2); border:1px solid rgba(148,163,184,.15); cursor:pointer; flex-shrink:0 }
     .lr-photo-view-thumb img { width:100%; height:100%; object-fit:cover; display:block }
@@ -866,6 +880,9 @@ function updateFBID(prefix) {
 var _svgCopy  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 var _svgCheck = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 var _svgLink  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+var _svgEye   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+var _svgDL    = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+var _svgX2    = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 function copyFBID(inputId) {
   var val = (document.getElementById(inputId)||{}).value||'';
   if (!val.trim()) return;
@@ -2453,6 +2470,78 @@ async function uploadDirectToCloudinary(file) {
   throw new Error((data.error && data.error.message) || 'Upload failed');
 }
 
+/* ── Lightbox ── */
+var _lbItems = [], _lbIdx = 0;
+function openLightbox(items, idx) {
+  _lbItems = items || [];
+  _lbIdx   = Math.max(0, Math.min(idx||0, _lbItems.length-1));
+  _renderLb();
+}
+function _renderLb() {
+  var el = document.getElementById('lrLightbox');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'lrLightbox';
+    el.className = 'lr-lightbox';
+    el.addEventListener('click', function(e){ if (e.target === el) closeLightbox(); });
+    document.body.appendChild(el);
+    document.addEventListener('keydown', _lbKey);
+  }
+  var item = _lbItems[_lbIdx] || {};
+  var src  = item.src || '';
+  var n    = _lbItems.length;
+  el.innerHTML =
+    (item.isVideo
+      ? '<video src="'+esc(src)+'" class="lr-lb-media" controls autoplay muted playsinline></video>'
+      : '<img src="'+esc(src)+'" class="lr-lb-media">')
+    +'<button class="lr-lb-btn lr-lb-close" onclick="closeLightbox()" title="Close">'+_svgX2+'</button>'
+    +'<button class="lr-lb-btn lr-lb-dl"    onclick="lbDownload()"   title="Download">'+_svgDL+'</button>'
+    +(n>1 ? '<button class="lr-lb-btn lr-lb-prev" onclick="lbNav(-1)">‹</button>' : '')
+    +(n>1 ? '<button class="lr-lb-btn lr-lb-next" onclick="lbNav(1)">›</button>'  : '')
+    +(n>1 ? '<div class="lr-lb-counter">'+(_lbIdx+1)+' / '+n+'</div>' : '');
+}
+function closeLightbox() {
+  var el = document.getElementById('lrLightbox');
+  if (el) el.remove();
+  document.removeEventListener('keydown', _lbKey);
+}
+function lbNav(dir) { _lbIdx = (_lbIdx+dir+_lbItems.length)%_lbItems.length; _renderLb(); }
+function _lbKey(e) {
+  if (e.key==='Escape') closeLightbox();
+  else if (e.key==='ArrowLeft')  lbNav(-1);
+  else if (e.key==='ArrowRight') lbNav(1);
+}
+async function lbDownload() {
+  var item = _lbItems[_lbIdx] || {};
+  var src  = item.src || '';
+  if (!src) return;
+  var parts = src.split('/'); var name = parts[parts.length-1].split('?')[0];
+  if (!name || !name.includes('.')) name = item.isVideo ? 'video.mp4' : 'photo.jpg';
+  try {
+    var r    = await fetch(src);
+    var blob = await r.blob();
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+  } catch(e) { window.open(src, '_blank', 'noopener'); }
+}
+function _openProfileLightbox(prefix) {
+  var src = prefix==='af'
+    ? (_profilePhoto ? _profilePhoto.preview : '')
+    : (_editProfileNew ? _editProfileNew.preview : (!_editProfileRemoved ? _editProfileUrl : ''));
+  if (src) openLightbox([{ src:src, isVideo:false }], 0);
+}
+function openLightboxFromAdd(idx) {
+  openLightbox(_addPhotos.map(function(p){ return { src:p.preview, isVideo:!!p.isVideo }; }), idx);
+}
+function openLightboxFromEdit(idx) {
+  var ex = _editExistingPhotos.map(function(u){ return { src:u, isVideo:isVideoUrl(u) }; });
+  var nw = _editNewPhotos.map(function(p){ return { src:p.preview, isVideo:!!p.isVideo }; });
+  openLightbox(ex.concat(nw), idx);
+}
+/* ── / Lightbox ── */
+
 /* ── Social Links state & helpers ── */
 var _addSocialLinks = [];
 var _editSocialLinks = [];
@@ -2611,7 +2700,8 @@ function renderAddPhotos() {
     var media = p.isVideo
       ? '<video src="'+p.preview+'" muted playsinline preload="metadata" style="pointer-events:none"></video>'
       : '<img src="'+p.preview+'">';
-    return '<div class="lr-photo-thumb">'+media+'<button type="button" class="lr-photo-thumb-rm" onclick="removeAddPhoto('+i+')">×</button></div>';
+    return '<div class="lr-photo-thumb" onclick="openLightboxFromAdd('+i+')">'+media
+      +'<button type="button" class="lr-photo-thumb-rm" onclick="event.stopPropagation();removeAddPhoto('+i+')">×</button></div>';
   }).join('');
   if (addBtn) addBtn.style.display = _addPhotos.length >= 5 ? 'none' : '';
 }
@@ -2657,7 +2747,8 @@ function renderProfilePhoto() {
   if (!prev) return;
   if (_profilePhoto) {
     prev.innerHTML = '<img src="'+_profilePhoto.preview+'" style="width:100%;height:100%;object-fit:cover;display:block">'
-      +'<button type="button" onclick="event.stopPropagation();clearProfilePhoto()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0">×</button>';
+      +'<button type="button" onclick="event.stopPropagation();clearProfilePhoto()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0">×</button>'
+      +'<button type="button" class="lr-profile-view" onclick="event.stopPropagation();_openProfileLightbox(\'af\')" title="View">'+_svgEye+'</button>';
     if (wrap) { wrap.style.padding='0'; wrap.style.border='none'; }
   } else {
     prev.innerHTML = '<div class="lr-profile-placeholder">'
@@ -2729,7 +2820,8 @@ function renderEditProfilePhoto() {
   var src = _editProfileNew ? _editProfileNew.preview : (_editProfileRemoved ? '' : _editProfileUrl);
   if (src) {
     prev.innerHTML = '<img src="'+esc(src)+'" style="width:100%;height:100%;object-fit:cover;display:block">'
-      +'<button type="button" onclick="event.stopPropagation();clearEditProfilePhoto()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0">×</button>';
+      +'<button type="button" onclick="event.stopPropagation();clearEditProfilePhoto()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0">×</button>'
+      +'<button type="button" class="lr-profile-view" onclick="event.stopPropagation();_openProfileLightbox(\'ef\')" title="View">'+_svgEye+'</button>';
     if (wrap) { wrap.style.padding='0'; wrap.style.border='none'; }
   } else {
     prev.innerHTML = '<div class="lr-profile-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Click or drag photo</span></div>';
@@ -2761,18 +2853,21 @@ function renderEditPhotos() {
   var addBtn = document.getElementById('ef_PhotoAddBtn');
   if (!grid) return;
   var total = _editExistingPhotos.length + _editNewPhotos.length;
+  var _exLen = _editExistingPhotos.length;
   grid.innerHTML =
     _editExistingPhotos.map(function(url, i) {
       var media = isVideoUrl(url)
         ? '<video src="'+esc(url)+'" muted playsinline preload="metadata" style="pointer-events:none"></video>'
         : '<img src="'+esc(url)+'" loading="lazy">';
-      return '<div class="lr-photo-thumb">'+media+'<button type="button" class="lr-photo-thumb-rm" onclick="removeEditExistingPhoto('+i+')">×</button></div>';
+      return '<div class="lr-photo-thumb" onclick="openLightboxFromEdit('+i+')">'+media
+        +'<button type="button" class="lr-photo-thumb-rm" onclick="event.stopPropagation();removeEditExistingPhoto('+i+')">×</button></div>';
     }).join('')
     + _editNewPhotos.map(function(p, i) {
       var media = p.isVideo
         ? '<video src="'+p.preview+'" muted playsinline preload="metadata" style="pointer-events:none"></video>'
         : '<img src="'+p.preview+'">';
-      return '<div class="lr-photo-thumb">'+media+'<button type="button" class="lr-photo-thumb-rm" onclick="removeEditNewPhoto('+i+')">×</button></div>';
+      return '<div class="lr-photo-thumb" onclick="openLightboxFromEdit('+(_exLen+i)+')">'+media
+        +'<button type="button" class="lr-photo-thumb-rm" onclick="event.stopPropagation();removeEditNewPhoto('+i+')">×</button></div>';
     }).join('');
   if (addBtn) addBtn.style.display = total >= 5 ? 'none' : '';
 }
