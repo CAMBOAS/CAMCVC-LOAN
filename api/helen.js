@@ -450,12 +450,11 @@ export default async function handler(req, res) {
       return res.json({ ok:true });
     }
 
-    /* ── Upload photo to Cloudinary ── */
+    /* ── Upload photo to Cloudinary (server-side, images only) ── */
     if (action === 'helen_upload_photo') {
       if (!CLD_CLOUD || !CLD_KEY || !CLD_SEC) return res.json({ ok:false, message:'Cloudinary not configured' });
       const b64 = body.data;
       if (!b64) return res.json({ ok:false, message:'No image data' });
-      /* Convert data URI to Blob so FormData sends a proper file part */
       const commaIdx = b64.indexOf(',');
       const meta     = commaIdx > -1 ? b64.slice(0, commaIdx) : '';
       const rawB64   = commaIdx > -1 ? b64.slice(commaIdx + 1) : b64;
@@ -472,10 +471,20 @@ export default async function handler(req, res) {
       form.append('timestamp', String(timestamp));
       form.append('folder',    folder);
       form.append('signature', signature);
-      const r    = await fetch(`https://api.cloudinary.com/v1_1/${CLD_CLOUD}/image/upload`, { method:'POST', body: form });
+      const r    = await fetch(`https://api.cloudinary.com/v1_1/${CLD_CLOUD}/auto/upload`, { method:'POST', body: form });
       const data = await r.json();
       if (data.secure_url) return res.json({ ok:true, url: data.secure_url });
       return res.json({ ok:false, message: data.error?.message || 'Upload failed' });
+    }
+
+    /* ── Return signature for browser-direct upload (videos/large files) ── */
+    if (action === 'helen_get_upload_sig') {
+      if (!CLD_CLOUD || !CLD_KEY || !CLD_SEC) return res.json({ ok:false, message:'Cloudinary not configured' });
+      const timestamp = Math.floor(Date.now() / 1000);
+      const folder    = 'helen-loan';
+      const signStr   = `folder=${folder}&timestamp=${timestamp}${CLD_SEC}`;
+      const signature = crypto.createHash('sha1').update(signStr).digest('hex');
+      return res.json({ ok:true, timestamp, signature, api_key: CLD_KEY, cloud_name: CLD_CLOUD, folder });
     }
 
     return res.json({ ok:false, message:'Unknown action: ' + action });

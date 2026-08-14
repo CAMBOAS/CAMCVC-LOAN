@@ -475,7 +475,7 @@
     .lr-photo-wrap { display:flex; flex-direction:column; gap:8px }
     .lr-photo-grid { display:flex; flex-wrap:wrap; gap:8px }
     .lr-photo-thumb { position:relative; width:72px; height:72px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,.2); border:1px solid rgba(148,163,184,.15); flex-shrink:0 }
-    .lr-photo-thumb img { width:100%; height:100%; object-fit:cover; display:block }
+    .lr-photo-thumb img, .lr-photo-thumb video { width:100%; height:100%; object-fit:cover; display:block }
     .lr-photo-thumb-rm { position:absolute; top:2px; right:2px; background:rgba(0,0,0,.65); border:none; color:#fff; border-radius:50%; width:18px; height:18px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0 }
     .lr-photo-add-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1.5px dashed rgba(124,92,255,.4); border-radius:10px; cursor:pointer; font-size:12px; color:rgba(124,92,255,.9); background:rgba(124,92,255,.06); transition:.15s; user-select:none }
     .lr-photo-add-btn:hover { border-color:rgba(124,92,255,.7); background:rgba(124,92,255,.12) }
@@ -2135,8 +2135,8 @@ function openAddModal() {
     +'<div class="lr-photo-wrap" ondragover="event.preventDefault();this.classList.add(\'lr-drag-over\')" ondrop="onPhotoDrop(event);this.classList.remove(\'lr-drag-over\')" ondragleave="this.classList.remove(\'lr-drag-over\')" style="border:1.5px dashed transparent;border-radius:12px;padding:6px;transition:.15s">'
     +'<div class="lr-photo-grid" id="af_PhotoGrid"></div>'
     +'<label class="lr-photo-add-btn" id="af_PhotoAddBtn">'
-    +'<input type="file" id="af_PhotoInput" accept="image/*" multiple style="display:none" onchange="onPhotoSelect(event)">'
-    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Photos'
+    +'<input type="file" id="af_PhotoInput" accept="image/*,video/*" multiple style="display:none" onchange="onPhotoSelect(event)">'
+    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Photos / Videos'
     +'</label>'
     +'</div></div>';
 
@@ -2435,6 +2435,24 @@ function avatarHtml(l) {
 
 var _addPhotos = [];
 
+function isVideoUrl(url) {
+  return /\/video\/upload\/|\.mp4|\.mov|\.webm|\.avi|\.mkv/i.test(String(url||''));
+}
+async function uploadDirectToCloudinary(file) {
+  var sigRes = await CamboAPI.post({ action: 'helen_get_upload_sig' });
+  if (!sigRes.ok) throw new Error(sigRes.message || 'Signature failed');
+  var form = new FormData();
+  form.append('file', file);
+  form.append('api_key', sigRes.api_key);
+  form.append('timestamp', String(sigRes.timestamp));
+  form.append('folder', sigRes.folder);
+  form.append('signature', sigRes.signature);
+  var r = await fetch('https://api.cloudinary.com/v1_1/' + sigRes.cloud_name + '/auto/upload', { method:'POST', body:form });
+  var data = await r.json();
+  if (data.secure_url) return data.secure_url;
+  throw new Error((data.error && data.error.message) || 'Upload failed');
+}
+
 /* ── Social Links state & helpers ── */
 var _addSocialLinks = [];
 var _editSocialLinks = [];
@@ -2590,10 +2608,10 @@ function renderAddPhotos() {
   var addBtn = document.getElementById('af_PhotoAddBtn');
   if (!grid) return;
   grid.innerHTML = _addPhotos.map(function(p, i) {
-    return '<div class="lr-photo-thumb">'
-      + '<img src="' + p.preview + '">'
-      + '<button type="button" class="lr-photo-thumb-rm" onclick="removeAddPhoto(' + i + ')">×</button>'
-      + '</div>';
+    var media = p.isVideo
+      ? '<video src="'+p.preview+'" muted playsinline preload="metadata" style="pointer-events:none"></video>'
+      : '<img src="'+p.preview+'">';
+    return '<div class="lr-photo-thumb">'+media+'<button type="button" class="lr-photo-thumb-rm" onclick="removeAddPhoto('+i+')">×</button></div>';
   }).join('');
   if (addBtn) addBtn.style.display = _addPhotos.length >= 5 ? 'none' : '';
 }
@@ -2610,8 +2628,13 @@ async function onPhotoSelect(event) {
   if (remaining <= 0) return;
   files = files.slice(0, remaining);
   for (var i = 0; i < files.length; i++) {
-    var b64 = await compressPhoto(files[i]);
-    if (b64) _addPhotos.push({ b64: b64, preview: b64 });
+    var f = files[i];
+    if (f.type.startsWith('video/')) {
+      _addPhotos.push({ b64: null, preview: URL.createObjectURL(f), isVideo: true, file: f });
+    } else {
+      var b64 = await compressPhoto(f);
+      if (b64) _addPhotos.push({ b64: b64, preview: b64, isVideo: false, file: null });
+    }
   }
   renderAddPhotos();
 }
@@ -2666,13 +2689,18 @@ function clearProfilePhoto() { _profilePhoto = null; renderProfilePhoto(); }
 /* ── Photos drag & drop ── */
 async function onPhotoDrop(event) {
   event.preventDefault();
-  var files = Array.from(event.dataTransfer.files||[]).filter(function(f){ return f.type.startsWith('image/'); });
+  var files = Array.from(event.dataTransfer.files||[]).filter(function(f){ return f.type.startsWith('image/') || f.type.startsWith('video/'); });
   if (!files.length) return;
   var remaining = 5 - _addPhotos.length;
   files = files.slice(0, remaining);
   for (var i = 0; i < files.length; i++) {
-    var b64 = await compressPhoto(files[i]);
-    if (b64) _addPhotos.push({ b64: b64, preview: b64 });
+    var f = files[i];
+    if (f.type.startsWith('video/')) {
+      _addPhotos.push({ b64: null, preview: URL.createObjectURL(f), isVideo: true, file: f });
+    } else {
+      var b64 = await compressPhoto(f);
+      if (b64) _addPhotos.push({ b64: b64, preview: b64, isVideo: false, file: null });
+    }
   }
   renderAddPhotos();
 }
@@ -2735,10 +2763,16 @@ function renderEditPhotos() {
   var total = _editExistingPhotos.length + _editNewPhotos.length;
   grid.innerHTML =
     _editExistingPhotos.map(function(url, i) {
-      return '<div class="lr-photo-thumb"><img src="'+esc(url)+'" loading="lazy"><button type="button" class="lr-photo-thumb-rm" onclick="removeEditExistingPhoto('+i+')">×</button></div>';
+      var media = isVideoUrl(url)
+        ? '<video src="'+esc(url)+'" muted playsinline preload="metadata" style="pointer-events:none"></video>'
+        : '<img src="'+esc(url)+'" loading="lazy">';
+      return '<div class="lr-photo-thumb">'+media+'<button type="button" class="lr-photo-thumb-rm" onclick="removeEditExistingPhoto('+i+')">×</button></div>';
     }).join('')
     + _editNewPhotos.map(function(p, i) {
-      return '<div class="lr-photo-thumb"><img src="'+p.preview+'"><button type="button" class="lr-photo-thumb-rm" onclick="removeEditNewPhoto('+i+')">×</button></div>';
+      var media = p.isVideo
+        ? '<video src="'+p.preview+'" muted playsinline preload="metadata" style="pointer-events:none"></video>'
+        : '<img src="'+p.preview+'">';
+      return '<div class="lr-photo-thumb">'+media+'<button type="button" class="lr-photo-thumb-rm" onclick="removeEditNewPhoto('+i+')">×</button></div>';
     }).join('');
   if (addBtn) addBtn.style.display = total >= 5 ? 'none' : '';
 }
@@ -2750,20 +2784,30 @@ async function onEditPhotoSelect(event) {
   if (remaining <= 0) return;
   files = files.slice(0, remaining);
   for (var i = 0; i < files.length; i++) {
-    var b64 = await compressPhoto(files[i]);
-    if (b64) _editNewPhotos.push({ b64: b64, preview: b64 });
+    var f = files[i];
+    if (f.type.startsWith('video/')) {
+      _editNewPhotos.push({ b64: null, preview: URL.createObjectURL(f), isVideo: true, file: f });
+    } else {
+      var b64 = await compressPhoto(f);
+      if (b64) _editNewPhotos.push({ b64: b64, preview: b64, isVideo: false, file: null });
+    }
   }
   renderEditPhotos();
 }
 async function onEditPhotoDrop(event) {
   event.preventDefault();
-  var files = Array.from(event.dataTransfer.files||[]).filter(function(f){ return f.type.startsWith('image/'); });
+  var files = Array.from(event.dataTransfer.files||[]).filter(function(f){ return f.type.startsWith('image/') || f.type.startsWith('video/'); });
   if (!files.length) return;
   var remaining = 5 - (_editExistingPhotos.length + _editNewPhotos.length);
   files = files.slice(0, remaining);
   for (var i = 0; i < files.length; i++) {
-    var b64 = await compressPhoto(files[i]);
-    if (b64) _editNewPhotos.push({ b64: b64, preview: b64 });
+    var f = files[i];
+    if (f.type.startsWith('video/')) {
+      _editNewPhotos.push({ b64: null, preview: URL.createObjectURL(f), isVideo: true, file: f });
+    } else {
+      var b64 = await compressPhoto(f);
+      if (b64) _editNewPhotos.push({ b64: b64, preview: b64, isVideo: false, file: null });
+    }
   }
   renderEditPhotos();
 }
@@ -2806,14 +2850,20 @@ async function saveAdd() {
   }
   loan.photo_url = profileUrl;
 
-  /* Upload additional photos to Cloudinary */
+  /* Upload additional photos/videos to Cloudinary */
   var photoUrls = [];
   if (_addPhotos.length > 0) {
     for (var pi = 0; pi < _addPhotos.length; pi++) {
-      btn.innerHTML = '<span style="opacity:.8">Uploading photo ' + (pi+1) + '/' + _addPhotos.length + '…</span>';
+      var pItem = _addPhotos[pi];
+      btn.innerHTML = '<span style="opacity:.8">Uploading ' + (pItem.isVideo ? 'video' : 'photo') + ' ' + (pi+1) + '/' + _addPhotos.length + '…</span>';
       try {
-        var ur = await CamboAPI.post({ action:'helen_upload_photo', data: _addPhotos[pi].b64 });
-        if (ur.ok && ur.url) photoUrls.push(ur.url);
+        if (pItem.isVideo) {
+          var vUrl = await uploadDirectToCloudinary(pItem.file);
+          if (vUrl) photoUrls.push(vUrl);
+        } else {
+          var ur = await CamboAPI.post({ action:'helen_upload_photo', data: pItem.b64 });
+          if (ur.ok && ur.url) photoUrls.push(ur.url);
+        }
       } catch(e) {}
     }
   }
@@ -2951,8 +3001,8 @@ function openEditModal(loan) {
     +'<div class="lr-photo-wrap" ondragover="event.preventDefault();this.classList.add(\'lr-drag-over\')" ondrop="onEditPhotoDrop(event);this.classList.remove(\'lr-drag-over\')" ondragleave="this.classList.remove(\'lr-drag-over\')" style="border:1.5px dashed transparent;border-radius:12px;padding:6px;transition:.15s">'
     +'<div class="lr-photo-grid" id="ef_PhotoGrid"></div>'
     +'<label class="lr-photo-add-btn" id="ef_PhotoAddBtn">'
-    +'<input type="file" id="ef_PhotoInput" accept="image/*" multiple style="display:none" onchange="onEditPhotoSelect(event)">'
-    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Photos'
+    +'<input type="file" id="ef_PhotoInput" accept="image/*,video/*" multiple style="display:none" onchange="onEditPhotoSelect(event)">'
+    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Photos / Videos'
     +'</label>'
     +'</div></div>';
 
@@ -3009,14 +3059,20 @@ async function saveEdit() {
   }
   updated.photo_url = finalProfileUrl || '';
 
-  /* Upload new additional photos */
+  /* Upload new additional photos/videos */
   var finalPhotos = _editExistingPhotos.slice();
   if (_editNewPhotos.length > 0) {
     for (var epi = 0; epi < _editNewPhotos.length; epi++) {
-      btn.innerHTML = '<span style="opacity:.8">Uploading photo ' + (epi+1) + '/' + _editNewPhotos.length + '…</span>';
+      var epItem = _editNewPhotos[epi];
+      btn.innerHTML = '<span style="opacity:.8">Uploading ' + (epItem.isVideo ? 'video' : 'photo') + ' ' + (epi+1) + '/' + _editNewPhotos.length + '…</span>';
       try {
-        var eur = await CamboAPI.post({ action:'helen_upload_photo', data: _editNewPhotos[epi].b64 });
-        if (eur.ok && eur.url) finalPhotos.push(eur.url);
+        if (epItem.isVideo) {
+          var evUrl = await uploadDirectToCloudinary(epItem.file);
+          if (evUrl) finalPhotos.push(evUrl);
+        } else {
+          var eur = await CamboAPI.post({ action:'helen_upload_photo', data: epItem.b64 });
+          if (eur.ok && eur.url) finalPhotos.push(eur.url);
+        }
       } catch(e) {}
     }
   }
