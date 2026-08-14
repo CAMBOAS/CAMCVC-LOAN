@@ -420,7 +420,7 @@
     }
 
     /* ── Add Modal Redesign ── */
-    .lr-add-modal { background:var(--card); border:1px solid rgba(148,163,184,.12); border-radius:24px; width:min(820px,95vw); max-height:calc(100vh - 40px); overflow-y:auto; box-shadow:0 28px 72px rgba(0,0,0,.55); display:flex; flex-direction:column }
+    .lr-add-modal { background:var(--card); border:1px solid rgba(148,163,184,.12); border-radius:24px; width:min(820px,95vw); height:calc(100vh - 40px); max-height:calc(100vh - 40px); overflow:hidden; box-shadow:0 28px 72px rgba(0,0,0,.55); display:flex; flex-direction:column }
     .lr-modal-cols { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:4px }
     .lr-modal-col { display:flex; flex-direction:column; gap:0 }
     .lr-add-modal::-webkit-scrollbar { width:4px }
@@ -455,7 +455,7 @@
     .lr-infor-input { flex:1; padding:8px 12px; border-radius:8px; border:1px solid rgba(148,163,200,.25); background:rgba(148,163,200,.07); color:var(--text); font-size:13px; font-family:inherit; outline:none }
     .lr-infor-input:focus { border-color:rgba(99,102,241,.5) }
     .lr-infor-add-btn { padding:8px 14px; border-radius:8px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap }
-    .lr-add-body { padding:22px 24px 0 }
+    .lr-add-body { padding:22px 24px 0; flex:1; overflow-y:auto }
     .lr-add-section { font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; display:flex; align-items:center; gap:8px; margin:0 0 12px }
     .lr-add-section::after { content:''; flex:1; height:1px; background:rgba(148,163,200,.12) }
     .lr-add-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 16px }
@@ -540,7 +540,7 @@
     .lr-add-submit:disabled { opacity:.45; cursor:not-allowed; transform:none }
     @media(max-width:620px){
       .lr-modal-bg { align-items:stretch !important; justify-content:stretch !important; padding:0 !important }
-      .lr-add-modal { width:100vw !important; max-width:100vw !important; border-radius:0 !important; max-height:100dvh !important; min-height:100dvh !important; margin:0 !important }
+      .lr-add-modal { width:100vw !important; max-width:100vw !important; border-radius:0 !important; height:100dvh !important; max-height:100dvh !important; margin:0 !important }
       /* ── Stack the 2 panels vertically; keep 2 fields per row inside ── */
       .lr-modal-cols { grid-template-columns:1fr !important; gap:0 !important }
       .lr-add-grid { grid-template-columns:1fr 1fr !important; gap:0 8px !important }
