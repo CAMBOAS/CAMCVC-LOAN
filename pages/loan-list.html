@@ -305,18 +305,26 @@
     .tag-m   { color:#22d3ee }
     .tag-f   { color:#f472b6 }
     .tag-o   { color:#fbbf24 }
-    .tag-good   { color:#4ade80 }
-    .tag-normal { color:#22d3ee }
-    .tag-black  { color:#f87171 }
-    .tag-risk   { color:#fbbf24 }
-    .tag-done   { color:#a78bfa }
-    .tag-def    { color:var(--muted) }
+    .tag-good      { color:#4ade80 }
+    .tag-normal    { color:#22d3ee }
+    .tag-black     { color:#f87171 }
+    .tag-risk      { color:#fbbf24 }
+    .tag-poor      { color:#fb923c }
+    .tag-fair      { color:#facc15 }
+    .tag-excellent { color:#e879f9 }
+    .tag-vip       { color:#fcd34d }
+    .tag-done      { color:#a78bfa }
+    .tag-def       { color:var(--muted) }
     .tag-group  { background:rgba(99,102,241,.12); color:#a5b4fc; padding:3px 8px; border-radius:5px }
-    [data-theme="light"] .tag-good   { color:#15803d }
-    [data-theme="light"] .tag-normal { color:#0e7490 }
-    [data-theme="light"] .tag-black  { color:#b91c1c }
-    [data-theme="light"] .tag-risk   { color:#b45309 }
-    [data-theme="light"] .tag-done   { color:#6d28d9 }
+    [data-theme="light"] .tag-good      { color:#15803d }
+    [data-theme="light"] .tag-normal    { color:#0e7490 }
+    [data-theme="light"] .tag-black     { color:#b91c1c }
+    [data-theme="light"] .tag-risk      { color:#b45309 }
+    [data-theme="light"] .tag-poor      { color:#c2410c }
+    [data-theme="light"] .tag-fair      { color:#a16207 }
+    [data-theme="light"] .tag-excellent { color:#86198f }
+    [data-theme="light"] .tag-vip       { color:#92400e }
+    [data-theme="light"] .tag-done      { color:#6d28d9 }
 
     /* Loading / empty */
     .lr-loading { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px }
@@ -956,11 +964,15 @@ function statusTag(s) {
   var v = (s||'').trim();
   if (!v) return '<span class="tag tag-def">—</span>';
   var lower = v.toLowerCase();
-  if (lower==='good')       return '<span class="tag tag-good">Good</span>';
-  if (lower==='normal')     return '<span class="tag tag-normal">Normal</span>';
-  if (lower==='blacklisted')return '<span class="tag tag-black">BlackListed</span>';
-  if (lower.includes('high')|| lower.includes('risk')) return '<span class="tag tag-risk">High Risk</span>';
-  if (lower==='done')       return '<span class="tag tag-done">Done</span>';
+  if (lower==='good')        return '<span class="tag tag-good">Good</span>';
+  if (lower==='normal')      return '<span class="tag tag-normal">Normal</span>';
+  if (lower==='blacklisted') return '<span class="tag tag-black">BlackListed</span>';
+  if (lower.includes('high')||lower.includes('risk')) return '<span class="tag tag-risk">High Risk</span>';
+  if (lower==='poor')        return '<span class="tag tag-poor">Poor</span>';
+  if (lower==='fair')        return '<span class="tag tag-fair">Fair</span>';
+  if (lower==='excellent')   return '<span class="tag tag-excellent">Excellent</span>';
+  if (lower==='vip')         return '<span class="tag tag-vip">VIP</span>';
+  if (lower==='done')        return '<span class="tag tag-done">Done</span>';
   return '<span class="tag tag-def">'+esc(v)+'</span>';
 }
 function genderTag(g) {
@@ -977,13 +989,18 @@ var STATUS_COLORS = {
   'Normal':     '#06b6d4',
   'BlackListed':'#ef4444',
   'High Risk':  '#f59e0b',
+  'Poor':       '#f97316',
+  'Fair':       '#eab308',
+  'Excellent':  '#d946ef',
+  'VIP':        '#f59e0b',
+  'Done':       '#8b5cf6',
 };
 function statusColor(s) {
   var v = (s||'').trim();
   if (v.toLowerCase()==='blacklisted') return STATUS_COLORS['BlackListed'];
   return STATUS_COLORS[v] || '#94a3b8';
 }
-var STATUS_RGB = { 'Good':'34,197,94', 'Normal':'6,182,212', 'BlackListed':'239,68,68', 'High Risk':'245,158,11' };
+var STATUS_RGB = { 'Good':'34,197,94', 'Normal':'6,182,212', 'BlackListed':'239,68,68', 'High Risk':'245,158,11', 'Poor':'249,115,22', 'Fair':'234,179,8', 'Excellent':'217,70,239', 'VIP':'245,158,11', 'Done':'139,92,246' };
 function statusRGB(s) {
   var v = (s||'').trim();
   if (v.toLowerCase()==='blacklisted') return STATUS_RGB['BlackListed'];
