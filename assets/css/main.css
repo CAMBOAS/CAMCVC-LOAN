@@ -2848,6 +2848,10 @@ body.sb-collapsed .main-content {
 .sb-ctrl-btn .sb-theme-icon svg { width: 15px; height: 15px; }
 .sb-ctrl-label { line-height: 1; }
 
+/* Logout button — red hover */
+.sb-logout-btn:hover { background: rgba(239,68,68,.12) !important; border-color: rgba(239,68,68,.28) !important; color: #fca5a5 !important; }
+[data-theme="light"] .sb-logout-btn:hover { background: rgba(239,68,68,.08) !important; border-color: rgba(239,68,68,.22) !important; color: #ef4444 !important; }
+
 /* User card */
 .sb-user-card {
   display: flex; align-items: center; gap: 10px;
@@ -2919,6 +2923,7 @@ body.sb-collapsed .main-content {
 .sidebar.sb-collapsed .sb-status-strip { display: none !important; }
 .sidebar.sb-collapsed .sb-ctrl-row { flex-direction: column; gap: 5px; }
 .sidebar.sb-collapsed .sb-ctrl-btn { padding: 9px; justify-content: center; }
+.sidebar.sb-collapsed .sb-ctrl-label { display: none !important; }
 .sidebar.sb-collapsed .sb-user-card { justify-content: center; padding: 8px; }
 .sidebar.sb-collapsed .sb-user-avatar { border-radius: 50%; box-shadow: 0 0 0 2px rgba(139,92,246,.35), 0 3px 10px rgba(139,92,246,.30); }
 .sidebar.sb-collapsed .sb-footer { padding: 8px 0 16px; }
