@@ -62,7 +62,7 @@ function rowToLoan(r) {
       } catch(e) {}
       // Fallback: synthesise from old columns
       if (r.fb_name || r.fb_url || r.social_id || r.fbid) {
-        return [{ name: r.fb_name||'', platform: r.social_media||'Facebook', url: r.fb_url||r.fbid||r.social_id||'' }];
+        return [{ name: r.fb_name||'', platform: r.social_media||'Facebook', url: r.fb_url||'', id: r.social_id||'', fbid: r.fbid||'' }];
       }
       return [];
     })(),
@@ -289,7 +289,7 @@ export default async function handler(req, res) {
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [key, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
-         l.Note||'', sl0.name||l.FBName||'', sl0.url||l.URL||'', sl0.platform||l.FacebookCom||'', l.ID||'', l.FBID||'',
+         l.Note||'', sl0.name||l.FBName||'', sl0.url||l.URL||'', sl0.platform||l.FacebookCom||'', sl0.id||l.ID||'', sl0.fbid||l.FBID||'',
          l.photo_url||null, photosJson, slJson]
       );
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
@@ -316,7 +316,7 @@ export default async function handler(req, res) {
          WHERE loan_key=? AND deleted_at IS NULL`,
         [newKey, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
-         l.Note||'', sl0u.name||l.FBName||'', sl0u.url||l.URL||'', sl0u.platform||l.FacebookCom||'', l.ID||'', l.FBID||'',
+         l.Note||'', sl0u.name||l.FBName||'', sl0u.url||l.URL||'', sl0u.platform||l.FacebookCom||'', sl0u.id||l.ID||'', sl0u.fbid||l.FBID||'',
          l.photo_url||null, photosJsonU, slJsonU, key]
       );
       const [updated] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [newKey]);

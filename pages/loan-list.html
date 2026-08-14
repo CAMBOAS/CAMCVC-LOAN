@@ -492,17 +492,13 @@
     .lr-profile-placeholder { display:flex; flex-direction:column; align-items:center; gap:5px; color:rgba(124,92,255,.7); font-size:11px; font-weight:600; pointer-events:none }
     /* ── / Photo upload ── */
     /* ── Social Links ── */
-    .lr-sl-list { display:flex; flex-direction:column; gap:6px; margin-bottom:4px }
-    .lr-sl-row { display:flex; gap:5px; align-items:center }
-    .lr-sl-row .lr-add-input { height:32px; padding:4px 8px; font-size:12px }
-    .lr-sl-name { flex:1; min-width:60px }
-    .lr-sl-platform { width:108px; flex-shrink:0 }
-    .lr-sl-url { flex:1.4; min-width:80px }
-    .lr-sl-rm { flex-shrink:0; width:26px; height:26px; border-radius:7px; border:1px solid rgba(239,68,68,.3); background:rgba(239,68,68,.07); color:#f87171; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; line-height:1; transition:.13s }
-    .lr-sl-rm:hover { background:rgba(239,68,68,.18); border-color:rgba(239,68,68,.55) }
-    .lr-sl-add { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1.5px dashed rgba(124,92,255,.4); border-radius:9px; cursor:pointer; font-size:11px; font-weight:700; color:rgba(124,92,255,.9); background:rgba(124,92,255,.06); transition:.13s; user-select:none; margin-top:2px }
-    .lr-sl-add:hover { border-color:rgba(124,92,255,.7); background:rgba(124,92,255,.12) }
-    .lr-sl-empty { font-size:11px; color:var(--muted); opacity:.6; padding:6px 0 2px }
+    .lr-sl-list { display:flex; flex-direction:column; gap:8px }
+    .lr-sl-card { position:relative }
+    .lr-sl-card-rm { position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:6px; border:1px solid rgba(239,68,68,.35); background:rgba(239,68,68,.08); color:#f87171; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; font-weight:300; line-height:1; padding:0; transition:.13s; z-index:1 }
+    .lr-sl-card-rm:hover { background:rgba(239,68,68,.22); border-color:rgba(239,68,68,.65) }
+    .lr-sl-add { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border:1.5px solid rgba(124,92,255,.35); border-radius:20px; cursor:pointer; font-size:13px; font-weight:700; color:#a78bfa; background:rgba(124,92,255,.08); transition:.13s; user-select:none; letter-spacing:.02em }
+    .lr-sl-add:hover { border-color:rgba(124,92,255,.65); background:rgba(124,92,255,.15); color:#c4b5fd }
+    .lr-sl-empty { font-size:11px; color:var(--muted); opacity:.55; padding:4px 0 2px; font-style:italic }
     /* ── / Social Links ── */
     .lr-add-footer { padding:16px 24px 20px; border-top:1px solid rgba(148,163,200,.1); display:flex; gap:10px; justify-content:flex-end; background:rgba(148,163,200,.03); border-radius:0 0 24px 24px }
     .lr-add-cancel { padding:10px 22px; border-radius:12px; border:1.5px solid rgba(148,163,184,.18); background:transparent; color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.18s }
@@ -2098,7 +2094,7 @@ function openAddModal() {
     +'<div class="lr-sec-box" style="height:100%;box-sizing:border-box">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     +'<div class="lr-add-section" style="margin-bottom:0">Social Links</div>'
-    +'<button type="button" class="lr-sl-add" onclick="addSocialLink(\'af\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add</button>'
+    +'<button type="button" class="lr-sl-add" onclick="addSocialLink(\'af\')">± Add</button>'
     +'</div>'
     +'<div class="lr-sl-list" id="af_SlList"></div>'
     +'<div class="lr-add-date-row" style="margin-top:10px">'
@@ -2436,7 +2432,9 @@ var _editSocialLinks = [];
 var _slPlatforms = ['Facebook','Instagram','Telegram','TikTok','YouTube','Twitter / X','Line','WhatsApp','Website','Phone','Other'];
 
 function _slPlatformOpts(selected) {
-  return _slPlatforms.map(function(p) {
+  var opts = _slPlatforms.slice();
+  if (selected && opts.indexOf(selected) === -1) opts.unshift(selected);
+  return opts.map(function(p) {
     return '<option value="'+esc(p)+'"'+(p===(selected||'Facebook')?' selected':'')+'>'+esc(p)+'</option>';
   }).join('');
 }
@@ -2446,18 +2444,46 @@ function renderSocialLinks(prefix) {
   var el = document.getElementById(prefix+'_SlList');
   if (!el) return;
   if (!arr.length) {
-    el.innerHTML = '<div class="lr-sl-empty">No social links yet — click + to add one</div>';
+    el.innerHTML = '<div class="lr-sl-empty">No social links yet — click ± to add</div>';
     return;
   }
   el.innerHTML = arr.map(function(sl, i) {
-    return '<div class="lr-sl-row">'
-      +'<input class="lr-add-input lr-sl-name" placeholder="Label (e.g. FB)" value="'+esc(sl.name||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'name\',this.value)">'
-      +'<select class="lr-add-input lr-sl-platform" onchange="_slUpdate(\''+prefix+'\','+i+',\'platform\',this.value)">'+_slPlatformOpts(sl.platform)+'</select>'
-      +'<input class="lr-add-input lr-sl-url" placeholder="URL / ID / username" value="'+esc(sl.url||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'url\',this.value)">'
-      +'<button type="button" class="lr-sl-rm" onclick="removeSocialLink(\''+prefix+'\','+i+')" title="Remove">×</button>'
+    return '<div class="lr-sec-box lr-sl-card" style="padding:10px 12px 10px;margin-bottom:0">'
+      +'<button type="button" class="lr-sl-card-rm" onclick="removeSocialLink(\''+prefix+'\','+i+')" title="Remove">−</button>'
+      +'<div class="lr-add-grid" style="margin-bottom:0">'
+      +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">FB Name</div>'
+      +'<input class="lr-add-input" id="'+prefix+'_sl_name_'+i+'" placeholder="Facebook name..." value="'+esc(sl.name||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'name\',this.value)"></div>'
+      +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">URL</div>'
+      +'<input class="lr-add-input" id="'+prefix+'_sl_url_'+i+'" placeholder="https://..." value="'+esc(sl.url||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'url\',this.value)"></div>'
+      +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">Social Media</div>'
+      +'<select class="lr-add-input" id="'+prefix+'_sl_platform_'+i+'" onchange="updateSLFBID(\''+prefix+'\','+i+')">'+_slPlatformOpts(sl.platform)+'</select></div>'
+      +'<div class="lr-add-field" style="margin-bottom:6px"><div class="lr-add-label">ID</div>'
+      +'<input class="lr-add-input" id="'+prefix+'_sl_id_'+i+'" placeholder="Facebook ID..." value="'+esc(sl.id||'')+'" oninput="updateSLFBID(\''+prefix+'\','+i+')"></div>'
+      +'<div class="lr-add-field" style="grid-column:1/-1;margin-bottom:0"><div class="lr-add-label">FBID <span style="font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.05em">(Auto)</span></div>'
+      +'<div class="lr-fbid-wrap"><input class="lr-add-input" id="'+prefix+'_sl_fbid_'+i+'" readonly placeholder="Auto-generated from Social Media + ID" value="'+esc(sl.fbid||'')+'" style="flex:1;background:rgba(148,163,184,.08);color:var(--muted);cursor:default">'
+      +'<button type="button" class="lr-copy-btn" id="'+prefix+'_sl_fbid_'+i+'_copy" onclick="copySLFBID(\''+prefix+'\','+i+')" title="Copy FBID">'+_svgCopy+'</button>'
+      +'<button type="button" class="lr-copy-btn" onclick="openSLFBID(\''+prefix+'\','+i+')" title="Open link">'+_svgLink+'</button>'
+      +'</div></div>'
+      +'</div>'
       +'</div>';
   }).join('');
 }
+
+function updateSLFBID(prefix, i) {
+  var platformEl = document.getElementById(prefix+'_sl_platform_'+i);
+  var idEl       = document.getElementById(prefix+'_sl_id_'+i);
+  var fbidEl     = document.getElementById(prefix+'_sl_fbid_'+i);
+  if (!platformEl || !idEl || !fbidEl) return;
+  var smVal = platformEl.value.trim();
+  var idVal = idEl.value.trim();
+  var fbid  = idVal ? smVal + idVal : '';
+  fbidEl.value = fbid;
+  var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
+  if (arr[i]) { arr[i].platform = smVal; arr[i].id = idVal; arr[i].fbid = fbid; }
+}
+
+function copySLFBID(prefix, i) { copyFBID(prefix+'_sl_fbid_'+i); }
+function openSLFBID(prefix, i) { openFBID(prefix+'_sl_fbid_'+i); }
 
 function _slUpdate(prefix, i, key, val) {
   var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
@@ -2466,11 +2492,13 @@ function _slUpdate(prefix, i, key, val) {
 
 function addSocialLink(prefix) {
   var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
-  arr.push({ name:'', platform:'Facebook', url:'' });
+  arr.push({ name:'', platform:'Facebook', url:'', id:'', fbid:'' });
   renderSocialLinks(prefix);
-  /* Focus the new name input */
-  var el = document.getElementById(prefix+'_SlList');
-  if (el) { var inputs = el.querySelectorAll('.lr-sl-name'); if (inputs.length) inputs[inputs.length-1].focus(); }
+  var n = arr.length - 1;
+  setTimeout(function() {
+    var f = document.getElementById(prefix+'_sl_name_'+n);
+    if (f) f.focus();
+  }, 30);
 }
 
 function removeSocialLink(prefix, i) {
@@ -2481,20 +2509,19 @@ function removeSocialLink(prefix, i) {
 
 function getSocialLinksData(prefix) {
   var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
-  /* Sync from DOM inputs before returning */
-  var el = document.getElementById(prefix+'_SlList');
-  if (el) {
-    var rows = el.querySelectorAll('.lr-sl-row');
-    rows.forEach(function(row, i) {
-      if (!arr[i]) return;
-      var inputs = row.querySelectorAll('input');
-      var select = row.querySelector('select');
-      if (inputs[0]) arr[i].name = inputs[0].value.trim();
-      if (select)    arr[i].platform = select.value;
-      if (inputs[1]) arr[i].url = inputs[1].value.trim();
-    });
-  }
-  return arr.filter(function(sl) { return sl.url || sl.name; });
+  arr.forEach(function(sl, i) {
+    var nameEl     = document.getElementById(prefix+'_sl_name_'+i);
+    var urlEl      = document.getElementById(prefix+'_sl_url_'+i);
+    var platformEl = document.getElementById(prefix+'_sl_platform_'+i);
+    var idEl       = document.getElementById(prefix+'_sl_id_'+i);
+    var fbidEl     = document.getElementById(prefix+'_sl_fbid_'+i);
+    if (nameEl)     sl.name     = nameEl.value.trim();
+    if (urlEl)      sl.url      = urlEl.value.trim();
+    if (platformEl) sl.platform = platformEl.value;
+    if (idEl)       sl.id       = idEl.value.trim();
+    if (fbidEl)     sl.fbid     = fbidEl.value;
+  });
+  return arr.filter(function(sl) { return sl.url || sl.name || sl.id; });
 }
 /* ── / Social Links state & helpers ── */
 
@@ -2856,7 +2883,7 @@ function openEditModal(loan) {
     +'<div class="lr-sec-box" style="height:100%;box-sizing:border-box">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     +'<div class="lr-add-section" style="margin-bottom:0">Social Links</div>'
-    +'<button type="button" class="lr-sl-add" onclick="addSocialLink(\'ef\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add</button>'
+    +'<button type="button" class="lr-sl-add" onclick="addSocialLink(\'ef\')">± Add</button>'
     +'</div>'
     +'<div class="lr-sl-list" id="ef_SlList"></div>'
     +'<div class="lr-add-date-row" style="margin-top:10px">'
@@ -2895,7 +2922,9 @@ function openEditModal(loan) {
 
   document.getElementById('lrModalBg').classList.add('open');
   initEditPhotos(loan);
-  _editSocialLinks = Array.isArray(loan.social_links) ? loan.social_links.map(function(sl){ return Object.assign({},sl); }) : [];
+  _editSocialLinks = Array.isArray(loan.social_links) ? loan.social_links.map(function(sl){
+    return { name:sl.name||'', platform:sl.platform||'Facebook', url:sl.url||'', id:sl.id||'', fbid:sl.fbid||'' };
+  }) : [];
   renderSocialLinks('ef');
   setTimeout(function(){ var f=document.getElementById('ef_FullName'); if(f) f.focus(); }, 80);
 }
