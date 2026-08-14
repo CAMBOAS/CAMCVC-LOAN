@@ -96,9 +96,9 @@
             <span class="sb-theme-icon">${ic.moon}</span>
             <span class="sb-ctrl-label">${t('ម៉ូត','Theme')}</span>
           </button>
-          <button class="sb-ctrl-btn sb-lang-btn" id="sbLangBtn" title="Language">
-            <span class="sb-theme-icon">${ic.globe}</span>
-            <span class="sb-ctrl-label" id="sbLangLabel">${getLang().toUpperCase()}</span>
+          <button class="sb-ctrl-btn sb-logout-btn" id="sbLogoutBtn" title="ចាកចេញ">
+            <span class="sb-theme-icon">${ic.logout}</span>
+            <span class="sb-ctrl-label">ចេញ</span>
           </button>
         </div>
         ${(function(){
@@ -243,13 +243,10 @@
     });
   }
 
-  function initLangBtn() {
-    var btn = document.getElementById('sbLangBtn');
+  function initLogoutBtn() {
+    var btn = document.getElementById('sbLogoutBtn');
     if (!btn) return;
-    btn.addEventListener('click', function() {
-      setLang(getLang() === 'kh' ? 'en' : 'kh');
-      renderLayout(); /* rebuild sidebar + topbar without page reload */
-    });
+    btn.addEventListener('click', function() { showLogoutModal(); });
   }
 
   function renderLayout() {
@@ -266,7 +263,7 @@
     if (sidebar) {
       initSidebarToggle(sidebar);
       initThemeBtn();
-      initLangBtn();
+      initLogoutBtn();
     }
     /* Inject bottom nav (mobile) */
     var old = document.getElementById('sbBottomNav');
