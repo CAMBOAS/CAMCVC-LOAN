@@ -2344,6 +2344,35 @@ body.sb-collapsed .main-content {
   background: rgba(99,102,241,.05) !important;
 }
 
+/* Logout button: icon only when collapsed */
+.sidebar.sb-collapsed .sb-logout-btn {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 44px !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  margin: 0 0 4px !important;
+}
+.sidebar.sb-collapsed .sb-logout-btn > span:not(.sb-theme-icon) { display: none !important; }
+.sidebar.sb-collapsed .sb-logout-btn .sb-theme-icon {
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  border: 1px solid rgba(239,68,68,.25) !important;
+  background: rgba(239,68,68,.07) !important;
+}
+[data-theme="light"] .sidebar.sb-collapsed .sb-logout-btn .sb-theme-icon {
+  border-color: rgba(239,68,68,.2) !important;
+  background: rgba(239,68,68,.05) !important;
+}
+
 /* Theme button: icon only */
 .sidebar.sb-collapsed .sb-theme-btn {
   display: flex !important;
