@@ -105,6 +105,8 @@
     .um-modal-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:4px 6px; line-height:1; border-radius:6px; transition:.12s }
     .um-modal-close:hover { background:rgba(148,163,184,.12) }
     .um-modal-body { padding:18px 22px }
+    @keyframes umSpin { to { transform:rotate(360deg) } }
+    @keyframes umFadeIn { from { opacity:0 } to { opacity:1 } }
 
     /* ── Form fields ── */
     .um-field { margin-bottom:14px }
@@ -465,6 +467,14 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
       </div>
       <div class="um-modal-title" id="umModalTitle">Add New User</div>
+      <!-- Photo avatar (edit mode only) -->
+      <div id="umPhotoWrap" style="display:none;position:relative;width:48px;height:48px;flex-shrink:0">
+        <div id="umPhotoCircle" style="width:48px;height:48px;border-radius:50%;background:rgba(124,92,255,.12);border:2px solid rgba(124,92,255,.28);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:18px;font-weight:800;color:#a78bfa"></div>
+        <div id="umPhotoCam" style="position:absolute;bottom:0;right:0;width:20px;height:20px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(124,58,237,.5)" title="Change photo">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <input type="file" id="umPhotoFile" accept="image/*" style="display:none">
+      </div>
       <button class="um-modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="um-modal-body">
@@ -673,6 +683,7 @@ function openAddModal() {
   document.getElementById('uf_status').value                 = 'active';
   document.getElementById('umModalIcon').style.background    = 'rgba(124,92,255,.15)';
   document.getElementById('umModalIcon').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
+  document.getElementById('umPhotoWrap').style.display = 'none';
   document.getElementById('umModalBg').classList.add('open');
   setTimeout(function(){ document.getElementById('uf_username').focus(); }, 80);
 }
@@ -695,12 +706,24 @@ function openEditModal(username) {
   document.getElementById('uf_status').value                 = u.status || 'active';
   document.getElementById('umModalIcon').style.background    = 'rgba(245,158,11,.13)';
   document.getElementById('umModalIcon').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  /* Photo avatar */
+  var photoWrap = document.getElementById('umPhotoWrap');
+  var photoCircle = document.getElementById('umPhotoCircle');
+  photoWrap.style.display = '';
+  if (u.photo_url) {
+    photoCircle.innerHTML = '<img src="'+esc(u.photo_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    photoCircle.style.cursor = 'zoom-in'; photoCircle.title = 'View photo';
+  } else {
+    photoCircle.textContent = (u.display_name||u.username||'?').charAt(0).toUpperCase();
+    photoCircle.style.cursor = 'default'; photoCircle.title = '';
+  }
   document.getElementById('umModalBg').classList.add('open');
   setTimeout(function(){ document.getElementById('uf_display_name').focus(); }, 80);
 }
 
 function closeModal() {
   document.getElementById('umModalBg').classList.remove('open');
+  document.getElementById('umPhotoFile').value = '';
   _editingUser = null;
 }
 
@@ -751,6 +774,50 @@ async function deleteUserConfirm() {
     else { toast('❌ '+(res&&res.message||'Delete failed'), true); renderTable(); }
   } catch(e) { toast('❌ Network error', true); renderTable(); }
 }
+
+/* ── Edit modal photo handlers ── */
+document.getElementById('umPhotoCircle').addEventListener('click', function() {
+  if (!_editingUser || !_editingUser.photo_url) return;
+  var prev = document.createElement('div');
+  prev.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);cursor:zoom-out;animation:umFadeIn .15s ease';
+  prev.innerHTML = '<img src="'+esc(_editingUser.photo_url)+'" style="max-width:88vw;max-height:88vh;border-radius:16px;object-fit:contain;box-shadow:0 24px 64px rgba(0,0,0,.8)">';
+  prev.onclick = function() { prev.remove(); };
+  document.body.appendChild(prev);
+});
+
+document.getElementById('umPhotoCam').addEventListener('click', function(e) {
+  e.stopPropagation();
+  document.getElementById('umPhotoFile').click();
+});
+
+document.getElementById('umPhotoFile').addEventListener('change', async function(e) {
+  var file = e.target.files && e.target.files[0];
+  if (!file || !_editingUser) return;
+  var circle = document.getElementById('umPhotoCircle');
+  var origContent = circle.innerHTML;
+  circle.style.cursor = 'default';
+  circle.innerHTML = '<div style="width:20px;height:20px;border:2.5px solid rgba(124,92,255,.3);border-top-color:#a78bfa;border-radius:50%;animation:umSpin .65s linear infinite"></div>';
+  try {
+    var reader = new FileReader();
+    reader.onload = async function(ev) {
+      try {
+        var r = await CamboAPI.post({ action:'helen_upload_photo', data: ev.target.result });
+        if (!r || !r.ok) { toast('❌ Upload failed: '+(r&&r.message||''), true); circle.innerHTML = origContent; return; }
+        var r2 = await CamboAPI.post({ action:'helen_user_update_photo', username: _editingUser.username, photo_url: r.url });
+        if (!r2 || !r2.ok) { toast('❌ '+(r2&&r2.message||'Save failed'), true); circle.innerHTML = origContent; return; }
+        _editingUser.photo_url = r.url;
+        var idx = _users.findIndex(function(x){ return x.username === _editingUser.username; });
+        if (idx >= 0) _users[idx].photo_url = r.url;
+        circle.innerHTML = '<img src="'+esc(r.url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        circle.style.cursor = 'zoom-in'; circle.title = 'View photo';
+        renderTable();
+        toast('✅ Photo updated!');
+      } catch(err) { toast('❌ '+err.message, true); circle.innerHTML = origContent; }
+    };
+    reader.readAsDataURL(file);
+  } catch(err) { toast('❌ '+err.message, true); circle.innerHTML = origContent; }
+  e.target.value = '';
+});
 
 /* ── Keyboard ── */
 document.addEventListener('keydown', function(e) {

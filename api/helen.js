@@ -445,6 +445,17 @@ export default async function handler(req, res) {
       return res.json({ ok:true });
     }
 
+    /* ── Admin update user photo ── */
+    if (action === 'helen_user_update_photo') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
+      const u = String(body.username||'').trim();
+      if (!u) return res.json({ ok:false, message:'Username required' });
+      await ensureUserPhotoCol();
+      const photoUrl = String(body.photo_url||'').trim();
+      await db().query('UPDATE helen_users SET photo_url=? WHERE username=?', [photoUrl || null, u]);
+      return res.json({ ok:true });
+    }
+
     /* ── Self update profile (any authenticated user) ── */
     if (action === 'helen_user_self_update') {
       const type = String(body.type || '').trim();
