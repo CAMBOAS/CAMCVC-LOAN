@@ -32,6 +32,7 @@
 
   function logout() {
     clear();
+    localStorage.removeItem('helen_user_photo');
     location.replace('login.html');
   }
 

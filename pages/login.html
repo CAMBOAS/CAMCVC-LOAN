@@ -583,6 +583,8 @@
           localStorage.setItem('helenAuth', JSON.stringify({
             u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || ''
           }));
+          if (res.photo_url) localStorage.setItem('helen_user_photo', res.photo_url);
+          else localStorage.removeItem('helen_user_photo');
           var next = new URLSearchParams(location.search).get('next') || 'loan-list.html';
           location.replace(next);
         }

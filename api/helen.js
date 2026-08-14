@@ -176,8 +176,9 @@ async function isWatched(username) {
 /* ── Auth ── */
 async function validateAuth(u, p) {
   if (!u || !p) return null;
+  await ensureUserPhotoCol();
   const [rows] = await db().query(
-    'SELECT username, role, display_name, exp_date FROM helen_users WHERE username=? AND pin=? AND status="active" LIMIT 1',
+    'SELECT username, role, display_name, exp_date, photo_url FROM helen_users WHERE username=? AND pin=? AND status="active" LIMIT 1',
     [u, p]
   );
   if (!rows.length) return null;
@@ -192,7 +193,7 @@ async function validateAuth(u, p) {
   const expDate = user.exp_date
     ? (user.exp_date instanceof Date ? user.exp_date.toISOString().split('T')[0] : String(user.exp_date).substring(0,10))
     : '';
-  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate };
+  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '' };
 }
 
 export const config = { api: { bodyParser: false } };
@@ -227,7 +228,7 @@ export default async function handler(req, res) {
       if (v.expired)   return res.json({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
       db().query('UPDATE helen_users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
       if (await isNotifEnabled('login')) { try { await sendTelegramEvent('login', { name:v.name, role:v.role, username:v.username }); } catch(e) {} }
-      return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate });
+      return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate, photo_url:v.photo_url||'' });
     }
 
     if (action === 'helen_login_alert') {
