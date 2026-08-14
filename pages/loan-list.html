@@ -2132,7 +2132,7 @@ function openAddModal() {
     +'</div></div>';
 
   document.getElementById('lrAddModalBg').classList.add('open');
-  _addSocialLinks = [];
+  _addSocialLinks = [{ name:'', platform:'Facebook', url:'', id:'', fbid:'' }];
   _addSLActiveTab = 0;
   renderSocialLinks('af');
   setTimeout(function(){ var f=document.getElementById('af_FullName'); if(f) f.focus(); }, 80);
