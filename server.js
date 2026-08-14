@@ -165,6 +165,27 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(200); return res.end(); }
 
+  /* ── /api/helen — proxy to Vercel production (MySQL API) ── */
+  if (pathname === '/api/helen') {
+    try {
+      let body = '';
+      await new Promise((ok) => { req.on('data', c => { body += c; }); req.on('end', ok); });
+      const response = await fetch('https://helen-loan.vercel.app/api/helen', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    body,
+      });
+      const text = await response.text();
+      res.setHeader('Content-Type', 'application/json');
+      res.writeHead(response.status);
+      return res.end(text);
+    } catch (err) {
+      console.error('[/api/helen proxy error]', err.message);
+      res.writeHead(502);
+      return res.end(JSON.stringify({ ok: false, message: err.message }));
+    }
+  }
+
   /* ── /api/proxy — forward to Apps Script (uses built-in fetch, auto redirect) ── */
   if (pathname === '/api/proxy') {
     try {
