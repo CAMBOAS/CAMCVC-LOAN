@@ -25,6 +25,14 @@ function db() {
   return pool;
 }
 
+/* ── One-time migration: add social_links column if absent ── */
+let _slColReady = false;
+async function ensureSocialLinksCol() {
+  if (_slColReady) return;
+  try { await db().query('ALTER TABLE helen_loans ADD COLUMN social_links TEXT'); } catch(e) {}
+  _slColReady = true;
+}
+
 /* ── Map DB row → frontend loan object ── */
 function rowToLoan(r) {
   return {
@@ -45,6 +53,19 @@ function rowToLoan(r) {
     FBID:        r.fbid         || '',
     photo_url:   r.photo_url    || '',
     photos:      (() => { try { if (!r.photos) return []; if (Array.isArray(r.photos)) return r.photos; return JSON.parse(r.photos) || []; } catch(e) { return []; } })(),
+    social_links: (() => {
+      try {
+        if (r.social_links) {
+          const sl = typeof r.social_links === 'string' ? JSON.parse(r.social_links) : r.social_links;
+          if (Array.isArray(sl) && sl.length) return sl;
+        }
+      } catch(e) {}
+      // Fallback: synthesise from old columns
+      if (r.fb_name || r.fb_url || r.social_id || r.fbid) {
+        return [{ name: r.fb_name||'', platform: r.social_media||'Facebook', url: r.fb_url||r.fbid||r.social_id||'' }];
+      }
+      return [];
+    })(),
   };
 }
 
@@ -255,18 +276,21 @@ export default async function handler(req, res) {
 
     /* ── Add loan ── */
     if (action === 'helen_loan_add') {
+      await ensureSocialLinksCol();
       const l = body.loan || {};
       const datePart = l.DateTime ? l.DateTime.substring(0, 10) : new Date().toISOString().substring(0, 10);
       const key = datePart + 'T' + new Date().toISOString().substring(11);
       const photosJson = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
+      const slJson = Array.isArray(l.social_links) && l.social_links.length ? JSON.stringify(l.social_links) : null;
+      const sl0 = (l.social_links||[])[0] || {};
       await db().query(
         `INSERT INTO helen_loans
-           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photo_url,photos)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photo_url,photos,social_links)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [key, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
-         l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'',
-         l.photo_url||null, photosJson]
+         l.Note||'', sl0.name||l.FBName||'', sl0.url||l.URL||'', sl0.platform||l.FacebookCom||'', l.ID||'', l.FBID||'',
+         l.photo_url||null, photosJson, slJson]
       );
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('add'))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
@@ -275,22 +299,25 @@ export default async function handler(req, res) {
 
     /* ── Update loan ── */
     if (action === 'helen_loan_update') {
+      await ensureSocialLinksCol();
       const key = String(body.key||'').trim();
       const l   = body.loan || {};
       const [old] = await db().query('SELECT * FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!old.length) return res.json({ ok:false, message:'Row not found' });
       const newKey = l.DateTime || key;
       const photosJsonU = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
+      const slJsonU = Array.isArray(l.social_links) && l.social_links.length ? JSON.stringify(l.social_links) : null;
+      const sl0u = (l.social_links||[])[0] || {};
       await db().query(
         `UPDATE helen_loans SET
            loan_key=?,full_name=?,national_id=?,dob=?,phone=?,gender=?,loan_group=?,
            money=?,loan_status=?,note=?,fb_name=?,fb_url=?,social_media=?,social_id=?,fbid=?,
-           photo_url=?,photos=?
+           photo_url=?,photos=?,social_links=?
          WHERE loan_key=? AND deleted_at IS NULL`,
         [newKey, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
-         l.Note||'', l.FBName||'', l.URL||'', l.FacebookCom||'', l.ID||'', l.FBID||'',
-         l.photo_url||null, photosJsonU, key]
+         l.Note||'', sl0u.name||l.FBName||'', sl0u.url||l.URL||'', sl0u.platform||l.FacebookCom||'', l.ID||'', l.FBID||'',
+         l.photo_url||null, photosJsonU, slJsonU, key]
       );
       const [updated] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [newKey]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('edit'))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }

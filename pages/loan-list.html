@@ -491,6 +491,19 @@
     .lr-profile-wrap:hover { border-color:rgba(124,92,255,.65); background:rgba(124,92,255,.09) }
     .lr-profile-placeholder { display:flex; flex-direction:column; align-items:center; gap:5px; color:rgba(124,92,255,.7); font-size:11px; font-weight:600; pointer-events:none }
     /* ── / Photo upload ── */
+    /* ── Social Links ── */
+    .lr-sl-list { display:flex; flex-direction:column; gap:6px; margin-bottom:4px }
+    .lr-sl-row { display:flex; gap:5px; align-items:center }
+    .lr-sl-row .lr-add-input { height:32px; padding:4px 8px; font-size:12px }
+    .lr-sl-name { flex:1; min-width:60px }
+    .lr-sl-platform { width:108px; flex-shrink:0 }
+    .lr-sl-url { flex:1.4; min-width:80px }
+    .lr-sl-rm { flex-shrink:0; width:26px; height:26px; border-radius:7px; border:1px solid rgba(239,68,68,.3); background:rgba(239,68,68,.07); color:#f87171; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; line-height:1; transition:.13s }
+    .lr-sl-rm:hover { background:rgba(239,68,68,.18); border-color:rgba(239,68,68,.55) }
+    .lr-sl-add { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1.5px dashed rgba(124,92,255,.4); border-radius:9px; cursor:pointer; font-size:11px; font-weight:700; color:rgba(124,92,255,.9); background:rgba(124,92,255,.06); transition:.13s; user-select:none; margin-top:2px }
+    .lr-sl-add:hover { border-color:rgba(124,92,255,.7); background:rgba(124,92,255,.12) }
+    .lr-sl-empty { font-size:11px; color:var(--muted); opacity:.6; padding:6px 0 2px }
+    /* ── / Social Links ── */
     .lr-add-footer { padding:16px 24px 20px; border-top:1px solid rgba(148,163,200,.1); display:flex; gap:10px; justify-content:flex-end; background:rgba(148,163,200,.03); border-radius:0 0 24px 24px }
     .lr-add-cancel { padding:10px 22px; border-radius:12px; border:1.5px solid rgba(148,163,184,.18); background:transparent; color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.18s }
     .lr-add-cancel:hover { background:rgba(148,163,184,.1) }
@@ -2083,15 +2096,12 @@ function openAddModal() {
     +'</div></div></div>'
     +'<div class="lr-modal-col">'
     +'<div class="lr-sec-box" style="height:100%;box-sizing:border-box">'
-    +'<div class="lr-add-section">Facebook Info</div>'
-    +'<div class="lr-add-grid">'
-    +'<div class="lr-add-field"><div class="lr-add-label">FB Name</div><input class="lr-add-input" id="af_FBName" placeholder="Facebook name..."></div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">URL</div><input class="lr-add-input" id="af_URL" placeholder="https://..."></div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">Social Media</div>'+smField+'</div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">ID</div><input class="lr-add-input" id="af_ID" placeholder="Facebook ID..." oninput="updateFBID(\'af\')"></div>'
-    +'<div class="lr-add-field" style="grid-column:1/-1;margin-bottom:0"><div class="lr-add-label">FBID <span style="font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.05em">(Auto)</span></div><div class="lr-fbid-wrap"><input class="lr-add-input" id="af_FBID" readonly placeholder="Auto-generated from Social Media + ID" style="flex:1;background:rgba(148,163,184,.08);color:var(--muted);cursor:default"><button type="button" class="lr-copy-btn" id="af_FBID_copy" onclick="copyFBID(\'af_FBID\')" title="Copy FBID">'+_svgCopy+'</button><button type="button" class="lr-copy-btn" onclick="openFBID(\'af_FBID\')" title="Open link">'+_svgLink+'</button></div></div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    +'<div class="lr-add-section" style="margin-bottom:0">Social Links</div>'
+    +'<button type="button" class="lr-sl-add" onclick="addSocialLink(\'af\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add</button>'
     +'</div>'
-    +'<div class="lr-add-date-row" style="margin-top:12px">'
+    +'<div class="lr-sl-list" id="af_SlList"></div>'
+    +'<div class="lr-add-date-row" style="margin-top:10px">'
     +'<div class="lr-add-date-label">'+svgCal+' Entry Date <span class="lr-add-date-hint">(empty = today)</span></div>'
     +'<label class="lr-datepick-wrap" for="af_DateTime">'
     +'<span class="lr-datepick-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>'
@@ -2126,19 +2136,21 @@ function openAddModal() {
     +'</div></div>';
 
   document.getElementById('lrAddModalBg').classList.add('open');
-  updateFBID('af');
+  _addSocialLinks = [];
+  renderSocialLinks('af');
   setTimeout(function(){ var f=document.getElementById('af_FullName'); if(f) f.focus(); }, 80);
 }
 
 function isAddFormDirty() {
   var ids = ['af_FullName','af_NationalID','af_DOB','af_Phone','af_Gender','af_Groups',
-             'af_Money','af_Status','af_FBName','af_URL','af_ID','af_Note'];
+             'af_Money','af_Status','af_Note'];
   for (var i = 0; i < ids.length; i++) {
     var el = document.getElementById(ids[i]);
     if (!el) continue;
     var v = el.value.trim();
     if (v && v !== '0' && v !== '0.00') return true;
   }
+  if (_addSocialLinks.length > 0) return true;
   return false;
 }
 function closeAddModal() {
@@ -2417,6 +2429,75 @@ function avatarHtml(l) {
 
 var _addPhotos = [];
 
+/* ── Social Links state & helpers ── */
+var _addSocialLinks = [];
+var _editSocialLinks = [];
+
+var _slPlatforms = ['Facebook','Instagram','Telegram','TikTok','YouTube','Twitter / X','Line','WhatsApp','Website','Phone','Other'];
+
+function _slPlatformOpts(selected) {
+  return _slPlatforms.map(function(p) {
+    return '<option value="'+esc(p)+'"'+(p===(selected||'Facebook')?' selected':'')+'>'+esc(p)+'</option>';
+  }).join('');
+}
+
+function renderSocialLinks(prefix) {
+  var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
+  var el = document.getElementById(prefix+'_SlList');
+  if (!el) return;
+  if (!arr.length) {
+    el.innerHTML = '<div class="lr-sl-empty">No social links yet — click + to add one</div>';
+    return;
+  }
+  el.innerHTML = arr.map(function(sl, i) {
+    return '<div class="lr-sl-row">'
+      +'<input class="lr-add-input lr-sl-name" placeholder="Label (e.g. FB)" value="'+esc(sl.name||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'name\',this.value)">'
+      +'<select class="lr-add-input lr-sl-platform" onchange="_slUpdate(\''+prefix+'\','+i+',\'platform\',this.value)">'+_slPlatformOpts(sl.platform)+'</select>'
+      +'<input class="lr-add-input lr-sl-url" placeholder="URL / ID / username" value="'+esc(sl.url||'')+'" oninput="_slUpdate(\''+prefix+'\','+i+',\'url\',this.value)">'
+      +'<button type="button" class="lr-sl-rm" onclick="removeSocialLink(\''+prefix+'\','+i+')" title="Remove">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+function _slUpdate(prefix, i, key, val) {
+  var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
+  if (arr[i]) arr[i][key] = val;
+}
+
+function addSocialLink(prefix) {
+  var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
+  arr.push({ name:'', platform:'Facebook', url:'' });
+  renderSocialLinks(prefix);
+  /* Focus the new name input */
+  var el = document.getElementById(prefix+'_SlList');
+  if (el) { var inputs = el.querySelectorAll('.lr-sl-name'); if (inputs.length) inputs[inputs.length-1].focus(); }
+}
+
+function removeSocialLink(prefix, i) {
+  var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
+  arr.splice(i, 1);
+  renderSocialLinks(prefix);
+}
+
+function getSocialLinksData(prefix) {
+  var arr = prefix==='af' ? _addSocialLinks : _editSocialLinks;
+  /* Sync from DOM inputs before returning */
+  var el = document.getElementById(prefix+'_SlList');
+  if (el) {
+    var rows = el.querySelectorAll('.lr-sl-row');
+    rows.forEach(function(row, i) {
+      if (!arr[i]) return;
+      var inputs = row.querySelectorAll('input');
+      var select = row.querySelector('select');
+      if (inputs[0]) arr[i].name = inputs[0].value.trim();
+      if (select)    arr[i].platform = select.value;
+      if (inputs[1]) arr[i].url = inputs[1].value.trim();
+    });
+  }
+  return arr.filter(function(sl) { return sl.url || sl.name; });
+}
+/* ── / Social Links state & helpers ── */
+
 function compressPhoto(file) {
   return new Promise(function(resolve) {
     var img = new Image();
@@ -2645,11 +2726,7 @@ async function saveAdd() {
     Status:      status,
     Note:        document.getElementById('af_Note').value.trim(),
     DateTime:    customDT,
-    FBName:      document.getElementById('af_FBName').value.trim(),
-    URL:         document.getElementById('af_URL').value.trim(),
-    FacebookCom: document.getElementById('af_FacebookCom').value.trim(),
-    ID:          document.getElementById('af_ID').value.trim(),
-    FBID:        document.getElementById('af_FBID').value.trim(),
+    social_links: getSocialLinksData('af'),
   };
 
   /* Upload profile photo */
@@ -2777,15 +2854,12 @@ function openEditModal(loan) {
     +'</div></div></div>'
     +'<div class="lr-modal-col">'
     +'<div class="lr-sec-box" style="height:100%;box-sizing:border-box">'
-    +'<div class="lr-add-section">Facebook Info</div>'
-    +'<div class="lr-add-grid">'
-    +'<div class="lr-add-field"><div class="lr-add-label">FB Name</div><input class="lr-add-input" id="ef_FBName" value="'+esc(loan.FBName||'')+'" placeholder="Facebook name..."></div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">URL</div><input class="lr-add-input" id="ef_URL" value="'+esc(loan.URL||'')+'" placeholder="https://..."></div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">Social Media</div>'+smFieldE+'</div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">ID</div><input class="lr-add-input" id="ef_ID" value="'+esc(loan.ID||'')+'" placeholder="Facebook ID..." oninput="updateFBID(\'ef\')"></div>'
-    +'<div class="lr-add-field" style="grid-column:1/-1;margin-bottom:0"><div class="lr-add-label">FBID <span style="font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.05em">(Auto)</span></div><div class="lr-fbid-wrap"><input class="lr-add-input" id="ef_FBID" readonly placeholder="Auto-generated from Social Media + ID" style="flex:1;background:rgba(148,163,184,.08);color:var(--muted);cursor:default"><button type="button" class="lr-copy-btn" id="ef_FBID_copy" onclick="copyFBID(\'ef_FBID\')" title="Copy FBID">'+_svgCopy+'</button><button type="button" class="lr-copy-btn" onclick="openFBID(\'ef_FBID\')" title="Open link">'+_svgLink+'</button></div></div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    +'<div class="lr-add-section" style="margin-bottom:0">Social Links</div>'
+    +'<button type="button" class="lr-sl-add" onclick="addSocialLink(\'ef\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add</button>'
     +'</div>'
-    +'<div class="lr-add-date-row" style="margin-top:12px">'
+    +'<div class="lr-sl-list" id="ef_SlList"></div>'
+    +'<div class="lr-add-date-row" style="margin-top:10px">'
     +'<div class="lr-add-date-label">'+svgCal+' Entry Date</div>'
     +'<label class="lr-datepick-wrap" for="ef_DateTime">'
     +'<span class="lr-datepick-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>'
@@ -2821,7 +2895,8 @@ function openEditModal(loan) {
 
   document.getElementById('lrModalBg').classList.add('open');
   initEditPhotos(loan);
-  updateFBID('ef');
+  _editSocialLinks = Array.isArray(loan.social_links) ? loan.social_links.map(function(sl){ return Object.assign({},sl); }) : [];
+  renderSocialLinks('ef');
   setTimeout(function(){ var f=document.getElementById('ef_FullName'); if(f) f.focus(); }, 80);
 }
 
@@ -2853,11 +2928,7 @@ async function saveEdit() {
     Money:       document.getElementById('ef_Money').value,
     Status:      document.getElementById('ef_Status').value,
     Note:        document.getElementById('ef_Note').value.trim(),
-    FBName:      document.getElementById('ef_FBName').value.trim(),
-    URL:         document.getElementById('ef_URL').value.trim(),
-    FacebookCom: document.getElementById('ef_FacebookCom').value.trim(),
-    ID:          document.getElementById('ef_ID').value.trim(),
-    FBID:        document.getElementById('ef_FBID').value.trim(),
+    social_links: getSocialLinksData('ef'),
     Code:        _editLoan.Code || '',
   };
 
@@ -3018,10 +3089,18 @@ function openSheet(loan) {
     + '<div class="lr-sheet-row" style="align-items:center"><div class="lr-sheet-icon" style="background:rgba(148,163,184,.1)"><span style="color:var(--muted)">🔖</span></div><div style="flex:1;min-width:0"><div class="lr-sheet-lbl">ស្ថានភាព</div><div class="lr-sheet-val">'+statusBadge+'</div></div></div>'
     + row('<span style="color:#fbbf24">'+svgCal+'</span>',   'rgba(251,191,36,.12)', 'កាលបរិច្ឆេទ',   esc(fmtDate(loan.DateTime)))
     + (loan.Note ? row('<span style="color:var(--muted)">'+svgNote+'</span>', 'rgba(148,163,184,.1)', 'Note', esc(loan.Note)) : '')
-    + (loan.FBName ? row('<span style="color:#60a5fa">'+svgFb+'</span>', 'rgba(96,165,250,.12)', 'FB Name', esc(loan.FBName)) : '')
-    + (String(loan.FBID||'').trim() ? row('<span style="color:#60a5fa">'+svgLink+'</span>', 'rgba(96,165,250,.12)', 'FBID / Link', fbid) : '')
-    + (String(loan.URL||'').trim() && /^https?:\/\//i.test(loan.URL) ? row('<span style="color:#60a5fa">'+svgLink+'</span>', 'rgba(96,165,250,.12)', 'URL', url) : '')
-    + (loan.ID ? row('<span style="color:var(--muted)">'+svgId+'</span>', 'rgba(148,163,184,.1)', 'ID', '<span style="font-family:monospace;font-size:11px">'+esc(loan.ID)+'</span>') : '');
+    + (function() {
+        var links = Array.isArray(loan.social_links) && loan.social_links.length ? loan.social_links : [];
+        if (!links.length && (loan.FBName || loan.URL || loan.FBID)) {
+          links = [{ name: loan.FBName||'', platform: loan.FacebookCom||'Facebook', url: loan.URL||loan.FBID||'' }];
+        }
+        return links.map(function(sl) {
+          var label = (sl.name ? esc(sl.name)+' · ' : '') + esc(sl.platform||'');
+          var u = String(sl.url||'').trim();
+          var valHtml = u ? ('<a href="'+((/^https?:\/\//i.test(u)?'':'https://')+esc(u))+'" target="_blank" rel="noopener noreferrer">'+esc(u)+'</a>') : '—';
+          return row('<span style="color:#60a5fa">'+svgLink+'</span>', 'rgba(96,165,250,.12)', label, valHtml);
+        }).join('');
+      })();
 
   document.getElementById('lrSheetBg').classList.add('open');
   document.getElementById('lrSheet').classList.add('open');
