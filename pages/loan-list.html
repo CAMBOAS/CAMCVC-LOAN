@@ -975,6 +975,16 @@ function fmtDate(dt) {
   if (m) return m[3]+'/'+m[2]+'/'+m[1];
   return s.split('T')[0] || '—';
 }
+function dateTs(key) {
+  if (!key) return 0;
+  try {
+    var d = new Date(String(key));
+    if (!isNaN(d.getTime())) return d.getTime();
+    var p = String(key).match(/^(\d{1,2})[,\s]+(\d{1,2})[,\s]+(\d{4})/);
+    if (p) return new Date(p[3]+'-'+p[2].padStart(2,'0')+'-'+p[1].padStart(2,'0')).getTime();
+  } catch(e){}
+  return 0;
+}
 function fmtDOB(el) {
   var v = el.value.replace(/\D/g, '').slice(0, 8);
   if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
@@ -1290,9 +1300,11 @@ function sortAndRender() {
 function renderTable() {
   var arr = _filtered.slice();
   arr.sort(function(a,b){
-    var av = a[_sortCol]||'', bv = b[_sortCol]||'';
-    if (_sortCol === 'Money') { av = Number(av)||0; bv = Number(bv)||0; }
-    if (_sortCol === '_idx')  { av = Number(av)||0; bv = Number(bv)||0; }
+    var av, bv;
+    if (_sortCol === 'Money') { av = Number(a[_sortCol]||0); bv = Number(b[_sortCol]||0); }
+    else if (_sortCol === '_idx') { av = Number(a[_sortCol]||0); bv = Number(b[_sortCol]||0); }
+    else if (_sortCol === '_date') { av = dateTs(a.DateTime); bv = dateTs(b.DateTime); }
+    else { av = a[_sortCol]||''; bv = b[_sortCol]||''; }
     var r = (av > bv ? 1 : av < bv ? -1 : 0);
     return _sortAsc ? r : -r;
   });
