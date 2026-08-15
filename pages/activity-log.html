@@ -102,6 +102,12 @@
     .al-actor-name { font-weight:700; font-size:12.5px }
     .al-borrow-cell { display:flex; align-items:center; gap:8px }
 
+    /* ── Date filter ── */
+    .al-date-filter { display:flex; gap:3px; flex-shrink:0 }
+    .al-df-btn { padding:6px 11px; border-radius:8px; border:1.5px solid var(--al-border); background:var(--al-card); color:var(--al-muted); font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s; white-space:nowrap }
+    .al-df-btn:hover { color:#7c5cff; border-color:#7c5cff }
+    .al-df-btn.al-df-active { background:rgba(124,92,255,.1); border-color:#7c5cff; color:#7c5cff }
+
     /* ── Load more ── */
     .al-load-more { text-align:center; padding:14px }
     .al-load-more-btn { padding:9px 26px; border-radius:10px; border:1.5px solid var(--al-border); background:transparent; color:#7c5cff; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
@@ -151,6 +157,12 @@
           <option value="">All Users</option>
         </select>
         <span id="alMyOnlyBadge" class="al-my-badge" style="display:none">My activity only</span>
+        <div class="al-date-filter">
+          <button class="al-df-btn al-df-active" data-filter="all"   onclick="setDateFilter('all')">All</button>
+          <button class="al-df-btn"               data-filter="today" onclick="setDateFilter('today')">Today</button>
+          <button class="al-df-btn"               data-filter="week"  onclick="setDateFilter('week')">7 Days</button>
+          <button class="al-df-btn"               data-filter="month" onclick="setDateFilter('month')">This Month</button>
+        </div>
         <button class="al-refresh-btn" onclick="loadData()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           Refresh
@@ -292,12 +304,44 @@
 <script>
 'use strict';
 
-var _allLogs  = [];
-var _offset   = 0;
-var _total    = 0;
-var _PAGE     = 300;
-var _actors   = new Set();
-var _curTab   = 'all';
+var _allLogs    = [];
+var _offset     = 0;
+var _total      = 0;
+var _PAGE       = 300;
+var _actors     = new Set();
+var _curTab     = 'all';
+var _dateFilter = 'all';
+
+/* ── Date filter ── */
+function _ppDateStr(d) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Phnom_Penh' }).format(d);
+}
+function _parseLogTs(l) {
+  var s = String(l.created_at||'').trim().replace(' ','T');
+  if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+  return new Date(s);
+}
+function applyDateFilter(logs) {
+  if (_dateFilter === 'all') return logs;
+  var now = new Date();
+  var todayPP = _ppDateStr(now);
+  return logs.filter(function(l) {
+    var d = _parseLogTs(l);
+    if (isNaN(d.getTime())) return true;
+    var datePP = _ppDateStr(d);
+    if (_dateFilter === 'today') return datePP === todayPP;
+    if (_dateFilter === 'week')  return d.getTime() >= now.getTime() - 7*24*3600*1000;
+    if (_dateFilter === 'month') return datePP.substring(0,7) === todayPP.substring(0,7);
+    return true;
+  });
+}
+function setDateFilter(f) {
+  _dateFilter = f;
+  document.querySelectorAll('.al-df-btn').forEach(function(b) {
+    b.classList.toggle('al-df-active', b.dataset.filter === f);
+  });
+  renderAll();
+}
 
 function _isAdmin() {
   try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a && a.role === 'Admin'; } catch(e) { return false; }
@@ -531,16 +575,17 @@ function rowUser(log) {
 /* ── Render all panels from _allLogs ── */
 function renderAll() {
   var admin = _isAdmin();
+  var filtered = applyDateFilter(_allLogs);
   var groups = {
-    auth:   _allLogs.filter(function(l){ return l.action==='user_login'||l.action==='user_logout'; }),
-    add:    _allLogs.filter(function(l){ return l.action==='loan_add'; }),
-    edit:   _allLogs.filter(function(l){ return l.action==='loan_edit'||l.action==='loan_paid'||l.action==='loan_recover'; }),
-    delete: _allLogs.filter(function(l){ return l.action==='loan_delete'; }),
-    users:  _allLogs.filter(function(l){ return l.action==='user_add'||l.action==='user_edit'||l.action==='user_delete'; }),
+    auth:   filtered.filter(function(l){ return l.action==='user_login'||l.action==='user_logout'; }),
+    add:    filtered.filter(function(l){ return l.action==='loan_add'; }),
+    edit:   filtered.filter(function(l){ return l.action==='loan_edit'||l.action==='loan_paid'||l.action==='loan_recover'; }),
+    delete: filtered.filter(function(l){ return l.action==='loan_delete'; }),
+    users:  filtered.filter(function(l){ return l.action==='user_add'||l.action==='user_edit'||l.action==='user_delete'; }),
   };
 
   /* KPI */
-  document.getElementById('kpiTotal').textContent   = _total;
+  document.getElementById('kpiTotal').textContent   = filtered.length;
   document.getElementById('kpiLogins').textContent  = groups.auth.length;
   document.getElementById('kpiAdded').textContent   = groups.add.length;
   document.getElementById('kpiEdited').textContent  = groups.edit.length;
@@ -548,7 +593,7 @@ function renderAll() {
   document.getElementById('alKpi').style.display = '';
 
   /* Tab badges */
-  document.getElementById('tbAll').textContent    = _total;
+  document.getElementById('tbAll').textContent    = filtered.length;
   document.getElementById('tbAuth').textContent   = groups.auth.length;
   document.getElementById('tbAdd').textContent    = groups.add.length;
   document.getElementById('tbEdit').textContent   = groups.edit.length;
@@ -558,13 +603,13 @@ function renderAll() {
   /* All panel */
   var bodyAll = document.getElementById('tbodyAll');
   var stAll   = document.getElementById('stateAll');
-  if (_allLogs.length) {
-    bodyAll.innerHTML = _allLogs.map(rowAll).join('');
+  if (filtered.length) {
+    bodyAll.innerHTML = filtered.map(rowAll).join('');
     stAll.style.display = 'none';
     document.getElementById('tblAll').style.display = '';
   } else {
     bodyAll.innerHTML = '';
-    stAll.innerHTML = '📭 No activity found';
+    stAll.innerHTML = 'No activity found';
     stAll.style.display = '';
     document.getElementById('tblAll').style.display = 'none';
   }
