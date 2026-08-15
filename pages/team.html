@@ -274,8 +274,6 @@ function renderCard(u, idx) {
     +'</div>'
     +'<div class="tm-name">'+esc(name)+'</div>'
     +'<span class="tm-role '+roleCls(u.role)+'">'+esc(u.role||'Staff')+'</span>'
-    +expBadge(u.exp_date)
-    +(online?'<span class="tm-online-badge"><span class="tm-online-badge-dot"></span>Online</span>':'')
     +'<div class="tm-divider"></div>'
     +'<div class="tm-stats">'
       +'<div class="tm-stat"><div class="tm-stat-val">'+Number(u.loans_added||0)+'</div><div class="tm-stat-lbl">Added</div></div>'
