@@ -90,9 +90,9 @@
           ${link('index.html', ic.dashboard, t('Dashboard','Dashboard'))}
           ${link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List'))}
           ${link('pages/reports.html', ic.report, t('Reports','Reports'))}
-          ${link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log'))}
           ${link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment'))}
           ${link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder'))}
+          ${link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log'))}
           ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
         </ul>
       </nav>
