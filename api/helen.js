@@ -265,6 +265,7 @@ export default async function handler(req, res) {
 
     /* ── All data (loans + infor) ── */
     if (action === 'helen_all') {
+      await ensureCreatedByUserCol();
       const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL ORDER BY l.loan_key DESC`);
       const [infor] = await db().query('SELECT type, value FROM helen_infor ORDER BY id');
       return res.json({
@@ -289,6 +290,7 @@ export default async function handler(req, res) {
 
     /* ── Trash list ── */
     if (action === 'helen_loan_list_trash') {
+      await ensureCreatedByUserCol();
       const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.deleted_at IS NOT NULL ORDER BY l.deleted_at DESC`);
       return res.json({ ok:true, loans: loans.map(rowToLoan) });
     }
