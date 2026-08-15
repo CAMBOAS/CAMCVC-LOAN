@@ -333,6 +333,7 @@ export default async function handler(req, res) {
 
     /* ── Logout log ── */
     if (action === 'helen_user_logout') {
+      db().query("UPDATE helen_users SET last_seen='2000-01-01 00:00:00' WHERE username=?", [_bu]).catch(()=>{});
       logActivity('user_logout', actor, _bu, null, null).catch(()=>{});
       return res.json({ ok: true });
     }
