@@ -677,5 +677,12 @@
     renderLayout();
     applyLogoAnimation();
     applyUserCardAnimation();
+    /* Inject global chat widget on every page except login */
+    var _pg = (window.location.pathname.split('/').pop()||'index.html');
+    if (_pg !== 'login.html' && !document.getElementById('gc-box')) {
+      var _s = document.createElement('script');
+      _s.src = getBase() + 'assets/js/chat-global.js?v=1';
+      document.head.appendChild(_s);
+    }
   });
 })();

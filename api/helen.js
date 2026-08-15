@@ -557,12 +557,22 @@ export default async function handler(req, res) {
     if (action === 'helen_msg_unread') {
       await ensureMessagesTable();
       const [rows] = await db().query(
-        'SELECT sender, COUNT(*) AS cnt FROM helen_messages WHERE recipient=? AND is_read=0 GROUP BY sender',
+        `SELECT hm.sender, COUNT(*) AS cnt,
+                COALESCE(hu.display_name, hm.sender) AS display_name,
+                COALESCE(hu.photo_url, '') AS photo_url
+         FROM helen_messages hm
+         LEFT JOIN helen_users hu
+           ON hu.username COLLATE utf8mb4_unicode_ci = hm.sender COLLATE utf8mb4_unicode_ci
+         WHERE hm.recipient=? AND hm.is_read=0
+         GROUP BY hm.sender, hu.display_name, hu.photo_url`,
         [_bu]
       );
       const counts = {};
-      rows.forEach(r => { counts[r.sender] = Number(r.cnt); });
-      return res.json({ ok:true, counts });
+      const unread = rows.map(r => {
+        counts[r.sender] = Number(r.cnt);
+        return { sender: r.sender, count: Number(r.cnt), display_name: r.display_name || r.sender, photo_url: r.photo_url || '' };
+      });
+      return res.json({ ok:true, counts, unread });
     }
 
     /* ── Team list (all authenticated users) ── */
