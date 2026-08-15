@@ -69,9 +69,11 @@
 
     /* ── Role badge ── */
     .um-role { display:inline-block; padding:2px 9px; border-radius:6px; font-size:11px; font-weight:700 }
-    .um-role-admin { background:rgba(124,92,255,.15); color:#a78bfa }
-    .um-role-owner { background:rgba(245,158,11,.15); color:#f59e0b }
-    .um-role-staff { background:rgba(6,182,212,.13); color:#22d3ee }
+    .um-role-admin   { background:rgba(124,92,255,.15); color:#a78bfa }
+    .um-role-owner   { background:rgba(245,158,11,.15); color:#f59e0b }
+    .um-role-staff   { background:rgba(6,182,212,.13);  color:#22d3ee }
+    .um-role-tester  { background:rgba(16,185,129,.13); color:#10b981 }
+    .um-role-viewer  { background:rgba(148,163,184,.15); color:#94a3b8 }
 
     /* ── Status badge ── */
     .um-status { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600 }
@@ -506,6 +508,8 @@
             <option value="Admin">Admin</option>
             <option value="Owner">Owner</option>
             <option value="Staff Loan" selected>Staff Loan</option>
+            <option value="Tester">Tester</option>
+            <option value="Viewer">Viewer</option>
           </select>
         </div>
       </div>
@@ -573,8 +577,10 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function roleClass(r) {
   if (!r) return 'um-role';
   var l = r.toLowerCase();
-  if (l === 'admin') return 'um-role um-role-admin';
-  if (l === 'owner') return 'um-role um-role-owner';
+  if (l === 'admin')  return 'um-role um-role-admin';
+  if (l === 'owner')  return 'um-role um-role-owner';
+  if (l === 'tester') return 'um-role um-role-tester';
+  if (l === 'viewer') return 'um-role um-role-viewer';
   return 'um-role um-role-staff';
 }
 
