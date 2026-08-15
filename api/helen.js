@@ -510,7 +510,7 @@ export default async function handler(req, res) {
     if (action === 'helen_team_list') {
       await ensureUserPhotoCol();
       const [users] = await db().query(`
-        SELECT u.username, u.display_name, u.role, u.photo_url, u.exp_date, u.status,
+        SELECT u.username, u.display_name, u.role, u.photo_url, u.exp_date, u.status, u.last_seen,
           COALESCE(s.loans_added, 0)  AS loans_added,
           COALESCE(s.loans_edited, 0) AS loans_edited,
           s.last_login
