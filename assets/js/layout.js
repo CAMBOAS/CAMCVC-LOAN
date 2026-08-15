@@ -107,10 +107,6 @@
             <span class="sb-theme-icon">${ic.moon}</span>
             <span class="sb-ctrl-label">${t('ម៉ូត','Theme')}</span>
           </button>
-          <button class="sb-ctrl-btn sb-logout-btn" id="sbLogoutBtn" title="Logout">
-            <span class="sb-theme-icon">${ic.logout}</span>
-            <span class="sb-ctrl-label">Logout</span>
-          </button>
         </div>
         ${(function(){
           var _a = null;
