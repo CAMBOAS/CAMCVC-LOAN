@@ -507,6 +507,64 @@ export default async function handler(req, res) {
       return res.json({ ok: r.affectedRows > 0, message: r.affectedRows > 0 ? 'Deleted' : 'Not found' });
     }
 
+    /* ── Messages ── */
+    async function ensureMessagesTable() {
+      await db().query(`CREATE TABLE IF NOT EXISTS helen_messages (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        sender      VARCHAR(100) NOT NULL,
+        recipient   VARCHAR(100) NOT NULL,
+        body        TEXT,
+        image_url   VARCHAR(1000),
+        is_read     TINYINT(1) DEFAULT 0,
+        created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_conv (sender(50), recipient(50)),
+        INDEX idx_recv (recipient(50), is_read)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+    }
+
+    if (action === 'helen_msg_send') {
+      await ensureMessagesTable();
+      const to  = String(body.to  || '').trim();
+      const txt = String(body.body || '').trim();
+      const img = String(body.image_url || '').trim();
+      if (!to)          return res.json({ ok:false, message:'Missing recipient' });
+      if (!txt && !img) return res.json({ ok:false, message:'Message is empty' });
+      const [ins] = await db().query(
+        'INSERT INTO helen_messages (sender, recipient, body, image_url) VALUES (?,?,?,?)',
+        [_bu, to, txt||null, img||null]
+      );
+      return res.json({ ok:true, id: ins.insertId });
+    }
+
+    if (action === 'helen_msg_list') {
+      await ensureMessagesTable();
+      const w = String(body.with || '').trim();
+      if (!w) return res.json({ ok:false, message:'Missing with' });
+      await db().query(
+        'UPDATE helen_messages SET is_read=1 WHERE sender=? AND recipient=? AND is_read=0',
+        [w, _bu]
+      );
+      const [msgs] = await db().query(
+        `SELECT id, sender, recipient, body, image_url, is_read, created_at
+         FROM helen_messages
+         WHERE (sender=? AND recipient=?) OR (sender=? AND recipient=?)
+         ORDER BY created_at ASC LIMIT 150`,
+        [_bu, w, w, _bu]
+      );
+      return res.json({ ok:true, messages: msgs });
+    }
+
+    if (action === 'helen_msg_unread') {
+      await ensureMessagesTable();
+      const [rows] = await db().query(
+        'SELECT sender, COUNT(*) AS cnt FROM helen_messages WHERE recipient=? AND is_read=0 GROUP BY sender',
+        [_bu]
+      );
+      const counts = {};
+      rows.forEach(r => { counts[r.sender] = Number(r.cnt); });
+      return res.json({ ok:true, counts });
+    }
+
     /* ── Team list (all authenticated users) ── */
     if (action === 'helen_team_list') {
       await ensureUserPhotoCol();
