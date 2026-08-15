@@ -12,11 +12,10 @@
   <link rel="stylesheet" href="../assets/css/main.css?v=5">
   <style>
     .orb{display:none!important}
-    .background{background:#27272a!important}
-    .background::before{display:none!important}
+    .dashboard{background:#27272a!important}
     body{background:#27272a!important}
     .sidebar{background:#27272a!important}
-    [data-theme="light"] .background{background:#f8fafc!important}
+    [data-theme="light"] .dashboard{background:#f8fafc!important}
     [data-theme="light"] body{background:#f8fafc!important}
     [data-theme="light"] .sidebar{background:#f8fafc!important}
     html[data-theme="light"] .header-shell,
@@ -99,9 +98,11 @@
   </style>
 </head>
 <body>
-<div class="background">
-  <aside class="sidebar" id="sidebar"></aside>
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
   <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
     <div class="rp-wrap" id="rpWrap">
 
       <!-- Header -->
@@ -224,7 +225,7 @@
       </div>
     </div><!-- /.rp-wrap -->
   </main>
-</div>
+</div><!-- /.dashboard -->
 
 <script src="../assets/js/layout.js?v=1"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
