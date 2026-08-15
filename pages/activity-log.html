@@ -359,16 +359,33 @@ function actorCell(log) {
 
 function fmtDateTime(dt) {
   try {
-    var d    = new Date(dt);
-    var now  = new Date();
-    var dd   = String(d.getDate()).padStart(2,'0');
-    var mo   = String(d.getMonth()+1).padStart(2,'0');
-    var h24  = d.getHours();
-    var mm   = String(d.getMinutes()).padStart(2,'0');
-    var ampm = h24 >= 12 ? 'PM' : 'AM';
-    var h12  = h24 % 12 || 12;
+    // MySQL dateStrings:true returns UTC as "YYYY-MM-DD HH:MM:SS" — force UTC parse
+    var s = String(dt||'').trim().replace(' ', 'T');
+    if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return String(dt||'').substring(0,16);
+
+    // Format in Asia/Phnom_Penh (UTC+7)
+    var TZ = 'Asia/Phnom_Penh';
+    var parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ, hour12: false,
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit'
+    }).formatToParts(d);
+    var p = {};
+    parts.forEach(function(x){ p[x.type] = x.value; });
+
+    var h24   = parseInt(p.hour, 10);
+    var ampm  = h24 >= 12 ? 'PM' : 'AM';
+    var h12   = h24 % 12 || 12;
     var hhStr = String(h12).padStart(2,'0');
-    var datePart = d.toDateString() === now.toDateString() ? 'Today' : dd+'/'+mo;
+    var mm    = p.minute;
+
+    // "Today" check also in PP timezone
+    var ppDate  = new Intl.DateTimeFormat('en-CA', {timeZone:TZ}).format(d);
+    var nowDate = new Intl.DateTimeFormat('en-CA', {timeZone:TZ}).format(new Date());
+    var datePart = ppDate === nowDate ? 'Today' : p.day+'/'+p.month;
+
     return '<span style="font-size:10px;color:var(--al-muted)">'+datePart+'</span>'
          + ' <b>'+hhStr+':'+mm+'</b>'
          + ' <span style="font-size:10px;font-weight:700;color:var(--al-muted)">'+ampm+'</span>';
