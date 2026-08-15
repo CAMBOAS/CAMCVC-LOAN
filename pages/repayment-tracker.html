@@ -230,6 +230,21 @@
     .rt-dp-del:hover { background:rgba(239,68,68,.18); border-color:rgba(239,68,68,.6) }
     .rt-dp-del:active { transform:none }
     .rt-dp-del:disabled { opacity:.4; cursor:not-allowed }
+    /* paid confirm overlay */
+    .rt-paid-conf-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:8000; display:flex; align-items:center; justify-content:center; padding:20px }
+    .rt-paid-conf-box { background:#1a1a2e; border:1px solid rgba(74,222,128,.25); border-radius:18px; padding:28px 24px 22px; max-width:320px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.6); text-align:center }
+    [data-theme="light"] .rt-paid-conf-box { background:#fff; border-color:rgba(22,163,74,.25); box-shadow:0 12px 40px rgba(0,0,0,.15) }
+    .rt-paid-conf-box.unpaid-mode { border-color:rgba(251,191,36,.3) }
+    .rt-paid-conf-title { font-size:16px; font-weight:800; color:var(--rt-text); margin-bottom:6px }
+    .rt-paid-conf-msg { font-size:12.5px; color:var(--rt-muted); line-height:1.55; margin-bottom:20px }
+    .rt-paid-conf-btns { display:flex; gap:9px }
+    .rt-paid-conf-cancel { flex:1; padding:10px; border-radius:10px; border:1px solid var(--rt-input-border); background:var(--rt-input); color:var(--rt-muted); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .rt-paid-conf-cancel:hover { color:var(--rt-text) }
+    .rt-paid-conf-ok { flex:1; padding:10px; border-radius:10px; border:none; color:#fff; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:.15s }
+    .rt-paid-conf-ok.go-paid   { background:linear-gradient(135deg,#16a34a,#4ade80) }
+    .rt-paid-conf-ok.go-unpaid { background:linear-gradient(135deg,#b45309,#fbbf24); color:#1a1200 }
+    .rt-paid-conf-ok:hover { opacity:.9 }
+    .rt-paid-conf-ok:disabled { opacity:.5; cursor:not-allowed }
     /* delete confirm overlay */
     .rt-del-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:8000; display:flex; align-items:center; justify-content:center; padding:20px }
     .rt-del-box { background:#1a1a2e; border:1px solid rgba(239,68,68,.3); border-radius:18px; padding:28px 24px 22px; max-width:340px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.6); text-align:center }
@@ -511,6 +526,19 @@
 <!-- Hidden file inputs -->
 <input type="file" id="dpMainPhotoFile" accept="image/*"        style="display:none" onchange="onMainPhotoChange(this)">
 <input type="file" id="dpMediaFile"     accept="image/*,video/*" style="display:none" onchange="onMediaAdd(this)">
+
+<!-- Paid Toggle Confirm Modal -->
+<div class="rt-paid-conf-overlay" id="rtPaidConfOverlay" style="display:none" onclick="if(event.target===this)closePaidConfirm()">
+  <div class="rt-paid-conf-box" id="rtPaidConfBox">
+    <div class="rt-del-icon" id="rtPaidConfIcon">✅</div>
+    <div class="rt-paid-conf-title" id="rtPaidConfTitle">Mark as Paid?</div>
+    <div class="rt-paid-conf-msg" id="rtPaidConfMsg"></div>
+    <div class="rt-paid-conf-btns">
+      <button class="rt-paid-conf-cancel" onclick="closePaidConfirm()">Cancel</button>
+      <button class="rt-paid-conf-ok go-paid" id="rtPaidConfOkBtn" onclick="doPaidToggle()">Confirm</button>
+    </div>
+  </div>
+</div>
 
 <!-- Delete Confirm Modal -->
 <div class="rt-del-overlay" id="rtDelOverlay" style="display:none" onclick="if(event.target===this)closeDeleteConfirm()">
@@ -983,7 +1011,7 @@ function renderTable() {
       +'<td style="font-size:11.5px">'+highlight(l.Groups||'—',q)+'</td>'
       +'<td>'+statusTag(l.Status)+'</td>'
       +'<td class="'+moneyCls+'">'+fmtMoney(l.Money)+'</td>'
-      +'<td style="text-align:center"><button class="rt-paid-btn '+paidCls+'" data-key="'+esc(l.DateTime)+'" title="Toggle paid" onclick="event.stopPropagation();togglePaid(this)">'+(l.Paid?'✅':'○')+'</button></td>'
+      +'<td style="text-align:center"><button class="rt-paid-btn '+paidCls+'" data-key="'+esc(l.DateTime)+'" title="'+(l.Paid?'Mark as Unpaid':'Mark as Paid')+'" onclick="event.stopPropagation();confirmTogglePaid(this)">'+(l.Paid?'✅':'○')+'</button></td>'
       +'</tr>';
   }).join('');
 }
@@ -1037,27 +1065,61 @@ function sortBy(key) {
 }
 
 /* ── Toggle paid (table) ── */
-async function togglePaid(btn) {
+var _pendingPaidKey = null;
+
+function confirmTogglePaid(btn) {
   var key = btn.getAttribute('data-key');
   if (!key) return;
-  btn.disabled = true;
-  var wasPaid = btn.classList.contains('paid');
-  var loan = _loans.find(function(l){ return l.DateTime===key; });
+  var loan = _loans.find(function(l){ return l.DateTime === key; });
+  if (!loan) return;
+  _pendingPaidKey = key;
+  var goingPaid = !loan.Paid;
+  var box  = document.getElementById('rtPaidConfBox');
+  var icon = document.getElementById('rtPaidConfIcon');
+  var ok   = document.getElementById('rtPaidConfOkBtn');
+  box.className  = 'rt-paid-conf-box' + (goingPaid ? '' : ' unpaid-mode');
+  icon.textContent = goingPaid ? '✅' : '⏳';
+  document.getElementById('rtPaidConfTitle').textContent = goingPaid ? 'Mark as Paid?' : 'Mark as Unpaid?';
+  document.getElementById('rtPaidConfMsg').innerHTML =
+    '<strong>'+esc(loan.FullName||'—')+'</strong> will be marked as <strong>'+(goingPaid?'Paid':'Unpaid')+'</strong>.';
+  ok.className   = 'rt-paid-conf-ok ' + (goingPaid ? 'go-paid' : 'go-unpaid');
+  ok.textContent = goingPaid ? '✅ Mark Paid' : '⏳ Mark Unpaid';
+  ok.disabled    = false;
+  document.getElementById('rtPaidConfOverlay').style.display = 'flex';
+}
+function closePaidConfirm() {
+  document.getElementById('rtPaidConfOverlay').style.display = 'none';
+  _pendingPaidKey = null;
+}
+async function doPaidToggle() {
+  var key = _pendingPaidKey;
+  if (!key) return;
+  var ok = document.getElementById('rtPaidConfOkBtn');
+  ok.disabled = true; ok.textContent = '…';
+  var loan = _loans.find(function(l){ return l.DateTime === key; });
+  var wasPaid = loan ? !!loan.Paid : false;
   if (loan) loan.Paid = wasPaid ? 0 : 1;
+  closePaidConfirm();
   render();
-  if (_selectedKey===key) populateDetail(_loans.find(function(l){ return l.DateTime===key; }));
+  if (_selectedKey === key) populateDetail(_loans.find(function(l){ return l.DateTime === key; }));
   try {
     var res = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:key });
-    if (!res||!res.ok) {
+    if (!res || !res.ok) {
       if (loan) loan.Paid = wasPaid ? 1 : 0;
       render();
-      if (_selectedKey===key) populateDetail(_loans.find(function(l){ return l.DateTime===key; }));
+      if (_selectedKey === key) populateDetail(_loans.find(function(l){ return l.DateTime === key; }));
+      toast('❌ ' + (res && res.message || 'Failed'));
+    } else {
+      if (loan && res.paid !== undefined) loan.Paid = res.paid;
+      render();
+      if (_selectedKey === key) populateDetail(_loans.find(function(l){ return l.DateTime === key; }));
+      toast(loan && loan.Paid ? '✅ Marked as Paid' : '⏳ Marked as Unpaid');
     }
   } catch(e) {
     if (loan) loan.Paid = wasPaid ? 1 : 0;
     render();
+    toast('❌ ' + e.message);
   }
-  btn.disabled = false;
 }
 
 /* ── Detail panel ── */
