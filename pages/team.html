@@ -62,16 +62,24 @@
 
     /* ── Online dot ── */
     .tm-online-dot {
-      position:absolute; bottom:2px; right:2px;
-      width:14px; height:14px; border-radius:50%;
-      background:#22c55e; border:2.5px solid var(--tm-card);
-      box-shadow:0 0 0 0 rgba(34,197,94,.6);
-      animation:tmPulse 2s ease-in-out infinite;
+      position:absolute; bottom:1px; right:1px;
+      width:18px; height:18px; border-radius:50%;
+      background:#22c55e; border:3px solid var(--tm-card);
+      animation:tmPulse 1.8s ease-in-out infinite;
     }
     @keyframes tmPulse {
-      0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,.5) }
-      50%      { box-shadow:0 0 0 5px rgba(34,197,94,0) }
+      0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,.6) }
+      50%      { box-shadow:0 0 0 6px rgba(34,197,94,0) }
     }
+
+    /* ── Online badge (text) ── */
+    .tm-online-badge {
+      display:inline-flex; align-items:center; gap:4px;
+      font-size:10px; font-weight:700; color:#16a34a;
+      background:rgba(34,197,94,.12); border-radius:20px;
+      padding:2px 8px; margin-bottom:10px;
+    }
+    .tm-online-badge-dot { width:6px; height:6px; border-radius:50%; background:#22c55e; flex-shrink:0 }
 
     /* ── Name & role ── */
     .tm-name { font-size:13.5px; font-weight:800; color:var(--tm-text); margin-bottom:5px; line-height:1.3; text-align:center; word-break:break-word }
@@ -154,10 +162,9 @@
 
     .pm-online-dot {
       position:absolute; bottom:4px; right:4px;
-      width:18px; height:18px; border-radius:50%;
+      width:20px; height:20px; border-radius:50%;
       background:#22c55e; border:3px solid var(--tm-card);
-      box-shadow:0 0 0 0 rgba(34,197,94,.6);
-      animation:tmPulse 2s ease-in-out infinite;
+      animation:tmPulse 1.8s ease-in-out infinite;
     }
 
     .pm-name { font-size:17px; font-weight:800; color:var(--tm-text); margin-bottom:6px; text-align:center }
@@ -324,6 +331,7 @@ function renderCard(u, idx) {
     +'<div class="tm-name">'+esc(name)+'</div>'
     +'<span class="tm-role '+roleCls(u.role)+'">'+esc(u.role||'Staff')+'</span>'
     +expBadge(u.exp_date)
+    +(online ? '<span class="tm-online-badge"><span class="tm-online-badge-dot"></span>Online</span>' : '')
     +'<div class="tm-divider"></div>'
     +'<div class="tm-stats">'
       +'<div class="tm-stat"><div class="tm-stat-val">'+Number(u.loans_added||0)+'</div><div class="tm-stat-lbl">Added</div></div>'
