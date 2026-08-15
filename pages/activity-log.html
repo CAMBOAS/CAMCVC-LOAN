@@ -23,76 +23,80 @@
     :root {
       --al-bg:#f1f5f9;--al-card:#ffffff;--al-text:#0f172a;--al-muted:#64748b;
       --al-border:rgba(148,163,184,.2);--al-shadow:0 2px 12px rgba(0,0,0,.07);
+      --al-th:#f8fafc;--al-tr-hover:rgba(124,92,255,.03);
     }
     [data-theme="dark"] {
       --al-bg:#18181b;--al-card:#1e293b;--al-text:#f1f5f9;--al-muted:#94a3b8;
       --al-border:rgba(148,163,184,.12);--al-shadow:0 2px 16px rgba(0,0,0,.4);
+      --al-th:#0f172a;--al-tr-hover:rgba(124,92,255,.06);
     }
 
     .al-wrap { padding:16px 20px 40px; overflow-y:auto; height:calc(100vh - 64px); box-sizing:border-box }
-    @media(max-width:980px){ .al-wrap{ height:auto; padding:14px 12px 100px } }
-
-    /* ── Filter bar ── */
-    .al-filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:18px }
-    .al-filter-sel { padding:8px 12px; border-radius:10px; border:1.5px solid var(--al-border); background:var(--al-card); color:var(--al-text); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; outline:none; transition:.15s }
-    .al-filter-sel:focus { border-color:#7c5cff }
-    .al-filter-count { font-size:12px; color:var(--al-muted); margin-left:auto }
-    .al-refresh-btn { display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:10px; border:1.5px solid var(--al-border); background:var(--al-card); color:var(--al-muted); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:.15s }
-    .al-refresh-btn:hover { color:#7c5cff; border-color:#7c5cff }
+    @media(max-width:980px){ .al-wrap{ height:auto; padding:12px 10px 100px } }
 
     /* ── KPI strip ── */
-    .al-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px }
-    @media(max-width:600px){ .al-kpi-row{ grid-template-columns:repeat(2,1fr) } }
-    .al-kpi { background:var(--al-card); border-radius:16px; padding:14px 16px; border:1px solid var(--al-border); box-shadow:var(--al-shadow) }
-    .al-kpi-label { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--al-muted); margin-bottom:6px }
-    .al-kpi-val { font-size:22px; font-weight:800; color:var(--al-text); line-height:1 }
-    .al-kpi-sub  { font-size:10.5px; color:var(--al-muted); margin-top:3px }
+    .al-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px }
+    @media(max-width:700px){ .al-kpi-row{ grid-template-columns:repeat(3,1fr) } }
+    @media(max-width:420px){ .al-kpi-row{ grid-template-columns:repeat(2,1fr) } }
+    .al-kpi { background:var(--al-card); border-radius:14px; padding:12px 14px; border:1px solid var(--al-border); box-shadow:var(--al-shadow); cursor:pointer; transition:.15s }
+    .al-kpi:hover { border-color:rgba(124,92,255,.3) }
+    .al-kpi.al-kpi-active { border-color:#7c5cff; box-shadow:0 0 0 3px rgba(124,92,255,.12) }
+    .al-kpi-label { font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--al-muted); margin-bottom:5px }
+    .al-kpi-val { font-size:20px; font-weight:800; color:var(--al-text); line-height:1 }
+    .al-kpi-sub  { font-size:10px; color:var(--al-muted); margin-top:2px }
 
-    /* ── Timeline ── */
-    .al-feed { display:flex; flex-direction:column; gap:4px }
-    .al-day-sep { display:flex; align-items:center; gap:10px; margin:14px 0 8px; color:var(--al-muted); font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase }
-    .al-day-sep::after { content:''; flex:1; height:1px; background:var(--al-border) }
+    /* ── Top bar ── */
+    .al-topbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px }
+    .al-filter-sel { padding:7px 11px; border-radius:9px; border:1.5px solid var(--al-border); background:var(--al-card); color:var(--al-text); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; outline:none; transition:.15s }
+    .al-filter-sel:focus { border-color:#7c5cff }
+    .al-refresh-btn { display:inline-flex; align-items:center; gap:5px; padding:7px 13px; border-radius:9px; border:1.5px solid var(--al-border); background:var(--al-card); color:var(--al-muted); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:.15s }
+    .al-refresh-btn:hover { color:#7c5cff; border-color:#7c5cff }
+    .al-count-txt { font-size:11.5px; color:var(--al-muted); margin-left:auto }
+    .al-my-badge { font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; background:rgba(124,92,255,.1); color:#7c5cff; white-space:nowrap }
 
-    .al-item { display:flex; align-items:flex-start; gap:12px; padding:11px 14px; border-radius:14px; background:var(--al-card); border:1px solid var(--al-border); transition:.15s }
-    .al-item:hover { border-color:rgba(124,92,255,.25); background:rgba(124,92,255,.03) }
-    .al-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px }
-    .al-body { flex:1; min-width:0 }
-    .al-row1 { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px }
-    .al-action-badge { font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:6px; letter-spacing:.03em }
-    .al-actor { font-size:12px; font-weight:700; color:var(--al-text) }
-    .al-time { font-size:11px; color:var(--al-muted); margin-left:auto; white-space:nowrap; flex-shrink:0 }
-    .al-desc { font-size:12.5px; color:var(--al-muted); line-height:1.5 }
-    .al-target { font-weight:700; color:var(--al-text) }
-    .al-detail { display:inline-flex; gap:6px; flex-wrap:wrap; margin-top:4px }
-    .al-chip { font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:6px; background:rgba(148,163,184,.1); color:var(--al-muted) }
+    /* ── Tab bar ── */
+    .al-tabs { display:flex; gap:4px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; -ms-overflow-style:none; scrollbar-width:none }
+    .al-tabs::-webkit-scrollbar { display:none }
+    .al-tab { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:1.5px solid transparent; background:transparent; color:var(--al-muted); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; transition:.15s }
+    .al-tab:hover { background:var(--al-card); color:var(--al-text) }
+    .al-tab.al-tab-active { background:var(--al-card); border-color:var(--al-border); color:var(--al-text); box-shadow:var(--al-shadow) }
+    .al-tab-badge { font-size:10px; font-weight:800; padding:1px 6px; border-radius:20px; background:rgba(148,163,184,.15); color:var(--al-muted); min-width:18px; text-align:center }
+    .al-tab-active .al-tab-badge { background:rgba(124,92,255,.15); color:#7c5cff }
 
-    /* Action colors */
-    .al-c-add    { background:rgba(34,197,94,.12);  color:#16a34a }
-    .al-c-edit   { background:rgba(59,130,246,.12); color:#2563eb }
-    .al-c-delete { background:rgba(239,68,68,.12);  color:#dc2626 }
-    .al-c-paid   { background:rgba(16,185,129,.12); color:#059669 }
-    .al-c-recover{ background:rgba(99,102,241,.12); color:#4f46e5 }
-    .al-c-login  { background:rgba(124,92,255,.12); color:#7c5cff }
-    .al-c-user   { background:rgba(245,158,11,.12); color:#d97706 }
+    /* ── Table panel ── */
+    .al-panel { display:none }
+    .al-panel.al-panel-active { display:block }
+    .al-table-wrap { background:var(--al-card); border-radius:16px; border:1px solid var(--al-border); box-shadow:var(--al-shadow); overflow:hidden }
+    .al-table-wrap .al-tbl-scroll { overflow-x:auto }
+    table.al-tbl { width:100%; border-collapse:collapse; font-size:12.5px }
+    table.al-tbl thead th { background:var(--al-th); color:var(--al-muted); font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:10px 14px; text-align:left; border-bottom:1px solid var(--al-border); white-space:nowrap }
+    table.al-tbl tbody tr { border-bottom:1px solid var(--al-border); transition:.12s }
+    table.al-tbl tbody tr:last-child { border-bottom:none }
+    table.al-tbl tbody tr:hover { background:var(--al-tr-hover) }
+    table.al-tbl td { padding:10px 14px; color:var(--al-text); vertical-align:middle }
+    .al-tbl-time { color:var(--al-muted); font-size:11.5px; white-space:nowrap; font-variant-numeric:tabular-nums }
+    .al-tbl-name { font-weight:700 }
+    .al-tbl-muted { color:var(--al-muted) }
+    .al-tbl-chip { display:inline-block; font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:6px; background:rgba(148,163,184,.12); color:var(--al-muted); margin-right:3px }
 
-    .al-icon-add    { background:rgba(34,197,94,.12) }
-    .al-icon-edit   { background:rgba(59,130,246,.12) }
-    .al-icon-delete { background:rgba(239,68,68,.12) }
-    .al-icon-paid   { background:rgba(16,185,129,.12) }
-    .al-icon-recover{ background:rgba(99,102,241,.12) }
-    .al-icon-login  { background:rgba(124,92,255,.12) }
-    .al-icon-user   { background:rgba(245,158,11,.12) }
-    .al-c-muted  { background:rgba(148,163,184,.12); color:#64748b }
-    .al-icon-muted { background:rgba(148,163,184,.1) }
+    /* Badge colors */
+    .b-add    { background:rgba(34,197,94,.12);  color:#16a34a }
+    .b-edit   { background:rgba(59,130,246,.12); color:#2563eb }
+    .b-delete { background:rgba(239,68,68,.12);  color:#dc2626 }
+    .b-paid   { background:rgba(16,185,129,.12); color:#059669 }
+    .b-recover{ background:rgba(99,102,241,.12); color:#4f46e5 }
+    .b-login  { background:rgba(124,92,255,.12); color:#7c5cff }
+    .b-logout { background:rgba(148,163,184,.12);color:#64748b }
+    .b-user   { background:rgba(245,158,11,.12); color:#d97706 }
 
     /* ── Empty / Loading ── */
-    .al-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:250px; gap:12px; color:var(--al-muted); font-size:14px }
-    .al-spin { width:30px; height:30px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:alSpin .7s linear infinite }
+    .al-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px; gap:10px; color:var(--al-muted); font-size:13px }
+    .al-spin { width:28px; height:28px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:alSpin .7s linear infinite }
     @keyframes alSpin{ to{ transform:rotate(360deg) } }
 
     /* ── Load more ── */
-    .al-load-more { text-align:center; margin-top:18px }
-    .al-load-more-btn { padding:10px 28px; border-radius:12px; border:1.5px solid var(--al-border); background:var(--al-card); color:#7c5cff; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .al-load-more { text-align:center; padding:14px }
+    .al-load-more-btn { padding:9px 26px; border-radius:10px; border:1.5px solid var(--al-border); background:transparent; color:#7c5cff; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
     .al-load-more-btn:hover { background:rgba(124,92,255,.08); border-color:#7c5cff }
   </style>
 </head>
@@ -104,64 +108,167 @@
     <div class="shared-topbar" id="sharedHeader"></div>
     <div class="al-wrap" id="alWrap">
 
-      <!-- KPI Row -->
+      <!-- KPI Row (clickable tabs) -->
       <div class="al-kpi-row" id="alKpi" style="display:none">
-        <div class="al-kpi">
+        <div class="al-kpi" onclick="switchTab('all')" id="kpiAll">
           <div class="al-kpi-label">Total Events</div>
           <div class="al-kpi-val" id="kpiTotal">—</div>
           <div class="al-kpi-sub">All recorded</div>
         </div>
-        <div class="al-kpi">
+        <div class="al-kpi" onclick="switchTab('auth')" id="kpiAuth">
+          <div class="al-kpi-label">Login / Logout</div>
+          <div class="al-kpi-val" id="kpiLogins" style="color:#7c5cff">—</div>
+          <div class="al-kpi-sub">auth events</div>
+        </div>
+        <div class="al-kpi" onclick="switchTab('add')" id="kpiAddCard">
           <div class="al-kpi-label">Loans Added</div>
           <div class="al-kpi-val" id="kpiAdded" style="color:#22c55e">—</div>
           <div class="al-kpi-sub">loan_add events</div>
         </div>
-        <div class="al-kpi">
+        <div class="al-kpi" onclick="switchTab('edit')" id="kpiEditCard">
+          <div class="al-kpi-label">Loans Edited</div>
+          <div class="al-kpi-val" id="kpiEdited" style="color:#3b82f6">—</div>
+          <div class="al-kpi-sub">edit + paid + recover</div>
+        </div>
+        <div class="al-kpi" onclick="switchTab('delete')" id="kpiDelCard">
           <div class="al-kpi-label">Loans Deleted</div>
           <div class="al-kpi-val" id="kpiDeleted" style="color:#ef4444">—</div>
           <div class="al-kpi-sub">loan_delete events</div>
         </div>
-        <div class="al-kpi">
-          <div class="al-kpi-label">User Logins</div>
-          <div class="al-kpi-val" id="kpiLogins" style="color:#7c5cff">—</div>
-          <div class="al-kpi-sub">login events</div>
-        </div>
       </div>
 
-      <!-- Filter bar -->
-      <div class="al-filter-bar">
-        <select class="al-filter-sel" id="alFilterAction" onchange="applyFilter()">
-          <option value="">All Actions</option>
-          <option value="loan_add">Loan Added</option>
-          <option value="loan_edit">Loan Edited</option>
-          <option value="loan_delete">Loan Deleted</option>
-          <option value="loan_recover">Loan Recovered</option>
-          <option value="loan_paid">Paid Toggled</option>
-          <option value="user_login">User Login</option>
-          <option value="user_logout">User Logout</option>
-          <option value="user_add">User Added</option>
-          <option value="user_edit">User Edited</option>
-          <option value="user_delete">User Deleted</option>
-        </select>
-        <select class="al-filter-sel" id="alFilterActor" onchange="applyFilter()" style="display:none">
+      <!-- Top bar -->
+      <div class="al-topbar">
+        <select class="al-filter-sel" id="alFilterActor" onchange="loadData()" style="display:none">
           <option value="">All Users</option>
         </select>
-        <span id="alMyOnlyBadge" style="display:none;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;background:rgba(124,92,255,.1);color:#7c5cff;white-space:nowrap">
-          My activity only
-        </span>
+        <span id="alMyOnlyBadge" class="al-my-badge" style="display:none">My activity only</span>
         <button class="al-refresh-btn" onclick="loadData()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           Refresh
         </button>
-        <span class="al-filter-count" id="alCount"></span>
+        <span class="al-count-txt" id="alCount"></span>
       </div>
 
-      <!-- Feed -->
-      <div id="alFeed">
-        <div class="al-state"><div class="al-spin"></div><span>Loading activity…</span></div>
+      <!-- Tab bar -->
+      <div class="al-tabs" id="alTabBar">
+        <button class="al-tab al-tab-active" data-tab="all"    onclick="switchTab('all')">    📋 All Activity  <span class="al-tab-badge" id="tbAll">0</span></button>
+        <button class="al-tab"               data-tab="auth"   onclick="switchTab('auth')">   🔑 Login / Logout <span class="al-tab-badge" id="tbAuth">0</span></button>
+        <button class="al-tab"               data-tab="add"    onclick="switchTab('add')">    ➕ Loans Added   <span class="al-tab-badge" id="tbAdd">0</span></button>
+        <button class="al-tab"               data-tab="edit"   onclick="switchTab('edit')">   ✏️ Loans Edited  <span class="al-tab-badge" id="tbEdit">0</span></button>
+        <button class="al-tab"               data-tab="delete" onclick="switchTab('delete')"> 🗑️ Loans Deleted <span class="al-tab-badge" id="tbDelete">0</span></button>
+        <button class="al-tab" id="tabUsers" data-tab="users"  onclick="switchTab('users')" style="display:none"> 👤 Users <span class="al-tab-badge" id="tbUsers">0</span></button>
       </div>
 
-      <!-- Load More -->
+      <!-- ── Panel: All Activity ── -->
+      <div class="al-panel al-panel-active" id="panelAll">
+        <div class="al-table-wrap">
+          <div class="al-tbl-scroll">
+            <table class="al-tbl" id="tblAll">
+              <thead><tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>By</th>
+                <th>Target / Detail</th>
+              </tr></thead>
+              <tbody id="tbodyAll"></tbody>
+            </table>
+          </div>
+          <div id="stateAll" class="al-state"><div class="al-spin"></div><span>Loading…</span></div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Login / Logout ── -->
+      <div class="al-panel" id="panelAuth">
+        <div class="al-table-wrap">
+          <div class="al-tbl-scroll">
+            <table class="al-tbl">
+              <thead><tr>
+                <th>Time</th>
+                <th>Event</th>
+                <th>User</th>
+                <th>Role</th>
+              </tr></thead>
+              <tbody id="tbodyAuth"></tbody>
+            </table>
+          </div>
+          <div id="stateAuth" class="al-state" style="display:none">📭 No login / logout events</div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Loans Added ── -->
+      <div class="al-panel" id="panelAdd">
+        <div class="al-table-wrap">
+          <div class="al-tbl-scroll">
+            <table class="al-tbl">
+              <thead><tr>
+                <th>Time</th>
+                <th>Borrower</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Added By</th>
+              </tr></thead>
+              <tbody id="tbodyAdd"></tbody>
+            </table>
+          </div>
+          <div id="stateAdd" class="al-state" style="display:none">📭 No loans added yet</div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Loans Edited ── -->
+      <div class="al-panel" id="panelEdit">
+        <div class="al-table-wrap">
+          <div class="al-tbl-scroll">
+            <table class="al-tbl">
+              <thead><tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>Borrower</th>
+                <th>By</th>
+              </tr></thead>
+              <tbody id="tbodyEdit"></tbody>
+            </table>
+          </div>
+          <div id="stateEdit" class="al-state" style="display:none">📭 No loan edits yet</div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Loans Deleted ── -->
+      <div class="al-panel" id="panelDelete">
+        <div class="al-table-wrap">
+          <div class="al-tbl-scroll">
+            <table class="al-tbl">
+              <thead><tr>
+                <th>Time</th>
+                <th>Borrower</th>
+                <th>Deleted By</th>
+              </tr></thead>
+              <tbody id="tbodyDelete"></tbody>
+            </table>
+          </div>
+          <div id="stateDelete" class="al-state" style="display:none">📭 No loans deleted</div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Users (Admin only) ── -->
+      <div class="al-panel" id="panelUsers">
+        <div class="al-table-wrap">
+          <div class="al-tbl-scroll">
+            <table class="al-tbl">
+              <thead><tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>Username</th>
+                <th>By</th>
+                <th>Details</th>
+              </tr></thead>
+              <tbody id="tbodyUsers"></tbody>
+            </table>
+          </div>
+          <div id="stateUsers" class="al-state" style="display:none">📭 No user changes</div>
+        </div>
+      </div>
+
       <div class="al-load-more" id="alLoadMore" style="display:none">
         <button class="al-load-more-btn" onclick="loadMore()">Load more</button>
       </div>
@@ -177,11 +284,12 @@
 <script>
 'use strict';
 
-var _allLogs   = [];
-var _offset    = 0;
-var _total     = 0;
-var _PAGE      = 150;
-var _actors    = new Set();
+var _allLogs  = [];
+var _offset   = 0;
+var _total    = 0;
+var _PAGE     = 300;
+var _actors   = new Set();
+var _curTab   = 'all';
 
 function _isAdmin() {
   try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a && a.role === 'Admin'; } catch(e) { return false; }
@@ -189,171 +297,217 @@ function _isAdmin() {
 
 function _initRoleUI() {
   var admin = _isAdmin();
-  var actorSel   = document.getElementById('alFilterActor');
-  var myBadge    = document.getElementById('alMyOnlyBadge');
-  if (actorSel) actorSel.style.display = admin ? '' : 'none';
-  if (myBadge)  myBadge.style.display  = admin ? 'none' : '';
+  var actSel  = document.getElementById('alFilterActor');
+  var myBadge = document.getElementById('alMyOnlyBadge');
+  var tabU    = document.getElementById('tabUsers');
+  if (actSel)  actSel.style.display  = admin ? '' : 'none';
+  if (myBadge) myBadge.style.display = admin ? 'none' : '';
+  if (tabU)    tabU.style.display    = admin ? '' : 'none';
 }
-
-var ACTION_META = {
-  loan_add:     { label:'Loan Added',     icon:'➕', cls:'add'    },
-  loan_edit:    { label:'Loan Edited',    icon:'✏️', cls:'edit'   },
-  loan_delete:  { label:'Loan Deleted',   icon:'🗑️', cls:'delete' },
-  loan_recover: { label:'Loan Recovered', icon:'↩️', cls:'recover'},
-  loan_paid:    { label:'Paid Toggle',    icon:'✅', cls:'paid'   },
-  user_login:   { label:'User Login',     icon:'🔑', cls:'login'  },
-  user_logout:  { label:'User Logout',    icon:'🚪', cls:'muted'  },
-  user_add:     { label:'User Added',     icon:'👤', cls:'user'   },
-  user_edit:    { label:'User Edited',    icon:'👤', cls:'user'   },
-  user_delete:  { label:'User Deleted',   icon:'👤', cls:'delete' },
-};
 
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function relTime(dt) {
+function fmtDateTime(dt) {
   try {
-    var now  = Date.now();
-    var then = new Date(dt).getTime();
-    var diff = Math.floor((now - then) / 1000);
-    if (diff < 60)    return 'just now';
-    if (diff < 3600)  return Math.floor(diff/60)  + ' min ago';
-    if (diff < 86400) return Math.floor(diff/3600) + ' hr ago';
-    if (diff < 172800)return 'Yesterday';
-    return Math.floor(diff/86400) + ' days ago';
-  } catch(e) { return ''; }
-}
-
-function fmtTime(dt) {
-  try {
-    var d = new Date(dt);
-    var hh = String(d.getHours()).padStart(2,'0');
-    var mm = String(d.getMinutes()).padStart(2,'0');
-    return hh+':'+mm;
-  } catch(e) { return ''; }
-}
-
-function fmtDay(dt) {
-  try {
-    var d   = new Date(dt);
+    var d  = new Date(dt);
     var now = new Date();
     var dd  = String(d.getDate()).padStart(2,'0');
     var mo  = String(d.getMonth()+1).padStart(2,'0');
-    var yr  = d.getFullYear();
-    if (d.toDateString() === now.toDateString()) return 'Today';
-    var yes = new Date(now); yes.setDate(yes.getDate()-1);
-    if (d.toDateString() === yes.toDateString()) return 'Yesterday';
-    return dd+'/'+mo+'/'+yr;
-  } catch(e) { return String(dt).substring(0,10); }
+    var hh  = String(d.getHours()).padStart(2,'0');
+    var mm  = String(d.getMinutes()).padStart(2,'0');
+    var datePart = d.toDateString() === now.toDateString() ? 'Today' : dd+'/'+mo;
+    return '<span style="font-size:10.5px;color:var(--al-muted)">'+datePart+'</span> '+hh+':'+mm;
+  } catch(e) { return String(dt||'').substring(0,16); }
 }
 
-function dayKey(dt) {
-  try { return new Date(dt).toDateString(); } catch(e) { return String(dt).substring(0,10); }
+function badge(label, cls) {
+  return '<span class="al-tbl-chip b-'+cls+'">'+esc(label)+'</span>';
 }
 
-function buildDesc(log) {
-  var m  = ACTION_META[log.action] || { label: log.action, icon:'•', cls:'login' };
-  var detail = {};
-  try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
-
-  var target = log.target ? '<span class="al-target">'+esc(log.target)+'</span>' : '';
-  var chips  = '';
-
-  if (log.action === 'loan_add') {
-    var txt = 'Added loan';
-    if (target) txt += ' for '+target;
-    var chipArr = [];
-    if (detail.money) chipArr.push('<span class="al-chip">$'+esc(String(detail.money))+'</span>');
-    if (detail.status) chipArr.push('<span class="al-chip">'+esc(detail.status)+'</span>');
-    chips = chipArr.length ? '<div class="al-detail">'+chipArr.join('')+'</div>' : '';
-    return txt + (chips ? '<br>'+chips : '');
-  }
-  if (log.action === 'loan_edit') {
-    return 'Updated loan' + (target ? ' for '+target : '');
-  }
-  if (log.action === 'loan_delete') {
-    return 'Deleted loan' + (target ? ' for '+target : '');
-  }
-  if (log.action === 'loan_recover') {
-    return 'Recovered loan' + (target ? ' for '+target : '');
-  }
-  if (log.action === 'loan_paid') {
-    var paidStr = detail.paid ? 'Marked as <b>Paid ✓</b>' : 'Unmarked paid';
-    return paidStr + (target ? ' — '+target : '');
-  }
-  if (log.action === 'user_login') {
-    return 'Logged in' + (detail.role ? ' <span class="al-chip">'+esc(detail.role)+'</span>' : '');
-  }
-  if (log.action === 'user_add') {
-    return 'Added user <span class="al-target">'+esc(log.target||'')+'</span>'
-      + (detail.display_name ? ' <span class="al-chip">'+esc(detail.display_name)+'</span>' : '')
-      + (detail.role ? ' <span class="al-chip">'+esc(detail.role)+'</span>' : '');
-  }
-  if (log.action === 'user_edit') {
-    var editTxt = 'Edited user <span class="al-target">'+esc(log.target||'')+'</span>';
-    if (detail.old_name && detail.new_name && detail.old_name !== detail.new_name) {
-      editTxt += ' — renamed <span class="al-chip">'+esc(detail.old_name)+'</span> → <span class="al-chip">'+esc(detail.new_name)+'</span>';
-    }
-    return editTxt;
-  }
-  if (log.action === 'user_delete') {
-    return 'Deleted user <span class="al-target">'+esc(log.target||'')+'</span>';
-  }
-  return esc(log.action) + (target ? ' — '+target : '');
+/* ── Render helpers per panel ── */
+function rowAll(log) {
+  var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
+  var actionMap = {
+    loan_add:'➕ Loan Added', loan_edit:'✏️ Loan Edited', loan_delete:'🗑️ Loan Deleted',
+    loan_recover:'↩️ Recovered', loan_paid:'✅ Paid Toggle',
+    user_login:'🔑 Login', user_logout:'🚪 Logout',
+    user_add:'👤 User Added', user_edit:'👤 User Edited', user_delete:'👤 User Deleted'
+  };
+  var clsMap = {
+    loan_add:'add', loan_edit:'edit', loan_delete:'delete', loan_recover:'recover',
+    loan_paid:'paid', user_login:'login', user_logout:'logout',
+    user_add:'user', user_edit:'user', user_delete:'delete'
+  };
+  var target = log.target || '';
+  var detailStr = '';
+  if (log.action==='loan_add' && detail.money) detailStr = '$'+esc(String(detail.money));
+  if (log.action==='loan_paid') detailStr = detail.paid ? 'Marked Paid' : 'Unpaid';
+  if (log.action==='user_edit' && detail.old_name && detail.new_name && detail.old_name!==detail.new_name)
+    detailStr = esc(detail.old_name)+' → '+esc(detail.new_name);
+  if (log.action==='user_login' && detail.role) detailStr = esc(detail.role);
+  return '<tr>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
+    +'<td>'+badge(actionMap[log.action]||log.action, clsMap[log.action]||'edit')+'</td>'
+    +'<td class="al-tbl-name">'+esc(log.actor||'—')+'</td>'
+    +'<td class="al-tbl-muted">'+(target?'<b style="color:var(--al-text)">'+esc(target)+'</b>':'')+
+      (detailStr?' <span class="al-tbl-chip">'+detailStr+'</span>':'')+'</td>'
+    +'</tr>';
 }
 
-function renderFeed(logs, append) {
-  var feed = document.getElementById('alFeed');
-  if (!append) feed.innerHTML = '';
-
-  if (!logs.length && !append) {
-    feed.innerHTML = '<div class="al-state"><span style="font-size:28px">📭</span><span>No activity found</span></div>';
-    return;
-  }
-
-  var lastDay = append ? window._lastDay || '' : '';
-  var html = '';
-
-  logs.forEach(function(log) {
-    var dk = dayKey(log.created_at);
-    if (dk !== lastDay) {
-      html += '<div class="al-day-sep">'+esc(fmtDay(log.created_at))+'</div>';
-      lastDay = dk;
-    }
-    var m = ACTION_META[log.action] || { label: log.action, icon:'•', cls:'login' };
-    html += '<div class="al-item">'
-      + '<div class="al-icon al-icon-'+m.cls+'">'+m.icon+'</div>'
-      + '<div class="al-body">'
-      + '<div class="al-row1">'
-      + '<span class="al-action-badge al-c-'+m.cls+'">'+esc(m.label)+'</span>'
-      + (log.actor ? '<span class="al-actor">'+esc(log.actor)+'</span>' : '')
-      + '<span class="al-time" title="'+esc(String(log.created_at||''))+'">'+fmtTime(log.created_at)+' · '+relTime(log.created_at)+'</span>'
-      + '</div>'
-      + '<div class="al-desc">'+buildDesc(log)+'</div>'
-      + '</div>'
-      + '</div>';
-  });
-
-  if (append) feed.insertAdjacentHTML('beforeend', html);
-  else feed.innerHTML = html;
-
-  window._lastDay = lastDay;
+function rowAuth(log) {
+  var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
+  var isLogin = log.action === 'user_login';
+  return '<tr>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
+    +'<td>'+badge(isLogin?'🔑 Login':'🚪 Logout', isLogin?'login':'logout')+'</td>'
+    +'<td class="al-tbl-name">'+esc(log.actor||'—')+'</td>'
+    +'<td class="al-tbl-muted">'+esc(detail.role||'—')+'</td>'
+    +'</tr>';
 }
 
-function updateKpi(logs, total) {
-  var added   = logs.filter(function(l){ return l.action==='loan_add'; }).length;
-  var deleted = logs.filter(function(l){ return l.action==='loan_delete'; }).length;
-  var logins  = logs.filter(function(l){ return l.action==='user_login'; }).length;
-  document.getElementById('kpiTotal').textContent   = total;
-  document.getElementById('kpiAdded').textContent   = added;
-  document.getElementById('kpiDeleted').textContent = deleted;
-  document.getElementById('kpiLogins').textContent  = logins;
+function rowAdd(log) {
+  var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
+  return '<tr>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
+    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td style="font-weight:700;color:#16a34a">'+(detail.money?'$'+esc(String(detail.money)):'—')+'</td>'
+    +'<td>'+(detail.status?badge(detail.status,'paid'):'—')+'</td>'
+    +'<td class="al-tbl-muted">'+esc(log.actor||'—')+'</td>'
+    +'</tr>';
+}
+
+function rowEdit(log) {
+  var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
+  var editMap = { loan_edit:'✏️ Edited', loan_paid:'✅ Paid Toggle', loan_recover:'↩️ Recovered' };
+  var clsMap  = { loan_edit:'edit', loan_paid:'paid', loan_recover:'recover' };
+  var extra = '';
+  if (log.action==='loan_paid') extra = detail.paid ? ' <span class="al-tbl-chip b-paid">Paid</span>' : ' <span class="al-tbl-chip b-logout">Unpaid</span>';
+  return '<tr>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
+    +'<td>'+badge(editMap[log.action]||log.action, clsMap[log.action]||'edit')+extra+'</td>'
+    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td class="al-tbl-muted">'+esc(log.actor||'—')+'</td>'
+    +'</tr>';
+}
+
+function rowDelete(log) {
+  return '<tr>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
+    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td class="al-tbl-muted">'+esc(log.actor||'—')+'</td>'
+    +'</tr>';
+}
+
+function rowUser(log) {
+  var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
+  var actMap = { user_add:'👤 Added', user_edit:'✏️ Edited', user_delete:'🗑️ Deleted' };
+  var clsMap = { user_add:'user', user_edit:'edit', user_delete:'delete' };
+  var detailStr = '';
+  if (log.action==='user_add' && detail.role) detailStr = esc(detail.role);
+  if (log.action==='user_edit' && detail.old_name && detail.new_name && detail.old_name!==detail.new_name)
+    detailStr = esc(detail.old_name)+' → '+esc(detail.new_name);
+  return '<tr>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
+    +'<td>'+badge(actMap[log.action]||log.action, clsMap[log.action]||'user')+'</td>'
+    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td class="al-tbl-muted">'+esc(log.actor||'—')+'</td>'
+    +'<td class="al-tbl-muted">'+(detailStr?'<span class="al-tbl-chip">'+detailStr+'</span>':'—')+'</td>'
+    +'</tr>';
+}
+
+/* ── Render all panels from _allLogs ── */
+function renderAll() {
+  var admin = _isAdmin();
+  var groups = {
+    auth:   _allLogs.filter(function(l){ return l.action==='user_login'||l.action==='user_logout'; }),
+    add:    _allLogs.filter(function(l){ return l.action==='loan_add'; }),
+    edit:   _allLogs.filter(function(l){ return l.action==='loan_edit'||l.action==='loan_paid'||l.action==='loan_recover'; }),
+    delete: _allLogs.filter(function(l){ return l.action==='loan_delete'; }),
+    users:  _allLogs.filter(function(l){ return l.action==='user_add'||l.action==='user_edit'||l.action==='user_delete'; }),
+  };
+
+  /* KPI */
+  document.getElementById('kpiTotal').textContent   = _total;
+  document.getElementById('kpiLogins').textContent  = groups.auth.length;
+  document.getElementById('kpiAdded').textContent   = groups.add.length;
+  document.getElementById('kpiEdited').textContent  = groups.edit.length;
+  document.getElementById('kpiDeleted').textContent = groups.delete.length;
   document.getElementById('alKpi').style.display = '';
+
+  /* Tab badges */
+  document.getElementById('tbAll').textContent    = _total;
+  document.getElementById('tbAuth').textContent   = groups.auth.length;
+  document.getElementById('tbAdd').textContent    = groups.add.length;
+  document.getElementById('tbEdit').textContent   = groups.edit.length;
+  document.getElementById('tbDelete').textContent = groups.delete.length;
+  if (admin) document.getElementById('tbUsers').textContent = groups.users.length;
+
+  /* All panel */
+  var bodyAll = document.getElementById('tbodyAll');
+  var stAll   = document.getElementById('stateAll');
+  if (_allLogs.length) {
+    bodyAll.innerHTML = _allLogs.map(rowAll).join('');
+    stAll.style.display = 'none';
+    document.getElementById('tblAll').style.display = '';
+  } else {
+    bodyAll.innerHTML = '';
+    stAll.innerHTML = '📭 No activity found';
+    stAll.style.display = '';
+    document.getElementById('tblAll').style.display = 'none';
+  }
+
+  /* Auth panel */
+  fill('tbodyAuth','stateAuth', groups.auth, rowAuth);
+  /* Add panel */
+  fill('tbodyAdd','stateAdd', groups.add, rowAdd);
+  /* Edit panel */
+  fill('tbodyEdit','stateEdit', groups.edit, rowEdit);
+  /* Delete panel */
+  fill('tbodyDelete','stateDelete', groups.delete, rowDelete);
+  /* Users panel */
+  if (admin) fill('tbodyUsers','stateUsers', groups.users, rowUser);
 }
 
+function fill(tbodyId, stateId, rows, rowFn) {
+  var tbody = document.getElementById(tbodyId);
+  var state = document.getElementById(stateId);
+  var tbl   = tbody ? tbody.closest('table') : null;
+  if (!tbody) return;
+  if (rows.length) {
+    tbody.innerHTML = rows.map(rowFn).join('');
+    state.style.display = 'none';
+    if (tbl) tbl.style.display = '';
+  } else {
+    tbody.innerHTML = '';
+    state.style.display = '';
+    if (tbl) tbl.style.display = 'none';
+  }
+}
+
+/* ── Tab switching ── */
+function switchTab(tab) {
+  _curTab = tab;
+  document.querySelectorAll('.al-tab').forEach(function(t){
+    t.classList.toggle('al-tab-active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('.al-panel').forEach(function(p){
+    p.classList.toggle('al-panel-active', p.id === 'panel'+cap(tab));
+  });
+  document.querySelectorAll('.al-kpi').forEach(function(k){
+    k.classList.remove('al-kpi-active');
+  });
+  var kpiMap = { all:'kpiAll', auth:'kpiAuth', add:'kpiAddCard', edit:'kpiEditCard', delete:'kpiDelCard' };
+  var kEl = document.getElementById(kpiMap[tab]);
+  if (kEl) kEl.classList.add('al-kpi-active');
+}
+
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+/* ── Actor filter (Admin only) ── */
 function updateActorFilter(logs) {
-  if (!_isAdmin()) return; /* Staff sees no user filter */
+  if (!_isAdmin()) return;
   logs.forEach(function(l){ if (l.actor_user) _actors.add(l.actor_user+'|'+(l.actor||l.actor_user)); });
   var sel = document.getElementById('alFilterActor');
   var cur = sel.value;
@@ -368,45 +522,43 @@ function updateActorFilter(logs) {
   });
 }
 
+/* ── Load ── */
 async function loadData() {
-  _offset = 0;
-  _allLogs = [];
-  window._lastDay = '';
-  document.getElementById('alFeed').innerHTML = '<div class="al-state"><div class="al-spin"></div><span>Loading…</span></div>';
+  _offset = 0; _allLogs = []; window._lastDay = '';
+  document.getElementById('stateAll').innerHTML = '<div class="al-spin"></div><span>Loading…</span>';
+  document.getElementById('stateAll').style.display = '';
+  document.getElementById('tblAll') && (document.getElementById('tblAll').style.display = 'none');
   document.getElementById('alLoadMore').style.display = 'none';
   document.getElementById('alCount').textContent = '';
 
-  var fAct  = document.getElementById('alFilterAction').value;
   var fUser = document.getElementById('alFilterActor').value;
 
   try {
     var data = await window.CamboAPI.post({
       action: 'helen_activity_list',
       limit: _PAGE, offset: 0,
-      filter_action: fAct, filter_actor: fUser
+      filter_action: '', filter_actor: fUser
     });
     if (!data || !data.ok) {
-      document.getElementById('alFeed').innerHTML = '<div class="al-state" style="color:#ef4444">Failed to load</div>';
+      document.getElementById('stateAll').innerHTML = '❌ Failed to load';
       return;
     }
-    _allLogs  = data.logs || [];
-    _total    = data.total || 0;
-    _offset   = _allLogs.length;
+    _allLogs = data.logs || [];
+    _total   = data.total || 0;
+    _offset  = _allLogs.length;
 
-    updateKpi(_allLogs, _total);
     updateActorFilter(_allLogs);
-    renderFeed(_allLogs, false);
+    renderAll();
 
-    var shown = _allLogs.length;
-    document.getElementById('alCount').textContent = shown + ' / ' + _total + ' events';
+    document.getElementById('alCount').textContent = _offset + ' / ' + _total + ' events';
     document.getElementById('alLoadMore').style.display = _offset < _total ? '' : 'none';
   } catch(e) {
-    document.getElementById('alFeed').innerHTML = '<div class="al-state" style="color:#ef4444">Error: '+String(e.message||e)+'</div>';
+    document.getElementById('stateAll').innerHTML = '❌ Error: '+esc(String(e.message||e));
+    document.getElementById('stateAll').style.display = '';
   }
 }
 
 async function loadMore() {
-  var fAct  = document.getElementById('alFilterAction').value;
   var fUser = document.getElementById('alFilterActor').value;
   var btn   = document.querySelector('.al-load-more-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
@@ -414,12 +566,13 @@ async function loadMore() {
     var data = await window.CamboAPI.post({
       action: 'helen_activity_list',
       limit: _PAGE, offset: _offset,
-      filter_action: fAct, filter_actor: fUser
+      filter_action: '', filter_actor: fUser
     });
     if (data && data.ok && data.logs.length) {
       _allLogs = _allLogs.concat(data.logs);
+      _total   = data.total || _total;
       _offset  = _allLogs.length;
-      renderFeed(data.logs, true);
+      renderAll();
       document.getElementById('alCount').textContent = _offset + ' / ' + _total + ' events';
       document.getElementById('alLoadMore').style.display = _offset < _total ? '' : 'none';
     }
@@ -427,13 +580,10 @@ async function loadMore() {
   if (btn) { btn.disabled = false; btn.textContent = 'Load more'; }
 }
 
-function applyFilter() {
-  loadData();
-}
-
 document.addEventListener('DOMContentLoaded', function() {
   if (window.HelenAuth && !window.HelenAuth.check()) return;
   _initRoleUI();
+  switchTab('all');
   loadData();
 });
 </script>
