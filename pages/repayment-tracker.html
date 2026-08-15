@@ -60,6 +60,18 @@
     .rt-refresh-btn:hover { color:var(--rt-accent); border-color:var(--rt-accent) }
     .rt-count-label { margin-left:auto; font-size:11.5px; color:var(--rt-muted) }
 
+    /* ── Search ── */
+    .rt-search-wrap { position:relative; flex:1; min-width:160px; max-width:300px }
+    .rt-search-icon { position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--rt-muted); pointer-events:none; display:flex }
+    .rt-search { width:100%; background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-text); border-radius:8px; padding:6px 28px 6px 30px; font-size:12px; font-family:inherit; outline:none; box-sizing:border-box; transition:border-color .15s }
+    .rt-search:focus { border-color:rgba(167,139,250,.5); background:rgba(167,139,250,.04) }
+    .rt-search::placeholder { color:var(--rt-muted) }
+    .rt-search-clear { position:absolute; right:7px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--rt-muted); cursor:pointer; font-size:15px; padding:2px 3px; display:none; line-height:1; border-radius:4px }
+    .rt-search-clear.show { display:flex; align-items:center }
+    .rt-search-clear:hover { color:var(--rt-text) }
+    /* highlight matched text */
+    .rt-hl { background:rgba(167,139,250,.28); border-radius:2px; padding:0 1px }
+
     /* ── Tabs ── */
     .rt-tabs { display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap }
     .rt-tab { padding:6px 14px; border-radius:9px; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid var(--rt-border); background:var(--rt-card); color:var(--rt-muted); transition:.15s; display:flex; align-items:center; gap:5px }
@@ -253,6 +265,14 @@
 
       <!-- Toolbar -->
       <div class="rt-toolbar">
+        <!-- Search -->
+        <div class="rt-search-wrap">
+          <span class="rt-search-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input class="rt-search" id="rtSearch" type="text" placeholder="Search name, NID, phone…" oninput="applySearch()" autocomplete="off">
+          <button class="rt-search-clear" id="rtSearchClear" onclick="clearSearch()" title="Clear">✕</button>
+        </div>
         <select class="rt-group-sel" id="rtGroupSel" onchange="applyFilter()">
           <option value="">All Groups</option>
         </select>
@@ -448,6 +468,7 @@ var _groups     = [];
 var _statuses   = [];
 var _tab        = 'all';
 var _group      = '';
+var _search     = '';
 var _sortKey    = '_date';
 var _sortDir    = -1;
 var _selectedKey = null;
@@ -726,12 +747,42 @@ function openMediaLightbox(galleryIdx) {
   document.body.appendChild(ov);
 }
 
+/* ── Search helpers ── */
+function applySearch() {
+  _search = (document.getElementById('rtSearch').value || '').trim();
+  document.getElementById('rtSearchClear').classList.toggle('show', _search.length > 0);
+  render();
+}
+function clearSearch() {
+  document.getElementById('rtSearch').value = '';
+  _search = '';
+  document.getElementById('rtSearchClear').classList.remove('show');
+  render();
+  document.getElementById('rtSearch').focus();
+}
+/* Wrap matched text in highlight span */
+function highlight(text, q) {
+  if (!q || !text) return esc(text);
+  var s = String(text);
+  var idx = s.toLowerCase().indexOf(q.toLowerCase());
+  if (idx < 0) return esc(s);
+  return esc(s.substring(0, idx))
+    + '<mark class="rt-hl">'+esc(s.substring(idx, idx+q.length))+'</mark>'
+    + esc(s.substring(idx+q.length));
+}
+
 /* ── Filter + sort ── */
 function filtered() {
+  var q = _search.toLowerCase();
   var list = _loans.filter(function(l) {
     if (_group && l.Groups !== _group) return false;
-    if (_tab === 'paid')   return l.Paid;
-    if (_tab === 'unpaid') return !l.Paid;
+    if (_tab === 'paid')   { if (!l.Paid) return false; }
+    if (_tab === 'unpaid') { if (l.Paid)  return false; }
+    if (q) {
+      var hay = [l.FullName, l.NationalID, l.Phone, l.Groups, l.Status, l.Note]
+        .map(function(v){ return String(v||'').toLowerCase(); }).join(' ');
+      if (hay.indexOf(q) < 0) return false;
+    }
     return true;
   });
   var k = _sortKey, d = _sortDir;
@@ -777,7 +828,13 @@ function renderKPIs() {
 function renderTable() {
   var list  = filtered();
   var tbody = document.getElementById('rtTbody');
-  document.getElementById('rtCountLabel').textContent = list.length+' loans';
+  var total = _loans.filter(function(l){
+    if (_group && l.Groups!==_group) return false;
+    if (_tab==='paid') return l.Paid; if (_tab==='unpaid') return !l.Paid; return true;
+  }).length;
+  document.getElementById('rtCountLabel').textContent = _search
+    ? list.length+' / '+total+' results'
+    : list.length+' loans';
 
   if (!list.length) {
     document.getElementById('rtState').innerHTML = '<span>No loans found</span>';
@@ -793,10 +850,11 @@ function renderTable() {
     var isSel    = l.DateTime === _selectedKey;
     var paidCls  = l.Paid ? 'paid' : '';
     var moneyCls = l.Paid ? 'rt-money rt-money-paid' : 'rt-money';
+    var q = _search;
     return '<tr class="'+(isSel?'rt-row-selected':'')+'" onclick="selectLoan(\''+k+'\')">'
       +'<td style="color:var(--rt-muted);font-size:10.5px">'+(i+1)+'</td>'
-      +'<td><div class="rt-name-cell">'+avatar(l)+'<div><div class="rt-name-text">'+esc(l.FullName||'—')+'</div><div class="rt-nid">'+esc(l.NationalID||'')+'</div></div></div></td>'
-      +'<td style="font-size:11.5px">'+esc(l.Groups||'—')+'</td>'
+      +'<td><div class="rt-name-cell">'+avatar(l)+'<div><div class="rt-name-text">'+highlight(l.FullName||'—',q)+'</div><div class="rt-nid">'+highlight(l.NationalID||'',q)+'</div></div></div></td>'
+      +'<td style="font-size:11.5px">'+highlight(l.Groups||'—',q)+'</td>'
       +'<td>'+statusTag(l.Status)+'</td>'
       +'<td class="'+moneyCls+'">'+fmtMoney(l.Money)+'</td>'
       +'<td style="text-align:center"><button class="rt-paid-btn '+paidCls+'" data-key="'+esc(l.DateTime)+'" title="Toggle paid" onclick="event.stopPropagation();togglePaid(this)">'+(l.Paid?'✅':'○')+'</button></td>'
