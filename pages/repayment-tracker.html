@@ -53,12 +53,12 @@
     .rt-progress-wrap { height:5px; background:var(--rt-border); border-radius:3px; overflow:hidden; margin-top:5px }
     .rt-progress-bar { height:100%; border-radius:3px; background:linear-gradient(90deg,#a78bfa,#7c5cff); transition:width .6s ease }
 
-    /* ── Toolbar ── */
-    .rt-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap }
-    .rt-group-sel { background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-text); border-radius:8px; padding:6px 10px; font-size:12px; font-family:inherit; cursor:pointer; outline:none }
-    .rt-refresh-btn { display:flex; align-items:center; gap:5px; background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-muted); border-radius:8px; padding:6px 11px; font-size:12px; font-family:inherit; cursor:pointer; transition:.15s }
+    /* ── Toolbar card (rectangle) ── */
+    .rt-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; background:rgba(167,139,250,.05); border:1.5px solid rgba(167,139,250,.22); border-radius:13px; padding:10px 14px }
+    [data-theme="light"] .rt-toolbar { background:rgba(255,255,255,.96); border-color:rgba(167,139,250,.3); box-shadow:0 2px 10px rgba(167,139,250,.08) }
+    .rt-group-sel { background:var(--rt-input); border:1px solid var(--rt-input-border); color:var(--rt-text); border-radius:8px; padding:6px 10px; font-size:12px; font-family:inherit; cursor:pointer; outline:none }
+    .rt-refresh-btn { display:flex; align-items:center; gap:5px; background:var(--rt-input); border:1px solid var(--rt-input-border); color:var(--rt-muted); border-radius:8px; padding:6px 11px; font-size:12px; font-family:inherit; cursor:pointer; transition:.15s }
     .rt-refresh-btn:hover { color:var(--rt-accent); border-color:var(--rt-accent) }
-    .rt-count-label { margin-left:auto; font-size:11.5px; color:var(--rt-muted) }
 
     /* ── Search ── */
     .rt-search-wrap { position:relative; flex:1; min-width:160px; max-width:300px }
@@ -73,10 +73,11 @@
     .rt-hl { background:rgba(167,139,250,.28); border-radius:2px; padding:0 1px }
 
     /* ── Tabs ── */
-    .rt-tabs { display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap }
-    .rt-tab { padding:6px 14px; border-radius:9px; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid var(--rt-border); background:var(--rt-card); color:var(--rt-muted); transition:.15s; display:flex; align-items:center; gap:5px }
-    .rt-tab:hover { color:var(--rt-text) }
-    .rt-tab.active { background:rgba(167,139,250,.15); border-color:rgba(167,139,250,.5); color:var(--rt-accent) }
+    /* ── Tabs (inline, right side of toolbar) ── */
+    .rt-tabs { display:flex; gap:4px; margin-left:auto; flex-shrink:0 }
+    .rt-tab { padding:5px 11px; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; border:1.5px solid var(--rt-input-border); background:var(--rt-input); color:var(--rt-muted); transition:.15s; display:flex; align-items:center; gap:5px; white-space:nowrap }
+    .rt-tab:hover { color:var(--rt-text); border-color:rgba(167,139,250,.35) }
+    .rt-tab.active { background:rgba(167,139,250,.15); border-color:rgba(167,139,250,.55); color:var(--rt-accent) }
     .rt-tab-badge { font-size:10px; font-weight:800; padding:1px 6px; border-radius:5px; background:rgba(167,139,250,.18); color:var(--rt-accent); min-width:16px; text-align:center }
 
     /* ── Split body ── */
@@ -264,6 +265,7 @@
       </div>
 
       <!-- Toolbar -->
+      <!-- Toolbar card (rectangle) -->
       <div class="rt-toolbar">
         <!-- Search -->
         <div class="rt-search-wrap">
@@ -280,15 +282,15 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           Refresh
         </button>
-        <span class="rt-count-label" id="rtCountLabel"></span>
+        <!-- Tabs (right side, inside card) -->
+        <div class="rt-tabs">
+          <button class="rt-tab active" onclick="switchTab('all',this)">All <span class="rt-tab-badge" id="badgeAll">0</span></button>
+          <button class="rt-tab" onclick="switchTab('unpaid',this)">⏳ Unpaid <span class="rt-tab-badge" id="badgeUnpaid">0</span></button>
+          <button class="rt-tab" onclick="switchTab('paid',this)">✅ Paid <span class="rt-tab-badge" id="badgePaid">0</span></button>
+        </div>
       </div>
-
-      <!-- Tabs -->
-      <div class="rt-tabs">
-        <button class="rt-tab active" onclick="switchTab('all',this)">All <span class="rt-tab-badge" id="badgeAll">0</span></button>
-        <button class="rt-tab" onclick="switchTab('unpaid',this)">⏳ Unpaid <span class="rt-tab-badge" id="badgeUnpaid">0</span></button>
-        <button class="rt-tab" onclick="switchTab('paid',this)">✅ Paid <span class="rt-tab-badge" id="badgePaid">0</span></button>
-      </div>
+      <!-- search result count (appears below toolbar when searching) -->
+      <div id="rtCountLabel" style="font-size:11px;color:var(--rt-muted);margin:-8px 0 10px 4px;min-height:14px"></div>
 
       <!-- Split body -->
       <div class="rt-body">
