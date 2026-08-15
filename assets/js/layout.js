@@ -1,4 +1,4 @@
-/* HELEN LOAN — Shared Layout (Sidebar + Topbar) */
+/* HELEN LOAN — Shared Layout (Sidebar + Topbar) v17 */
 (function () {
   'use strict';
 
@@ -13,6 +13,8 @@
       'borrower-profile.html':{ title: t('Profile អ្នកខ្ចី','Borrower Profile'), subtitle: t('ព័ត៌មានលម្អិតអ្នកខ្ចី','Full borrower details and loan history') },
       'activity-log.html':  { title: t('Activity Log','Activity Log'), subtitle: t('កំណត់ហេតុសកម្មភាព','All system events and actions') },
       'team.html':          { title: t('ក្រុម','Team'),               subtitle: t('សមាជិកក្រុម និងស្ថិតិ','Team members and activity stats') },
+      'customers.html':     { title: t('អតិថិជន','Customers'),         subtitle: t('គ្រប់គ្រងព័ត៌មានអតិថិជន','Customer information and records') },
+      'add-customer.html':  { title: t('បន្ថែមអតិថិជន','Add Customer'),  subtitle: t('បំពេញព័ត៌មានអតិថិជនខាងក្រោម','Fill in the customer information below') },
       'repayment-tracker.html': { title: t('Repayment Tracker','Repayment Tracker'), subtitle: t('តាមដានការសងប្រាក់','Track loan repayments and paid status') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
       'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
@@ -34,6 +36,7 @@
     report:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
     activity: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
     repayment: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><polyline points="7 15 9 17 13 13"/></svg>',
+    customers: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M15 9h3M15 13h3M5 17c0-1.1 1.79-2 4-2s4 .9 4 2"/></svg>',
   };
 
   function getCurrentPage() {
@@ -51,6 +54,18 @@
   function getAuthRole() {
     try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a ? (a.role||'') : ''; } catch(e) { return ''; }
   }
+
+  var _PERMS = {
+    delete:   ['Admin','Owner','Moderator'],
+    write:    ['Admin','Owner','Staff Loan','Staff','Moderator','Tester'],
+    reports:  ['Admin','Owner','Staff','Moderator','Viewer'],
+    actAll:   ['Admin','Owner','Moderator'],
+    settings: ['Admin']
+  };
+  window.helenCan = function(perm) {
+    var role = getAuthRole();
+    return (_PERMS[perm]||[]).indexOf(role) !== -1;
+  };
 
   function buildSidebar() {
     const cur  = getCurrentPage();
@@ -89,8 +104,9 @@
         <div class="sb-section-label">${t('ម៉ឺនុយចំបង','Main Menu')}</div>
         <ul class="sb-list">
           ${link('index.html', ic.dashboard, t('Dashboard','Dashboard'))}
+          ${link('pages/customers.html', ic.customers, t('អតិថិជន','Customers'))}
           ${link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List'))}
-          ${link('pages/reports.html', ic.report, t('Reports','Reports'))}
+          ${helenCan('reports') ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
           ${link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment'))}
           ${link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder'))}
           ${link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log'))}

@@ -901,14 +901,17 @@
   <div class="lr-save-alert-text">Saved Successfully!</div>
 </div>
 
-<script src="../assets/js/layout.js?v=16"></script>
-<script src="../assets/js/dashboard-layout.js?v=16"></script>
+<script src="../assets/js/layout.js?v=17"></script>
+<script src="../assets/js/dashboard-layout.js?v=17"></script>
 <script src="../assets/js/auth.js?v=1"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
 /* ── Auth guard — redirect to login if not authenticated ── */
 if (!HelenAuth.check()) { throw new Error('redirect'); }
 var _me = HelenAuth.get(); /* { u, p, name, role } */
+var _canDelete = helenCan('delete');
+var _canWrite  = helenCan('write');
+if (!_canDelete) { var _dbtn = document.getElementById('lrSheetDelBtn'); if (_dbtn) _dbtn.style.display = 'none'; }
 
 var _allLoans   = [];
 var _filtered   = [];
@@ -1398,7 +1401,7 @@ function renderCards(arr) {
         + avatarHtml(l)
         + '<span class="lr-mob-name">'+esc(l.FullName||'—')+'</span>'
         + statusTag(l.Status)
-        + '<button class="lr-del-btn lr-mob-del" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="Delete" onclick="event.stopPropagation()">'+_svgDel16+'</button>'
+        + (_canDelete ? '<button class="lr-del-btn lr-mob-del" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="Delete" onclick="event.stopPropagation()">'+_svgDel16+'</button>' : '')
       + '</div>'
       + '<div class="lr-mob-r2">'
         + '<span class="lr-mob-nid">'+esc(l.NationalID||'—')+'</span>'

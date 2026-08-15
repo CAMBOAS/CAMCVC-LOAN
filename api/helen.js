@@ -341,11 +341,11 @@ export default async function handler(req, res) {
     /* ── Activity Log list ── */
     if (action === 'helen_activity_list') {
       await ensureActivityLogTable();
-      const isAdmin = _bv.role === 'Admin';
+      const isAdmin = ['Admin','Owner','Moderator'].includes(_bv.role);
       const limit  = Math.min(parseInt(body.limit||150, 10), 500);
       const offset = parseInt(body.offset||0, 10);
       const fAct   = String(body.filter_action||'').trim();
-      /* Non-Admin can only see their own activity — force actor_user to self */
+      /* Only Admin/Owner/Moderator can see all activity — others see own only */
       const fUser  = isAdmin ? String(body.filter_actor||'').trim() : _bu;
       await ensureUserPhotoCol();
       const params = [];
@@ -412,6 +412,7 @@ export default async function handler(req, res) {
 
     /* ── Add loan ── */
     if (action === 'helen_loan_add') {
+      if (_bv.role === 'Viewer') return res.json({ ok:false, message:'Permission denied', code:403 });
       await ensureSocialLinksCol();
       await ensurePaidCol();
       await ensureCreatedByCol();
@@ -439,6 +440,7 @@ export default async function handler(req, res) {
 
     /* ── Update loan ── */
     if (action === 'helen_loan_update') {
+      if (_bv.role === 'Viewer') return res.json({ ok:false, message:'Permission denied', code:403 });
       await ensureSocialLinksCol();
       await ensurePaidCol();
       const key = String(body.key||'').trim();
@@ -480,6 +482,7 @@ export default async function handler(req, res) {
 
     /* ── Delete loan (soft) ── */
     if (action === 'helen_loan_delete') {
+      if (!['Admin','Owner','Moderator'].includes(_bv.role)) return res.json({ ok:false, message:'Permission denied', code:403 });
       const key = String(body.key||'').trim();
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!rows.length) return res.json({ ok:false, message:'Row not found' });
@@ -501,6 +504,7 @@ export default async function handler(req, res) {
 
     /* ── Permanent delete ── */
     if (action === 'helen_loan_perm_delete') {
+      if (!['Admin','Owner','Moderator'].includes(_bv.role)) return res.json({ ok:false, message:'Permission denied', code:403 });
       const key = String(body.key||'').trim();
       const [r] = await db().query(
         'DELETE FROM helen_loans WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);

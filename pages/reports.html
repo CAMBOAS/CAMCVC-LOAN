@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -227,12 +227,13 @@
   </main>
 </div><!-- /.dashboard -->
 
-<script src="../assets/js/layout.js?v=16"></script>
-<script src="../assets/js/dashboard-layout.js?v=16"></script>
+<script src="../assets/js/layout.js?v=17"></script>
+<script src="../assets/js/dashboard-layout.js?v=17"></script>
 <script src="../assets/js/auth.js?v=1"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
 if (!HelenAuth.check()) throw new Error('auth');
+if (!helenCan('reports')) { location.replace('../index.html'); }
 
 /* ── roundRect polyfill ── */
 if (!CanvasRenderingContext2D.prototype.roundRect) {
