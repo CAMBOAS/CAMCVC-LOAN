@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <script>(function(){document.documentElement.style.visibility='';})();</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <title>Reports - HELEN LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=5">
+  <style>
+    .orb{display:none!important}
+    .background{background:#27272a!important}
+    .background::before{display:none!important}
+    body{background:#27272a!important}
+    .sidebar{background:#27272a!important}
+    [data-theme="light"] .background{background:#f8fafc!important}
+    [data-theme="light"] body{background:#f8fafc!important}
+    [data-theme="light"] .sidebar{background:#f8fafc!important}
+    html[data-theme="light"] .header-shell,
+    html[data-theme="light"] .shared-topbar{background:#ffffff!important;border-bottom-color:rgba(0,0,0,.09)!important}
+    .sb-logo-wrap{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+    .sb-logo-wrap:hover{box-shadow:none!important;transform:none!important}
+    .sb-user-card{border-color:transparent!important;background:transparent!important}
+    .sb-user-avatar{box-shadow:none!important}
+    .sidebar.sb-collapsed .sb-user-avatar{box-shadow:none!important}
+    .main-content{padding:0!important;height:100vh!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+    @media(max-width:980px){.main-content{padding-top:64px!important;height:auto!important;overflow:visible!important}}
+
+    /* ── Page shell ── */
+    .rp-wrap{display:flex;flex-direction:column;gap:10px;padding:12px 14px 16px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(148,163,200,.15) transparent}
+
+    /* Header */
+    .rp-header{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .rp-title{font-size:17px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+    .rp-title svg{color:#a78bfa;flex-shrink:0}
+    .rp-hdr-right{display:flex;gap:8px;align-items:center}
+    .rp-last-upd{font-size:11px;color:var(--muted)}
+    .rp-btn-refresh{background:transparent;border:1px solid var(--border);color:var(--muted);width:34px;height:34px;padding:0;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;flex-shrink:0}
+    .rp-btn-refresh:hover{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#a78bfa}
+    .rp-btn-refresh.spinning svg{animation:rpSpin .7s linear infinite}
+    @keyframes rpSpin{to{transform:rotate(360deg)}}
+
+    /* Filter bar */
+    .rp-filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:10px 14px}
+    .rp-f-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+    .rp-f-input{height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:.15s}
+    .rp-f-input:focus{border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.05)}
+    [data-theme="light"] .rp-f-input{background:#fff}
+    .rp-f-sep{width:1px;height:20px;background:var(--border);flex-shrink:0}
+    .rp-f-btn{height:32px;padding:0 14px;border-radius:8px;border:1px solid rgba(139,92,246,.4);background:rgba(139,92,246,.12);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+    .rp-f-btn:hover{background:rgba(139,92,246,.24);border-color:rgba(139,92,246,.6)}
+    .rp-f-btn-cl{background:transparent;border-color:transparent;color:var(--muted)}
+    .rp-f-btn-cl:hover{background:rgba(148,163,184,.08);border-color:var(--border);color:var(--text)}
+
+    /* KPI row */
+    .rp-kpi-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;flex-shrink:0}
+    .rp-kpi{padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--border);position:relative;overflow:hidden;min-width:0}
+    .rp-kpi-lbl{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rp-kpi-val{font-size:24px;font-weight:800;color:var(--text);line-height:1;margin-bottom:3px;font-variant-numeric:tabular-nums}
+    .rp-kpi-sub{font-size:10px;color:var(--muted)}
+    .rp-kpi-blob{position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;opacity:.12;pointer-events:none}
+
+    /* Charts grid */
+    .rp-charts{display:flex;flex-direction:column;gap:10px}
+    .rp-row2{display:grid;grid-template-columns:5fr 7fr;gap:10px}
+    .rp-row3{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .rp-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column}
+    .rp-card-title{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px;flex-shrink:0}
+    .rp-canvas-wrap{position:relative;flex-shrink:0}
+    .rp-canvas-wrap canvas{display:block;width:100%;height:100%}
+
+    /* Legend */
+    .rp-legend{display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:10px;flex-shrink:0}
+    .rp-leg-item{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--muted)}
+    .rp-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+    /* Staff table */
+    .rp-staff-scroll{overflow-y:auto;flex:1;margin-top:2px}
+    .rp-staff-tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .rp-staff-tbl th{text-align:left;padding:5px 10px;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+    .rp-staff-tbl td{padding:7px 10px;border-bottom:1px solid rgba(148,163,184,.06);color:var(--text);vertical-align:middle}
+    .rp-staff-bar-bg{height:6px;background:rgba(148,163,184,.12);border-radius:4px;overflow:hidden;width:70px}
+    .rp-staff-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#a78bfa)}
+
+    @media(max-width:980px){
+      .rp-kpi-row{grid-template-columns:repeat(3,1fr)}
+      .rp-row2{grid-template-columns:1fr}
+      .rp-row3{grid-template-columns:1fr}
+      .rp-wrap{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+    }
+    @media(max-width:600px){
+      .rp-kpi-row{grid-template-columns:repeat(2,1fr)}
+      .rp-kpi-val{font-size:20px}
+      .rp-filter{gap:6px;padding:8px 10px}
+    }
+  </style>
+</head>
+<body>
+<div class="background">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="rp-wrap" id="rpWrap">
+
+      <!-- Header -->
+      <div class="rp-header">
+        <div class="rp-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+          Reports
+        </div>
+        <div class="rp-hdr-right">
+          <span class="rp-last-upd" id="rpLastUpd"></span>
+          <button class="rp-btn-refresh" id="rpRefreshBtn" title="Refresh Data">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.75"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="rp-filter">
+        <span class="rp-f-label">Date</span>
+        <input type="date" class="rp-f-input" id="rpFrom" title="From">
+        <span style="color:var(--muted);font-size:12px">–</span>
+        <input type="date" class="rp-f-input" id="rpTo" title="To">
+        <div class="rp-f-sep"></div>
+        <span class="rp-f-label">Group</span>
+        <select class="rp-f-input" id="rpGroup" style="padding-right:6px"><option value="">All Groups</option></select>
+        <div class="rp-f-sep"></div>
+        <span class="rp-f-label">Status</span>
+        <select class="rp-f-input" id="rpStatus" style="padding-right:6px">
+          <option value="">All Statuses</option>
+          <option value="Good">Good</option>
+          <option value="Normal">Normal</option>
+          <option value="BlackListed">BlackListed</option>
+          <option value="High Risk">High Risk</option>
+          <option value="Done">Done</option>
+        </select>
+        <button class="rp-f-btn" onclick="applyFilter()">Apply</button>
+        <button class="rp-f-btn rp-f-btn-cl" onclick="clearFilter()">Clear</button>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="rp-kpi-row">
+        <div class="rp-kpi">
+          <div class="rp-kpi-lbl">Total Borrowers</div>
+          <div class="rp-kpi-val" id="kTotal">—</div>
+          <div class="rp-kpi-sub" id="kTotalSub"></div>
+          <div class="rp-kpi-blob" style="background:#7c3aed"></div>
+        </div>
+        <div class="rp-kpi">
+          <div class="rp-kpi-lbl">Total Amount</div>
+          <div class="rp-kpi-val" id="kAmount" style="color:#10b981">—</div>
+          <div class="rp-kpi-sub" id="kAmountSub"></div>
+          <div class="rp-kpi-blob" style="background:#10b981"></div>
+        </div>
+        <div class="rp-kpi">
+          <div class="rp-kpi-lbl">BlackListed</div>
+          <div class="rp-kpi-val" id="kBl" style="color:#f87171">—</div>
+          <div class="rp-kpi-sub" id="kBlSub"></div>
+          <div class="rp-kpi-blob" style="background:#ef4444"></div>
+        </div>
+        <div class="rp-kpi">
+          <div class="rp-kpi-lbl">Good</div>
+          <div class="rp-kpi-val" id="kGood" style="color:#10b981">—</div>
+          <div class="rp-kpi-sub" id="kGoodSub"></div>
+          <div class="rp-kpi-blob" style="background:#10b981"></div>
+        </div>
+        <div class="rp-kpi">
+          <div class="rp-kpi-lbl">High Risk</div>
+          <div class="rp-kpi-val" id="kHr" style="color:#f59e0b">—</div>
+          <div class="rp-kpi-sub" id="kHrSub"></div>
+          <div class="rp-kpi-blob" style="background:#f59e0b"></div>
+        </div>
+        <div class="rp-kpi">
+          <div class="rp-kpi-lbl">Paid / Done</div>
+          <div class="rp-kpi-val" id="kPaid" style="color:#a78bfa">—</div>
+          <div class="rp-kpi-sub" id="kPaidSub"></div>
+          <div class="rp-kpi-blob" style="background:#7c3aed"></div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="rp-charts">
+
+        <!-- Row 1: Status donut + Monthly trend -->
+        <div class="rp-row2">
+          <div class="rp-card">
+            <div class="rp-card-title">Status Distribution</div>
+            <div class="rp-canvas-wrap" id="wStatus" style="height:180px"><canvas id="cStatus"></canvas></div>
+            <div class="rp-legend" id="lgStatus"></div>
+          </div>
+          <div class="rp-card">
+            <div class="rp-card-title">Monthly Loan Trend (last 12 months)</div>
+            <div class="rp-canvas-wrap" id="wMonth" style="height:180px"><canvas id="cMonth"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Row 2: Amount by Group (full width) -->
+        <div class="rp-card">
+          <div class="rp-card-title">Amount by Group ($)</div>
+          <div class="rp-canvas-wrap" id="wGroup" style="height:120px"><canvas id="cGroup"></canvas></div>
+        </div>
+
+        <!-- Row 3: Staff table + Gender donut -->
+        <div class="rp-row3">
+          <div class="rp-card" style="min-height:200px">
+            <div class="rp-card-title">Staff Activity — Added By</div>
+            <div class="rp-staff-scroll">
+              <table class="rp-staff-tbl">
+                <thead><tr><th>#</th><th>Staff</th><th>Loans</th><th>Amount</th><th></th></tr></thead>
+                <tbody id="staffTbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="rp-card">
+            <div class="rp-card-title">Gender Breakdown</div>
+            <div class="rp-canvas-wrap" id="wGender" style="height:170px"><canvas id="cGender"></canvas></div>
+            <div class="rp-legend" id="lgGender"></div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /.rp-wrap -->
+  </main>
+</div>
+
+<script src="../assets/js/layout.js?v=1"></script>
+<script src="../assets/js/dashboard-layout.js?v=1"></script>
+<script src="../assets/js/auth.js?v=1"></script>
+<script src="../assets/js/api.js?v=8"></script>
+<script>
+if (!HelenAuth.check()) throw new Error('auth');
+
+/* ── roundRect polyfill ── */
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
+    r = Math.min(r, w/2, h/2);
+    this.moveTo(x+r,y);
+    this.arcTo(x+w,y,x+w,y+h,r);
+    this.arcTo(x+w,y+h,x,y+h,r);
+    this.arcTo(x,y+h,x,y,r);
+    this.arcTo(x,y,x+w,y,r);
+    this.closePath();
+  };
+}
+
+/* ── Data state ── */
+var _all = [], _data = [];
+
+/* ── Theme helpers ── */
+function dark() { return document.documentElement.getAttribute('data-theme') !== 'light'; }
+function tc() {
+  var d = dark();
+  return {
+    text:  d ? '#f1f5f9' : '#0f172a',
+    muted: d ? '#64748b' : '#94a3b8',
+    grid:  d ? 'rgba(148,163,200,.09)' : 'rgba(148,163,184,.15)',
+    bg:    d ? '#18181b' : '#ffffff',
+    statusColor: function(s) {
+      return {Good:'#10b981',Normal:'#60a5fa',BlackListed:'#f87171','High Risk':'#f59e0b',Done:'#a78bfa'}[s] || '#64748b';
+    }
+  };
+}
+
+/* ── Canvas setup (HiDPI) ── */
+function setupCanvas(id, wrapId) {
+  var canvas = document.getElementById(id);
+  var wrap   = document.getElementById(wrapId);
+  if (!canvas || !wrap) return null;
+  var W   = wrap.offsetWidth  || 300;
+  var H   = wrap.offsetHeight || 180;
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width  = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  var ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+  return { ctx: ctx, W: W, H: H };
+}
+
+/* ── Donut chart ── */
+function drawDonut(canvasId, wrapId, segments, centerLabel) {
+  var c = setupCanvas(canvasId, wrapId);
+  if (!c) return;
+  var ctx = c.ctx, W = c.W, H = c.H;
+  var colors = tc();
+  var cx = W / 2, cy = H / 2;
+  var R = Math.min(cx, cy) * 0.80;
+  var IR = R * 0.54;
+  var total = segments.reduce(function(s,x){ return s+x.val; }, 0);
+
+  if (!total) {
+    ctx.fillStyle = colors.muted;
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('No data', cx, cy);
+    return;
+  }
+
+  var ang = -Math.PI / 2;
+  segments.forEach(function(seg) {
+    var slice = (seg.val / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, ang, ang + slice);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    ang += slice;
+  });
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, IR, 0, 2 * Math.PI);
+  ctx.fillStyle = colors.bg;
+  ctx.fill();
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = colors.text;
+  ctx.font = 'bold 20px sans-serif';
+  ctx.fillText(centerLabel || total, cx, cy - 7);
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = colors.muted;
+  ctx.fillText('total', cx, cy + 10);
+}
+
+/* ── Bar chart (vertical) ── */
+function drawBars(canvasId, wrapId, labels, values, barColor) {
+  var c = setupCanvas(canvasId, wrapId);
+  if (!c) return;
+  var ctx = c.ctx, W = c.W, H = c.H;
+  var col = tc();
+  var pad = { t:14, r:10, b:28, l:28 };
+  var cW = W - pad.l - pad.r;
+  var cH = H - pad.t - pad.b;
+  var maxV = Math.max.apply(null, values.concat([1]));
+  var n = values.length;
+  var bW = (cW / n) * 0.58;
+  var step = cW / n;
+
+  /* grid */
+  [.25,.5,.75,1].forEach(function(f) {
+    var y = pad.t + cH * (1 - f);
+    ctx.strokeStyle = col.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+    ctx.fillStyle = col.muted;
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(Math.round(maxV * f), pad.l - 4, y);
+  });
+
+  /* bars */
+  values.forEach(function(v, i) {
+    var x  = pad.l + i * step + (step - bW) / 2;
+    var bH = (v / maxV) * cH;
+    var y  = pad.t + cH - bH;
+    if (bH > 0) {
+      var grad = ctx.createLinearGradient(x, y, x, y + bH);
+      grad.addColorStop(0, barColor);
+      grad.addColorStop(1, barColor + '55');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(x, y, bW, bH, [3,3,0,0]);
+      ctx.fill();
+    }
+    if (v > 0) {
+      ctx.fillStyle = col.muted;
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(v, x + bW / 2, y - 1);
+    }
+    ctx.fillStyle = col.muted;
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(labels[i], x + bW / 2, pad.t + cH + 4);
+  });
+}
+
+/* ── Horizontal bar chart ── */
+function drawHBars(canvasId, wrapId, entries) {
+  var wrap = document.getElementById(wrapId);
+  var rowH = 30, padV = 10, labelW = 110, rightW = 90;
+  var needed = Math.max(80, entries.length * rowH + padV * 2);
+  if (wrap) wrap.style.height = needed + 'px';
+
+  var c = setupCanvas(canvasId, wrapId);
+  if (!c) return;
+  var ctx = c.ctx, W = c.W, H = c.H;
+  var col = tc();
+  var barArea = W - labelW - rightW - 8;
+  var maxAmt  = Math.max.apply(null, entries.map(function(e){ return e.amount; }).concat([1]));
+  var palette = ['#8b5cf6','#06b6d4','#10b981','#f59e0b','#f87171','#a78bfa','#60a5fa','#34d399'];
+
+  entries.forEach(function(e, i) {
+    var y   = padV + i * rowH;
+    var bW  = barArea * (e.amount / maxAmt);
+    var mid = y + rowH / 2;
+
+    /* label */
+    ctx.fillStyle = col.text;
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    var lbl = e.label.length > 14 ? e.label.slice(0,13) + '…' : e.label;
+    ctx.fillText(lbl, 0, mid);
+
+    /* bar bg */
+    ctx.fillStyle = col.grid;
+    ctx.beginPath();
+    ctx.roundRect(labelW, y + 7, barArea, rowH - 14, 4);
+    ctx.fill();
+
+    /* bar fill */
+    if (bW > 2) {
+      ctx.fillStyle = palette[i % palette.length];
+      ctx.beginPath();
+      ctx.roundRect(labelW, y + 7, bW, rowH - 14, 4);
+      ctx.fill();
+    }
+
+    /* value */
+    ctx.fillStyle = col.muted;
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('$' + e.amount.toLocaleString() + ' (' + e.count + ')', labelW + barArea + 8, mid);
+  });
+}
+
+/* ── Render KPIs ── */
+function renderKPIs() {
+  var d = _data, n = d.length;
+  var amt  = d.reduce(function(s,l){ return s+(Number(l.Money)||0); }, 0);
+  var bl   = d.filter(function(l){ return (l.Status||'').toLowerCase().includes('black'); }).length;
+  var good = d.filter(function(l){ return l.Status === 'Good'; }).length;
+  var hr   = d.filter(function(l){ return l.Status === 'High Risk'; }).length;
+  var paid = d.filter(function(l){ return l.Paid || l.Status === 'Done'; }).length;
+  function pct(v){ return n ? Math.round(v/n*100)+'% of total' : ''; }
+
+  document.getElementById('kTotal').textContent    = n;
+  document.getElementById('kTotalSub').textContent = n === _all.length ? 'all borrowers' : 'filtered';
+  document.getElementById('kAmount').textContent   = '$' + amt.toLocaleString();
+  document.getElementById('kAmountSub').textContent= n ? 'avg $'+Math.round(amt/n) : '';
+  document.getElementById('kBl').textContent       = bl;
+  document.getElementById('kBlSub').textContent    = pct(bl);
+  document.getElementById('kGood').textContent     = good;
+  document.getElementById('kGoodSub').textContent  = pct(good);
+  document.getElementById('kHr').textContent       = hr;
+  document.getElementById('kHrSub').textContent    = pct(hr);
+  document.getElementById('kPaid').textContent     = paid;
+  document.getElementById('kPaidSub').textContent  = pct(paid);
+}
+
+/* ── Render status donut ── */
+function renderStatus() {
+  var counts = {};
+  _data.forEach(function(l){ var s=l.Status||'Normal'; counts[s]=(counts[s]||0)+1; });
+  var segs = Object.keys(counts).map(function(k){
+    return { label:k, val:counts[k], color:tc().statusColor(k) };
+  }).sort(function(a,b){ return b.val-a.val; });
+
+  drawDonut('cStatus','wStatus', segs, _data.length.toString());
+
+  document.getElementById('lgStatus').innerHTML = segs.map(function(s){
+    return '<div class="rp-leg-item"><div class="rp-leg-dot" style="background:'+s.color+'"></div>'+s.label+' ('+s.val+')</div>';
+  }).join('');
+}
+
+/* ── Render monthly trend ── */
+function renderMonthly() {
+  var now = new Date(), months = [], labels = [];
+  for (var i = 11; i >= 0; i--) {
+    var d  = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    var mk = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    months.push({ key: mk, count: 0 });
+    labels.push((d.getMonth()+1) + '/' + String(d.getFullYear()).slice(2));
+  }
+  _data.forEach(function(l) {
+    if (!l.DateTime) return;
+    var mk = l.DateTime.substring(0,7);
+    var m = months.find(function(x){ return x.key===mk; });
+    if (m) m.count++;
+  });
+  drawBars('cMonth','wMonth', labels, months.map(function(m){ return m.count; }), '#8b5cf6');
+}
+
+/* ── Render group horizontal bars ── */
+function renderGroups() {
+  var grps = {};
+  _data.forEach(function(l){
+    var g = (l.Groups||'No Group').trim();
+    if (!grps[g]) grps[g] = { count:0, amount:0 };
+    grps[g].count++;
+    grps[g].amount += Number(l.Money)||0;
+  });
+  var entries = Object.keys(grps).map(function(k){
+    return { label:k, count:grps[k].count, amount:grps[k].amount };
+  }).sort(function(a,b){ return b.amount-a.amount; }).slice(0,8);
+  drawHBars('cGroup','wGroup', entries);
+}
+
+/* ── Render staff table ── */
+function renderStaff() {
+  var staff = {};
+  _data.forEach(function(l){
+    var by = (l.created_by||'—').trim() || '—';
+    if (!staff[by]) staff[by] = { count:0, amount:0 };
+    staff[by].count++;
+    staff[by].amount += Number(l.Money)||0;
+  });
+  var rows = Object.keys(staff).map(function(k){
+    return { name:k, count:staff[k].count, amount:staff[k].amount };
+  }).sort(function(a,b){ return b.count-a.count; });
+
+  var maxC = rows.length ? rows[0].count : 1;
+  document.getElementById('staffTbody').innerHTML = rows.length
+    ? rows.map(function(r,i){
+        return '<tr>'
+          +'<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'
+          +'<td style="font-weight:700">'+r.name+'</td>'
+          +'<td style="font-variant-numeric:tabular-nums">'+r.count+'</td>'
+          +'<td style="color:#10b981;font-weight:700;font-variant-numeric:tabular-nums">$'+r.amount.toLocaleString()+'</td>'
+          +'<td><div class="rp-staff-bar-bg"><div class="rp-staff-bar-fill" style="width:'+Math.round(r.count/maxC*100)+'%"></div></div></td>'
+          +'</tr>';
+      }).join('')
+    : '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">No data</td></tr>';
+}
+
+/* ── Render gender donut ── */
+function renderGender() {
+  var g = { Male:0, Female:0, Other:0 };
+  _data.forEach(function(l){ var v=l.Gender||'Other'; g[v in g?v:'Other']++; });
+  var segs = [
+    { label:'Male',   val:g.Male,   color:'#60a5fa' },
+    { label:'Female', val:g.Female, color:'#f472b6' },
+    { label:'Other',  val:g.Other,  color:'#94a3b8' },
+  ].filter(function(s){ return s.val>0; });
+
+  drawDonut('cGender','wGender', segs, _data.length.toString());
+  document.getElementById('lgGender').innerHTML = segs.map(function(s){
+    return '<div class="rp-leg-item"><div class="rp-leg-dot" style="background:'+s.color+'"></div>'+s.label+' ('+s.val+')</div>';
+  }).join('');
+}
+
+/* ── Render all ── */
+function renderAll() {
+  renderKPIs();
+  renderStatus();
+  renderMonthly();
+  renderGroups();
+  renderStaff();
+  renderGender();
+}
+
+/* ── Filter ── */
+function applyFilter() {
+  var from = document.getElementById('rpFrom').value;
+  var to   = document.getElementById('rpTo').value;
+  var grp  = document.getElementById('rpGroup').value;
+  var st   = document.getElementById('rpStatus').value;
+  _data = _all.filter(function(l){
+    if (from && l.DateTime && l.DateTime.substring(0,10) < from) return false;
+    if (to   && l.DateTime && l.DateTime.substring(0,10) > to)   return false;
+    if (grp  && (l.Groups||'').trim() !== grp)  return false;
+    if (st   && (l.Status||'')         !== st)   return false;
+    return true;
+  });
+  renderAll();
+}
+
+function clearFilter() {
+  ['rpFrom','rpTo','rpGroup','rpStatus'].forEach(function(id){ document.getElementById(id).value=''; });
+  _data = _all.slice();
+  renderAll();
+}
+
+/* ── Populate group dropdown ── */
+function populateGroups() {
+  var grps = [...new Set(_all.map(function(l){ return (l.Groups||'').trim(); }).filter(Boolean))].sort();
+  var sel = document.getElementById('rpGroup');
+  sel.innerHTML = '<option value="">All Groups</option>'
+    + grps.map(function(g){ return '<option value="'+g+'">'+g+'</option>'; }).join('');
+}
+
+/* ── Load data ── */
+async function loadData() {
+  var btn = document.getElementById('rpRefreshBtn');
+  btn.classList.add('spinning');
+  try {
+    var res = await Promise.race([
+      CamboAPI.get({ action: 'helen_all' }),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); },30000); })
+    ]);
+    if (res && res.ok) {
+      _all  = res.loans || [];
+      _data = _all.slice();
+      populateGroups();
+      renderAll();
+      document.getElementById('rpLastUpd').textContent =
+        'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    }
+  } catch(e) { console.error('[Reports]', e); }
+  btn.classList.remove('spinning');
+}
+
+/* ── Wiring ── */
+document.getElementById('rpRefreshBtn').addEventListener('click', loadData);
+
+/* Redraw on theme change */
+new MutationObserver(function(){ if (_data.length) renderAll(); })
+  .observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+
+/* Redraw on resize */
+var _resizeT;
+window.addEventListener('resize', function(){
+  clearTimeout(_resizeT);
+  _resizeT = setTimeout(function(){ if (_data.length) renderAll(); }, 200);
+});
+
+loadData();
+</script>
+</body>
+</html>
