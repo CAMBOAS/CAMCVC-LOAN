@@ -184,6 +184,7 @@
   var _chatPoll   = null;
   var _unreadPoll = null;
   var _prevCounts = {};  // sender → last known count
+  var _lastMsgId  = 0;   // last seen message id inside open chat
 
   /* ── Wire DOM events ── */
   function wire() {
@@ -221,6 +222,7 @@
     document.getElementById('gcImgPrev').style.display='none';
     document.getElementById('gcInput').value='';
     document.getElementById('gcMsgs').innerHTML='<div class="gc-loading"><div class="gc-spin"></div></div>';
+    _lastMsgId = 0;
     document.getElementById('gc-box').classList.add('gc-open');
     gcLoadMsgs(true);
     if (_chatPoll) clearInterval(_chatPoll);
@@ -246,7 +248,16 @@
       if (el.querySelector('.gc-spin')) el.innerHTML='<div class="gc-empty" style="color:#ef4444">Could not load messages — retrying…</div>';
       return;
     }
-    gcRenderMsgs(res.messages||[], scrollDown);
+    var msgs = res.messages || [];
+    /* detect new message from the other person while chat is open */
+    if (msgs.length > 0) {
+      var last = msgs[msgs.length - 1];
+      if (_lastMsgId > 0 && last.id > _lastMsgId && last.sender !== getMyUsername()) {
+        playReceiveSound();
+      }
+      _lastMsgId = last.id;
+    }
+    gcRenderMsgs(msgs, scrollDown);
     var card=document.querySelector('.tm-card[data-username="'+_chatWith+'"]');
     if (card){ var b=card.querySelector('.tm-unread'); if(b) b.remove(); }
   }
@@ -400,25 +411,36 @@
     document.removeEventListener('click', _resume);
   }, { once: true });
 
-  function playNotifSound() {
+  function _playTones(tones) {
     try {
       var ctx = _getCtx(); if (!ctx) return;
-      if (ctx.state === 'suspended') { ctx.resume(); }
+      if (ctx.state === 'suspended') ctx.resume();
       var now = ctx.currentTime;
-      function tone(freq, start, dur, vol) {
-        var osc  = ctx.createOscillator();
-        var gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, start);
-        gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(vol, start + 0.015);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      tones.forEach(function(t) {
+        var osc=ctx.createOscillator(), gain=ctx.createGain();
+        osc.type='sine'; osc.frequency.setValueAtTime(t[0], now+t[1]);
+        gain.gain.setValueAtTime(0, now+t[1]);
+        gain.gain.linearRampToValueAtTime(t[3], now+t[1]+0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now+t[1]+t[2]);
         osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(start); osc.stop(start + dur);
-      }
-      tone(988,  now,        0.35, 0.22);  /* B5 */
-      tone(1319, now + 0.12, 0.30, 0.15); /* E6 */
+        osc.start(now+t[1]); osc.stop(now+t[1]+t[2]);
+      });
     } catch(e) {}
+  }
+
+  /* Two-note notification ping (chat closed — louder) */
+  function playNotifSound() {
+    _playTones([
+      [988,  0,    0.35, 0.22],  /* B5 */
+      [1319, 0.12, 0.30, 0.15],  /* E6 */
+    ]);
+  }
+
+  /* Single soft pop (new message while chat is open) */
+  function playReceiveSound() {
+    _playTones([
+      [1047, 0, 0.25, 0.10],  /* C6 — soft single note */
+    ]);
   }
 
   /* ── Start polling ── */
