@@ -437,21 +437,25 @@ export default async function handler(req, res) {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
+      const [oldRows] = await db().query('SELECT display_name FROM helen_users WHERE username=?', [u]);
+      const oldDisplayName = oldRows.length ? (oldRows[0].display_name || '') : '';
+      const newDisplayName = String(body.display_name||u).trim();
       const p = String(body.pin||'').trim();
       if (p) {
         await db().query(
           'UPDATE helen_users SET pin=?,role=?,display_name=?,exp_date=?,status=? WHERE username=?',
-          [p, String(body.role||'Staff Loan'), String(body.display_name||u).trim(),
-           body.exp_date||null, body.status||'active', u]
+          [p, String(body.role||'Staff Loan'), newDisplayName, body.exp_date||null, body.status||'active', u]
         );
       } else {
         await db().query(
           'UPDATE helen_users SET role=?,display_name=?,exp_date=?,status=? WHERE username=?',
-          [String(body.role||'Staff Loan'), String(body.display_name||u).trim(),
-           body.exp_date||null, body.status||'active', u]
+          [String(body.role||'Staff Loan'), newDisplayName, body.exp_date||null, body.status||'active', u]
         );
       }
-      if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'edit', username:u, display_name:String(body.display_name||u).trim(), role:String(body.role||'Staff Loan'), status:body.status||'active', actor }); } catch(e) {} }
+      if (oldDisplayName && newDisplayName && oldDisplayName !== newDisplayName) {
+        await db().query('UPDATE helen_loans SET created_by=? WHERE created_by=?', [newDisplayName, oldDisplayName]);
+      }
+      if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'edit', username:u, display_name:newDisplayName, role:String(body.role||'Staff Loan'), status:body.status||'active', actor }); } catch(e) {} }
       return res.json({ ok:true });
     }
 
