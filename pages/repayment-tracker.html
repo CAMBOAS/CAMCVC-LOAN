@@ -122,12 +122,14 @@
 </head>
 <body>
 <div class="background"></div>
-<div class="layout-root" id="layoutRoot"></div>
-<script src="../assets/js/auth.js?v=3"></script>
-<script src="../assets/js/layout.js?v=14"></script>
 
-<div class="page-content" id="pageContent">
-  <div class="rt-wrap">
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
+
+    <div class="rt-wrap">
 
     <!-- KPI Row -->
     <div class="rt-kpi-row" id="rtKpiRow">
@@ -206,9 +208,13 @@
       </table>
     </div>
 
-  </div>
-</div>
+    </div><!-- rt-wrap -->
+  </main>
+</div><!-- dashboard -->
 
+<script src="../assets/js/layout.js?v=14"></script>
+<script src="../assets/js/dashboard-layout.js?v=1"></script>
+<script src="../assets/js/auth.js?v=3"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
 'use strict';
