@@ -522,7 +522,7 @@ export default async function handler(req, res) {
             MAX(CASE WHEN action='user_login' THEN created_at ELSE NULL END)                 AS last_login
           FROM helen_activity_log
           GROUP BY actor_user
-        ) s ON s.actor_user = u.username
+        ) s ON s.actor_user COLLATE utf8mb4_unicode_ci = u.username COLLATE utf8mb4_unicode_ci
         ORDER BY u.display_name
       `);
       return res.json({ ok: true, users });
