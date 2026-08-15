@@ -65,6 +65,36 @@ async function ensureCreatedByUserCol() {
   _createdByUserColReady = true;
 }
 
+/* ── Activity log table ── */
+let _actLogReady = false;
+async function ensureActivityLogTable() {
+  if (_actLogReady) return;
+  try {
+    await db().query(`CREATE TABLE IF NOT EXISTS helen_activity_log (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      action VARCHAR(50) NOT NULL,
+      actor VARCHAR(100),
+      actor_user VARCHAR(100),
+      target VARCHAR(255),
+      detail TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_created (created_at),
+      INDEX idx_action (action)
+    )`);
+  } catch(e) {}
+  _actLogReady = true;
+}
+
+async function logActivity(act, actor, actorUser, target, detail) {
+  try {
+    await ensureActivityLogTable();
+    await db().query(
+      'INSERT INTO helen_activity_log (action,actor,actor_user,target,detail) VALUES (?,?,?,?,?)',
+      [act, actor||null, actorUser||null, target||null, detail ? JSON.stringify(detail) : null]
+    );
+  } catch(e) {}
+}
+
 /* ── Map DB row → frontend loan object ── */
 function rowToLoan(r) {
   return {
@@ -245,6 +275,7 @@ export default async function handler(req, res) {
       if (v.expired)   return res.json({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
       db().query('UPDATE helen_users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
       if (await isNotifEnabled('login')) { try { await sendTelegramEvent('login', { name:v.name, role:v.role, username:v.username }); } catch(e) {} }
+      logActivity('user_login', v.name, v.username, null, { role: v.role }).catch(()=>{});
       return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate, photo_url:v.photo_url||'' });
     }
 
@@ -298,6 +329,26 @@ export default async function handler(req, res) {
         history = hist.map(rowToLoan);
       }
       return res.json({ ok: true, loan, history });
+    }
+
+    /* ── Activity Log list ── */
+    if (action === 'helen_activity_list') {
+      await ensureActivityLogTable();
+      const limit  = Math.min(parseInt(body.limit||150, 10), 500);
+      const offset = parseInt(body.offset||0, 10);
+      const fAct   = String(body.filter_action||'').trim();
+      const fUser  = String(body.filter_actor||'').trim();
+      let sql = 'SELECT * FROM helen_activity_log';
+      const params = [];
+      const wheres = [];
+      if (fAct)  { wheres.push('action=?');     params.push(fAct); }
+      if (fUser) { wheres.push('actor_user=?'); params.push(fUser); }
+      if (wheres.length) sql += ' WHERE ' + wheres.join(' AND ');
+      sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+      params.push(limit, offset);
+      const [logs] = await db().query(sql, params);
+      const [[tot]] = await db().query('SELECT COUNT(*) AS total FROM helen_activity_log');
+      return res.json({ ok: true, logs, total: tot.total });
     }
 
     /* ── Infor only ── */
@@ -357,6 +408,7 @@ export default async function handler(req, res) {
       );
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('add'))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
+      logActivity('loan_add', actor, _bu, l.FullName||'', { money: l.Money||0, status: l.Status||'Normal' }).catch(()=>{});
       return res.json({ ok:true });
     }
 
@@ -385,6 +437,7 @@ export default async function handler(req, res) {
       );
       const [updated] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [newKey]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('edit'))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }
+      logActivity('loan_edit', actor, _bu, l.FullName||'', { key: newKey }).catch(()=>{});
       return res.json({ ok:true, message:'Updated' });
     }
 
@@ -392,10 +445,11 @@ export default async function handler(req, res) {
     if (action === 'helen_loan_toggle_paid') {
       await ensurePaidCol();
       const key = String(body.key||'').trim();
-      const [rows] = await db().query('SELECT paid FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
+      const [rows] = await db().query('SELECT paid, full_name FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!rows.length) return res.json({ ok:false, message:'Row not found' });
       const newPaid = rows[0].paid ? 0 : 1;
       await db().query('UPDATE helen_loans SET paid=? WHERE loan_key=?', [newPaid, key]);
+      logActivity('loan_paid', actor, _bu, rows[0].full_name||'', { paid: newPaid }).catch(()=>{});
       return res.json({ ok:true, paid: newPaid });
     }
 
@@ -406,14 +460,17 @@ export default async function handler(req, res) {
       if (!rows.length) return res.json({ ok:false, message:'Row not found' });
       await db().query('UPDATE helen_loans SET deleted_at=NOW() WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('delete'))) { try { await sendTelegram(rows[0], 'delete', actor); } catch(e) {} }
+      logActivity('loan_delete', actor, _bu, rows[0].full_name||'', { key }).catch(()=>{});
       return res.json({ ok:true, message:'Deleted' });
     }
 
     /* ── Recover loan ── */
     if (action === 'helen_loan_recover') {
       const key = String(body.key||'').trim();
+      const [trashRow] = await db().query('SELECT full_name FROM helen_loans WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
       const [r] = await db().query(
         'UPDATE helen_loans SET deleted_at=NULL WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
+      if (r.affectedRows > 0) logActivity('loan_recover', actor, _bu, trashRow[0]&&trashRow[0].full_name||'', { key }).catch(()=>{});
       return res.json({ ok: r.affectedRows > 0, message: r.affectedRows > 0 ? 'Recovered' : 'Not found in trash' });
     }
 
@@ -452,6 +509,7 @@ export default async function handler(req, res) {
         throw e;
       }
       if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'add', username:u, display_name:String(body.display_name||u).trim(), role:String(body.role||'Staff Loan'), status:body.status||'active', actor }); } catch(e) {} }
+      logActivity('user_add', actor, _bu, u, { display_name: String(body.display_name||u).trim(), role: String(body.role||'Staff Loan') }).catch(()=>{});
       return res.json({ ok:true });
     }
 
@@ -479,6 +537,7 @@ export default async function handler(req, res) {
         await db().query('UPDATE helen_loans SET created_by=? WHERE created_by=?', [newDisplayName, oldDisplayName]);
       }
       if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'edit', username:u, display_name:newDisplayName, role:String(body.role||'Staff Loan'), status:body.status||'active', actor }); } catch(e) {} }
+      logActivity('user_edit', actor, _bu, u, { old_name: oldDisplayName, new_name: newDisplayName }).catch(()=>{});
       return res.json({ ok:true });
     }
 
@@ -490,6 +549,7 @@ export default async function handler(req, res) {
       if (u === _bu) return res.json({ ok:false, message:'មិនអាចលុប Account ខ្លួនឯងបាន' });
       await db().query('DELETE FROM helen_users WHERE username=?', [u]);
       if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'delete', username:u, actor }); } catch(e) {} }
+      logActivity('user_delete', actor, _bu, u, null).catch(()=>{});
       return res.json({ ok:true });
     }
 

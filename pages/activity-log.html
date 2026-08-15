@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>(function(){document.documentElement.style.visibility='';})();</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <title>Activity Log - HELEN LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=5">
+  <style>
+    .orb{display:none!important}.background{background:#27272a!important}.background::before{display:none!important}
+    body{background:#27272a!important}.sidebar{background:#27272a!important}
+    [data-theme="light"] .background{background:#f8fafc!important}[data-theme="light"] body{background:#f8fafc!important}
+    [data-theme="light"] .sidebar{background:#f8fafc!important}
+    html[data-theme="light"] .header-shell,html[data-theme="light"] .shared-topbar{background:#ffffff!important;border-bottom-color:rgba(0,0,0,.09)!important}
+    .sb-logo-wrap{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+    .sb-user-card{border-color:transparent!important;background:transparent!important}.sb-user-avatar{box-shadow:none!important}
+    .main-content{padding:0!important}
+
+    :root {
+      --al-bg:#f1f5f9;--al-card:#ffffff;--al-text:#0f172a;--al-muted:#64748b;
+      --al-border:rgba(148,163,184,.2);--al-shadow:0 2px 12px rgba(0,0,0,.07);
+    }
+    [data-theme="dark"] {
+      --al-bg:#18181b;--al-card:#1e293b;--al-text:#f1f5f9;--al-muted:#94a3b8;
+      --al-border:rgba(148,163,184,.12);--al-shadow:0 2px 16px rgba(0,0,0,.4);
+    }
+
+    .al-wrap { padding:16px 20px 40px; overflow-y:auto; height:calc(100vh - 64px); box-sizing:border-box }
+    @media(max-width:980px){ .al-wrap{ height:auto; padding:14px 12px 100px } }
+
+    /* ── Filter bar ── */
+    .al-filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:18px }
+    .al-filter-sel { padding:8px 12px; border-radius:10px; border:1.5px solid var(--al-border); background:var(--al-card); color:var(--al-text); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; outline:none; transition:.15s }
+    .al-filter-sel:focus { border-color:#7c5cff }
+    .al-filter-count { font-size:12px; color:var(--al-muted); margin-left:auto }
+    .al-refresh-btn { display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:10px; border:1.5px solid var(--al-border); background:var(--al-card); color:var(--al-muted); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:.15s }
+    .al-refresh-btn:hover { color:#7c5cff; border-color:#7c5cff }
+
+    /* ── KPI strip ── */
+    .al-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px }
+    @media(max-width:600px){ .al-kpi-row{ grid-template-columns:repeat(2,1fr) } }
+    .al-kpi { background:var(--al-card); border-radius:16px; padding:14px 16px; border:1px solid var(--al-border); box-shadow:var(--al-shadow) }
+    .al-kpi-label { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--al-muted); margin-bottom:6px }
+    .al-kpi-val { font-size:22px; font-weight:800; color:var(--al-text); line-height:1 }
+    .al-kpi-sub  { font-size:10.5px; color:var(--al-muted); margin-top:3px }
+
+    /* ── Timeline ── */
+    .al-feed { display:flex; flex-direction:column; gap:4px }
+    .al-day-sep { display:flex; align-items:center; gap:10px; margin:14px 0 8px; color:var(--al-muted); font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase }
+    .al-day-sep::after { content:''; flex:1; height:1px; background:var(--al-border) }
+
+    .al-item { display:flex; align-items:flex-start; gap:12px; padding:11px 14px; border-radius:14px; background:var(--al-card); border:1px solid var(--al-border); transition:.15s }
+    .al-item:hover { border-color:rgba(124,92,255,.25); background:rgba(124,92,255,.03) }
+    .al-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px }
+    .al-body { flex:1; min-width:0 }
+    .al-row1 { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px }
+    .al-action-badge { font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:6px; letter-spacing:.03em }
+    .al-actor { font-size:12px; font-weight:700; color:var(--al-text) }
+    .al-time { font-size:11px; color:var(--al-muted); margin-left:auto; white-space:nowrap; flex-shrink:0 }
+    .al-desc { font-size:12.5px; color:var(--al-muted); line-height:1.5 }
+    .al-target { font-weight:700; color:var(--al-text) }
+    .al-detail { display:inline-flex; gap:6px; flex-wrap:wrap; margin-top:4px }
+    .al-chip { font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:6px; background:rgba(148,163,184,.1); color:var(--al-muted) }
+
+    /* Action colors */
+    .al-c-add    { background:rgba(34,197,94,.12);  color:#16a34a }
+    .al-c-edit   { background:rgba(59,130,246,.12); color:#2563eb }
+    .al-c-delete { background:rgba(239,68,68,.12);  color:#dc2626 }
+    .al-c-paid   { background:rgba(16,185,129,.12); color:#059669 }
+    .al-c-recover{ background:rgba(99,102,241,.12); color:#4f46e5 }
+    .al-c-login  { background:rgba(124,92,255,.12); color:#7c5cff }
+    .al-c-user   { background:rgba(245,158,11,.12); color:#d97706 }
+
+    .al-icon-add    { background:rgba(34,197,94,.12) }
+    .al-icon-edit   { background:rgba(59,130,246,.12) }
+    .al-icon-delete { background:rgba(239,68,68,.12) }
+    .al-icon-paid   { background:rgba(16,185,129,.12) }
+    .al-icon-recover{ background:rgba(99,102,241,.12) }
+    .al-icon-login  { background:rgba(124,92,255,.12) }
+    .al-icon-user   { background:rgba(245,158,11,.12) }
+
+    /* ── Empty / Loading ── */
+    .al-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:250px; gap:12px; color:var(--al-muted); font-size:14px }
+    .al-spin { width:30px; height:30px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:alSpin .7s linear infinite }
+    @keyframes alSpin{ to{ transform:rotate(360deg) } }
+
+    /* ── Load more ── */
+    .al-load-more { text-align:center; margin-top:18px }
+    .al-load-more-btn { padding:10px 28px; border-radius:12px; border:1.5px solid var(--al-border); background:var(--al-card); color:#7c5cff; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .al-load-more-btn:hover { background:rgba(124,92,255,.08); border-color:#7c5cff }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
+    <div class="al-wrap" id="alWrap">
+
+      <!-- KPI Row -->
+      <div class="al-kpi-row" id="alKpi" style="display:none">
+        <div class="al-kpi">
+          <div class="al-kpi-label">Total Events</div>
+          <div class="al-kpi-val" id="kpiTotal">—</div>
+          <div class="al-kpi-sub">All recorded</div>
+        </div>
+        <div class="al-kpi">
+          <div class="al-kpi-label">Loans Added</div>
+          <div class="al-kpi-val" id="kpiAdded" style="color:#22c55e">—</div>
+          <div class="al-kpi-sub">loan_add events</div>
+        </div>
+        <div class="al-kpi">
+          <div class="al-kpi-label">Loans Deleted</div>
+          <div class="al-kpi-val" id="kpiDeleted" style="color:#ef4444">—</div>
+          <div class="al-kpi-sub">loan_delete events</div>
+        </div>
+        <div class="al-kpi">
+          <div class="al-kpi-label">User Logins</div>
+          <div class="al-kpi-val" id="kpiLogins" style="color:#7c5cff">—</div>
+          <div class="al-kpi-sub">login events</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="al-filter-bar">
+        <select class="al-filter-sel" id="alFilterAction" onchange="applyFilter()">
+          <option value="">All Actions</option>
+          <option value="loan_add">Loan Added</option>
+          <option value="loan_edit">Loan Edited</option>
+          <option value="loan_delete">Loan Deleted</option>
+          <option value="loan_recover">Loan Recovered</option>
+          <option value="loan_paid">Paid Toggled</option>
+          <option value="user_login">User Login</option>
+          <option value="user_add">User Added</option>
+          <option value="user_edit">User Edited</option>
+          <option value="user_delete">User Deleted</option>
+        </select>
+        <select class="al-filter-sel" id="alFilterActor" onchange="applyFilter()">
+          <option value="">All Users</option>
+        </select>
+        <button class="al-refresh-btn" onclick="loadData()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+        <span class="al-filter-count" id="alCount"></span>
+      </div>
+
+      <!-- Feed -->
+      <div id="alFeed">
+        <div class="al-state"><div class="al-spin"></div><span>Loading activity…</span></div>
+      </div>
+
+      <!-- Load More -->
+      <div class="al-load-more" id="alLoadMore" style="display:none">
+        <button class="al-load-more-btn" onclick="loadMore()">Load more</button>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/layout.js?v=2"></script>
+<script src="../assets/js/dashboard-layout.js?v=1"></script>
+<script src="../assets/js/auth.js?v=2"></script>
+<script src="../assets/js/api.js?v=8"></script>
+<script>
+'use strict';
+
+var _allLogs   = [];
+var _offset    = 0;
+var _total     = 0;
+var _PAGE      = 150;
+var _actors    = new Set();
+
+var ACTION_META = {
+  loan_add:     { label:'Loan Added',     icon:'➕', cls:'add'    },
+  loan_edit:    { label:'Loan Edited',    icon:'✏️', cls:'edit'   },
+  loan_delete:  { label:'Loan Deleted',   icon:'🗑️', cls:'delete' },
+  loan_recover: { label:'Loan Recovered', icon:'↩️', cls:'recover'},
+  loan_paid:    { label:'Paid Toggle',    icon:'✅', cls:'paid'   },
+  user_login:   { label:'User Login',     icon:'🔑', cls:'login'  },
+  user_add:     { label:'User Added',     icon:'👤', cls:'user'   },
+  user_edit:    { label:'User Edited',    icon:'👤', cls:'user'   },
+  user_delete:  { label:'User Deleted',   icon:'👤', cls:'delete' },
+};
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function relTime(dt) {
+  try {
+    var now  = Date.now();
+    var then = new Date(dt).getTime();
+    var diff = Math.floor((now - then) / 1000);
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return Math.floor(diff/60)  + ' min ago';
+    if (diff < 86400) return Math.floor(diff/3600) + ' hr ago';
+    if (diff < 172800)return 'Yesterday';
+    return Math.floor(diff/86400) + ' days ago';
+  } catch(e) { return ''; }
+}
+
+function fmtTime(dt) {
+  try {
+    var d = new Date(dt);
+    var hh = String(d.getHours()).padStart(2,'0');
+    var mm = String(d.getMinutes()).padStart(2,'0');
+    return hh+':'+mm;
+  } catch(e) { return ''; }
+}
+
+function fmtDay(dt) {
+  try {
+    var d   = new Date(dt);
+    var now = new Date();
+    var dd  = String(d.getDate()).padStart(2,'0');
+    var mo  = String(d.getMonth()+1).padStart(2,'0');
+    var yr  = d.getFullYear();
+    if (d.toDateString() === now.toDateString()) return 'Today';
+    var yes = new Date(now); yes.setDate(yes.getDate()-1);
+    if (d.toDateString() === yes.toDateString()) return 'Yesterday';
+    return dd+'/'+mo+'/'+yr;
+  } catch(e) { return String(dt).substring(0,10); }
+}
+
+function dayKey(dt) {
+  try { return new Date(dt).toDateString(); } catch(e) { return String(dt).substring(0,10); }
+}
+
+function buildDesc(log) {
+  var m  = ACTION_META[log.action] || { label: log.action, icon:'•', cls:'login' };
+  var detail = {};
+  try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
+
+  var target = log.target ? '<span class="al-target">'+esc(log.target)+'</span>' : '';
+  var chips  = '';
+
+  if (log.action === 'loan_add') {
+    var txt = 'Added loan';
+    if (target) txt += ' for '+target;
+    var chipArr = [];
+    if (detail.money) chipArr.push('<span class="al-chip">$'+esc(String(detail.money))+'</span>');
+    if (detail.status) chipArr.push('<span class="al-chip">'+esc(detail.status)+'</span>');
+    chips = chipArr.length ? '<div class="al-detail">'+chipArr.join('')+'</div>' : '';
+    return txt + (chips ? '<br>'+chips : '');
+  }
+  if (log.action === 'loan_edit') {
+    return 'Updated loan' + (target ? ' for '+target : '');
+  }
+  if (log.action === 'loan_delete') {
+    return 'Deleted loan' + (target ? ' for '+target : '');
+  }
+  if (log.action === 'loan_recover') {
+    return 'Recovered loan' + (target ? ' for '+target : '');
+  }
+  if (log.action === 'loan_paid') {
+    var paidStr = detail.paid ? 'Marked as <b>Paid ✓</b>' : 'Unmarked paid';
+    return paidStr + (target ? ' — '+target : '');
+  }
+  if (log.action === 'user_login') {
+    return 'Logged in' + (detail.role ? ' <span class="al-chip">'+esc(detail.role)+'</span>' : '');
+  }
+  if (log.action === 'user_add') {
+    return 'Added user <span class="al-target">'+esc(log.target||'')+'</span>'
+      + (detail.display_name ? ' <span class="al-chip">'+esc(detail.display_name)+'</span>' : '')
+      + (detail.role ? ' <span class="al-chip">'+esc(detail.role)+'</span>' : '');
+  }
+  if (log.action === 'user_edit') {
+    var editTxt = 'Edited user <span class="al-target">'+esc(log.target||'')+'</span>';
+    if (detail.old_name && detail.new_name && detail.old_name !== detail.new_name) {
+      editTxt += ' — renamed <span class="al-chip">'+esc(detail.old_name)+'</span> → <span class="al-chip">'+esc(detail.new_name)+'</span>';
+    }
+    return editTxt;
+  }
+  if (log.action === 'user_delete') {
+    return 'Deleted user <span class="al-target">'+esc(log.target||'')+'</span>';
+  }
+  return esc(log.action) + (target ? ' — '+target : '');
+}
+
+function renderFeed(logs, append) {
+  var feed = document.getElementById('alFeed');
+  if (!append) feed.innerHTML = '';
+
+  if (!logs.length && !append) {
+    feed.innerHTML = '<div class="al-state"><span style="font-size:28px">📭</span><span>No activity found</span></div>';
+    return;
+  }
+
+  var lastDay = append ? window._lastDay || '' : '';
+  var html = '';
+
+  logs.forEach(function(log) {
+    var dk = dayKey(log.created_at);
+    if (dk !== lastDay) {
+      html += '<div class="al-day-sep">'+esc(fmtDay(log.created_at))+'</div>';
+      lastDay = dk;
+    }
+    var m = ACTION_META[log.action] || { label: log.action, icon:'•', cls:'login' };
+    html += '<div class="al-item">'
+      + '<div class="al-icon al-icon-'+m.cls+'">'+m.icon+'</div>'
+      + '<div class="al-body">'
+      + '<div class="al-row1">'
+      + '<span class="al-action-badge al-c-'+m.cls+'">'+esc(m.label)+'</span>'
+      + (log.actor ? '<span class="al-actor">'+esc(log.actor)+'</span>' : '')
+      + '<span class="al-time" title="'+esc(String(log.created_at||''))+'">'+fmtTime(log.created_at)+' · '+relTime(log.created_at)+'</span>'
+      + '</div>'
+      + '<div class="al-desc">'+buildDesc(log)+'</div>'
+      + '</div>'
+      + '</div>';
+  });
+
+  if (append) feed.insertAdjacentHTML('beforeend', html);
+  else feed.innerHTML = html;
+
+  window._lastDay = lastDay;
+}
+
+function updateKpi(logs, total) {
+  var added   = logs.filter(function(l){ return l.action==='loan_add'; }).length;
+  var deleted = logs.filter(function(l){ return l.action==='loan_delete'; }).length;
+  var logins  = logs.filter(function(l){ return l.action==='user_login'; }).length;
+  document.getElementById('kpiTotal').textContent   = total;
+  document.getElementById('kpiAdded').textContent   = added;
+  document.getElementById('kpiDeleted').textContent = deleted;
+  document.getElementById('kpiLogins').textContent  = logins;
+  document.getElementById('alKpi').style.display = '';
+}
+
+function updateActorFilter(logs) {
+  logs.forEach(function(l){ if (l.actor_user) _actors.add(l.actor_user+'|'+(l.actor||l.actor_user)); });
+  var sel = document.getElementById('alFilterActor');
+  var cur = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  Array.from(_actors).sort().forEach(function(a) {
+    var parts = a.split('|');
+    var opt = document.createElement('option');
+    opt.value = parts[0];
+    opt.textContent = parts[1] || parts[0];
+    if (opt.value === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadData() {
+  _offset = 0;
+  _allLogs = [];
+  window._lastDay = '';
+  document.getElementById('alFeed').innerHTML = '<div class="al-state"><div class="al-spin"></div><span>Loading…</span></div>';
+  document.getElementById('alLoadMore').style.display = 'none';
+  document.getElementById('alCount').textContent = '';
+
+  var fAct  = document.getElementById('alFilterAction').value;
+  var fUser = document.getElementById('alFilterActor').value;
+
+  try {
+    var data = await window.CamboAPI.post({
+      action: 'helen_activity_list',
+      limit: _PAGE, offset: 0,
+      filter_action: fAct, filter_actor: fUser
+    });
+    if (!data || !data.ok) {
+      document.getElementById('alFeed').innerHTML = '<div class="al-state" style="color:#ef4444">Failed to load</div>';
+      return;
+    }
+    _allLogs  = data.logs || [];
+    _total    = data.total || 0;
+    _offset   = _allLogs.length;
+
+    updateKpi(_allLogs, _total);
+    updateActorFilter(_allLogs);
+    renderFeed(_allLogs, false);
+
+    var shown = _allLogs.length;
+    document.getElementById('alCount').textContent = shown + ' / ' + _total + ' events';
+    document.getElementById('alLoadMore').style.display = _offset < _total ? '' : 'none';
+  } catch(e) {
+    document.getElementById('alFeed').innerHTML = '<div class="al-state" style="color:#ef4444">Error: '+String(e.message||e)+'</div>';
+  }
+}
+
+async function loadMore() {
+  var fAct  = document.getElementById('alFilterAction').value;
+  var fUser = document.getElementById('alFilterActor').value;
+  var btn   = document.querySelector('.al-load-more-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+  try {
+    var data = await window.CamboAPI.post({
+      action: 'helen_activity_list',
+      limit: _PAGE, offset: _offset,
+      filter_action: fAct, filter_actor: fUser
+    });
+    if (data && data.ok && data.logs.length) {
+      _allLogs = _allLogs.concat(data.logs);
+      _offset  = _allLogs.length;
+      renderFeed(data.logs, true);
+      document.getElementById('alCount').textContent = _offset + ' / ' + _total + ' events';
+      document.getElementById('alLoadMore').style.display = _offset < _total ? '' : 'none';
+    }
+  } catch(e) {}
+  if (btn) { btn.disabled = false; btn.textContent = 'Load more'; }
+}
+
+function applyFilter() {
+  loadData();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.HelenAuth && !window.HelenAuth.check()) return;
+  loadData();
+});
+</script>
+</body>
+</html>
