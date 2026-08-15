@@ -314,13 +314,21 @@
       + '<div id="hlProfError" style="font-size:12.5px;color:#ef4444;margin-bottom:12px;min-height:18px;text-align:center"></div>'
 
       /* save */
-      + '<button id="hlProfSave" style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(124,58,237,.35)">Save</button>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button id="hlProfLogout" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(239,68,68,.25);background:rgba(239,68,68,.07);color:#ef4444;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s">Logout</button>'
+      + '<button id="hlProfSave" style="flex:2;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(124,58,237,.35)">Save</button>'
+      + '</div>'
       + '</div>';
 
     document.body.appendChild(m);
 
     document.getElementById('hlProfClose').onclick = function() { m.remove(); };
     m.addEventListener('click', function(e) { if (e.target === m) m.remove(); });
+
+    document.getElementById('hlProfLogout').onclick = function() {
+      m.remove();
+      showLogoutModal();
+    };
 
     /* Avatar circle click → preview current photo */
     document.getElementById('hlProfAvatarCircle').addEventListener('click', function() {

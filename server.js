@@ -170,7 +170,7 @@ const server = http.createServer(async (req, res) => {
     try {
       let body = '';
       await new Promise((ok) => { req.on('data', c => { body += c; }); req.on('end', ok); });
-      const response = await fetch('https://helen-loan.vercel.app/api/helen', {
+      const response = await fetch('https://helenloan.vercel.app/api/helen', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    body,
