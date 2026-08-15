@@ -511,13 +511,25 @@ export default async function handler(req, res) {
           if (newUsername && newUsername !== _bu) {
             const [ex] = await db().query('SELECT 1 FROM helen_users WHERE username=?', [newUsername]);
             if (ex.length) return res.json({ ok: false, message: 'Username "'+newUsername+'" មានរួចហើយ' });
+            const finalName = displayName || _bv.name || _bu;
             await db().query(
               'UPDATE helen_users SET username=?, display_name=? WHERE username=?',
-              [newUsername, displayName || _bv.name || _bu, _bu]
+              [newUsername, finalName, _bu]
             );
-            return res.json({ ok: true, username: newUsername, display_name: displayName || _bv.name || _bu });
+            // Keep loan references in sync
+            await db().query('UPDATE helen_loans SET created_by_user=? WHERE created_by_user=?', [newUsername, _bu]);
+            const oldName = _bv.name || '';
+            if (oldName && finalName !== oldName) {
+              await db().query('UPDATE helen_loans SET created_by=? WHERE created_by=?', [finalName, oldName]);
+            }
+            return res.json({ ok: true, username: newUsername, display_name: finalName });
           }
           await db().query('UPDATE helen_users SET display_name=? WHERE username=?', [displayName, _bu]);
+          // Backfill old loan records that stored the old display name
+          const oldDisplayName = _bv.name || '';
+          if (oldDisplayName && displayName !== oldDisplayName) {
+            await db().query('UPDATE helen_loans SET created_by=? WHERE created_by=?', [displayName, oldDisplayName]);
+          }
           return res.json({ ok: true, username: _bu, display_name: displayName });
         }
       }
