@@ -12,6 +12,7 @@
       'loan-list.html':       { title: t('បញ្ជីកម្ចី','Loan List'),       subtitle: t('តារាង និងការគ្រប់គ្រងអ្នកខ្ចីសរុប','Borrower list and full management') },
       'borrower-profile.html':{ title: t('Profile អ្នកខ្ចី','Borrower Profile'), subtitle: t('ព័ត៌មានលម្អិតអ្នកខ្ចី','Full borrower details and loan history') },
       'activity-log.html':  { title: t('Activity Log','Activity Log'), subtitle: t('កំណត់ហេតុសកម្មភាព','All system events and actions') },
+      'repayment-tracker.html': { title: t('Repayment Tracker','Repayment Tracker'), subtitle: t('តាមដានការសងប្រាក់','Track loan repayments and paid status') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
       'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },
@@ -31,6 +32,7 @@
     users:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     report:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
     activity: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    repayment: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><polyline points="7 15 9 17 13 13"/></svg>',
   };
 
   function getCurrentPage() {
@@ -89,6 +91,7 @@
           ${link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List'))}
           ${link('pages/reports.html', ic.report, t('Reports','Reports'))}
           ${link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log'))}
+          ${link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment'))}
           ${link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder'))}
           ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
         </ul>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Repayment Tracker - HELEN LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=5">
+  <style>
+    .orb{display:none!important}.background{background:#27272a!important}.background::before{display:none!important}
+    body{background:#27272a!important}.sidebar{background:#27272a!important}
+    [data-theme="light"] .background{background:#f8fafc!important}
+    [data-theme="light"] body{background:#f8fafc!important}
+    [data-theme="light"] .sidebar{background:#f8fafc!important}
+
+    /* ── Variables ── */
+    :root {
+      --rt-bg:     #1e1e21;
+      --rt-card:   rgba(255,255,255,.045);
+      --rt-border: rgba(255,255,255,.08);
+      --rt-text:   #e2e8f0;
+      --rt-muted:  #64748b;
+      --rt-accent: #a78bfa;
+      --rt-green:  #4ade80;
+      --rt-red:    #f87171;
+      --rt-gold:   #fbbf24;
+    }
+    [data-theme="light"] {
+      --rt-bg:     #f8fafc;
+      --rt-card:   rgba(255,255,255,.92);
+      --rt-border: rgba(203,213,225,.7);
+      --rt-text:   #1e293b;
+      --rt-muted:  #64748b;
+      --rt-green:  #15803d;
+      --rt-red:    #dc2626;
+      --rt-gold:   #d97706;
+    }
+
+    /* ── Layout ── */
+    .rt-wrap { padding:20px 24px 40px; max-width:1100px; }
+
+    /* ── KPI cards ── */
+    .rt-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px }
+    @media(max-width:900px){ .rt-kpi-row{ grid-template-columns:repeat(3,1fr) } }
+    @media(max-width:600px){ .rt-kpi-row{ grid-template-columns:repeat(2,1fr) } }
+    .rt-kpi { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:4px; position:relative; overflow:hidden }
+    .rt-kpi-label { font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--rt-muted); text-transform:uppercase }
+    .rt-kpi-val { font-size:26px; font-weight:800; color:var(--rt-text); line-height:1.1; font-variant-numeric:tabular-nums }
+    .rt-kpi-sub { font-size:11px; color:var(--rt-muted); font-weight:500 }
+    .rt-kpi-bar { position:absolute; left:0; bottom:0; height:3px; border-radius:0 0 14px 14px; transition:width .6s ease }
+
+    /* ── Toolbar ── */
+    .rt-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap }
+    .rt-group-sel { background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-text); border-radius:8px; padding:6px 10px; font-size:12px; font-family:inherit; cursor:pointer; outline:none }
+    .rt-refresh-btn { display:flex; align-items:center; gap:6px; background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-muted); border-radius:8px; padding:6px 12px; font-size:12px; font-family:inherit; cursor:pointer; transition:.15s }
+    .rt-refresh-btn:hover { color:var(--rt-accent); border-color:var(--rt-accent) }
+    .rt-count-label { margin-left:auto; font-size:12px; color:var(--rt-muted) }
+
+    /* ── Tabs ── */
+    .rt-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap }
+    .rt-tab { padding:7px 16px; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; border:1.5px solid var(--rt-border); background:var(--rt-card); color:var(--rt-muted); transition:.15s; display:flex; align-items:center; gap:6px }
+    .rt-tab:hover { color:var(--rt-text) }
+    .rt-tab.active { background:rgba(167,139,250,.15); border-color:rgba(167,139,250,.5); color:var(--rt-accent) }
+    .rt-tab-badge { font-size:10.5px; font-weight:800; padding:2px 6px; border-radius:6px; background:rgba(167,139,250,.18); color:var(--rt-accent); min-width:18px; text-align:center }
+    .rt-tab.active .rt-tab-badge { background:rgba(167,139,250,.28) }
+
+    /* ── Table ── */
+    .rt-tbl-wrap { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; overflow:hidden }
+    .rt-tbl { width:100%; border-collapse:collapse; font-size:12.5px }
+    .rt-tbl thead th { padding:10px 12px; text-align:left; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--rt-muted); border-bottom:1px solid var(--rt-border); white-space:nowrap; cursor:pointer; user-select:none }
+    .rt-tbl thead th:hover { color:var(--rt-text) }
+    .rt-tbl tbody tr { border-bottom:1px solid var(--rt-border); transition:background .1s }
+    .rt-tbl tbody tr:last-child { border-bottom:none }
+    .rt-tbl tbody tr:hover { background:rgba(167,139,250,.04) }
+    .rt-tbl td { padding:10px 12px; vertical-align:middle; color:var(--rt-text) }
+
+    /* ── Photo avatar ── */
+    .rt-av { width:34px; height:34px; border-radius:50%; overflow:hidden; flex-shrink:0; background:rgba(167,139,250,.12); border:1.5px solid rgba(167,139,250,.25); display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--rt-accent) }
+    .rt-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
+    .rt-name-cell { display:flex; align-items:center; gap:9px }
+    .rt-name-text { font-weight:700; font-size:12.5px }
+    .rt-nid { font-size:10px; color:var(--rt-muted); margin-top:1px }
+
+    /* ── Amount ── */
+    .rt-money { font-variant-numeric:tabular-nums; font-weight:700; font-size:13px; text-align:right; white-space:nowrap }
+    .rt-money-paid { color:var(--rt-green) }
+    .rt-money-unpaid { color:var(--rt-text) }
+
+    /* ── Status tag ── */
+    .rt-tag { display:inline-flex; align-items:center; padding:3px 9px; border-radius:6px; font-size:10.5px; font-weight:700; white-space:nowrap }
+
+    /* ── Paid toggle ── */
+    .rt-paid-btn { border:none; background:rgba(148,163,184,.1); color:var(--rt-muted); border-radius:7px; width:32px; height:26px; font-size:14px; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
+    .rt-paid-btn:hover { background:rgba(74,222,128,.15); color:var(--rt-green) }
+    .rt-paid-btn.paid { background:rgba(74,222,128,.15); color:var(--rt-green) }
+    .rt-paid-btn.paid:hover { background:rgba(248,113,113,.12); color:var(--rt-red) }
+    [data-theme="light"] .rt-paid-btn.paid { background:rgba(21,128,61,.1); color:#15803d }
+
+    /* ── Progress bar ── */
+    .rt-progress-wrap { height:6px; background:var(--rt-border); border-radius:3px; overflow:hidden; margin-top:6px }
+    .rt-progress-bar { height:100%; border-radius:3px; background:linear-gradient(90deg,#a78bfa,#7c5cff); transition:width .6s ease }
+
+    /* ── Empty/loading ── */
+    .rt-state { display:flex; align-items:center; justify-content:center; gap:10px; padding:40px; color:var(--rt-muted); font-size:13px }
+    .rt-spin { width:20px; height:20px; border:2.5px solid rgba(167,139,250,.25); border-top-color:var(--rt-accent); border-radius:50%; animation:rtSpin .6s linear infinite; flex-shrink:0 }
+    @keyframes rtSpin { to{transform:rotate(360deg)} }
+
+    /* ── Sort arrow ── */
+    .rt-sort-asc::after { content:' ↑' }
+    .rt-sort-desc::after { content:' ↓' }
+
+    /* ── Mobile ── */
+    @media(max-width:700px){
+      .rt-tbl thead th:nth-child(5),
+      .rt-tbl td:nth-child(5){ display:none }
+      .rt-kpi-val { font-size:20px }
+    }
+  </style>
+</head>
+<body>
+<div class="background"></div>
+<div class="layout-root" id="layoutRoot"></div>
+<script src="../assets/js/auth.js?v=3"></script>
+<script src="../assets/js/layout.js?v=14"></script>
+
+<div class="page-content" id="pageContent">
+  <div class="rt-wrap">
+
+    <!-- KPI Row -->
+    <div class="rt-kpi-row" id="rtKpiRow">
+      <div class="rt-kpi">
+        <div class="rt-kpi-label">Total Loans</div>
+        <div class="rt-kpi-val" id="kpiTotal">—</div>
+        <div class="rt-kpi-sub">borrowers</div>
+        <div class="rt-kpi-bar" style="background:#a78bfa;width:100%"></div>
+      </div>
+      <div class="rt-kpi">
+        <div class="rt-kpi-label">Total Borrowed</div>
+        <div class="rt-kpi-val" id="kpiAmount">—</div>
+        <div class="rt-kpi-sub" id="kpiAmountSub">USD</div>
+        <div class="rt-kpi-bar" style="background:#6366f1;width:100%"></div>
+      </div>
+      <div class="rt-kpi">
+        <div class="rt-kpi-label">Paid</div>
+        <div class="rt-kpi-val" id="kpiPaid" style="color:#4ade80">—</div>
+        <div class="rt-kpi-sub" id="kpiPaidSub">loans</div>
+        <div class="rt-kpi-bar" id="kpiPaidBar" style="background:#4ade80;width:0%"></div>
+      </div>
+      <div class="rt-kpi">
+        <div class="rt-kpi-label">Outstanding</div>
+        <div class="rt-kpi-val" id="kpiOut" style="color:#fb923c">—</div>
+        <div class="rt-kpi-sub" id="kpiOutSub">loans</div>
+        <div class="rt-kpi-bar" id="kpiOutBar" style="background:#fb923c;width:100%"></div>
+      </div>
+      <div class="rt-kpi" style="position:relative">
+        <div class="rt-kpi-label">% Collected</div>
+        <div class="rt-kpi-val" id="kpiPct" style="color:#a78bfa">—</div>
+        <div class="rt-progress-wrap"><div class="rt-progress-bar" id="kpiProgress" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="rt-toolbar">
+      <select class="rt-group-sel" id="rtGroupSel" onchange="applyFilter()">
+        <option value="">All Groups</option>
+      </select>
+      <button class="rt-refresh-btn" onclick="loadData()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+      <span class="rt-count-label" id="rtCountLabel"></span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="rt-tabs">
+      <button class="rt-tab active" id="tabAll" onclick="switchTab('all',this)">
+        All <span class="rt-tab-badge" id="badgeAll">0</span>
+      </button>
+      <button class="rt-tab" id="tabUnpaid" onclick="switchTab('unpaid',this)">
+        ⏳ Unpaid <span class="rt-tab-badge" id="badgeUnpaid">0</span>
+      </button>
+      <button class="rt-tab" id="tabPaid" onclick="switchTab('paid',this)">
+        ✅ Paid <span class="rt-tab-badge" id="badgePaid">0</span>
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="rt-tbl-wrap">
+      <div id="rtState" class="rt-state"><div class="rt-spin"></div><span>Loading…</span></div>
+      <table class="rt-tbl" id="rtTbl" style="display:none">
+        <thead>
+          <tr>
+            <th style="width:36px">#</th>
+            <th style="min-width:160px" onclick="sortBy('FullName')">Name</th>
+            <th onclick="sortBy('Groups')">Group</th>
+            <th onclick="sortBy('Status')">Status</th>
+            <th onclick="sortBy('Money')" style="text-align:right">Amount</th>
+            <th onclick="sortBy('_date')">Date</th>
+            <th style="text-align:center">Paid</th>
+          </tr>
+        </thead>
+        <tbody id="rtTbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="../assets/js/api.js?v=8"></script>
+<script>
+'use strict';
+
+var _loans   = [];   /* all active loans */
+var _tab     = 'all';
+var _group   = '';
+var _sortKey = '_date';
+var _sortDir = -1;
+
+/* ── Helpers ── */
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtMoney(v) {
+  var n = Number(v);
+  if (isNaN(n) || v === '') return '—';
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:2 });
+}
+
+function fmtDate(key) {
+  if (!key || key.length < 8) return '—';
+  /* loan_key format: DDMMYYYY/HHMMSS or DD, MM, YYYY ... */
+  try {
+    var s = String(key);
+    /* Try ISO-like: YYYY-MM-DD */
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return m[3]+'/'+m[2]+'/'+m[1].slice(2);
+    /* DD, MM, YYYY format */
+    var p = s.match(/^(\d{1,2})[,\s]+(\d{1,2})[,\s]+(\d{4})/);
+    if (p) return p[1].padStart(2,'0')+'/'+p[2].padStart(2,'0')+'/'+p[3].slice(2);
+    return s.substring(0,10);
+  } catch(e){ return String(key).substring(0,10); }
+}
+
+function dateTs(key) {
+  if (!key) return 0;
+  try {
+    var s = String(key);
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(m[1]+'-'+m[2]+'-'+m[3]).getTime();
+    var p = s.match(/^(\d{1,2})[,\s]+(\d{1,2})[,\s]+(\d{4})/);
+    if (p) return new Date(p[3]+'-'+p[2].padStart(2,'0')+'-'+p[1].padStart(2,'0')).getTime();
+    return new Date(s.substring(0,10)).getTime() || 0;
+  } catch(e){ return 0; }
+}
+
+var STATUS_COLORS = {
+  'Good':'#22c55e','Normal':'#06b6d4','BlackListed':'#ef4444','High Risk':'#f59e0b',
+  'Poor':'#f97316','Fair':'#eab308','Excellent':'#d946ef','VIP':'#f59e0b','Done':'#8b5cf6'
+};
+function statusTag(s) {
+  var v = (s||'').trim();
+  if (!v) return '<span class="rt-tag" style="background:rgba(100,116,139,.12);color:#64748b">—</span>';
+  var col = STATUS_COLORS[v] || '#94a3b8';
+  return '<span class="rt-tag" style="background:'+col+'22;color:'+col+'">'+esc(v)+'</span>';
+}
+
+function avatar(loan) {
+  var name = loan.FullName || '?';
+  var init = name.charAt(0).toUpperCase();
+  var photo = loan.photo_url || '';
+  if (photo) {
+    return '<span class="rt-av"><img src="'+esc(photo)+'" alt="'+esc(init)+'" onerror="this.parentNode.innerHTML=\''+init+'\'"></span>';
+  }
+  return '<span class="rt-av">'+init+'</span>';
+}
+
+/* ── Filter + sort ── */
+function filtered() {
+  var list = _loans.filter(function(l) {
+    if (_group && l.Groups !== _group) return false;
+    if (_tab === 'paid')   return l.Paid;
+    if (_tab === 'unpaid') return !l.Paid;
+    return true;
+  });
+  var k = _sortKey, d = _sortDir;
+  list.sort(function(a,b){
+    var av = k === '_date' ? dateTs(a.DateTime) : (a[k]||'');
+    var bv = k === '_date' ? dateTs(b.DateTime) : (b[k]||'');
+    if (k === 'Money') { av = Number(av)||0; bv = Number(bv)||0; }
+    if (av < bv) return -d; if (av > bv) return d; return 0;
+  });
+  return list;
+}
+
+/* ── KPIs ── */
+function renderKPIs() {
+  var all    = _group ? _loans.filter(function(l){ return l.Groups === _group; }) : _loans;
+  var total  = all.length;
+  var totalA = all.reduce(function(s,l){ return s + (Number(l.Money)||0); }, 0);
+  var paidL  = all.filter(function(l){ return l.Paid; });
+  var paidA  = paidL.reduce(function(s,l){ return s + (Number(l.Money)||0); }, 0);
+  var outL   = all.filter(function(l){ return !l.Paid; });
+  var outA   = outL.reduce(function(s,l){ return s + (Number(l.Money)||0); }, 0);
+  var pct    = total ? Math.round((paidL.length/total)*100) : 0;
+  var pctA   = totalA ? Math.round((paidA/totalA)*100) : 0;
+
+  document.getElementById('kpiTotal').textContent  = total;
+  document.getElementById('kpiAmount').textContent = fmtMoney(totalA);
+  document.getElementById('kpiAmountSub').textContent = total + ' loans';
+  document.getElementById('kpiPaid').textContent   = fmtMoney(paidA);
+  document.getElementById('kpiPaidSub').textContent  = paidL.length + ' loans paid';
+  document.getElementById('kpiPaidBar').style.width  = pctA + '%';
+  document.getElementById('kpiOut').textContent    = fmtMoney(outA);
+  document.getElementById('kpiOutSub').textContent   = outL.length + ' loans left';
+  document.getElementById('kpiOutBar').style.width   = (100-pctA) + '%';
+  document.getElementById('kpiPct').textContent    = pct + '%';
+  document.getElementById('kpiProgress').style.width = pct + '%';
+
+  document.getElementById('badgeAll').textContent    = _group ? all.length : _loans.length;
+  document.getElementById('badgeUnpaid').textContent = _group ? outL.length : _loans.filter(function(l){ return !l.Paid; }).length;
+  document.getElementById('badgePaid').textContent   = _group ? paidL.length : _loans.filter(function(l){ return l.Paid; }).length;
+}
+
+/* ── Render table ── */
+function renderTable() {
+  var list = filtered();
+  var tbody = document.getElementById('rtTbody');
+
+  document.getElementById('rtCountLabel').textContent = list.length + ' loans';
+
+  if (!list.length) {
+    document.getElementById('rtState').innerHTML = '<span>No loans found</span>';
+    document.getElementById('rtState').style.display = 'flex';
+    document.getElementById('rtTbl').style.display = 'none';
+    return;
+  }
+  document.getElementById('rtState').style.display = 'none';
+  document.getElementById('rtTbl').style.display = '';
+
+  tbody.innerHTML = list.map(function(l, i) {
+    var safeKey = (l.DateTime||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    var paidClass = l.Paid ? 'paid' : '';
+    var paidTitle = l.Paid ? 'Mark as Unpaid' : 'Mark as Paid';
+    var paidIcon  = l.Paid ? '✅' : '○';
+    var moneyClass = l.Paid ? 'rt-money rt-money-paid' : 'rt-money rt-money-unpaid';
+
+    return '<tr id="row-'+esc(l.DateTime)+'">'
+      + '<td style="color:var(--rt-muted);font-size:11px">'+(i+1)+'</td>'
+      + '<td><div class="rt-name-cell">'+avatar(l)+'<div><div class="rt-name-text">'+esc(l.FullName||'—')+'</div><div class="rt-nid">'+esc(l.NationalID||'')+'</div></div></div></td>'
+      + '<td>'+esc(l.Groups||'—')+'</td>'
+      + '<td>'+statusTag(l.Status)+'</td>'
+      + '<td class="'+moneyClass+'">'+fmtMoney(l.Money)+'</td>'
+      + '<td style="color:var(--rt-muted);font-size:12px;white-space:nowrap">'+fmtDate(l.DateTime)+'</td>'
+      + '<td style="text-align:center"><button class="rt-paid-btn '+paidClass+'" data-key="'+esc(l.DateTime)+'" title="'+paidTitle+'" onclick="togglePaid(this)">'+paidIcon+'</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function render() {
+  renderKPIs();
+  renderTable();
+}
+
+/* ── Tab switch ── */
+function switchTab(tab, btn) {
+  _tab = tab;
+  document.querySelectorAll('.rt-tab').forEach(function(t){ t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderTable();
+  var cnt = filtered().length;
+  document.getElementById('rtCountLabel').textContent = cnt + ' loans';
+}
+
+/* ── Group filter ── */
+function applyFilter() {
+  _group = document.getElementById('rtGroupSel').value;
+  render();
+}
+
+/* ── Sort ── */
+function sortBy(key) {
+  if (_sortKey === key) { _sortDir *= -1; } else { _sortKey = key; _sortDir = -1; }
+  renderTable();
+}
+
+/* ── Toggle paid ── */
+async function togglePaid(btn) {
+  var key = btn.getAttribute('data-key');
+  if (!key) return;
+  btn.disabled = true;
+  var wasPaid = btn.classList.contains('paid');
+  /* Optimistic update */
+  btn.classList.toggle('paid');
+  btn.textContent = btn.classList.contains('paid') ? '✅' : '○';
+  var loan = _loans.find(function(l){ return l.DateTime === key; });
+  if (loan) loan.Paid = btn.classList.contains('paid') ? 1 : 0;
+  render();
+  try {
+    var res = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:key });
+    if (!res || !res.ok) {
+      /* Revert on failure */
+      if (loan) loan.Paid = wasPaid ? 1 : 0;
+      render();
+    }
+  } catch(e) {
+    if (loan) loan.Paid = wasPaid ? 1 : 0;
+    render();
+  }
+  btn.disabled = false;
+}
+
+/* ── Load ── */
+async function loadData() {
+  document.getElementById('rtState').innerHTML = '<div class="rt-spin"></div><span>Loading…</span>';
+  document.getElementById('rtState').style.display = 'flex';
+  document.getElementById('rtTbl').style.display = 'none';
+  try {
+    var res = await CamboAPI.post({ action:'helen_all' });
+    if (!res || !res.ok) {
+      document.getElementById('rtState').innerHTML = '❌ Failed to load';
+      return;
+    }
+    _loans = (res.loans || []).filter(function(l){ return !l.deleted; });
+
+    /* Populate group filter */
+    var groups = [];
+    _loans.forEach(function(l){ if (l.Groups && !groups.includes(l.Groups)) groups.push(l.Groups); });
+    groups.sort();
+    var sel = document.getElementById('rtGroupSel');
+    var prev = sel.value;
+    sel.innerHTML = '<option value="">All Groups</option>' + groups.map(function(g){
+      return '<option value="'+esc(g)+'"'+(g===prev?' selected':'')+'>'+esc(g)+'</option>';
+    }).join('');
+    _group = sel.value;
+
+    render();
+  } catch(e) {
+    document.getElementById('rtState').innerHTML = '❌ Error: ' + esc(e.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.HelenAuth && !window.HelenAuth.check()) return;
+  loadData();
+});
+</script>
+</body>
+</html>
