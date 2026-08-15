@@ -301,11 +301,29 @@
     [data-theme="light"] .lr-tbl-footer { background:var(--card,rgba(255,255,255,.92)) }
 
     /* Paid toggle */
-    .lr-paid-btn { border:none; background:rgba(148,163,184,.1); color:var(--muted); border-radius:6px; width:28px; height:22px; font-size:13px; font-weight:700; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
-    .lr-paid-btn:hover { background:rgba(34,197,94,.15); color:#4ade80 }
-    .lr-paid-btn.lr-paid-yes { background:rgba(34,197,94,.15); color:#4ade80 }
-    .lr-paid-btn.lr-paid-yes:hover { background:rgba(239,68,68,.12); color:#f87171 }
-    [data-theme="light"] .lr-paid-btn.lr-paid-yes { background:rgba(34,197,94,.12); color:#15803d }
+    .lr-paid-btn { border:1.5px solid rgba(148,163,184,.3); background:rgba(148,163,184,.08); color:rgba(148,163,184,.55); border-radius:6px; width:28px; height:22px; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
+    .lr-paid-btn:hover { background:rgba(34,197,94,.12); border-color:#22c55e; color:#22c55e }
+    .lr-paid-btn.lr-paid-yes { background:rgba(34,197,94,.16); border:2px solid #22c55e; color:#22c55e }
+    .lr-paid-btn.lr-paid-yes svg { stroke-width:3 }
+    .lr-paid-btn.lr-paid-yes:hover { background:rgba(239,68,68,.12); border-color:#f87171; color:#f87171 }
+    [data-theme="light"] .lr-paid-btn { border-color:rgba(100,116,139,.3); color:rgba(100,116,139,.5) }
+    [data-theme="light"] .lr-paid-btn.lr-paid-yes { background:rgba(21,128,61,.1); border-color:#16a34a; color:#16a34a }
+    /* Paid confirm modal */
+    .lr-paid-ov { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:8000; display:flex; align-items:center; justify-content:center; padding:20px }
+    .lr-paid-box { background:#1a1a2e; border:1px solid rgba(74,222,128,.25); border-radius:18px; padding:28px 24px 22px; max-width:320px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.6); text-align:center }
+    [data-theme="light"] .lr-paid-box { background:#fff; border-color:rgba(22,163,74,.25); box-shadow:0 12px 40px rgba(0,0,0,.15) }
+    .lr-paid-box.unpaid-mode { border-color:rgba(251,191,36,.3) }
+    .lr-paid-box-icon { display:flex; align-items:center; justify-content:center; margin-bottom:10px }
+    .lr-paid-box-title { font-size:16px; font-weight:800; color:var(--text); margin-bottom:6px }
+    .lr-paid-box-msg { font-size:12.5px; color:var(--muted); line-height:1.55; margin-bottom:20px }
+    .lr-paid-box-btns { display:flex; gap:9px }
+    .lr-paid-box-cancel { flex:1; padding:10px; border-radius:10px; border:1px solid rgba(148,163,184,.2); background:rgba(148,163,184,.08); color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .lr-paid-box-cancel:hover { color:var(--text) }
+    .lr-paid-box-ok { flex:1; padding:10px; border-radius:10px; border:none; color:#fff; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:.15s; display:flex; align-items:center; justify-content:center; gap:6px }
+    .lr-paid-box-ok.go-paid   { background:linear-gradient(135deg,#16a34a,#4ade80) }
+    .lr-paid-box-ok.go-unpaid { background:linear-gradient(135deg,#b45309,#fbbf24); color:#1a1200 }
+    .lr-paid-box-ok:hover { opacity:.9 }
+    .lr-paid-box-ok:disabled { opacity:.5; cursor:not-allowed }
 
     /* Tags */
     .tag { display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; border:none; background:none; white-space:nowrap; letter-spacing:.04em; text-align:center; padding:0 }
@@ -734,14 +752,14 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
             <select class="lr-filter" id="lrDatePreset" onchange="applyLrDatePreset()" title="Filter by date" style="min-width:130px">
-              <option value="">📅 All Dates</option>
+              <option value="">All Dates</option>
               <option value="today">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
               <option value="last30">Last 30 Days</option>
               <option value="last3m">Last 3 Months</option>
               <option value="year">This Year</option>
-              <option value="custom">⚙ Custom Range…</option>
+              <option value="custom">Custom Range…</option>
             </select>
             <div class="lr-filter-wrap">
               <button class="lr-btn lr-btn-filter" id="lrBtnFilter" onclick="toggleLrFilters()" title="Filter Data">
@@ -1126,7 +1144,7 @@ async function loadData(opts) {
     applyData_(fetchedData);
   } else {
     _allLoans = [];
-    toast('❌ មិនអាចភ្ជាប់ Server — សូម Refresh ម្ដងទៀត', true);
+    toast('មិនអាចភ្ជាប់ Server — សូម Refresh ម្ដងទៀត', true);
     populateFilters(); applyFilter(); renderCharts();
   }
 
@@ -1305,7 +1323,7 @@ function renderTable() {
       + '<td style="font-size:12px">'+esc(l.Groups||'—')+'</td>'
       + '<td style="text-align:right">'+moneyHtml+'</td>'
       + '<td>'+statusTag(l.Status)+'</td>'
-      + '<td style="text-align:center"><button class="lr-paid-btn'+(l.Paid?' lr-paid-yes':'')+'" data-dt="'+esc(l.DateTime||'')+'" title="'+(l.Paid?'Paid — click to unmark':'Not paid — click to mark paid')+'">'+(l.Paid?'✓':'—')+'</button></td>'
+      + '<td style="text-align:center"><button class="lr-paid-btn'+(l.Paid?' lr-paid-yes':'')+'" data-dt="'+esc(l.DateTime||'')+'" title="'+(l.Paid?'Paid — click to unmark':'Not paid — click to mark paid')+'">'+(l.Paid?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>')+'</button></td>'
       + '<td style="font-size:11px;color:var(--muted)">'+fmtDate(l.DateTime)+'</td>'
       + '<td style="font-size:11px;color:#a78bfa;white-space:nowrap">'+esc(l.created_by||'—')+'</td>'
       + '<td style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(l.Note||'')+'">'+esc(l.Note||'—')+'</td>'
@@ -2284,7 +2302,7 @@ async function toggleTrashMode() {
     _trashLoans.forEach(function(l,i){ l._idx = i+1; });
     applyFilter();
   } catch(e) {
-    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="17" class="lr-loading">❌ មិនអាចភ្ជាប់ Server</td></tr>';
+    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="17" class="lr-loading">មិនអាចភ្ជាប់ Server</td></tr>';
   }
 }
 
@@ -2292,7 +2310,7 @@ function renderTrashTable(loans) {
   var body   = document.getElementById('lrTrashBody');
   var footer = document.getElementById('lrTrashFooter');
   if (!loans || !loans.length) {
-    body.innerHTML = '<div class="lr-trash-empty">🗑️ Trash ទទេ — គ្មានទិន្នន័យ</div>';
+    body.innerHTML = '<div class="lr-trash-empty">Trash ទទេ — គ្មានទិន្នន័យ</div>';
     footer.textContent = '0 items';
     return;
   }
@@ -2354,7 +2372,7 @@ async function executeTAAction() {
     var res = await CamboAPI.post({ action: apiAction, key: _taAction.key });
     if (res && res.ok) {
       var wasRecover = _taAction.type === 'recover';
-      toast(wasRecover ? '✅ ស្ដារបានជោគជ័យ' : '🗑️ លុបចោលជាស្ថាពរ');
+      toast(wasRecover ? 'ស្ដារបានជោគជ័យ' : 'លុបចោលជាស្ថាពរ');
       var doneKey = _taAction.key;
       closeTAConfirm();
       _trashLoans = _trashLoans.filter(function(l){ return l.DateTime !== doneKey; });
@@ -2362,14 +2380,14 @@ async function executeTAAction() {
       applyFilter();
       if (wasRecover) loadData({ force: true });
     } else {
-      toast('❌ ' + ((res && res.message) || 'Failed'), true);
+      toast((res && res.message) || 'Failed', true);
       btn.disabled = false;
       btn.textContent = _taAction.type === 'recover' ? 'Recover' : 'លុបចោល';
     }
   } catch(e) {
     if (location.protocol === 'file:') {
       var wasRecover = _taAction && _taAction.type === 'recover';
-      toast(wasRecover ? '✅ ស្ដារបានជោគជ័យ' : '🗑️ លុបចោលជាស្ថាពរ');
+      toast(wasRecover ? 'ស្ដារបានជោគជ័យ' : 'លុបចោលជាស្ថាពរ');
       var doneKey = _taAction ? _taAction.key : null;
       closeTAConfirm();
       if (doneKey) _trashLoans = _trashLoans.filter(function(l){ return l.DateTime !== doneKey; });
@@ -2377,7 +2395,7 @@ async function executeTAAction() {
       applyFilter();
       if (wasRecover) loadData({ force: true });
     } else {
-      toast('❌ Network error', true);
+      toast('Network error', true);
       btn.disabled = false;
       btn.textContent = _taAction.type === 'recover' ? 'Recover' : 'លុបចោល';
     }
@@ -2458,9 +2476,9 @@ async function addInforItem() {
       document.getElementById('lrInforNewVal').value = '';
       renderInforList();
       _refreshOpenFormDropdowns();
-      toast('✅ បន្ថែមបានជោគជ័យ!');
-    } else { toast('❌ ' + (res.message || 'Error')); }
-  } catch(e) { toast('❌ Server error'); }
+      toast('បន្ថែមបានជោគជ័យ!');
+    } else { toast(res.message || 'Error'); }
+  } catch(e) { toast('Server error'); }
 }
 function deleteInforItem(val) {
   _inforPendingDel = val;
@@ -2481,9 +2499,9 @@ async function deleteInforItemConfirm() {
       _helenInfor[_inforTab] = _inforData[_inforTab].slice();
       renderInforList();
       _refreshOpenFormDropdowns();
-      toast('🗑️ លុបបានជោគជ័យ!');
-    } else { toast('❌ ' + (res.message || 'Error')); }
-  } catch(e) { toast('❌ Server error'); }
+      toast('លុបបានជោគជ័យ!');
+    } else { toast(res.message || 'Error'); }
+  } catch(e) { toast('Server error'); }
 }
 
 /* ── Photo upload helpers ── */
@@ -3040,7 +3058,7 @@ async function saveAdd() {
       _allLoans.forEach(function(l, i){ l._idx = i + 1; });
       populateFilters(); applyFilter(); renderCharts();
     } else {
-      toast('❌ ' + ((res && res.message) || 'Add failed'), true);
+      toast((res && res.message) || 'Add failed', true);
       btn.disabled = false; btn.innerHTML = _addBtnHTML;
     }
   } catch(e) {
@@ -3056,7 +3074,7 @@ async function saveAdd() {
       _allLoans.forEach(function(l,i){ l._idx = i+1; });
       populateFilters(); applyFilter(); renderCharts();
     } else {
-      toast(e.message === 'timeout' ? '⏱️ Request timeout — សូម Try Again' : '❌ Network error', true);
+      toast(e.message === 'timeout' ? 'Request timeout — សូម Try Again' : 'Network error', true);
       btn.disabled = false; btn.innerHTML = _addBtnHTML;
     }
   }
@@ -3244,7 +3262,7 @@ async function saveEdit() {
       showSaveAlert();
       populateFilters(); applyFilter(); renderCharts();
     } else {
-      toast('❌ ' + ((res && res.message) || 'Update failed'), true);
+      toast((res && res.message) || 'Update failed', true);
       btn.disabled = false; btn.innerHTML = _saveBtnHTML;
     }
   } catch(e) {
@@ -3257,7 +3275,7 @@ async function saveEdit() {
       showSaveAlert();
       populateFilters(); applyFilter(); renderCharts();
     } else {
-      toast(e.message === 'timeout' ? '⏱️ Request timeout — សូម Try Again' : '❌ Network error', true);
+      toast(e.message === 'timeout' ? 'Request timeout — សូម Try Again' : 'Network error', true);
       btn.disabled = false; btn.innerHTML = _saveBtnHTML;
     }
   }
@@ -3288,24 +3306,62 @@ document.getElementById('lrKpiRow').addEventListener('click', function(e) {
 
 /* lrStatusCard / lrGroupBars / lrMonthList removed — listeners skipped */
 
-async function togglePaid(btn, dt) {
-  btn.disabled = true;
+var _lrPendingPaidDt = null;
+var _svgCheck13 = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+var _svgCircle13 = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>';
+
+function confirmLrPaid(dt) {
+  var loan = _allLoans.find(function(x){ return x.DateTime === dt; });
+  if (!loan) return;
+  _lrPendingPaidDt = dt;
+  var goingPaid = !loan.Paid;
+  var box  = document.getElementById('lrPaidConfBox');
+  var icon = document.getElementById('lrPaidConfIcon');
+  var ok   = document.getElementById('lrPaidConfOkBtn');
+  box.className  = 'lr-paid-box' + (goingPaid ? '' : ' unpaid-mode');
+  icon.style.color = goingPaid ? '#4ade80' : '#fbbf24';
+  icon.innerHTML = goingPaid
+    ? '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    : '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  document.getElementById('lrPaidConfTitle').textContent = goingPaid ? 'Mark as Paid?' : 'Mark as Unpaid?';
+  document.getElementById('lrPaidConfMsg').innerHTML =
+    '<strong>' + esc(loan.FullName||'—') + '</strong> will be marked as <strong>' + (goingPaid?'Paid':'Unpaid') + '</strong>.';
+  ok.className = 'lr-paid-box-ok ' + (goingPaid ? 'go-paid' : 'go-unpaid');
+  ok.innerHTML = (goingPaid
+    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Mark Paid'
+    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Mark Unpaid');
+  ok.disabled = false;
+  document.getElementById('lrPaidConfOv').style.display = 'flex';
+}
+function closeLrPaidConfirm() {
+  document.getElementById('lrPaidConfOv').style.display = 'none';
+  _lrPendingPaidDt = null;
+}
+async function doLrPaidToggle() {
+  var dt = _lrPendingPaidDt;
+  if (!dt) return;
+  var ok = document.getElementById('lrPaidConfOkBtn');
+  ok.disabled = true; ok.textContent = '…';
+  closeLrPaidConfirm();
   var res = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:dt });
   if (res && res.ok) {
     var loan = _allLoans.find(function(x){ return x.DateTime===dt; });
     if (loan) loan.Paid = res.paid;
-    btn.classList.toggle('lr-paid-yes', !!res.paid);
-    btn.textContent = res.paid ? '✓' : '—';
-    btn.title = res.paid ? 'Paid — click to unmark' : 'Not paid — click to mark paid';
+    var btn = document.querySelector('.lr-paid-btn[data-dt="'+dt+'"]');
+    if (btn) {
+      btn.classList.toggle('lr-paid-yes', !!res.paid);
+      btn.innerHTML = res.paid ? _svgCheck13 : _svgCircle13;
+      btn.title = res.paid ? 'Paid — click to unmark' : 'Not paid — click to mark paid';
+    }
+    toast(res.paid ? 'Marked as Paid' : 'Marked as Unpaid');
   } else {
-    toast('❌ ' + ((res&&res.message)||'Error'), true);
+    toast((res&&res.message)||'Error', true);
   }
-  btn.disabled = false;
 }
 
 document.getElementById('lrTbody').addEventListener('click', function(e) {
   var paidBtn = e.target.closest('.lr-paid-btn');
-  if (paidBtn) { togglePaid(paidBtn, paidBtn.getAttribute('data-dt')); return; }
+  if (paidBtn) { confirmLrPaid(paidBtn.getAttribute('data-dt')); return; }
   var nameEl = e.target.closest('.lr-name-link');
   if (nameEl) {
     var dt = nameEl.getAttribute('data-dt');
@@ -3612,6 +3668,24 @@ setInterval(function() { HelenAuth.check(); }, 60 * 1000);
       <button class="lr-add-submit" id="lrAddBtn" onclick="saveAdd()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
         Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Paid Toggle Confirm Modal -->
+<div class="lr-paid-ov" id="lrPaidConfOv" style="display:none" onclick="if(event.target===this)closeLrPaidConfirm()">
+  <div class="lr-paid-box" id="lrPaidConfBox">
+    <div class="lr-paid-box-icon" id="lrPaidConfIcon" style="color:#4ade80">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div class="lr-paid-box-title" id="lrPaidConfTitle">Mark as Paid?</div>
+    <div class="lr-paid-box-msg" id="lrPaidConfMsg"></div>
+    <div class="lr-paid-box-btns">
+      <button class="lr-paid-box-cancel" onclick="closeLrPaidConfirm()">Cancel</button>
+      <button class="lr-paid-box-ok go-paid" id="lrPaidConfOkBtn" onclick="doLrPaidToggle()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirm
       </button>
     </div>
   </div>
