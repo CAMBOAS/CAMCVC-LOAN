@@ -16,9 +16,7 @@
     [data-theme="light"] body{background:#f8fafc!important}
     [data-theme="light"] .sidebar{background:#f8fafc!important}
 
-    /* ── Variables ── */
     :root {
-      --rt-bg:     #1e1e21;
       --rt-card:   rgba(255,255,255,.045);
       --rt-border: rgba(255,255,255,.08);
       --rt-text:   #e2e8f0;
@@ -26,98 +24,149 @@
       --rt-accent: #a78bfa;
       --rt-green:  #4ade80;
       --rt-red:    #f87171;
-      --rt-gold:   #fbbf24;
+      --rt-input:  rgba(255,255,255,.06);
+      --rt-input-border: rgba(255,255,255,.12);
     }
     [data-theme="light"] {
-      --rt-bg:     #f8fafc;
       --rt-card:   rgba(255,255,255,.92);
       --rt-border: rgba(203,213,225,.7);
       --rt-text:   #1e293b;
       --rt-muted:  #64748b;
       --rt-green:  #15803d;
       --rt-red:    #dc2626;
-      --rt-gold:   #d97706;
+      --rt-input:  #f8fafc;
+      --rt-input-border: rgba(203,213,225,1);
     }
 
-    /* ── Layout ── */
-    .rt-wrap { padding:20px 24px 40px; max-width:1100px; }
+    /* ── Outer wrap ── */
+    .rt-wrap { padding:16px 18px 40px; }
 
-    /* ── KPI cards ── */
-    .rt-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px }
+    /* ── KPI ── */
+    .rt-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px }
     @media(max-width:900px){ .rt-kpi-row{ grid-template-columns:repeat(3,1fr) } }
-    @media(max-width:600px){ .rt-kpi-row{ grid-template-columns:repeat(2,1fr) } }
-    .rt-kpi { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:4px; position:relative; overflow:hidden }
-    .rt-kpi-label { font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--rt-muted); text-transform:uppercase }
-    .rt-kpi-val { font-size:26px; font-weight:800; color:var(--rt-text); line-height:1.1; font-variant-numeric:tabular-nums }
-    .rt-kpi-sub { font-size:11px; color:var(--rt-muted); font-weight:500 }
-    .rt-kpi-bar { position:absolute; left:0; bottom:0; height:3px; border-radius:0 0 14px 14px; transition:width .6s ease }
+    @media(max-width:580px){ .rt-kpi-row{ grid-template-columns:repeat(2,1fr) } }
+    .rt-kpi { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:3px; position:relative; overflow:hidden }
+    .rt-kpi-label { font-size:10px; font-weight:700; letter-spacing:.06em; color:var(--rt-muted); text-transform:uppercase }
+    .rt-kpi-val { font-size:22px; font-weight:800; color:var(--rt-text); line-height:1.1; font-variant-numeric:tabular-nums }
+    .rt-kpi-sub { font-size:10.5px; color:var(--rt-muted) }
+    .rt-kpi-bar { position:absolute; left:0; bottom:0; height:3px; transition:width .6s ease }
+    .rt-progress-wrap { height:5px; background:var(--rt-border); border-radius:3px; overflow:hidden; margin-top:5px }
+    .rt-progress-bar { height:100%; border-radius:3px; background:linear-gradient(90deg,#a78bfa,#7c5cff); transition:width .6s ease }
 
     /* ── Toolbar ── */
-    .rt-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap }
+    .rt-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap }
     .rt-group-sel { background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-text); border-radius:8px; padding:6px 10px; font-size:12px; font-family:inherit; cursor:pointer; outline:none }
-    .rt-refresh-btn { display:flex; align-items:center; gap:6px; background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-muted); border-radius:8px; padding:6px 12px; font-size:12px; font-family:inherit; cursor:pointer; transition:.15s }
+    .rt-refresh-btn { display:flex; align-items:center; gap:5px; background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-muted); border-radius:8px; padding:6px 11px; font-size:12px; font-family:inherit; cursor:pointer; transition:.15s }
     .rt-refresh-btn:hover { color:var(--rt-accent); border-color:var(--rt-accent) }
-    .rt-count-label { margin-left:auto; font-size:12px; color:var(--rt-muted) }
+    .rt-count-label { margin-left:auto; font-size:11.5px; color:var(--rt-muted) }
 
     /* ── Tabs ── */
-    .rt-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap }
-    .rt-tab { padding:7px 16px; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; border:1.5px solid var(--rt-border); background:var(--rt-card); color:var(--rt-muted); transition:.15s; display:flex; align-items:center; gap:6px }
+    .rt-tabs { display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap }
+    .rt-tab { padding:6px 14px; border-radius:9px; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid var(--rt-border); background:var(--rt-card); color:var(--rt-muted); transition:.15s; display:flex; align-items:center; gap:5px }
     .rt-tab:hover { color:var(--rt-text) }
     .rt-tab.active { background:rgba(167,139,250,.15); border-color:rgba(167,139,250,.5); color:var(--rt-accent) }
-    .rt-tab-badge { font-size:10.5px; font-weight:800; padding:2px 6px; border-radius:6px; background:rgba(167,139,250,.18); color:var(--rt-accent); min-width:18px; text-align:center }
-    .rt-tab.active .rt-tab-badge { background:rgba(167,139,250,.28) }
+    .rt-tab-badge { font-size:10px; font-weight:800; padding:1px 6px; border-radius:5px; background:rgba(167,139,250,.18); color:var(--rt-accent); min-width:16px; text-align:center }
 
-    /* ── Table ── */
+    /* ── Split body ── */
+    .rt-body { display:grid; grid-template-columns:1fr 350px; gap:14px; align-items:start }
+    @media(max-width:960px){ .rt-body{ grid-template-columns:1fr } }
+
+    /* ── Table panel ── */
     .rt-tbl-wrap { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; overflow:hidden }
-    .rt-tbl { width:100%; border-collapse:collapse; font-size:12.5px }
-    .rt-tbl thead th { padding:10px 12px; text-align:left; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--rt-muted); border-bottom:1px solid var(--rt-border); white-space:nowrap; cursor:pointer; user-select:none }
+    .rt-tbl { width:100%; border-collapse:collapse; font-size:12px }
+    .rt-tbl thead th { padding:9px 10px; text-align:left; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--rt-muted); border-bottom:1px solid var(--rt-border); white-space:nowrap; cursor:pointer; user-select:none }
     .rt-tbl thead th:hover { color:var(--rt-text) }
-    .rt-tbl tbody tr { border-bottom:1px solid var(--rt-border); transition:background .1s }
+    .rt-tbl tbody tr { border-bottom:1px solid var(--rt-border); transition:background .1s; cursor:pointer }
     .rt-tbl tbody tr:last-child { border-bottom:none }
-    .rt-tbl tbody tr:hover { background:rgba(167,139,250,.04) }
-    .rt-tbl td { padding:10px 12px; vertical-align:middle; color:var(--rt-text) }
+    .rt-tbl tbody tr:hover { background:rgba(167,139,250,.05) }
+    .rt-tbl tbody tr.rt-row-selected { background:rgba(167,139,250,.12) !important; outline:none }
+    .rt-tbl td { padding:9px 10px; vertical-align:middle; color:var(--rt-text) }
 
-    /* ── Photo avatar ── */
-    .rt-av { width:34px; height:34px; border-radius:50%; overflow:hidden; flex-shrink:0; background:rgba(167,139,250,.12); border:1.5px solid rgba(167,139,250,.25); display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--rt-accent) }
-    .rt-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
-    .rt-name-cell { display:flex; align-items:center; gap:9px }
-    .rt-name-text { font-weight:700; font-size:12.5px }
-    .rt-nid { font-size:10px; color:var(--rt-muted); margin-top:1px }
-
-    /* ── Amount ── */
-    .rt-money { font-variant-numeric:tabular-nums; font-weight:700; font-size:13px; text-align:right; white-space:nowrap }
-    .rt-money-paid { color:var(--rt-green) }
-    .rt-money-unpaid { color:var(--rt-text) }
+    /* ── Avatar (table) ── */
+    .rt-av { width:32px; height:32px; border-radius:50%; overflow:hidden; flex-shrink:0; background:rgba(167,139,250,.12); border:1.5px solid rgba(167,139,250,.25); display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--rt-accent) }
+    .rt-av img { width:100%; height:100%; object-fit:cover; display:block }
+    .rt-name-cell { display:flex; align-items:center; gap:8px }
+    .rt-name-text { font-weight:700; font-size:12.5px; line-height:1.2 }
+    .rt-nid { font-size:10px; color:var(--rt-muted) }
 
     /* ── Status tag ── */
-    .rt-tag { display:inline-flex; align-items:center; padding:3px 9px; border-radius:6px; font-size:10.5px; font-weight:700; white-space:nowrap }
+    .rt-tag { display:inline-flex; align-items:center; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:700; white-space:nowrap }
 
-    /* ── Paid toggle ── */
-    .rt-paid-btn { border:none; background:rgba(148,163,184,.1); color:var(--rt-muted); border-radius:7px; width:32px; height:26px; font-size:14px; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
+    /* ── Paid btn (table) ── */
+    .rt-paid-btn { border:none; background:rgba(148,163,184,.1); color:var(--rt-muted); border-radius:6px; width:28px; height:24px; font-size:13px; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
     .rt-paid-btn:hover { background:rgba(74,222,128,.15); color:var(--rt-green) }
     .rt-paid-btn.paid { background:rgba(74,222,128,.15); color:var(--rt-green) }
     .rt-paid-btn.paid:hover { background:rgba(248,113,113,.12); color:var(--rt-red) }
     [data-theme="light"] .rt-paid-btn.paid { background:rgba(21,128,61,.1); color:#15803d }
 
-    /* ── Progress bar ── */
-    .rt-progress-wrap { height:6px; background:var(--rt-border); border-radius:3px; overflow:hidden; margin-top:6px }
-    .rt-progress-bar { height:100%; border-radius:3px; background:linear-gradient(90deg,#a78bfa,#7c5cff); transition:width .6s ease }
+    /* ── Money ── */
+    .rt-money { font-variant-numeric:tabular-nums; font-weight:700; text-align:right; white-space:nowrap }
+    .rt-money-paid { color:var(--rt-green) }
 
     /* ── Empty/loading ── */
-    .rt-state { display:flex; align-items:center; justify-content:center; gap:10px; padding:40px; color:var(--rt-muted); font-size:13px }
-    .rt-spin { width:20px; height:20px; border:2.5px solid rgba(167,139,250,.25); border-top-color:var(--rt-accent); border-radius:50%; animation:rtSpin .6s linear infinite; flex-shrink:0 }
+    .rt-state { display:flex; align-items:center; justify-content:center; gap:10px; padding:36px; color:var(--rt-muted); font-size:13px }
+    .rt-spin { width:18px; height:18px; border:2.5px solid rgba(167,139,250,.25); border-top-color:var(--rt-accent); border-radius:50%; animation:rtSpin .6s linear infinite; flex-shrink:0 }
     @keyframes rtSpin { to{transform:rotate(360deg)} }
 
-    /* ── Sort arrow ── */
-    .rt-sort-asc::after { content:' ↑' }
-    .rt-sort-desc::after { content:' ↓' }
+    /* ══════════════════════════════
+       DETAIL PANEL
+    ══════════════════════════════ */
+    .rt-detail { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; overflow:hidden; position:sticky; top:16px; max-height:calc(100vh - 100px); overflow-y:auto }
 
-    /* ── Mobile ── */
-    @media(max-width:700px){
-      .rt-tbl thead th:nth-child(5),
-      .rt-tbl td:nth-child(5){ display:none }
-      .rt-kpi-val { font-size:20px }
-    }
+    /* empty state */
+    .rt-detail-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:60px 20px; color:var(--rt-muted); text-align:center }
+    .rt-detail-empty svg { opacity:.25 }
+    .rt-detail-empty-title { font-size:13px; font-weight:700; color:var(--rt-muted) }
+    .rt-detail-empty-sub { font-size:11.5px }
+
+    /* header */
+    .rt-dp-hdr { padding:18px 18px 14px; border-bottom:1px solid var(--rt-border); display:flex; align-items:center; gap:14px; background:rgba(167,139,250,.04) }
+    .rt-dp-photo { width:72px; height:72px; border-radius:50%; overflow:hidden; flex-shrink:0; background:rgba(167,139,250,.12); border:2.5px solid rgba(167,139,250,.35); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; color:var(--rt-accent); cursor:pointer; transition:transform .2s }
+    .rt-dp-photo:hover { transform:scale(1.05) }
+    .rt-dp-photo img { width:100%; height:100%; object-fit:cover; display:block }
+    .rt-dp-info { flex:1; min-width:0 }
+    .rt-dp-name { font-size:15px; font-weight:800; color:var(--rt-text); line-height:1.2; word-break:break-word }
+    .rt-dp-nid  { font-size:11px; color:var(--rt-muted); margin-top:2px; font-family:monospace }
+    .rt-dp-meta { display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:6px }
+    .rt-dp-chip { font-size:10.5px; color:var(--rt-muted); display:flex; align-items:center; gap:3px }
+
+    /* body */
+    .rt-dp-body { padding:14px 18px }
+    .rt-dp-section { margin-bottom:16px }
+    .rt-dp-section-title { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--rt-accent); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--rt-border) }
+
+    /* form fields */
+    .rt-dp-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px }
+    .rt-dp-row.full { grid-template-columns:1fr }
+    .rt-dp-field { display:flex; flex-direction:column; gap:3px }
+    .rt-dp-label { font-size:10px; font-weight:700; color:var(--rt-muted); letter-spacing:.04em; text-transform:uppercase }
+    .rt-dp-input { background:var(--rt-input); border:1px solid var(--rt-input-border); border-radius:8px; color:var(--rt-text); font-size:12.5px; font-family:inherit; padding:7px 10px; outline:none; width:100%; box-sizing:border-box; transition:border-color .15s }
+    .rt-dp-input:focus { border-color:rgba(167,139,250,.6) }
+    select.rt-dp-input { cursor:pointer }
+    textarea.rt-dp-input { resize:vertical; min-height:60px; line-height:1.5 }
+
+    /* paid toggle (detail panel) */
+    .rt-dp-paid-row { display:flex; align-items:center; justify-content:space-between; background:var(--rt-input); border:1px solid var(--rt-input-border); border-radius:10px; padding:10px 14px; margin-bottom:14px }
+    .rt-dp-paid-label { font-size:12.5px; font-weight:700; color:var(--rt-text) }
+    .rt-dp-paid-sub { font-size:10.5px; color:var(--rt-muted); margin-top:1px }
+    .rt-dp-toggle { position:relative; width:44px; height:24px; flex-shrink:0 }
+    .rt-dp-toggle input { opacity:0; width:0; height:0; position:absolute }
+    .rt-dp-toggle-track { position:absolute; inset:0; border-radius:12px; background:rgba(148,163,184,.2); transition:.25s; cursor:pointer }
+    .rt-dp-toggle-track::after { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.25s; box-shadow:0 1px 4px rgba(0,0,0,.3) }
+    .rt-dp-toggle input:checked + .rt-dp-toggle-track { background:#4ade80 }
+    [data-theme="light"] .rt-dp-toggle input:checked + .rt-dp-toggle-track { background:#16a34a }
+    .rt-dp-toggle input:checked + .rt-dp-toggle-track::after { left:23px }
+
+    /* save btn */
+    .rt-dp-save { width:100%; padding:11px; border-radius:10px; border:none; background:linear-gradient(135deg,#7c5cff,#a78bfa); color:#fff; font-size:13px; font-weight:800; cursor:pointer; transition:.15s; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:7px }
+    .rt-dp-save:hover { opacity:.9; transform:translateY(-1px) }
+    .rt-dp-save:active { transform:none }
+    .rt-dp-save:disabled { opacity:.5; cursor:not-allowed; transform:none }
+
+    /* toast */
+    .rt-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1e1e28; border:1px solid rgba(167,139,250,.3); color:#e2e8f0; padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:9999; transition:transform .25s ease, opacity .25s ease; opacity:0; pointer-events:none; white-space:nowrap; box-shadow:0 8px 24px rgba(0,0,0,.4) }
+    .rt-toast.show { transform:translateX(-50%) translateY(0); opacity:1 }
+    [data-theme="light"] .rt-toast { background:#1e293b }
   </style>
 </head>
 <body>
@@ -131,86 +180,197 @@
 
     <div class="rt-wrap">
 
-    <!-- KPI Row -->
-    <div class="rt-kpi-row" id="rtKpiRow">
-      <div class="rt-kpi">
-        <div class="rt-kpi-label">Total Loans</div>
-        <div class="rt-kpi-val" id="kpiTotal">—</div>
-        <div class="rt-kpi-sub">borrowers</div>
-        <div class="rt-kpi-bar" style="background:#a78bfa;width:100%"></div>
+      <!-- KPI Row -->
+      <div class="rt-kpi-row">
+        <div class="rt-kpi">
+          <div class="rt-kpi-label">Total Loans</div>
+          <div class="rt-kpi-val" id="kpiTotal">—</div>
+          <div class="rt-kpi-sub">borrowers</div>
+          <div class="rt-kpi-bar" style="background:#a78bfa;width:100%"></div>
+        </div>
+        <div class="rt-kpi">
+          <div class="rt-kpi-label">Total Borrowed</div>
+          <div class="rt-kpi-val" id="kpiAmount">—</div>
+          <div class="rt-kpi-sub" id="kpiAmountSub">—</div>
+          <div class="rt-kpi-bar" style="background:#6366f1;width:100%"></div>
+        </div>
+        <div class="rt-kpi">
+          <div class="rt-kpi-label">Paid</div>
+          <div class="rt-kpi-val" id="kpiPaid" style="color:#4ade80">—</div>
+          <div class="rt-kpi-sub" id="kpiPaidSub">—</div>
+          <div class="rt-kpi-bar" id="kpiPaidBar" style="background:#4ade80;width:0%"></div>
+        </div>
+        <div class="rt-kpi">
+          <div class="rt-kpi-label">Outstanding</div>
+          <div class="rt-kpi-val" id="kpiOut" style="color:#fb923c">—</div>
+          <div class="rt-kpi-sub" id="kpiOutSub">—</div>
+          <div class="rt-kpi-bar" id="kpiOutBar" style="background:#fb923c;width:100%"></div>
+        </div>
+        <div class="rt-kpi">
+          <div class="rt-kpi-label">% Collected</div>
+          <div class="rt-kpi-val" id="kpiPct" style="color:#a78bfa">—</div>
+          <div class="rt-progress-wrap"><div class="rt-progress-bar" id="kpiProgress" style="width:0%"></div></div>
+        </div>
       </div>
-      <div class="rt-kpi">
-        <div class="rt-kpi-label">Total Borrowed</div>
-        <div class="rt-kpi-val" id="kpiAmount">—</div>
-        <div class="rt-kpi-sub" id="kpiAmountSub">USD</div>
-        <div class="rt-kpi-bar" style="background:#6366f1;width:100%"></div>
-      </div>
-      <div class="rt-kpi">
-        <div class="rt-kpi-label">Paid</div>
-        <div class="rt-kpi-val" id="kpiPaid" style="color:#4ade80">—</div>
-        <div class="rt-kpi-sub" id="kpiPaidSub">loans</div>
-        <div class="rt-kpi-bar" id="kpiPaidBar" style="background:#4ade80;width:0%"></div>
-      </div>
-      <div class="rt-kpi">
-        <div class="rt-kpi-label">Outstanding</div>
-        <div class="rt-kpi-val" id="kpiOut" style="color:#fb923c">—</div>
-        <div class="rt-kpi-sub" id="kpiOutSub">loans</div>
-        <div class="rt-kpi-bar" id="kpiOutBar" style="background:#fb923c;width:100%"></div>
-      </div>
-      <div class="rt-kpi" style="position:relative">
-        <div class="rt-kpi-label">% Collected</div>
-        <div class="rt-kpi-val" id="kpiPct" style="color:#a78bfa">—</div>
-        <div class="rt-progress-wrap"><div class="rt-progress-bar" id="kpiProgress" style="width:0%"></div></div>
-      </div>
-    </div>
 
-    <!-- Toolbar -->
-    <div class="rt-toolbar">
-      <select class="rt-group-sel" id="rtGroupSel" onchange="applyFilter()">
-        <option value="">All Groups</option>
-      </select>
-      <button class="rt-refresh-btn" onclick="loadData()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        Refresh
-      </button>
-      <span class="rt-count-label" id="rtCountLabel"></span>
-    </div>
+      <!-- Toolbar -->
+      <div class="rt-toolbar">
+        <select class="rt-group-sel" id="rtGroupSel" onchange="applyFilter()">
+          <option value="">All Groups</option>
+        </select>
+        <button class="rt-refresh-btn" onclick="loadData()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+        <span class="rt-count-label" id="rtCountLabel"></span>
+      </div>
 
-    <!-- Tabs -->
-    <div class="rt-tabs">
-      <button class="rt-tab active" id="tabAll" onclick="switchTab('all',this)">
-        All <span class="rt-tab-badge" id="badgeAll">0</span>
-      </button>
-      <button class="rt-tab" id="tabUnpaid" onclick="switchTab('unpaid',this)">
-        ⏳ Unpaid <span class="rt-tab-badge" id="badgeUnpaid">0</span>
-      </button>
-      <button class="rt-tab" id="tabPaid" onclick="switchTab('paid',this)">
-        ✅ Paid <span class="rt-tab-badge" id="badgePaid">0</span>
-      </button>
-    </div>
+      <!-- Tabs -->
+      <div class="rt-tabs">
+        <button class="rt-tab active" onclick="switchTab('all',this)">All <span class="rt-tab-badge" id="badgeAll">0</span></button>
+        <button class="rt-tab" onclick="switchTab('unpaid',this)">⏳ Unpaid <span class="rt-tab-badge" id="badgeUnpaid">0</span></button>
+        <button class="rt-tab" onclick="switchTab('paid',this)">✅ Paid <span class="rt-tab-badge" id="badgePaid">0</span></button>
+      </div>
 
-    <!-- Table -->
-    <div class="rt-tbl-wrap">
-      <div id="rtState" class="rt-state"><div class="rt-spin"></div><span>Loading…</span></div>
-      <table class="rt-tbl" id="rtTbl" style="display:none">
-        <thead>
-          <tr>
-            <th style="width:36px">#</th>
-            <th style="min-width:160px" onclick="sortBy('FullName')">Name</th>
-            <th onclick="sortBy('Groups')">Group</th>
-            <th onclick="sortBy('Status')">Status</th>
-            <th onclick="sortBy('Money')" style="text-align:right">Amount</th>
-            <th onclick="sortBy('_date')">Date</th>
-            <th style="text-align:center">Paid</th>
-          </tr>
-        </thead>
-        <tbody id="rtTbody"></tbody>
-      </table>
-    </div>
+      <!-- Split body -->
+      <div class="rt-body">
 
+        <!-- LEFT: Table -->
+        <div class="rt-tbl-wrap">
+          <div id="rtState" class="rt-state"><div class="rt-spin"></div><span>Loading…</span></div>
+          <table class="rt-tbl" id="rtTbl" style="display:none">
+            <thead>
+              <tr>
+                <th style="width:30px">#</th>
+                <th onclick="sortBy('FullName')">Name</th>
+                <th onclick="sortBy('Groups')">Group</th>
+                <th onclick="sortBy('Status')">Status</th>
+                <th onclick="sortBy('Money')" style="text-align:right">Amount</th>
+                <th style="text-align:center">Paid</th>
+              </tr>
+            </thead>
+            <tbody id="rtTbody"></tbody>
+          </table>
+        </div>
+
+        <!-- RIGHT: Detail panel -->
+        <div class="rt-detail" id="rtDetail">
+          <div class="rt-detail-empty" id="rtDetailEmpty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="rt-detail-empty-title">Select a loan</div>
+            <div class="rt-detail-empty-sub">Click any row to view<br>and edit customer details</div>
+          </div>
+          <div id="rtDetailContent" style="display:none">
+            <!-- Header -->
+            <div class="rt-dp-hdr">
+              <div class="rt-dp-photo" id="dpPhoto" onclick="previewPhoto()" title="View photo"></div>
+              <div class="rt-dp-info">
+                <div class="rt-dp-name" id="dpName">—</div>
+                <div class="rt-dp-nid" id="dpNid">—</div>
+                <div class="rt-dp-meta">
+                  <span class="rt-dp-chip" id="dpPhone">—</span>
+                  <span class="rt-dp-chip" id="dpGender">—</span>
+                  <span class="rt-dp-chip" id="dpDob">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit form -->
+            <div class="rt-dp-body">
+
+              <!-- Personal Info -->
+              <div class="rt-dp-section">
+                <div class="rt-dp-section-title">Personal Info</div>
+                <div class="rt-dp-row">
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Full Name</label>
+                    <input class="rt-dp-input" id="dpInName" type="text" autocomplete="off">
+                  </div>
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">NID</label>
+                    <input class="rt-dp-input" id="dpInNid" type="text" autocomplete="off">
+                  </div>
+                </div>
+                <div class="rt-dp-row">
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Phone</label>
+                    <input class="rt-dp-input" id="dpInPhone" type="text" autocomplete="off">
+                  </div>
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Gender</label>
+                    <select class="rt-dp-input" id="dpInGender">
+                      <option value="">—</option>
+                      <option value="ប្រុស">ប្រុស</option>
+                      <option value="ស្រី">ស្រី</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="rt-dp-row full">
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Date of Birth</label>
+                    <input class="rt-dp-input" id="dpInDob" type="text" placeholder="DD/MM/YYYY" autocomplete="off">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loan Info -->
+              <div class="rt-dp-section">
+                <div class="rt-dp-section-title">Loan Info</div>
+                <div class="rt-dp-row">
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Amount ($)</label>
+                    <input class="rt-dp-input" id="dpInMoney" type="number" min="0" step="0.01">
+                  </div>
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Status</label>
+                    <select class="rt-dp-input" id="dpInStatus"></select>
+                  </div>
+                </div>
+                <div class="rt-dp-row full">
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Group</label>
+                    <select class="rt-dp-input" id="dpInGroup"></select>
+                  </div>
+                </div>
+                <div class="rt-dp-row full">
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Note</label>
+                    <textarea class="rt-dp-input" id="dpInNote" rows="2"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Paid toggle -->
+              <div class="rt-dp-paid-row">
+                <div>
+                  <div class="rt-dp-paid-label">Repayment Status</div>
+                  <div class="rt-dp-paid-sub" id="dpPaidSub">Unpaid</div>
+                </div>
+                <label class="rt-dp-toggle">
+                  <input type="checkbox" id="dpInPaid" onchange="onDetailPaidChange()">
+                  <span class="rt-dp-toggle-track"></span>
+                </label>
+              </div>
+
+              <!-- Save -->
+              <button class="rt-dp-save" id="dpSaveBtn" onclick="saveLoan()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Changes
+              </button>
+
+            </div><!-- rt-dp-body -->
+          </div><!-- rtDetailContent -->
+        </div><!-- rt-detail -->
+
+      </div><!-- rt-body -->
     </div><!-- rt-wrap -->
   </main>
 </div><!-- dashboard -->
+
+<!-- Toast -->
+<div class="rt-toast" id="rtToast"></div>
 
 <script src="../assets/js/layout.js?v=14"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
@@ -219,34 +379,34 @@
 <script>
 'use strict';
 
-var _loans   = [];   /* all active loans */
-var _tab     = 'all';
-var _group   = '';
-var _sortKey = '_date';
-var _sortDir = -1;
+var _loans      = [];
+var _groups     = [];
+var _statuses   = [];
+var _tab        = 'all';
+var _group      = '';
+var _sortKey    = '_date';
+var _sortDir    = -1;
+var _selectedKey = null;
 
 /* ── Helpers ── */
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function fmtMoney(v) {
   var n = Number(v);
-  if (isNaN(n) || v === '') return '—';
+  if (isNaN(n) || v === '' || v == null) return '—';
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:2 });
 }
 
 function fmtDate(key) {
-  if (!key || key.length < 8) return '—';
-  /* loan_key format: DDMMYYYY/HHMMSS or DD, MM, YYYY ... */
+  if (!key) return '—';
   try {
     var s = String(key);
-    /* Try ISO-like: YYYY-MM-DD */
     var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (m) return m[3]+'/'+m[2]+'/'+m[1].slice(2);
-    /* DD, MM, YYYY format */
     var p = s.match(/^(\d{1,2})[,\s]+(\d{1,2})[,\s]+(\d{4})/);
     if (p) return p[1].padStart(2,'0')+'/'+p[2].padStart(2,'0')+'/'+p[3].slice(2);
     return s.substring(0,10);
-  } catch(e){ return String(key).substring(0,10); }
+  } catch(e){ return String(key||'').substring(0,10); }
 }
 
 function dateTs(key) {
@@ -257,8 +417,8 @@ function dateTs(key) {
     if (m) return new Date(m[1]+'-'+m[2]+'-'+m[3]).getTime();
     var p = s.match(/^(\d{1,2})[,\s]+(\d{1,2})[,\s]+(\d{4})/);
     if (p) return new Date(p[3]+'-'+p[2].padStart(2,'0')+'-'+p[1].padStart(2,'0')).getTime();
-    return new Date(s.substring(0,10)).getTime() || 0;
-  } catch(e){ return 0; }
+  } catch(e){}
+  return 0;
 }
 
 var STATUS_COLORS = {
@@ -276,10 +436,18 @@ function avatar(loan) {
   var name = loan.FullName || '?';
   var init = name.charAt(0).toUpperCase();
   var photo = loan.photo_url || '';
-  if (photo) {
-    return '<span class="rt-av"><img src="'+esc(photo)+'" alt="'+esc(init)+'" onerror="this.parentNode.innerHTML=\''+init+'\'"></span>';
-  }
+  if (photo) return '<span class="rt-av"><img src="'+esc(photo)+'" onerror="this.parentNode.innerHTML=\''+init+'\'"></span>';
   return '<span class="rt-av">'+init+'</span>';
+}
+
+/* ── Toast ── */
+var _toastTimer = null;
+function toast(msg) {
+  var el = document.getElementById('rtToast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2800);
 }
 
 /* ── Filter + sort ── */
@@ -304,79 +472,71 @@ function filtered() {
 function renderKPIs() {
   var all    = _group ? _loans.filter(function(l){ return l.Groups === _group; }) : _loans;
   var total  = all.length;
-  var totalA = all.reduce(function(s,l){ return s + (Number(l.Money)||0); }, 0);
+  var totalA = all.reduce(function(s,l){ return s+(Number(l.Money)||0); },0);
   var paidL  = all.filter(function(l){ return l.Paid; });
-  var paidA  = paidL.reduce(function(s,l){ return s + (Number(l.Money)||0); }, 0);
+  var paidA  = paidL.reduce(function(s,l){ return s+(Number(l.Money)||0); },0);
   var outL   = all.filter(function(l){ return !l.Paid; });
-  var outA   = outL.reduce(function(s,l){ return s + (Number(l.Money)||0); }, 0);
+  var outA   = outL.reduce(function(s,l){ return s+(Number(l.Money)||0); },0);
   var pct    = total ? Math.round((paidL.length/total)*100) : 0;
   var pctA   = totalA ? Math.round((paidA/totalA)*100) : 0;
 
-  document.getElementById('kpiTotal').textContent  = total;
-  document.getElementById('kpiAmount').textContent = fmtMoney(totalA);
-  document.getElementById('kpiAmountSub').textContent = total + ' loans';
-  document.getElementById('kpiPaid').textContent   = fmtMoney(paidA);
-  document.getElementById('kpiPaidSub').textContent  = paidL.length + ' loans paid';
-  document.getElementById('kpiPaidBar').style.width  = pctA + '%';
-  document.getElementById('kpiOut').textContent    = fmtMoney(outA);
-  document.getElementById('kpiOutSub').textContent   = outL.length + ' loans left';
-  document.getElementById('kpiOutBar').style.width   = (100-pctA) + '%';
-  document.getElementById('kpiPct').textContent    = pct + '%';
-  document.getElementById('kpiProgress').style.width = pct + '%';
+  document.getElementById('kpiTotal').textContent    = total;
+  document.getElementById('kpiAmount').textContent   = fmtMoney(totalA);
+  document.getElementById('kpiAmountSub').textContent= total+' loans';
+  document.getElementById('kpiPaid').textContent     = fmtMoney(paidA);
+  document.getElementById('kpiPaidSub').textContent  = paidL.length+' loans paid';
+  document.getElementById('kpiPaidBar').style.width  = pctA+'%';
+  document.getElementById('kpiOut').textContent      = fmtMoney(outA);
+  document.getElementById('kpiOutSub').textContent   = outL.length+' loans left';
+  document.getElementById('kpiOutBar').style.width   = (100-pctA)+'%';
+  document.getElementById('kpiPct').textContent      = pct+'%';
+  document.getElementById('kpiProgress').style.width = pct+'%';
 
-  document.getElementById('badgeAll').textContent    = _group ? all.length : _loans.length;
-  document.getElementById('badgeUnpaid').textContent = _group ? outL.length : _loans.filter(function(l){ return !l.Paid; }).length;
-  document.getElementById('badgePaid').textContent   = _group ? paidL.length : _loans.filter(function(l){ return l.Paid; }).length;
+  document.getElementById('badgeAll').textContent    = _loans.length;
+  document.getElementById('badgeUnpaid').textContent = _loans.filter(function(l){ return !l.Paid; }).length;
+  document.getElementById('badgePaid').textContent   = _loans.filter(function(l){ return l.Paid; }).length;
 }
 
 /* ── Render table ── */
 function renderTable() {
-  var list = filtered();
+  var list  = filtered();
   var tbody = document.getElementById('rtTbody');
-
-  document.getElementById('rtCountLabel').textContent = list.length + ' loans';
+  document.getElementById('rtCountLabel').textContent = list.length+' loans';
 
   if (!list.length) {
     document.getElementById('rtState').innerHTML = '<span>No loans found</span>';
     document.getElementById('rtState').style.display = 'flex';
-    document.getElementById('rtTbl').style.display = 'none';
+    document.getElementById('rtTbl').style.display   = 'none';
     return;
   }
   document.getElementById('rtState').style.display = 'none';
-  document.getElementById('rtTbl').style.display = '';
+  document.getElementById('rtTbl').style.display   = '';
 
-  tbody.innerHTML = list.map(function(l, i) {
-    var safeKey = (l.DateTime||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    var paidClass = l.Paid ? 'paid' : '';
-    var paidTitle = l.Paid ? 'Mark as Unpaid' : 'Mark as Paid';
-    var paidIcon  = l.Paid ? '✅' : '○';
-    var moneyClass = l.Paid ? 'rt-money rt-money-paid' : 'rt-money rt-money-unpaid';
+  tbody.innerHTML = list.map(function(l,i){
+    var k = (l.DateTime||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    var isSel = l.DateTime === _selectedKey;
+    var paidCls  = l.Paid ? 'paid' : '';
+    var moneyCls = l.Paid ? 'rt-money rt-money-paid' : 'rt-money';
 
-    return '<tr id="row-'+esc(l.DateTime)+'">'
-      + '<td style="color:var(--rt-muted);font-size:11px">'+(i+1)+'</td>'
-      + '<td><div class="rt-name-cell">'+avatar(l)+'<div><div class="rt-name-text">'+esc(l.FullName||'—')+'</div><div class="rt-nid">'+esc(l.NationalID||'')+'</div></div></div></td>'
-      + '<td>'+esc(l.Groups||'—')+'</td>'
-      + '<td>'+statusTag(l.Status)+'</td>'
-      + '<td class="'+moneyClass+'">'+fmtMoney(l.Money)+'</td>'
-      + '<td style="color:var(--rt-muted);font-size:12px;white-space:nowrap">'+fmtDate(l.DateTime)+'</td>'
-      + '<td style="text-align:center"><button class="rt-paid-btn '+paidClass+'" data-key="'+esc(l.DateTime)+'" title="'+paidTitle+'" onclick="togglePaid(this)">'+paidIcon+'</button></td>'
-      + '</tr>';
+    return '<tr class="'+(isSel?'rt-row-selected':'')+'" onclick="selectLoan(\''+k+'\')">'
+      +'<td style="color:var(--rt-muted);font-size:10.5px">'+(i+1)+'</td>'
+      +'<td><div class="rt-name-cell">'+avatar(l)+'<div><div class="rt-name-text">'+esc(l.FullName||'—')+'</div><div class="rt-nid">'+esc(l.NationalID||'')+'</div></div></div></td>'
+      +'<td style="font-size:11.5px">'+esc(l.Groups||'—')+'</td>'
+      +'<td>'+statusTag(l.Status)+'</td>'
+      +'<td class="'+moneyCls+'">'+fmtMoney(l.Money)+'</td>'
+      +'<td style="text-align:center"><button class="rt-paid-btn '+paidCls+'" data-key="'+esc(l.DateTime)+'" title="Toggle paid" onclick="event.stopPropagation();togglePaid(this)">'+( l.Paid?'✅':'○')+'</button></td>'
+      +'</tr>';
   }).join('');
 }
 
-function render() {
-  renderKPIs();
-  renderTable();
-}
+function render() { renderKPIs(); renderTable(); }
 
-/* ── Tab switch ── */
-function switchTab(tab, btn) {
+/* ── Tab ── */
+function switchTab(tab,btn) {
   _tab = tab;
   document.querySelectorAll('.rt-tab').forEach(function(t){ t.classList.remove('active'); });
   if (btn) btn.classList.add('active');
-  renderTable();
-  var cnt = filtered().length;
-  document.getElementById('rtCountLabel').textContent = cnt + ' loans';
+  render();
 }
 
 /* ── Group filter ── */
@@ -387,28 +547,26 @@ function applyFilter() {
 
 /* ── Sort ── */
 function sortBy(key) {
-  if (_sortKey === key) { _sortDir *= -1; } else { _sortKey = key; _sortDir = -1; }
+  if (_sortKey===key) _sortDir*=-1; else { _sortKey=key; _sortDir=-1; }
   renderTable();
 }
 
-/* ── Toggle paid ── */
+/* ── Toggle paid (table button) ── */
 async function togglePaid(btn) {
   var key = btn.getAttribute('data-key');
   if (!key) return;
   btn.disabled = true;
   var wasPaid = btn.classList.contains('paid');
-  /* Optimistic update */
-  btn.classList.toggle('paid');
-  btn.textContent = btn.classList.contains('paid') ? '✅' : '○';
-  var loan = _loans.find(function(l){ return l.DateTime === key; });
-  if (loan) loan.Paid = btn.classList.contains('paid') ? 1 : 0;
+  var loan = _loans.find(function(l){ return l.DateTime===key; });
+  if (loan) loan.Paid = wasPaid ? 0 : 1;
   render();
+  if (_selectedKey === key) populateDetail(_loans.find(function(l){ return l.DateTime===key; }));
   try {
     var res = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:key });
-    if (!res || !res.ok) {
-      /* Revert on failure */
+    if (!res||!res.ok) {
       if (loan) loan.Paid = wasPaid ? 1 : 0;
       render();
+      if (_selectedKey===key) populateDetail(_loans.find(function(l){ return l.DateTime===key; }));
     }
   } catch(e) {
     if (loan) loan.Paid = wasPaid ? 1 : 0;
@@ -417,34 +575,163 @@ async function togglePaid(btn) {
   btn.disabled = false;
 }
 
+/* ── Detail panel ── */
+function selectLoan(key) {
+  _selectedKey = key;
+  var loan = _loans.find(function(l){ return l.DateTime===key; });
+  if (!loan) return;
+  renderTable();
+  populateDetail(loan);
+  document.getElementById('rtDetailEmpty').style.display   = 'none';
+  document.getElementById('rtDetailContent').style.display = '';
+}
+
+function populateDetail(loan) {
+  if (!loan) return;
+  /* Header */
+  var init  = (loan.FullName||'?').charAt(0).toUpperCase();
+  var photo = loan.photo_url || '';
+  var dp    = document.getElementById('dpPhoto');
+  dp.style.fontSize = photo ? '' : '26px';
+  dp.innerHTML = photo
+    ? '<img src="'+esc(photo)+'" onerror="this.parentNode.innerHTML=\''+init+'\'">'
+    : init;
+
+  document.getElementById('dpName').textContent   = loan.FullName   || '—';
+  document.getElementById('dpNid').textContent    = loan.NationalID || '—';
+  document.getElementById('dpPhone').textContent  = loan.Phone  ? '📱 '+loan.Phone  : '';
+  document.getElementById('dpGender').textContent = loan.Gender ? '⚧ '+loan.Gender : '';
+  document.getElementById('dpDob').textContent    = loan.DOB    ? '🎂 '+loan.DOB    : '';
+
+  /* Inputs */
+  document.getElementById('dpInName').value   = loan.FullName    || '';
+  document.getElementById('dpInNid').value    = loan.NationalID  || '';
+  document.getElementById('dpInPhone').value  = loan.Phone       || '';
+  document.getElementById('dpInDob').value    = loan.DOB         || '';
+  document.getElementById('dpInMoney').value  = loan.Money != null ? loan.Money : '';
+  document.getElementById('dpInNote').value   = loan.Note        || '';
+
+  /* Gender */
+  var gSel = document.getElementById('dpInGender');
+  gSel.value = loan.Gender || '';
+  if (!gSel.value && loan.Gender) {
+    var opt = document.createElement('option');
+    opt.value = loan.Gender; opt.textContent = loan.Gender;
+    gSel.appendChild(opt); gSel.value = loan.Gender;
+  }
+
+  /* Status dropdown */
+  var sSel = document.getElementById('dpInStatus');
+  var statuses = _statuses.length ? _statuses : Object.keys(STATUS_COLORS);
+  sSel.innerHTML = statuses.map(function(s){ return '<option value="'+esc(s)+'"'+(s===loan.Status?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+  if (!sSel.value && loan.Status) {
+    var opt2 = document.createElement('option');
+    opt2.value = loan.Status; opt2.textContent = loan.Status; opt2.selected = true;
+    sSel.insertBefore(opt2, sSel.firstChild);
+  }
+
+  /* Group dropdown */
+  var grSel = document.getElementById('dpInGroup');
+  var groups = _groups.length ? _groups : (loan.Groups ? [loan.Groups] : ['—']);
+  grSel.innerHTML = '<option value="">—</option>' + groups.map(function(g){ return '<option value="'+esc(g)+'"'+(g===loan.Groups?' selected':'')+'>'+esc(g)+'</option>'; }).join('');
+
+  /* Paid toggle */
+  var paidChk = document.getElementById('dpInPaid');
+  paidChk.checked = !!loan.Paid;
+  document.getElementById('dpPaidSub').textContent = loan.Paid ? '✅ Paid' : '⏳ Unpaid';
+}
+
+function onDetailPaidChange() {
+  var chk = document.getElementById('dpInPaid');
+  document.getElementById('dpPaidSub').textContent = chk.checked ? '✅ Paid' : '⏳ Unpaid';
+}
+
+/* ── Photo preview ── */
+function previewPhoto() {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan || !loan.photo_url) return;
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);cursor:zoom-out;animation:rtFadeIn .15s ease';
+  ov.innerHTML = '<img src="'+esc(loan.photo_url)+'" style="max-width:85vw;max-height:85vh;border-radius:14px;object-fit:contain;box-shadow:0 24px 64px rgba(0,0,0,.8)">';
+  ov.onclick = function(){ ov.remove(); };
+  document.body.appendChild(ov);
+}
+
+/* ── Save loan ── */
+async function saveLoan() {
+  if (!_selectedKey) return;
+  var loan = _loans.find(function(l){ return l.DateTime===_selectedKey; });
+  if (!loan) return;
+  var btn = document.getElementById('dpSaveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="rt-spin" style="width:14px;height:14px;border-width:2px"></div> Saving…';
+  try {
+    var updatedLoan = {
+      DateTime:    loan.DateTime,
+      FullName:    document.getElementById('dpInName').value.trim()  || loan.FullName,
+      NationalID:  document.getElementById('dpInNid').value.trim()   || loan.NationalID,
+      Phone:       document.getElementById('dpInPhone').value.trim(),
+      DOB:         document.getElementById('dpInDob').value.trim(),
+      Gender:      document.getElementById('dpInGender').value,
+      Groups:      document.getElementById('dpInGroup').value,
+      Money:       parseFloat(document.getElementById('dpInMoney').value) || 0,
+      Status:      document.getElementById('dpInStatus').value || loan.Status,
+      Note:        document.getElementById('dpInNote').value,
+      Paid:        document.getElementById('dpInPaid').checked ? 1 : 0,
+      /* preserve untouched fields */
+      FBName:      loan.FBName      || '',
+      URL:         loan.URL         || '',
+      FacebookCom: loan.FacebookCom || '',
+      ID:          loan.ID          || '',
+      FBID:        loan.FBID        || '',
+      photo_url:   loan.photo_url   || '',
+    };
+    var res = await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:updatedLoan });
+    if (res && res.ok) {
+      /* Update local cache */
+      Object.assign(loan, updatedLoan);
+      render();
+      populateDetail(loan);
+      toast('✅ Saved!');
+    } else {
+      toast('❌ '+(res&&res.message||'Save failed'));
+    }
+  } catch(e) { toast('❌ '+e.message); }
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes';
+}
+
 /* ── Load ── */
 async function loadData() {
   document.getElementById('rtState').innerHTML = '<div class="rt-spin"></div><span>Loading…</span>';
   document.getElementById('rtState').style.display = 'flex';
-  document.getElementById('rtTbl').style.display = 'none';
+  document.getElementById('rtTbl').style.display   = 'none';
   try {
     var res = await CamboAPI.post({ action:'helen_all' });
-    if (!res || !res.ok) {
-      document.getElementById('rtState').innerHTML = '❌ Failed to load';
-      return;
-    }
-    _loans = (res.loans || []).filter(function(l){ return !l.deleted; });
+    if (!res||!res.ok) { document.getElementById('rtState').innerHTML='❌ Failed to load'; return; }
+    _loans    = (res.loans||[]).filter(function(l){ return !l.deleted; });
+    _groups   = res.groups   || [];
+    _statuses = res.statuses || [];
 
     /* Populate group filter */
-    var groups = [];
-    _loans.forEach(function(l){ if (l.Groups && !groups.includes(l.Groups)) groups.push(l.Groups); });
-    groups.sort();
+    var grps = [];
+    _loans.forEach(function(l){ if (l.Groups && !grps.includes(l.Groups)) grps.push(l.Groups); });
+    grps.sort();
     var sel = document.getElementById('rtGroupSel');
     var prev = sel.value;
-    sel.innerHTML = '<option value="">All Groups</option>' + groups.map(function(g){
+    sel.innerHTML = '<option value="">All Groups</option>'+grps.map(function(g){
       return '<option value="'+esc(g)+'"'+(g===prev?' selected':'')+'>'+esc(g)+'</option>';
     }).join('');
     _group = sel.value;
 
+    /* If a loan was selected, refresh its detail */
+    if (_selectedKey) {
+      var still = _loans.find(function(l){ return l.DateTime===_selectedKey; });
+      if (still) populateDetail(still); else _selectedKey = null;
+    }
+
     render();
-  } catch(e) {
-    document.getElementById('rtState').innerHTML = '❌ Error: ' + esc(e.message);
-  }
+  } catch(e) { document.getElementById('rtState').innerHTML='❌ '+esc(e.message); }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
