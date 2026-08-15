@@ -327,14 +327,14 @@
         <div class="rt-date-sep"></div>
         <!-- Date preset -->
         <select class="rt-group-sel" id="rtDatePreset" onchange="applyDateFilter()" title="Filter by date">
-          <option value="">📅 All Dates</option>
+          <option value="">All Dates</option>
           <option value="today">Today</option>
           <option value="week">This Week</option>
           <option value="month">This Month</option>
           <option value="last30">Last 30 Days</option>
           <option value="last3m">Last 3 Months</option>
           <option value="year">This Year</option>
-          <option value="custom">⚙ Custom Range…</option>
+          <option value="custom">Custom Range…</option>
         </select>
         <button class="rt-refresh-btn" onclick="loadData()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -343,8 +343,8 @@
         <!-- Tabs (right side, inside card) -->
         <div class="rt-tabs">
           <button class="rt-tab active" onclick="switchTab('all',this)">All <span class="rt-tab-badge" id="badgeAll">0</span></button>
-          <button class="rt-tab" onclick="switchTab('unpaid',this)">⏳ Unpaid <span class="rt-tab-badge" id="badgeUnpaid">0</span></button>
-          <button class="rt-tab" onclick="switchTab('paid',this)">✅ Paid <span class="rt-tab-badge" id="badgePaid">0</span></button>
+          <button class="rt-tab" onclick="switchTab('unpaid',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Unpaid <span class="rt-tab-badge" id="badgeUnpaid">0</span></button>
+          <button class="rt-tab" onclick="switchTab('paid',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Paid <span class="rt-tab-badge" id="badgePaid">0</span></button>
         </div>
         <!-- Custom date range row (shown when custom preset selected) -->
         <div class="rt-custom-row" id="rtCustomRow">
@@ -530,12 +530,17 @@
 <!-- Paid Toggle Confirm Modal -->
 <div class="rt-paid-conf-overlay" id="rtPaidConfOverlay" style="display:none" onclick="if(event.target===this)closePaidConfirm()">
   <div class="rt-paid-conf-box" id="rtPaidConfBox">
-    <div class="rt-del-icon" id="rtPaidConfIcon">✅</div>
+    <div class="rt-del-icon" id="rtPaidConfIcon" style="display:flex;align-items:center;justify-content:center;margin-bottom:10px">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
     <div class="rt-paid-conf-title" id="rtPaidConfTitle">Mark as Paid?</div>
     <div class="rt-paid-conf-msg" id="rtPaidConfMsg"></div>
     <div class="rt-paid-conf-btns">
       <button class="rt-paid-conf-cancel" onclick="closePaidConfirm()">Cancel</button>
-      <button class="rt-paid-conf-ok go-paid" id="rtPaidConfOkBtn" onclick="doPaidToggle()">Confirm</button>
+      <button class="rt-paid-conf-ok go-paid" id="rtPaidConfOkBtn" onclick="doPaidToggle()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirm
+      </button>
     </div>
   </div>
 </div>
@@ -543,7 +548,9 @@
 <!-- Delete Confirm Modal -->
 <div class="rt-del-overlay" id="rtDelOverlay" style="display:none" onclick="if(event.target===this)closeDeleteConfirm()">
   <div class="rt-del-box">
-    <div class="rt-del-icon">🗑️</div>
+    <div class="rt-del-icon" style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:#f87171">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    </div>
     <div class="rt-del-title">Delete Borrower?</div>
     <div class="rt-del-msg">You are about to delete <span class="rt-del-name" id="rtDelName">—</span>.<br>This will move them to Trash and can be recovered later.</div>
     <div class="rt-del-btns">
@@ -754,8 +761,8 @@ async function onMainPhotoChange(input) {
     /* Auto-save */
     await autoSaveLoan(false);
     render(); /* refresh table avatar too */
-    toast('✅ Photo updated!');
-  } catch(e) { toast('❌ '+e.message); }
+    toast('Photo updated!');
+  } catch(e) { toast('Error: '+e.message); }
 }
 
 /* ── Add media to gallery ── */
@@ -771,8 +778,8 @@ async function onMediaAdd(input) {
     loan.photos.push(url);
     renderGallery(loan);
     await autoSaveLoan(false);
-    toast('✅ Media added!');
-  } catch(e) { toast('❌ '+e.message); }
+    toast('Media added!');
+  } catch(e) { toast('Error: '+e.message); }
 }
 
 /* ── Remove gallery item ── */
@@ -783,7 +790,7 @@ async function removeMedia(idx) {
   loan.photos.splice(idx, 1);
   renderGallery(loan);
   await autoSaveLoan(false);
-  toast('🗑 Removed');
+  toast('Removed');
 }
 
 /* ── Render gallery strip ── */
@@ -1011,7 +1018,7 @@ function renderTable() {
       +'<td style="font-size:11.5px">'+highlight(l.Groups||'—',q)+'</td>'
       +'<td>'+statusTag(l.Status)+'</td>'
       +'<td class="'+moneyCls+'">'+fmtMoney(l.Money)+'</td>'
-      +'<td style="text-align:center"><button class="rt-paid-btn '+paidCls+'" data-key="'+esc(l.DateTime)+'" title="'+(l.Paid?'Mark as Unpaid':'Mark as Paid')+'" onclick="event.stopPropagation();confirmTogglePaid(this)">'+(l.Paid?'✅':'○')+'</button></td>'
+      +'<td style="text-align:center"><button class="rt-paid-btn '+paidCls+'" data-key="'+esc(l.DateTime)+'" title="'+(l.Paid?'Mark as Unpaid':'Mark as Paid')+'" onclick="event.stopPropagation();confirmTogglePaid(this)">'+(l.Paid?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>')+'</button></td>'
       +'</tr>';
   }).join('');
 }
@@ -1077,13 +1084,18 @@ function confirmTogglePaid(btn) {
   var box  = document.getElementById('rtPaidConfBox');
   var icon = document.getElementById('rtPaidConfIcon');
   var ok   = document.getElementById('rtPaidConfOkBtn');
+  var svgCheck = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  var svgClock = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
   box.className  = 'rt-paid-conf-box' + (goingPaid ? '' : ' unpaid-mode');
-  icon.textContent = goingPaid ? '✅' : '⏳';
+  icon.style.color = goingPaid ? '#4ade80' : '#fbbf24';
+  icon.innerHTML = goingPaid ? svgCheck : svgClock;
   document.getElementById('rtPaidConfTitle').textContent = goingPaid ? 'Mark as Paid?' : 'Mark as Unpaid?';
   document.getElementById('rtPaidConfMsg').innerHTML =
     '<strong>'+esc(loan.FullName||'—')+'</strong> will be marked as <strong>'+(goingPaid?'Paid':'Unpaid')+'</strong>.';
   ok.className   = 'rt-paid-conf-ok ' + (goingPaid ? 'go-paid' : 'go-unpaid');
-  ok.textContent = goingPaid ? '✅ Mark Paid' : '⏳ Mark Unpaid';
+  ok.innerHTML   = goingPaid
+    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Mark Paid'
+    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Mark Unpaid';
   ok.disabled    = false;
   document.getElementById('rtPaidConfOverlay').style.display = 'flex';
 }
@@ -1108,17 +1120,17 @@ async function doPaidToggle() {
       if (loan) loan.Paid = wasPaid ? 1 : 0;
       render();
       if (_selectedKey === key) populateDetail(_loans.find(function(l){ return l.DateTime === key; }));
-      toast('❌ ' + (res && res.message || 'Failed'));
+      toast((res && res.message) || 'Failed');
     } else {
       if (loan && res.paid !== undefined) loan.Paid = res.paid;
       render();
       if (_selectedKey === key) populateDetail(_loans.find(function(l){ return l.DateTime === key; }));
-      toast(loan && loan.Paid ? '✅ Marked as Paid' : '⏳ Marked as Unpaid');
+      toast(loan && loan.Paid ? 'Marked as Paid' : 'Marked as Unpaid');
     }
   } catch(e) {
     if (loan) loan.Paid = wasPaid ? 1 : 0;
     render();
-    toast('❌ ' + e.message);
+    toast('Error: '+e.message);
   }
 }
 
@@ -1179,7 +1191,7 @@ function populateDetail(loan) {
 
   var paidChk = document.getElementById('dpInPaid');
   paidChk.checked = !!loan.Paid;
-  document.getElementById('dpPaidSub').textContent = loan.Paid ? '✅ Paid' : '⏳ Unpaid';
+  document.getElementById('dpPaidSub').textContent = loan.Paid ? 'Paid' : 'Unpaid';
 
   /* Gallery */
   renderGallery(loan);
@@ -1187,7 +1199,7 @@ function populateDetail(loan) {
 
 function onDetailPaidChange() {
   var chk = document.getElementById('dpInPaid');
-  document.getElementById('dpPaidSub').textContent = chk.checked ? '✅ Paid' : '⏳ Unpaid';
+  document.getElementById('dpPaidSub').textContent = chk.checked ? 'Paid' : 'Unpaid';
 }
 
 /* ── Build loan obj from form ── */
@@ -1223,8 +1235,8 @@ async function autoSaveLoan(showToast) {
     var updated = buildLoanObj(loan);
     var res = await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:updated });
     if (res && res.ok) { Object.assign(loan, updated); }
-    if (showToast) toast(res && res.ok ? '✅ Saved!' : '❌ '+(res&&res.message||'Save failed'));
-  } catch(e) { if (showToast) toast('❌ '+e.message); }
+    if (showToast) toast(res && res.ok ? 'Saved!' : (res&&res.message||'Save failed'));
+  } catch(e) { if (showToast) toast('Error: '+e.message); }
 }
 
 /* ── Save loan (button) ── */
@@ -1242,11 +1254,11 @@ async function saveLoan() {
       Object.assign(loan, updatedLoan);
       render();
       populateDetail(loan);
-      toast('✅ Saved!');
+      toast('Saved!');
     } else {
-      toast('❌ '+(res&&res.message||'Save failed'));
+      toast((res&&res.message)||'Save failed');
     }
-  } catch(e) { toast('❌ '+e.message); }
+  } catch(e) { toast('Error: '+e.message); }
   btn.disabled = false;
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes';
 }
@@ -1277,13 +1289,13 @@ async function doDelete() {
       closeDeleteConfirm();
       document.getElementById('rtDetailContent').style.display = 'none';
       render();
-      toast('🗑️ Borrower moved to Trash');
+      toast('Borrower moved to Trash');
     } else {
-      toast('❌ ' + (res && res.message || 'Delete failed'));
+      toast((res && res.message) || 'Delete failed');
       closeDeleteConfirm();
     }
   } catch(e) {
-    toast('❌ ' + e.message);
+    toast('Error: '+e.message);
     closeDeleteConfirm();
   }
 }
@@ -1295,7 +1307,7 @@ async function loadData() {
   document.getElementById('rtTbl').style.display   = 'none';
   try {
     var res = await CamboAPI.post({ action:'helen_all' });
-    if (!res||!res.ok) { document.getElementById('rtState').innerHTML='❌ Failed to load'; return; }
+    if (!res||!res.ok) { document.getElementById('rtState').innerHTML='Failed to load'; return; }
     _loans    = (res.loans||[]).filter(function(l){ return !l.deleted; });
     _groups   = res.groups   || [];
     _statuses = res.statuses || [];
@@ -1315,7 +1327,7 @@ async function loadData() {
       if (still) populateDetail(still); else _selectedKey = null;
     }
     render();
-  } catch(e) { document.getElementById('rtState').innerHTML='❌ '+esc(e.message); }
+  } catch(e) { document.getElementById('rtState').innerHTML='Error: '+esc(e.message); }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
