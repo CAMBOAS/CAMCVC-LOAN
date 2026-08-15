@@ -346,15 +346,24 @@ export default async function handler(req, res) {
       const fAct   = String(body.filter_action||'').trim();
       /* Non-Admin can only see their own activity — force actor_user to self */
       const fUser  = isAdmin ? String(body.filter_actor||'').trim() : _bu;
-      let sql = 'SELECT l.*, u.photo_url AS actor_photo FROM helen_activity_log l LEFT JOIN helen_users u ON l.actor_user = u.username';
+      await ensureUserPhotoCol();
       const params = [];
       const wheres = [];
       if (fAct)  { wheres.push('l.action=?');     params.push(fAct); }
       if (fUser) { wheres.push('l.actor_user=?'); params.push(fUser); }
-      if (wheres.length) sql += ' WHERE ' + wheres.join(' AND ');
-      sql += ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
-      params.push(limit, offset);
-      const [logs] = await db().query(sql, params);
+      const whereClause = wheres.length ? ' WHERE ' + wheres.join(' AND ') : '';
+      const orderLimit  = ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
+      let logs;
+      try {
+        const sqlJoin = 'SELECT l.*, u.photo_url AS actor_photo FROM helen_activity_log l LEFT JOIN helen_users u ON l.actor_user = u.username' + whereClause + orderLimit;
+        const [rows] = await db().query(sqlJoin, [...params, limit, offset]);
+        logs = rows;
+      } catch(e) {
+        /* Fallback: fetch without photo if JOIN fails */
+        const sqlPlain = 'SELECT * FROM helen_activity_log l' + whereClause + orderLimit;
+        const [rows] = await db().query(sqlPlain, [...params, limit, offset]);
+        logs = rows;
+      }
       /* Total count respects same filter */
       let countSql = 'SELECT COUNT(*) AS total FROM helen_activity_log l';
       const countParams = [];
