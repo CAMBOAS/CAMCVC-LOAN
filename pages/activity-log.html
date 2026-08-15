@@ -171,10 +171,10 @@
           <div class="al-tbl-scroll">
             <table class="al-tbl" id="tblAll">
               <thead><tr>
-                <th>Time</th>
-                <th>Action</th>
                 <th>By</th>
+                <th>Action</th>
                 <th>Target / Detail</th>
+                <th>Time</th>
               </tr></thead>
               <tbody id="tbodyAll"></tbody>
             </table>
@@ -189,10 +189,10 @@
           <div class="al-tbl-scroll">
             <table class="al-tbl">
               <thead><tr>
-                <th>Time</th>
-                <th>Event</th>
                 <th>User</th>
                 <th>Role</th>
+                <th>Event</th>
+                <th>Time</th>
               </tr></thead>
               <tbody id="tbodyAuth"></tbody>
             </table>
@@ -207,11 +207,11 @@
           <div class="al-tbl-scroll">
             <table class="al-tbl">
               <thead><tr>
-                <th>Time</th>
+                <th>Added By</th>
                 <th>Borrower</th>
                 <th>Amount</th>
                 <th>Status</th>
-                <th>Added By</th>
+                <th>Time</th>
               </tr></thead>
               <tbody id="tbodyAdd"></tbody>
             </table>
@@ -226,10 +226,10 @@
           <div class="al-tbl-scroll">
             <table class="al-tbl">
               <thead><tr>
-                <th>Time</th>
-                <th>Action</th>
-                <th>Borrower</th>
                 <th>By</th>
+                <th>Borrower</th>
+                <th>Action</th>
+                <th>Time</th>
               </tr></thead>
               <tbody id="tbodyEdit"></tbody>
             </table>
@@ -244,9 +244,9 @@
           <div class="al-tbl-scroll">
             <table class="al-tbl">
               <thead><tr>
-                <th>Time</th>
-                <th>Borrower</th>
                 <th>Deleted By</th>
+                <th>Borrower</th>
+                <th>Time</th>
               </tr></thead>
               <tbody id="tbodyDelete"></tbody>
             </table>
@@ -261,11 +261,11 @@
           <div class="al-tbl-scroll">
             <table class="al-tbl">
               <thead><tr>
-                <th>Time</th>
+                <th>By</th>
                 <th>Action</th>
                 <th>Username</th>
-                <th>By</th>
                 <th>Details</th>
+                <th>Time</th>
               </tr></thead>
               <tbody id="tbodyUsers"></tbody>
             </table>
@@ -330,14 +330,19 @@ function actorCell(log) {
 
 function fmtDateTime(dt) {
   try {
-    var d  = new Date(dt);
-    var now = new Date();
-    var dd  = String(d.getDate()).padStart(2,'0');
-    var mo  = String(d.getMonth()+1).padStart(2,'0');
-    var hh  = String(d.getHours()).padStart(2,'0');
-    var mm  = String(d.getMinutes()).padStart(2,'0');
+    var d    = new Date(dt);
+    var now  = new Date();
+    var dd   = String(d.getDate()).padStart(2,'0');
+    var mo   = String(d.getMonth()+1).padStart(2,'0');
+    var h24  = d.getHours();
+    var mm   = String(d.getMinutes()).padStart(2,'0');
+    var ampm = h24 >= 12 ? 'PM' : 'AM';
+    var h12  = h24 % 12 || 12;
+    var hhStr = String(h12).padStart(2,'0');
     var datePart = d.toDateString() === now.toDateString() ? 'Today' : dd+'/'+mo;
-    return '<span style="font-size:10.5px;color:var(--al-muted)">'+datePart+'</span> '+hh+':'+mm;
+    return '<span style="font-size:10px;color:var(--al-muted)">'+datePart+'</span>'
+         + ' <b>'+hhStr+':'+mm+'</b>'
+         + ' <span style="font-size:10px;font-weight:700;color:var(--al-muted)">'+ampm+'</span>';
   } catch(e) { return String(dt||'').substring(0,16); }
 }
 
@@ -367,11 +372,11 @@ function rowAll(log) {
     detailStr = esc(detail.old_name)+' → '+esc(detail.new_name);
   if (log.action==='user_login' && detail.role) detailStr = esc(detail.role);
   return '<tr>'
-    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
-    +'<td>'+badge(actionMap[log.action]||log.action, clsMap[log.action]||'edit')+'</td>'
     +'<td>'+actorCell(log)+'</td>'
+    +'<td>'+badge(actionMap[log.action]||log.action, clsMap[log.action]||'edit')+'</td>'
     +'<td class="al-tbl-muted">'+(target?'<b style="color:var(--al-text)">'+esc(target)+'</b>':'')+
       (detailStr?' <span class="al-tbl-chip">'+detailStr+'</span>':'')+'</td>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
 
@@ -379,21 +384,21 @@ function rowAuth(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
   var isLogin = log.action === 'user_login';
   return '<tr>'
-    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
-    +'<td>'+badge(isLogin?'🔑 Login':'🚪 Logout', isLogin?'login':'logout')+'</td>'
     +'<td>'+actorCell(log)+'</td>'
     +'<td class="al-tbl-muted">'+esc(detail.role||'—')+'</td>'
+    +'<td>'+badge(isLogin?'🔑 Login':'🚪 Logout', isLogin?'login':'logout')+'</td>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
 
 function rowAdd(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
   return '<tr>'
-    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
+    +'<td>'+actorCell(log)+'</td>'
     +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
     +'<td style="font-weight:700;color:#16a34a">'+(detail.money?'$'+esc(String(detail.money)):'—')+'</td>'
     +'<td>'+(detail.status?badge(detail.status,'paid'):'—')+'</td>'
-    +'<td>'+actorCell(log)+'</td>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
 
@@ -404,18 +409,18 @@ function rowEdit(log) {
   var extra = '';
   if (log.action==='loan_paid') extra = detail.paid ? ' <span class="al-tbl-chip b-paid">Paid</span>' : ' <span class="al-tbl-chip b-logout">Unpaid</span>';
   return '<tr>'
-    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
-    +'<td>'+badge(editMap[log.action]||log.action, clsMap[log.action]||'edit')+extra+'</td>'
-    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
     +'<td>'+actorCell(log)+'</td>'
+    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td>'+badge(editMap[log.action]||log.action, clsMap[log.action]||'edit')+extra+'</td>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
 
 function rowDelete(log) {
   return '<tr>'
-    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
-    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
     +'<td>'+actorCell(log)+'</td>'
+    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
 
@@ -428,11 +433,11 @@ function rowUser(log) {
   if (log.action==='user_edit' && detail.old_name && detail.new_name && detail.old_name!==detail.new_name)
     detailStr = esc(detail.old_name)+' → '+esc(detail.new_name);
   return '<tr>'
-    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
+    +'<td>'+actorCell(log)+'</td>'
     +'<td>'+badge(actMap[log.action]||log.action, clsMap[log.action]||'user')+'</td>'
     +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
-    +'<td>'+actorCell(log)+'</td>'
     +'<td class="al-tbl-muted">'+(detailStr?'<span class="al-tbl-chip">'+detailStr+'</span>':'—')+'</td>'
+    +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
 
