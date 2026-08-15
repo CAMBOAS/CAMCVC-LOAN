@@ -181,7 +181,6 @@
     <div class="pm-header">
       <div class="pm-av" id="pmAv"></div>
       <div class="pm-name"  id="pmName"></div>
-      <div class="pm-username" id="pmUsername"></div>
       <div class="pm-badges" id="pmBadges"></div>
     </div>
     <div class="pm-body">
@@ -309,9 +308,8 @@ function openProfile(idx) {
     avEl.textContent = init;
   }
 
-  document.getElementById('pmName').textContent     = name;
-  document.getElementById('pmUsername').textContent = '@'+esc(u.username||'');
-  document.getElementById('pmAdded').textContent    = Number(u.loans_added||0);
+  document.getElementById('pmName').textContent  = name;
+  document.getElementById('pmAdded').textContent = Number(u.loans_added||0);
   document.getElementById('pmEdited').textContent   = Number(u.loans_edited||0);
   document.getElementById('pmLastLogin').textContent= fmtLastActive(u.last_login||'');
 
