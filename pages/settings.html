@@ -73,7 +73,8 @@
     .um-role-owner   { background:rgba(245,158,11,.15); color:#f59e0b }
     .um-role-staff   { background:rgba(6,182,212,.13);  color:#22d3ee }
     .um-role-tester  { background:rgba(16,185,129,.13); color:#10b981 }
-    .um-role-viewer  { background:rgba(148,163,184,.15); color:#94a3b8 }
+    .um-role-viewer    { background:rgba(148,163,184,.15); color:#94a3b8 }
+    .um-role-moderator { background:rgba(244,114,182,.15); color:#f472b6 }
 
     /* ── Status badge ── */
     .um-status { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600 }
@@ -510,6 +511,7 @@
             <option value="Staff Loan" selected>Staff Loan</option>
             <option value="Tester">Tester</option>
             <option value="Viewer">Viewer</option>
+            <option value="Moderator">Moderator</option>
           </select>
         </div>
       </div>
@@ -580,7 +582,8 @@ function roleClass(r) {
   if (l === 'admin')  return 'um-role um-role-admin';
   if (l === 'owner')  return 'um-role um-role-owner';
   if (l === 'tester') return 'um-role um-role-tester';
-  if (l === 'viewer') return 'um-role um-role-viewer';
+  if (l === 'viewer')    return 'um-role um-role-viewer';
+  if (l === 'moderator') return 'um-role um-role-moderator';
   return 'um-role um-role-staff';
 }
 
