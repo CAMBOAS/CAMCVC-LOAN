@@ -81,6 +81,12 @@
     .um-status-inactive .um-status-dot { background:#64748b }
     .um-status-inactive { color:var(--muted) }
 
+    /* ── Quick photo cell (table) ── */
+    .um-photo-cell { position:relative; width:34px; height:34px; border-radius:50%; background:rgba(124,92,255,.12); border:2px solid rgba(124,92,255,.25); display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; flex-shrink:0 }
+    .um-photo-cell img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
+    .um-photo-cell-init { font-size:13px; font-weight:800; color:#a78bfa }
+    .um-photo-cam-ov { position:absolute; inset:0; border-radius:50%; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .18s; pointer-events:none }
+    .um-photo-cell:hover .um-photo-cam-ov { opacity:1 }
     /* ── Action buttons ── */
     .um-act-btns { display:flex; gap:6px; align-items:center }
     .um-edit-btn { padding:5px 12px; border-radius:8px; border:1px solid rgba(124,92,255,.3); background:rgba(124,92,255,.08); color:#a78bfa; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:.15s; white-space:nowrap }
@@ -474,6 +480,7 @@
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
         <input type="file" id="umPhotoFile" accept="image/*" style="display:none">
+        <input type="file" id="umQuickPhotoFile" accept="image/*" style="display:none">
       </div>
       <button class="um-modal-close" onclick="closeModal()">✕</button>
     </div>
@@ -627,9 +634,14 @@ function renderTable() {
         + '</div></td>';
     }
 
-    var photoCell = u.photo_url
-      ? '<td><img src="'+esc(u.photo_url)+'" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(124,92,255,.3);display:block"></td>'
-      : '<td><div style="width:34px;height:34px;border-radius:50%;background:rgba(124,92,255,.12);border:2px solid rgba(124,92,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#a78bfa">'+(u.display_name||u.username||'?').charAt(0).toUpperCase()+'</div></td>';
+    var _camSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+    var _photoInner = u.photo_url
+      ? '<img src="'+esc(u.photo_url)+'" alt="">'
+      : '<span class="um-photo-cell-init">'+(u.display_name||u.username||'?').charAt(0).toUpperCase()+'</span>';
+    var photoCell = '<td><div class="um-photo-cell" onclick="quickUploadPhoto(\''+safeU+'\')" title="Upload photo">'
+      + _photoInner
+      + '<div class="um-photo-cam-ov">'+_camSvg+'</div>'
+      + '</div></td>';
 
     return '<tr>'
       + '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'
@@ -816,6 +828,37 @@ document.getElementById('umPhotoFile').addEventListener('change', async function
     };
     reader.readAsDataURL(file);
   } catch(err) { toast('❌ '+err.message, true); circle.innerHTML = origContent; }
+  e.target.value = '';
+});
+
+/* ── Quick photo upload (table row camera click) ── */
+var _quickPhotoUser = null;
+function quickUploadPhoto(username) {
+  _quickPhotoUser = username;
+  document.getElementById('umQuickPhotoFile').click();
+}
+document.getElementById('umQuickPhotoFile').addEventListener('change', async function(e) {
+  var file = e.target.files && e.target.files[0];
+  if (!file || !_quickPhotoUser) return;
+  var username = _quickPhotoUser;
+  _quickPhotoUser = null;
+  toast('⏳ Uploading photo…');
+  try {
+    var reader = new FileReader();
+    reader.onload = async function(ev) {
+      try {
+        var r = await CamboAPI.post({ action:'helen_upload_photo', data: ev.target.result });
+        if (!r || !r.ok) { toast('❌ Upload failed: '+(r&&r.message||''), true); return; }
+        var r2 = await CamboAPI.post({ action:'helen_user_update_photo', username: username, photo_url: r.url });
+        if (!r2 || !r2.ok) { toast('❌ '+(r2&&r2.message||'Save failed'), true); return; }
+        var idx = _users.findIndex(function(x){ return x.username === username; });
+        if (idx >= 0) _users[idx].photo_url = r.url;
+        renderTable();
+        toast('✅ Photo updated!');
+      } catch(err) { toast('❌ '+err.message, true); }
+    };
+    reader.readAsDataURL(file);
+  } catch(err) { toast('❌ '+err.message, true); }
   e.target.value = '';
 });
 
