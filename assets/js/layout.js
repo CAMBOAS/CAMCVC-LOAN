@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  function getLang() { return localStorage.getItem('helen_lang') || 'kh'; }
+  function getLang() { return localStorage.getItem('helen_lang') || 'en'; }
   function setLang(l) { localStorage.setItem('helen_lang', l); }
   function t(kh, en) { return getLang() === 'en' ? en : kh; }
 
@@ -98,9 +98,9 @@
             <span class="sb-theme-icon">${ic.moon}</span>
             <span class="sb-ctrl-label">${t('ម៉ូត','Theme')}</span>
           </button>
-          <button class="sb-ctrl-btn sb-logout-btn" id="sbLogoutBtn" title="ចាកចេញ">
+          <button class="sb-ctrl-btn sb-logout-btn" id="sbLogoutBtn" title="Logout">
             <span class="sb-theme-icon">${ic.logout}</span>
-            <span class="sb-ctrl-label">ចេញ</span>
+            <span class="sb-ctrl-label">Logout</span>
           </button>
         </div>
         ${(function(){
@@ -114,11 +114,11 @@
             : (_a && _a.exp ? _a.exp : 0);
           if (_a && _expMs) {
             var _d = Math.ceil((_expMs - Date.now()) / 86400000);
-            if (_d <= 0)     _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(239,68,68,.18);color:#ef4444;margin-left:4px">ផុតកំណត់</span>';
-            else if (_d <= 3)_exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:4px">'+_d+' ថ្ងៃ</span>';
-            else             _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(16,185,129,.13);color:#10b981;margin-left:4px">'+_d+' ថ្ងៃ</span>';
+            if (_d <= 0)     _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(239,68,68,.18);color:#ef4444;margin-left:4px">Expired</span>';
+            else if (_d <= 3)_exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:4px">'+_d+' days</span>';
+            else             _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(16,185,129,.13);color:#10b981;margin-left:4px">'+_d+' days</span>';
           }
-          var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowProfileModal&&window._hlShowProfileModal()" title="ព័ត៌មានគណនី"' : '';
+          var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowProfileModal&&window._hlShowProfileModal()" title="Account Info"' : '';
           var _photo = localStorage.getItem('helen_user_photo') || '';
           var _avatarInner = _photo
             ? '<img src="'+_photo+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
@@ -184,11 +184,11 @@
       + '<div style="width:48px;height:48px;background:rgba(239,68,68,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">'
       + '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
       + '</div>'
-      + '<div style="font-size:16px;font-weight:800;color:'+textPri+';margin-bottom:6px;font-family:inherit">ចាកចេញ?</div>'
-      + '<div style="font-size:12.5px;color:'+textSec+';margin-bottom:22px;line-height:1.6">អ្នកពិតជាចង់ចាកចេញ<br>ពីប្រព័ន្ធ HELEN LOAN?</div>'
+      + '<div style="font-size:16px;font-weight:800;color:'+textPri+';margin-bottom:6px;font-family:inherit">Sign Out?</div>'
+      + '<div style="font-size:12.5px;color:'+textSec+';margin-bottom:22px;line-height:1.6">Are you sure you want to<br>sign out of HELEN LOAN?</div>'
       + '<div style="display:flex;gap:10px">'
-      + '<button id="hlLogoutCancel" style="flex:1;padding:11px;border-radius:11px;border:1.5px solid '+btnBdr+';background:transparent;color:'+btnClr+';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s">បោះបង់</button>'
-      + '<button id="hlLogoutOk" style="flex:1;padding:11px;border-radius:11px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(239,68,68,.35)">ចាកចេញ</button>'
+      + '<button id="hlLogoutCancel" style="flex:1;padding:11px;border-radius:11px;border:1.5px solid '+btnBdr+';background:transparent;color:'+btnClr+';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s">Cancel</button>'
+      + '<button id="hlLogoutOk" style="flex:1;padding:11px;border-radius:11px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(239,68,68,.35)">Sign Out</button>'
       + '</div>'
       + '</div>';
     document.body.appendChild(m);
