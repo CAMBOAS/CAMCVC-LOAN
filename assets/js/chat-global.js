@@ -341,9 +341,8 @@
     var img=_chatImg;
     if (!text&&!img) return;
     var btn=document.getElementById('gcSendBtn'); btn.disabled=true;
-    var r = await gcPost({ action:'helen_msg_send', to:_chatWith, body:text, image_url:img });
+    await gcPost({ action:'helen_msg_send', to:_chatWith, body:text, image_url:img });
     input.value=''; gcClearImg();
-    if (r && r.ok) playSentSound();
     await gcLoadMsgs(true);
     btn.disabled=false;
     input.focus();
