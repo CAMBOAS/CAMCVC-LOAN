@@ -72,6 +72,18 @@
     /* highlight matched text */
     .rt-hl { background:rgba(167,139,250,.28); border-radius:2px; padding:0 1px }
 
+    /* ── Date filter ── */
+    .rt-date-sep { width:1px; height:18px; background:var(--rt-input-border); flex-shrink:0 }
+    .rt-custom-row { flex-basis:100%; display:none; align-items:center; gap:8px; padding-top:8px; border-top:1px solid var(--rt-border); margin-top:2px; flex-wrap:wrap }
+    .rt-custom-row.show { display:flex }
+    .rt-date-lbl { font-size:11px; font-weight:700; color:var(--rt-muted); white-space:nowrap; text-transform:uppercase; letter-spacing:.04em }
+    .rt-date-input { background:var(--rt-input); border:1px solid var(--rt-input-border); color:var(--rt-text); border-radius:8px; padding:5px 9px; font-size:12px; font-family:inherit; outline:none; cursor:pointer; color-scheme:dark; transition:border-color .15s }
+    [data-theme="light"] .rt-date-input { color-scheme:light }
+    .rt-date-input:focus { border-color:rgba(167,139,250,.55) }
+    .rt-date-arr { font-size:12px; color:var(--rt-muted) }
+    .rt-date-clear { padding:5px 10px; border-radius:8px; border:1px solid var(--rt-input-border); background:transparent; color:var(--rt-muted); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .rt-date-clear:hover { color:var(--rt-red); border-color:var(--rt-red) }
+
     /* ── Tabs ── */
     /* ── Tabs (inline, right side of toolbar) ── */
     .rt-tabs { display:flex; gap:4px; margin-left:auto; flex-shrink:0 }
@@ -278,6 +290,18 @@
         <select class="rt-group-sel" id="rtGroupSel" onchange="applyFilter()">
           <option value="">All Groups</option>
         </select>
+        <div class="rt-date-sep"></div>
+        <!-- Date preset -->
+        <select class="rt-group-sel" id="rtDatePreset" onchange="applyDateFilter()" title="Filter by date">
+          <option value="">📅 All Dates</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="last30">Last 30 Days</option>
+          <option value="last3m">Last 3 Months</option>
+          <option value="year">This Year</option>
+          <option value="custom">⚙ Custom Range…</option>
+        </select>
         <button class="rt-refresh-btn" onclick="loadData()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           Refresh
@@ -287,6 +311,15 @@
           <button class="rt-tab active" onclick="switchTab('all',this)">All <span class="rt-tab-badge" id="badgeAll">0</span></button>
           <button class="rt-tab" onclick="switchTab('unpaid',this)">⏳ Unpaid <span class="rt-tab-badge" id="badgeUnpaid">0</span></button>
           <button class="rt-tab" onclick="switchTab('paid',this)">✅ Paid <span class="rt-tab-badge" id="badgePaid">0</span></button>
+        </div>
+        <!-- Custom date range row (shown when custom preset selected) -->
+        <div class="rt-custom-row" id="rtCustomRow">
+          <span class="rt-date-lbl">From</span>
+          <input class="rt-date-input" type="date" id="rtDateFrom" onchange="applyDateFilter()">
+          <span class="rt-date-arr">→</span>
+          <span class="rt-date-lbl">To</span>
+          <input class="rt-date-input" type="date" id="rtDateTo" onchange="applyDateFilter()">
+          <button class="rt-date-clear" onclick="clearDateFilter()">✕ Clear</button>
         </div>
       </div>
       <div id="rtCountLabel" style="display:none"></div>
@@ -473,6 +506,9 @@ var _search     = '';
 var _sortKey    = '_date';
 var _sortDir    = -1;
 var _selectedKey = null;
+var _datePreset = '';
+var _dateFrom   = '';
+var _dateTo     = '';
 
 /* ── Helpers ── */
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -773,13 +809,60 @@ function highlight(text, q) {
     + esc(s.substring(idx+q.length));
 }
 
+/* ── Date range helpers ── */
+function dateRangeBounds() {
+  if (!_datePreset) return null;
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  if (_datePreset === 'today') {
+    var s = new Date(y, m, d, 0, 0, 0, 0);
+    var e = new Date(y, m, d, 23, 59, 59, 999);
+    return { from: s.getTime(), to: e.getTime() };
+  }
+  if (_datePreset === 'week') {
+    var dow = now.getDay(); // 0=Sun
+    var s = new Date(y, m, d - dow, 0, 0, 0, 0);
+    var e = new Date(y, m, d - dow + 6, 23, 59, 59, 999);
+    return { from: s.getTime(), to: e.getTime() };
+  }
+  if (_datePreset === 'month') {
+    var s = new Date(y, m, 1, 0, 0, 0, 0);
+    var e = new Date(y, m + 1, 0, 23, 59, 59, 999);
+    return { from: s.getTime(), to: e.getTime() };
+  }
+  if (_datePreset === 'last30') {
+    var s = new Date(y, m, d - 29, 0, 0, 0, 0);
+    return { from: s.getTime(), to: Infinity };
+  }
+  if (_datePreset === 'last3m') {
+    var s = new Date(y, m - 3, d, 0, 0, 0, 0);
+    return { from: s.getTime(), to: Infinity };
+  }
+  if (_datePreset === 'year') {
+    var s = new Date(y, 0, 1, 0, 0, 0, 0);
+    var e = new Date(y, 11, 31, 23, 59, 59, 999);
+    return { from: s.getTime(), to: e.getTime() };
+  }
+  if (_datePreset === 'custom') {
+    var from = _dateFrom ? new Date(_dateFrom + 'T00:00:00').getTime() : 0;
+    var to   = _dateTo   ? new Date(_dateTo   + 'T23:59:59').getTime() : Infinity;
+    return { from: from, to: to };
+  }
+  return null;
+}
+
 /* ── Filter + sort ── */
 function filtered() {
   var q = _search.toLowerCase();
+  var bounds = dateRangeBounds();
   var list = _loans.filter(function(l) {
     if (_group && l.Groups !== _group) return false;
     if (_tab === 'paid')   { if (!l.Paid) return false; }
     if (_tab === 'unpaid') { if (l.Paid)  return false; }
+    if (bounds) {
+      var ts = dateTs(l.DateTime);
+      if (ts < bounds.from || ts > bounds.to) return false;
+    }
     if (q) {
       var hay = [l.FullName, l.NationalID, l.Phone, l.Groups, l.Status, l.Note]
         .map(function(v){ return String(v||'').toLowerCase(); }).join(' ');
@@ -877,6 +960,32 @@ function switchTab(tab,btn) {
 /* ── Group filter ── */
 function applyFilter() {
   _group = document.getElementById('rtGroupSel').value;
+  render();
+}
+
+/* ── Date filter ── */
+function applyDateFilter() {
+  _datePreset = document.getElementById('rtDatePreset').value;
+  var customRow = document.getElementById('rtCustomRow');
+  if (_datePreset === 'custom') {
+    customRow.classList.add('show');
+    _dateFrom = document.getElementById('rtDateFrom').value;
+    _dateTo   = document.getElementById('rtDateTo').value;
+  } else {
+    customRow.classList.remove('show');
+    _dateFrom = '';
+    _dateTo   = '';
+  }
+  render();
+}
+function clearDateFilter() {
+  _datePreset = '';
+  _dateFrom   = '';
+  _dateTo     = '';
+  document.getElementById('rtDatePreset').value = '';
+  document.getElementById('rtDateFrom').value   = '';
+  document.getElementById('rtDateTo').value     = '';
+  document.getElementById('rtCustomRow').classList.remove('show');
   render();
 }
 
