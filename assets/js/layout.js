@@ -58,7 +58,7 @@
   var _PERMS = {
     delete:   ['Admin','Owner','Moderator'],
     write:    ['Admin','Owner','Staff Loan','Staff','Moderator','Tester'],
-    reports:  ['Admin','Owner','Staff','Moderator','Viewer'],
+    reports:  ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer'],
     actAll:   ['Admin','Owner','Moderator'],
     settings: ['Admin']
   };
