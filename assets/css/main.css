@@ -2873,8 +2873,8 @@ body.sb-collapsed .main-content {
 [data-theme="light"] .sb-ctrl-btn:hover {
   background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.28); color: #4f46e5;
 }
-.sb-ctrl-btn .sb-theme-icon { width: 15px; height: 15px; flex-shrink: 0; display: flex; align-items: center; }
-.sb-ctrl-btn .sb-theme-icon svg { width: 15px; height: 15px; }
+.sb-ctrl-btn .sb-theme-icon { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; }
+.sb-ctrl-btn .sb-theme-icon svg { width: 16px; height: 16px; }
 .sb-ctrl-label { line-height: 1; }
 
 /* Logout button — red hover */
