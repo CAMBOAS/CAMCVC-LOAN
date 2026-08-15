@@ -893,8 +893,8 @@ var _me = HelenAuth.get(); /* { u, p, name, role } */
 
 var _allLoans   = [];
 var _filtered   = [];
-var _sortCol    = '_idx';
-var _sortAsc    = true;
+var _sortCol    = '_date';
+var _sortAsc    = false;
 
 /* ── Helpers ── */
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1084,7 +1084,7 @@ var _helenInfor = { groups: [], statuses: [], socialMedia: [] };
 
 function applyData_(data) {
   _allLoans = (data.ok && Array.isArray(data.loans)) ? data.loans : [];
-  _allLoans.forEach(function(l,i){ l._idx=i+1; l._date=(l.DateTime||'').split('T')[0]; });
+  _allLoans.forEach(function(l,i){ l._idx=i+1; l._date=l.DateTime||''; });
   if (data.ok) {
     _helenInfor.groups      = Array.isArray(data.groups)      ? data.groups.filter(function(g){ return g && g.toLowerCase() !== 'groups'; })          : [];
     _helenInfor.statuses    = Array.isArray(data.statuses)    ? data.statuses.filter(function(s){ return s && s.toLowerCase() !== 'status'; })          : [];
