@@ -118,11 +118,12 @@
     .rt-tag { display:inline-flex; align-items:center; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:700; white-space:nowrap }
 
     /* ── Paid btn (table) ── */
-    .rt-paid-btn { border:none; background:rgba(148,163,184,.1); color:var(--rt-muted); border-radius:6px; width:28px; height:24px; font-size:13px; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
-    .rt-paid-btn:hover { background:rgba(74,222,128,.15); color:var(--rt-green) }
-    .rt-paid-btn.paid { background:rgba(74,222,128,.15); color:var(--rt-green) }
-    .rt-paid-btn.paid:hover { background:rgba(248,113,113,.12); color:var(--rt-red) }
-    [data-theme="light"] .rt-paid-btn.paid { background:rgba(21,128,61,.1); color:#15803d }
+    .rt-paid-btn { border:1px solid rgba(148,163,184,.25); background:rgba(148,163,184,.08); color:rgba(148,163,184,.6); border-radius:6px; width:28px; height:24px; font-size:13px; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
+    .rt-paid-btn:hover { background:rgba(74,222,128,.18); border-color:rgba(74,222,128,.5); color:#4ade80 }
+    .rt-paid-btn.paid { background:rgba(74,222,128,.2); border:1.5px solid rgba(74,222,128,.7); color:#22c55e }
+    .rt-paid-btn.paid:hover { background:rgba(248,113,113,.15); border-color:rgba(248,113,113,.6); color:#f87171 }
+    [data-theme="light"] .rt-paid-btn { border-color:rgba(100,116,139,.25); color:rgba(100,116,139,.5) }
+    [data-theme="light"] .rt-paid-btn.paid { background:rgba(21,128,61,.12); border-color:rgba(21,128,61,.6); color:#15803d }
 
     /* ── Money ── */
     .rt-money { font-variant-numeric:tabular-nums; font-weight:700; text-align:right; white-space:nowrap }
