@@ -106,9 +106,14 @@
     'font-size:11px;font-weight:800;color:#7c5cff;border:1.5px solid rgba(124,92,255,.18);}',
     '.gc-msg-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}',
     '.gc-msg-av.gc-av-hide{visibility:hidden;}',
+    '.gc-my-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;overflow:hidden;',
+    'background:linear-gradient(145deg,#9333ea,#6d28d9);display:flex;align-items:center;justify-content:center;',
+    'font-size:11px;font-weight:800;color:#fff;border:1.5px solid rgba(124,58,237,.35);box-shadow:0 2px 8px rgba(109,40,217,.3);}',
+    '.gc-my-av.gc-av-hide{visibility:hidden;}',
     /* bubbles */
     '.gc-bubble{max-width:72%;border-radius:18px;padding:9px 13px;word-break:break-word;line-height:1.55;}',
-    '.gc-bubble.mine{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-bottom-right-radius:5px;box-shadow:0 2px 10px rgba(124,58,237,.25);}',
+    '.gc-bubble.mine{background:linear-gradient(145deg,#9333ea 0%,#7c3aed 45%,#5b21b6 100%);color:#fff;border-bottom-right-radius:5px;',
+    'box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 16px rgba(109,40,217,.35);}',
     '.gc-bubble.theirs{background:#ffffff;color:var(--gc-text);border-bottom-left-radius:5px;',
     'border:1px solid rgba(148,163,184,.22);box-shadow:0 1px 6px rgba(0,0,0,.07);}',
     '[data-theme="dark"] .gc-bubble.theirs{background:rgba(255,255,255,.07);border-color:rgba(148,163,184,.18);box-shadow:0 1px 6px rgba(0,0,0,.25);}',
@@ -117,7 +122,7 @@
     '.gc-bubble.theirs .gc-ts{text-align:left;}',
     /* seen / sent receipt */
     '.gc-receipt{display:flex;align-items:center;justify-content:flex-end;gap:3px;',
-    'font-size:10px;font-weight:600;margin-top:2px;margin-right:2px;padding-bottom:4px;}',
+    'font-size:10px;font-weight:600;margin-top:2px;margin-right:36px;padding-bottom:4px;}',
     '.gc-receipt.seen{color:#22c55e;}.gc-receipt.sent{color:#94a3b8;}',
     '.gc-empty{text-align:center;color:var(--gc-muted);font-size:13px;margin:auto;padding:20px 0;}',
     '.gc-loading{display:flex;align-items:center;justify-content:center;padding:30px 0;}',
@@ -287,6 +292,12 @@
     return '<div class="gc-msg-av'+(visible?'':' gc-av-hide')+'">'+inner+'</div>';
   }
 
+  /* ── Avatar HTML for right (mine) bubbles ── */
+  function _myAvatar(visible) {
+    var init = (getMyUsername()||'?').charAt(0).toUpperCase();
+    return '<div class="gc-my-av'+(visible?'':' gc-av-hide')+'">'+esc(init)+'</div>';
+  }
+
   var _SEEN_SVG='<svg width="14" height="10" viewBox="0 0 18 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 6 5 10 11 2"/><polyline points="7 6 11 10 17 2"/></svg>';
   var _SENT_SVG='<svg width="12" height="10" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 6 5 10 13 2"/></svg>';
 
@@ -313,15 +324,18 @@
       var mine=m.sender===myUser;
       var ds=fmtDate(m.created_at);
       if (ds!==prevDate){ html+='<div class="gc-date-sep"><span>'+esc(ds)+'</span></div>'; prevDate=ds; }
-      /* show avatar only on last consecutive theirs message */
-      var isLastInSeq = !mine && (i===msgs.length-1 || msgs[i+1].sender===myUser);
+      /* show avatar only on last consecutive message in each sequence */
+      var isLastInSeq     = !mine && (i===msgs.length-1 || msgs[i+1].sender===myUser);
+      var isLastMineInSeq =  mine && (i===msgs.length-1 || msgs[i+1].sender!==myUser);
       html+='<div class="gc-row '+(mine?'mine':'theirs')+'">';
       if (!mine) html+=_theirAvatar(isLastInSeq);
       html+='<div class="gc-bubble '+(mine?'mine':'theirs')+'">';
       if (m.image_url) html+='<img class="gc-img-msg" src="'+esc(m.image_url)+'" onclick="window.open(\''+esc(m.image_url)+'\',\'_blank\')" loading="lazy">';
       if (m.body)      html+='<div class="gc-text">'+esc(m.body).replace(/\n/g,'<br>')+'</div>';
       html+='<div class="gc-ts">'+esc(fmtTime(m.created_at))+'</div>';
-      html+='</div></div>';
+      html+='</div>';
+      if (mine) html+=_myAvatar(isLastMineInSeq);
+      html+='</div>';
       /* receipt: show below the relevant mine message */
       if (mine && i===lastSeenMineIdx) {
         html+='<div class="gc-receipt seen">'+_SEEN_SVG+'Seen</div>';
