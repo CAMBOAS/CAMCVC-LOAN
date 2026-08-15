@@ -225,6 +225,25 @@
     .rt-dp-save:hover { opacity:.9; transform:translateY(-1px) }
     .rt-dp-save:active { transform:none }
     .rt-dp-save:disabled { opacity:.5; cursor:not-allowed; transform:none }
+    /* delete btn */
+    .rt-dp-del { width:100%; padding:9px; border-radius:10px; border:1px solid rgba(239,68,68,.35); background:rgba(239,68,68,.07); color:#f87171; font-size:12.5px; font-weight:700; cursor:pointer; transition:.15s; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:7px }
+    .rt-dp-del:hover { background:rgba(239,68,68,.18); border-color:rgba(239,68,68,.6) }
+    .rt-dp-del:active { transform:none }
+    .rt-dp-del:disabled { opacity:.4; cursor:not-allowed }
+    /* delete confirm overlay */
+    .rt-del-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:8000; display:flex; align-items:center; justify-content:center; padding:20px }
+    .rt-del-box { background:#1a1a2e; border:1px solid rgba(239,68,68,.3); border-radius:18px; padding:28px 24px 22px; max-width:340px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.6); text-align:center }
+    [data-theme="light"] .rt-del-box { background:#fff; border-color:rgba(239,68,68,.25); box-shadow:0 12px 40px rgba(0,0,0,.15) }
+    .rt-del-icon { font-size:36px; margin-bottom:10px }
+    .rt-del-title { font-size:16px; font-weight:800; color:var(--rt-text); margin-bottom:6px }
+    .rt-del-msg { font-size:12.5px; color:var(--rt-muted); line-height:1.5; margin-bottom:20px }
+    .rt-del-name { font-weight:700; color:var(--rt-text) }
+    .rt-del-btns { display:flex; gap:9px }
+    .rt-del-cancel { flex:1; padding:10px; border-radius:10px; border:1px solid var(--rt-input-border); background:var(--rt-input); color:var(--rt-muted); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .rt-del-cancel:hover { color:var(--rt-text) }
+    .rt-del-ok { flex:1; padding:10px; border-radius:10px; border:none; background:linear-gradient(135deg,#dc2626,#ef4444); color:#fff; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:.15s; display:flex; align-items:center; justify-content:center; gap:6px }
+    .rt-del-ok:hover { opacity:.9 }
+    .rt-del-ok:disabled { opacity:.5; cursor:not-allowed }
 
     /* toast */
     .rt-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1e1e28; border:1px solid rgba(167,139,250,.3); color:#e2e8f0; padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:9999; transition:transform .25s ease, opacity .25s ease; opacity:0; pointer-events:none; white-space:nowrap; box-shadow:0 8px 24px rgba(0,0,0,.4) }
@@ -473,6 +492,11 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 Save Changes
               </button>
+              <!-- Delete -->
+              <button class="rt-dp-del" id="dpDelBtn" onclick="confirmDelete()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                Delete Borrower
+              </button>
 
             </div><!-- rt-dp-body -->
           </div><!-- rtDetailContent -->
@@ -486,6 +510,22 @@
 <!-- Hidden file inputs -->
 <input type="file" id="dpMainPhotoFile" accept="image/*"        style="display:none" onchange="onMainPhotoChange(this)">
 <input type="file" id="dpMediaFile"     accept="image/*,video/*" style="display:none" onchange="onMediaAdd(this)">
+
+<!-- Delete Confirm Modal -->
+<div class="rt-del-overlay" id="rtDelOverlay" style="display:none" onclick="if(event.target===this)closeDeleteConfirm()">
+  <div class="rt-del-box">
+    <div class="rt-del-icon">🗑️</div>
+    <div class="rt-del-title">Delete Borrower?</div>
+    <div class="rt-del-msg">You are about to delete <span class="rt-del-name" id="rtDelName">—</span>.<br>This will move them to Trash and can be recovered later.</div>
+    <div class="rt-del-btns">
+      <button class="rt-del-cancel" onclick="closeDeleteConfirm()">Cancel</button>
+      <button class="rt-del-ok" id="rtDelOkBtn" onclick="doDelete()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Toast -->
 <div class="rt-toast" id="rtToast"></div>
@@ -1146,6 +1186,43 @@ async function saveLoan() {
   } catch(e) { toast('❌ '+e.message); }
   btn.disabled = false;
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes';
+}
+
+/* ── Delete loan ── */
+function confirmDelete() {
+  if (!_selectedKey) return;
+  var loan = _loans.find(function(l){ return l.DateTime === _selectedKey; });
+  if (!loan) return;
+  document.getElementById('rtDelName').textContent = loan.FullName || '—';
+  document.getElementById('rtDelOverlay').style.display = 'flex';
+}
+function closeDeleteConfirm() {
+  document.getElementById('rtDelOverlay').style.display = 'none';
+  var btn = document.getElementById('rtDelOkBtn');
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Delete'; }
+}
+async function doDelete() {
+  if (!_selectedKey) return;
+  var btn = document.getElementById('rtDelOkBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="rt-spin" style="width:12px;height:12px;border-width:2px"></div> Deleting…';
+  try {
+    var res = await CamboAPI.post({ action: 'helen_loan_delete', key: _selectedKey });
+    if (res && res.ok) {
+      _loans = _loans.filter(function(l){ return l.DateTime !== _selectedKey; });
+      _selectedKey = null;
+      closeDeleteConfirm();
+      document.getElementById('rtDetailContent').style.display = 'none';
+      render();
+      toast('🗑️ Borrower moved to Trash');
+    } else {
+      toast('❌ ' + (res && res.message || 'Delete failed'));
+      closeDeleteConfirm();
+    }
+  } catch(e) {
+    toast('❌ ' + e.message);
+    closeDeleteConfirm();
+  }
 }
 
 /* ── Load ── */
