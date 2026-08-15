@@ -375,12 +375,50 @@
       var prev=_prevCounts[u.sender]||0;
       if (u.count>prev && u.sender!==_chatWith) {
         showNotif(u.sender, u.display_name, u.photo_url, u.count);
+        playNotifSound();
       }
     });
     _prevCounts=newCounts;
 
     /* broadcast for team.html badges */
     document.dispatchEvent(new CustomEvent('helen-unread-update', { detail:{ counts:res.counts||{}, unread:unread } }));
+  }
+
+  /* ── Notification sound (Web Audio API — no file needed) ── */
+  var _audioCtx = null;
+  function _getCtx() {
+    if (!_audioCtx || _audioCtx.state === 'closed') {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      _audioCtx = new AC();
+    }
+    return _audioCtx;
+  }
+  /* Resume context on first user interaction (browser autoplay policy) */
+  document.addEventListener('click', function _resume() {
+    var c = _getCtx(); if (c && c.state === 'suspended') c.resume();
+    document.removeEventListener('click', _resume);
+  }, { once: true });
+
+  function playNotifSound() {
+    try {
+      var ctx = _getCtx(); if (!ctx) return;
+      if (ctx.state === 'suspended') { ctx.resume(); }
+      var now = ctx.currentTime;
+      function tone(freq, start, dur, vol) {
+        var osc  = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(vol, start + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(start); osc.stop(start + dur);
+      }
+      tone(988,  now,        0.35, 0.22);  /* B5 */
+      tone(1319, now + 0.12, 0.30, 0.15); /* E6 */
+    } catch(e) {}
   }
 
   /* ── Start polling ── */
