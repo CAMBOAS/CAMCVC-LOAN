@@ -493,12 +493,22 @@ async function loadChatMsgs(scrollToBottom) {
   if (!_chatWith) return;
   try {
     var res=await CamboAPI.post({ action:'helen_msg_list', with:_chatWith });
-    if (!res||!res.ok) return;
+    if (!res||!res.ok) {
+      var msgsEl=document.getElementById('chatMsgs');
+      if (msgsEl.querySelector('.chat-spin-sm')) {
+        msgsEl.innerHTML='<div class="chat-empty-txt" style="color:#ef4444">'+(res&&res.message?res.message:'Could not load messages — retrying…')+'</div>';
+      }
+      return;
+    }
     renderChatMsgs(res.messages||[], scrollToBottom);
-    // clear unread badge for this user
     var card=document.querySelector('.tm-card[data-username="'+_chatWith+'"]');
     if (card){ var b=card.querySelector('.tm-unread'); if(b) b.remove(); }
-  } catch(e){}
+  } catch(e){
+    var msgsEl=document.getElementById('chatMsgs');
+    if (msgsEl&&msgsEl.querySelector('.chat-spin-sm')) {
+      msgsEl.innerHTML='<div class="chat-empty-txt" style="color:#ef4444">Connection error — retrying…</div>';
+    }
+  }
 }
 
 function fmtChatTime(dtStr) {
