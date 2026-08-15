@@ -334,10 +334,12 @@ export default async function handler(req, res) {
     /* ── Activity Log list ── */
     if (action === 'helen_activity_list') {
       await ensureActivityLogTable();
+      const isAdmin = _bv.role === 'Admin';
       const limit  = Math.min(parseInt(body.limit||150, 10), 500);
       const offset = parseInt(body.offset||0, 10);
       const fAct   = String(body.filter_action||'').trim();
-      const fUser  = String(body.filter_actor||'').trim();
+      /* Non-Admin can only see their own activity — force actor_user to self */
+      const fUser  = isAdmin ? String(body.filter_actor||'').trim() : _bu;
       let sql = 'SELECT * FROM helen_activity_log';
       const params = [];
       const wheres = [];
@@ -347,8 +349,15 @@ export default async function handler(req, res) {
       sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
       params.push(limit, offset);
       const [logs] = await db().query(sql, params);
-      const [[tot]] = await db().query('SELECT COUNT(*) AS total FROM helen_activity_log');
-      return res.json({ ok: true, logs, total: tot.total });
+      /* Total count respects same filter */
+      let countSql = 'SELECT COUNT(*) AS total FROM helen_activity_log';
+      const countParams = [];
+      const countWheres = [];
+      if (fAct)  { countWheres.push('action=?');     countParams.push(fAct); }
+      if (fUser) { countWheres.push('actor_user=?'); countParams.push(fUser); }
+      if (countWheres.length) countSql += ' WHERE ' + countWheres.join(' AND ');
+      const [[tot]] = await db().query(countSql, countParams);
+      return res.json({ ok: true, logs, total: tot.total, is_admin: isAdmin });
     }
 
     /* ── Infor only ── */

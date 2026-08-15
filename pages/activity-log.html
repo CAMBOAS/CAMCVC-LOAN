@@ -140,9 +140,12 @@
           <option value="user_edit">User Edited</option>
           <option value="user_delete">User Deleted</option>
         </select>
-        <select class="al-filter-sel" id="alFilterActor" onchange="applyFilter()">
+        <select class="al-filter-sel" id="alFilterActor" onchange="applyFilter()" style="display:none">
           <option value="">All Users</option>
         </select>
+        <span id="alMyOnlyBadge" style="display:none;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;background:rgba(124,92,255,.1);color:#7c5cff;white-space:nowrap">
+          My activity only
+        </span>
         <button class="al-refresh-btn" onclick="loadData()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           Refresh
@@ -176,6 +179,18 @@ var _offset    = 0;
 var _total     = 0;
 var _PAGE      = 150;
 var _actors    = new Set();
+
+function _isAdmin() {
+  try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a && a.role === 'Admin'; } catch(e) { return false; }
+}
+
+function _initRoleUI() {
+  var admin = _isAdmin();
+  var actorSel   = document.getElementById('alFilterActor');
+  var myBadge    = document.getElementById('alMyOnlyBadge');
+  if (actorSel) actorSel.style.display = admin ? '' : 'none';
+  if (myBadge)  myBadge.style.display  = admin ? 'none' : '';
+}
 
 var ACTION_META = {
   loan_add:     { label:'Loan Added',     icon:'➕', cls:'add'    },
@@ -334,6 +349,7 @@ function updateKpi(logs, total) {
 }
 
 function updateActorFilter(logs) {
+  if (!_isAdmin()) return; /* Staff sees no user filter */
   logs.forEach(function(l){ if (l.actor_user) _actors.add(l.actor_user+'|'+(l.actor||l.actor_user)); });
   var sel = document.getElementById('alFilterActor');
   var cur = sel.value;
@@ -413,6 +429,7 @@ function applyFilter() {
 
 document.addEventListener('DOMContentLoaded', function() {
   if (window.HelenAuth && !window.HelenAuth.check()) return;
+  _initRoleUI();
   loadData();
 });
 </script>
