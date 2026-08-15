@@ -322,15 +322,25 @@ function _myUser() {
 }
 function _myPhoto() { return localStorage.getItem('helen_user_photo') || ''; }
 function _buildPhotoCache(logs) {
-  /* Seed with current user's own photo from localStorage */
   var mu = _myUser(), mp = _myPhoto();
   if (mu && mp) _photoCache[mu] = mp;
-  /* Fill from JOIN results (actor_photo from helen_users) */
   (logs || []).forEach(function(l) {
     if (l.actor_user && l.actor_photo && !_photoCache[l.actor_user]) {
       _photoCache[l.actor_user] = l.actor_photo;
     }
   });
+}
+/* Admin: pre-load all user photos from helen_user_list so cache is ready before render */
+async function _loadUserPhotos() {
+  if (!_isAdmin()) return;
+  try {
+    var res = await CamboAPI.post({ action: 'helen_user_list' });
+    if (res && res.ok && res.users) {
+      res.users.forEach(function(u) {
+        if (u.username && u.photo_url) _photoCache[u.username] = u.photo_url;
+      });
+    }
+  } catch(e) {}
 }
 
 function avatar(log) {
@@ -625,11 +635,12 @@ async function loadMore() {
   if (btn) { btn.disabled = false; btn.textContent = 'Load more'; }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   if (window.HelenAuth && !window.HelenAuth.check()) return;
-  _buildPhotoCache([]);   /* seed current user's own photo immediately */
+  _buildPhotoCache([]);
   _initRoleUI();
   switchTab('all');
+  await _loadUserPhotos();   /* pre-populate photos before first render */
   loadData();
 });
 </script>
