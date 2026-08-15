@@ -57,6 +57,14 @@ async function ensureCreatedByCol() {
   _createdByColReady = true;
 }
 
+/* ── One-time migration: add created_by_user column (login username) to helen_loans if absent ── */
+let _createdByUserColReady = false;
+async function ensureCreatedByUserCol() {
+  if (_createdByUserColReady) return;
+  try { await db().query('ALTER TABLE helen_loans ADD COLUMN created_by_user VARCHAR(100) DEFAULT NULL'); } catch(e) {}
+  _createdByUserColReady = true;
+}
+
 /* ── Map DB row → frontend loan object ── */
 function rowToLoan(r) {
   return {
@@ -76,7 +84,7 @@ function rowToLoan(r) {
     ID:          r.social_id    || '',
     FBID:        r.fbid         || '',
     Paid:        r.paid ? 1 : 0,
-    created_by:  r.created_by   || '',
+    created_by:  r.creator_display_name || r.created_by || '',
     photo_url:   r.photo_url    || '',
     photos:      (() => { try { if (!r.photos) return []; if (Array.isArray(r.photos)) return r.photos; return JSON.parse(r.photos) || []; } catch(e) { return []; } })(),
     social_links: (() => {
@@ -257,7 +265,7 @@ export default async function handler(req, res) {
 
     /* ── All data (loans + infor) ── */
     if (action === 'helen_all') {
-      const [loans] = await db().query('SELECT * FROM helen_loans WHERE deleted_at IS NULL ORDER BY loan_key DESC');
+      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL ORDER BY l.loan_key DESC`);
       const [infor] = await db().query('SELECT type, value FROM helen_infor ORDER BY id');
       return res.json({
         ok:          true,
@@ -281,7 +289,7 @@ export default async function handler(req, res) {
 
     /* ── Trash list ── */
     if (action === 'helen_loan_list_trash') {
-      const [loans] = await db().query('SELECT * FROM helen_loans WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC');
+      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.deleted_at IS NOT NULL ORDER BY l.deleted_at DESC`);
       return res.json({ ok:true, loans: loans.map(rowToLoan) });
     }
 
@@ -306,6 +314,7 @@ export default async function handler(req, res) {
       await ensureSocialLinksCol();
       await ensurePaidCol();
       await ensureCreatedByCol();
+      await ensureCreatedByUserCol();
       const l = body.loan || {};
       const datePart = l.DateTime ? l.DateTime.substring(0, 10) : new Date().toISOString().substring(0, 10);
       const key = datePart + 'T' + new Date().toISOString().substring(11);
@@ -314,12 +323,12 @@ export default async function handler(req, res) {
       const sl0 = (l.social_links||[])[0] || {};
       await db().query(
         `INSERT INTO helen_loans
-           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photo_url,photos,social_links,paid,created_by)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photo_url,photos,social_links,paid,created_by,created_by_user)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [key, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
          l.Note||'', sl0.name||l.FBName||'', sl0.url||l.URL||'', sl0.platform||l.FacebookCom||'', sl0.id||l.ID||'', sl0.fbid||l.FBID||'',
-         l.photo_url||null, photosJson, slJson, l.Paid ? 1 : 0, actor||null]
+         l.photo_url||null, photosJson, slJson, l.Paid ? 1 : 0, actor||null, _bu||null]
       );
       const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('add'))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
