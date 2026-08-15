@@ -288,7 +288,7 @@ function renderProfile(loan, history, key) {
     + '<div class="bp-hero-meta">'
     + (loan.NationalID ? '<span class="bp-nid-badge">'+esc(loan.NationalID)+'</span>' : '')
     + statusTag(loan.Status)
-    + (loan.Paid ? '<span class="bp-paid-yes">✓ Paid</span>' : '')
+    + (loan.Paid ? '<span class="bp-paid-yes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>Paid</span>' : '')
     + '</div>'
     + '<div class="bp-hero-stats">'
     + (loan.DOB ? '<div class="bp-hero-stat"><span class="bp-hero-stat-label">Date of Birth</span><span class="bp-hero-stat-val">'+esc(loan.DOB)+'</span></div>' : '')
@@ -306,7 +306,7 @@ function renderProfile(loan, history, key) {
     + '<div class="bp-card-title">Loan Details</div>'
     + (loan.Money ? '<div class="bp-amount">$'+esc(String(loan.Money))+'</div><div class="bp-amount-sub">Loan Amount</div><div style="height:14px"></div>' : '')
     + '<div class="bp-info-row"><span class="bp-info-lbl">Status</span><span class="bp-info-val">'+statusTag(loan.Status)+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Paid</span><span class="bp-info-val">'+(loan.Paid ? '<span class="bp-paid-yes">✓ Paid</span>' : '<span class="bp-paid-no">— Not Paid</span>')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Paid</span><span class="bp-info-val">'+(loan.Paid ? '<span class="bp-paid-yes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>Paid</span>' : '<span class="bp-paid-no">— Not Paid</span>')+'</span></div>'
     + '<div class="bp-info-row"><span class="bp-info-lbl">Group</span><span class="bp-info-val">'+esc(loan.Groups||'—')+'</span></div>'
     + '<div class="bp-info-row"><span class="bp-info-lbl">Date Added</span><span class="bp-info-val">'+fmtDate(loan.DateTime)+'</span></div>'
     + '<div class="bp-info-row"><span class="bp-info-lbl">Created By</span><span class="bp-info-val" style="color:#a78bfa">'+esc(loan.created_by||'—')+'</span></div>'
@@ -330,7 +330,7 @@ function renderProfile(loan, history, key) {
       + '<div class="bp-social-list">';
     socialLinks.forEach(function(sl) {
       var url = (sl.url||'').trim();
-      var linkBtn = url ? '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" class="bp-social-link" title="Open link">🔗</a>' : '';
+      var linkBtn = url ? '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" class="bp-social-link" title="Open link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>' : '';
       html += '<div class="bp-social-item">'
         + platformIcon(sl.platform)
         + '<div class="bp-social-detail">'
@@ -380,7 +380,7 @@ function renderProfile(loan, history, key) {
         + '<td style="white-space:nowrap">'+fmtDate(h.DateTime)+'</td>'
         + '<td style="color:#22c55e;font-weight:700">'+(h.Money?'$'+h.Money:'—')+'</td>'
         + '<td>'+statusTag(h.Status)+'</td>'
-        + '<td>'+(h.Paid?'<span class="bp-paid-yes">✓</span>':'<span style="color:var(--bp-muted)">—</span>')+'</td>'
+        + '<td>'+(h.Paid?'<span class="bp-paid-yes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>':'<span style="color:var(--bp-muted)">—</span>')+'</td>'
         + '<td style="font-size:12px">'+esc(h.Groups||'—')+'</td>'
         + '<td style="font-size:12px;color:#a78bfa">'+esc(h.created_by||'—')+'</td>'
         + '<td>'+(isCurrent?'<span style="font-size:11px;color:#7c5cff;font-weight:700">Current</span>':'<a href="borrower-profile.html?key='+encodeURIComponent(h.DateTime||'')+'" class="bp-hist-link">View</a>')+'</td>'

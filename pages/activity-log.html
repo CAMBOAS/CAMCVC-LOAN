@@ -631,7 +631,7 @@ async function loadData() {
       filter_action: '', filter_actor: fUser
     });
     if (!data || !data.ok) {
-      document.getElementById('stateAll').innerHTML = '❌ Failed to load';
+      document.getElementById('stateAll').innerHTML = 'Failed to load';
       return;
     }
     _allLogs = data.logs || [];
@@ -645,7 +645,7 @@ async function loadData() {
     document.getElementById('alCount').textContent = _offset + ' / ' + _total + ' events';
     document.getElementById('alLoadMore').style.display = _offset < _total ? '' : 'none';
   } catch(e) {
-    document.getElementById('stateAll').innerHTML = '❌ Error: '+esc(String(e.message||e));
+    document.getElementById('stateAll').innerHTML = 'Error: '+esc(String(e.message||e));
     document.getElementById('stateAll').style.display = '';
   }
 }

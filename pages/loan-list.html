@@ -891,7 +891,7 @@
     <button class="lr-sheet-del" id="lrSheetDelBtn" onclick="sheetDelete()" title="Delete">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     </button>
-    <button class="lr-sheet-edit" id="lrSheetEditBtn" onclick="sheetEdit()">✏️ កែសម្រួល</button>
+    <button class="lr-sheet-edit" id="lrSheetEditBtn" onclick="sheetEdit()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>កែសម្រួល</button>
   </div>
 </div>
 
@@ -1340,7 +1340,7 @@ function renderTable() {
       + '<td style="font-size:11px;color:#a78bfa;white-space:nowrap">'+esc(l.created_by||'—')+'</td>'
       + '<td style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(l.Note||'')+'">'+esc(l.Note||'—')+'</td>'
       + '<td style="font-size:11px;color:var(--text);white-space:nowrap">'+esc(l.FBName||'—')+'</td>'
-      + (function(){ var u=String(l.URL||'').trim(); return u && /^https?:\/\//i.test(u) ? '<td style="text-align:center"><a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" style="color:#60a5fa;font-size:11px">🔗</a></td>' : '<td style="color:var(--muted);font-size:11px;text-align:center">—</td>'; })()
+      + (function(){ var u=String(l.URL||'').trim(); return u && /^https?:\/\//i.test(u) ? '<td style="text-align:center"><a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" style="color:#60a5fa;display:inline-flex;align-items:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>' : '<td style="color:var(--muted);font-size:11px;text-align:center">—</td>'; })()
       + '<td style="font-family:monospace;font-size:10px;color:var(--muted);white-space:nowrap">'+esc(l.ID||'—')+'</td>'
       + (function(){ var fb=String(l.FBID||'').trim(); if(!fb) return '<td style="text-align:center;color:var(--muted);font-size:11px">—</td>'; var href=/^https?:\/\//i.test(fb)?fb:'https://'+fb; return '<td style="text-align:center"><a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="'+esc(fb)+'" style="color:#60a5fa;display:inline-flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>'; })()
       + (_trashMode
@@ -2127,10 +2127,10 @@ async function confirmDelete() {
     if (res && res.ok) {
       showDeleteSuccess_();
     } else {
-      toast('⚠️ ' + (res && res.message ? res.message : 'Server sync failed — Refresh to verify'), true);
+      toast((res && res.message ? res.message : 'Server sync failed — Refresh to verify'), true);
     }
   } catch(e) {
-    toast('⚠️ Connection issue — Refresh to verify delete', true);
+    toast('Connection issue — Refresh to verify delete', true);
   }
 }
 
@@ -2479,7 +2479,7 @@ function _refreshOpenFormDropdowns() {
 }
 async function addInforItem() {
   var val = (document.getElementById('lrInforNewVal').value || '').trim();
-  if (!val) return toast('⚠️ សូមបញ្ចូលឈ្មោះ!');
+  if (!val) return toast('សូមបញ្ចូលឈ្មោះ!');
   try {
     var res = await CamboAPI.post({ action: 'helen_infor_add', type: _inforTab, value: val });
     if (res && res.ok) {
@@ -3000,8 +3000,8 @@ async function onEditPhotoDrop(event) {
 async function saveAdd() {
   var fullName = document.getElementById('af_FullName').value.trim();
   var status   = document.getElementById('af_Status').value;
-  if (!fullName) { toast('⚠️ Full name is required', true); document.getElementById('af_FullName').focus(); return; }
-  if (!status)   { toast('⚠️ Please select a Status', true); document.getElementById('af_Status').focus(); return; }
+  if (!fullName) { toast('Full name is required', true); document.getElementById('af_FullName').focus(); return; }
+  if (!status)   { toast('Please select a Status', true); document.getElementById('af_Status').focus(); return; }
 
   var btn = document.getElementById('lrAddBtn');
   btn.disabled = true; btn.innerHTML = '<span class="lr-btn-spinner"></span>';
@@ -3419,7 +3419,7 @@ function openSheet(loan) {
 
   var phone = loan.Phone ? '<a href="tel:'+esc(loan.Phone)+'">'+esc(loan.Phone)+'</a>' : '—';
   var fbid  = (function(){ var f=String(loan.FBID||'').trim(); if(!f) return '—'; var h=/^https?:\/\//i.test(f)?f:'https://'+f; return '<a href="'+esc(h)+'" target="_blank" rel="noopener noreferrer">'+esc(f)+'</a>'; })();
-  var url   = (function(){ var u=String(loan.URL||'').trim(); return u&&/^https?:\/\//i.test(u)?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">🔗 Link</a>':'—'; })();
+  var url   = (function(){ var u=String(loan.URL||'').trim(); return u&&/^https?:\/\//i.test(u)?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:3px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Link</a>':'—'; })();
   var money = Number(loan.Money||0);
   var moneyVal = isNaN(money)||money===0 ? '—' : '<span style="color:#34d399;font-weight:800">'+fmtMoney(money)+'</span>';
 
@@ -3440,7 +3440,7 @@ function openSheet(loan) {
     + row('<span style="color:#a78bfa">'+svgId+'</span>',    'rgba(124,92,255,.12)', 'National ID',    esc(loan.NationalID||'—'))
     + row('<span style="color:#a78bfa">'+svgCal+'</span>',   'rgba(124,92,255,.12)', 'Date of Birth',  esc(loan.DOB||'—'))
     + row('<span style="color:#60a5fa">'+svgPhone+'</span>', 'rgba(96,165,250,.12)', 'ទូរស័ព្ទ',       phone)
-    + row('<span style="color:#f472b6">👤</span>',           'rgba(244,114,182,.10)','ភេទ',            genderLabel)
+    + row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', 'rgba(244,114,182,.10)','ភេទ', genderLabel)
     + row('<span style="color:#34d399">'+svgGrp+'</span>',   'rgba(52,211,153,.12)', 'ក្រុម',           esc(loan.Groups||'—'))
     + row('<span style="color:#34d399">'+svgMoney+'</span>', 'rgba(52,211,153,.12)', 'ចំនួនប្រាក់',    moneyVal)
     + '<div class="lr-sheet-row" style="align-items:center"><div class="lr-sheet-icon" style="background:rgba(148,163,184,.1)"><span style="color:var(--muted)">🔖</span></div><div style="flex:1;min-width:0"><div class="lr-sheet-lbl">ស្ថានភាព</div><div class="lr-sheet-val">'+statusBadge+'</div></div></div>'

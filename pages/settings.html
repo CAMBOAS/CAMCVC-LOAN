@@ -629,8 +629,8 @@ function renderTable() {
     } else {
       actHtml = '<td><div class="um-act-btns">'
         + (isSelf ? '<span class="um-self-badge">Me</span>' : '')
-        + '<button class="um-edit-btn" onclick="openEditModal(\''+safeU+'\')">✏️ Edit</button>'
-        + (!isSelf ? '<button class="um-del-btn" onclick="deleteUserMark(\''+safeU+'\')">🗑️</button>' : '')
+        + '<button class="um-edit-btn" onclick="openEditModal(\''+safeU+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>'
+        + (!isSelf ? '<button class="um-del-btn" onclick="deleteUserMark(\''+safeU+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>' : '')
         + '</div></td>';
     }
 
@@ -673,8 +673,8 @@ async function loadUsers() {
   try {
     var res = await CamboAPI.post({ action: 'helen_user_list' });
     if (res && res.ok) { _users = res.users || []; }
-    else { toast('❌ '+(res&&res.message||'Load failed'), true); }
-  } catch(e) { toast('❌ Network error', true); }
+    else { toast((res&&res.message||'Load failed'), true); }
+  } catch(e) { toast('Network error', true); }
   renderTable();
   renderKPIs();
 }
@@ -748,9 +748,9 @@ async function saveUser() {
   var exp_date     = document.getElementById('uf_exp_date').value || null;
   var status       = document.getElementById('uf_status').value;
 
-  if (!username)     return toast('⚠️ Please enter a Username!', true);
-  if (!display_name) return toast('⚠️ Please enter a Display Name!', true);
-  if (!_editingUser && !pin) return toast('⚠️ Please enter a PIN!', true);
+  if (!username)     return toast('Please enter a Username!', true);
+  if (!display_name) return toast('Please enter a Display Name!', true);
+  if (!_editingUser && !pin) return toast('Please enter a PIN!', true);
 
   var btn = document.getElementById('umSaveBtn');
   btn.disabled = true;
@@ -763,11 +763,11 @@ async function saveUser() {
     if (pin) payload.pin = pin;
     var res = await CamboAPI.post(payload);
     if (res && res.ok) {
-      toast(_editingUser ? '✅ User updated successfully!' : '✅ User added successfully!');
+      toast(_editingUser ? 'User updated successfully!' : 'User added successfully!');
       closeModal();
       await loadUsers();
-    } else { toast('❌ '+(res&&res.message||'Save failed'), true); }
-  } catch(e) { toast('❌ Network error', true); }
+    } else { toast((res&&res.message||'Save failed'), true); }
+  } catch(e) { toast('Network error', true); }
 
   btn.disabled = false;
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg> Save';
@@ -782,9 +782,9 @@ async function deleteUserConfirm() {
   _pendingDelUser = null;
   try {
     var res = await CamboAPI.post({ action: 'helen_user_delete', username: username });
-    if (res && res.ok) { toast('🗑️ User "'+username+'" deleted!'); await loadUsers(); }
-    else { toast('❌ '+(res&&res.message||'Delete failed'), true); renderTable(); }
-  } catch(e) { toast('❌ Network error', true); renderTable(); }
+    if (res && res.ok) { toast('User "'+username+'" deleted!'); await loadUsers(); }
+    else { toast((res&&res.message||'Delete failed'), true); renderTable(); }
+  } catch(e) { toast('Network error', true); renderTable(); }
 }
 
 /* ── Edit modal photo handlers ── */
@@ -814,20 +814,20 @@ document.getElementById('umPhotoFile').addEventListener('change', async function
     reader.onload = async function(ev) {
       try {
         var r = await CamboAPI.post({ action:'helen_upload_photo', data: ev.target.result });
-        if (!r || !r.ok) { toast('❌ Upload failed: '+(r&&r.message||''), true); circle.innerHTML = origContent; return; }
+        if (!r || !r.ok) { toast('Upload failed: '+(r&&r.message||''), true); circle.innerHTML = origContent; return; }
         var r2 = await CamboAPI.post({ action:'helen_user_update_photo', username: _editingUser.username, photo_url: r.url });
-        if (!r2 || !r2.ok) { toast('❌ '+(r2&&r2.message||'Save failed'), true); circle.innerHTML = origContent; return; }
+        if (!r2 || !r2.ok) { toast((r2&&r2.message||'Save failed'), true); circle.innerHTML = origContent; return; }
         _editingUser.photo_url = r.url;
         var idx = _users.findIndex(function(x){ return x.username === _editingUser.username; });
         if (idx >= 0) _users[idx].photo_url = r.url;
         circle.innerHTML = '<img src="'+esc(r.url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
         circle.style.cursor = 'zoom-in'; circle.title = 'View photo';
         renderTable();
-        toast('✅ Photo updated!');
-      } catch(err) { toast('❌ '+err.message, true); circle.innerHTML = origContent; }
+        toast('Photo updated!');
+      } catch(err) { toast(err.message, true); circle.innerHTML = origContent; }
     };
     reader.readAsDataURL(file);
-  } catch(err) { toast('❌ '+err.message, true); circle.innerHTML = origContent; }
+  } catch(err) { toast(err.message, true); circle.innerHTML = origContent; }
   e.target.value = '';
 });
 
@@ -842,23 +842,23 @@ document.getElementById('umQuickPhotoFile').addEventListener('change', async fun
   if (!file || !_quickPhotoUser) return;
   var username = _quickPhotoUser;
   _quickPhotoUser = null;
-  toast('⏳ Uploading photo…');
+  toast('Uploading photo…');
   try {
     var reader = new FileReader();
     reader.onload = async function(ev) {
       try {
         var r = await CamboAPI.post({ action:'helen_upload_photo', data: ev.target.result });
-        if (!r || !r.ok) { toast('❌ Upload failed: '+(r&&r.message||''), true); return; }
+        if (!r || !r.ok) { toast('Upload failed: '+(r&&r.message||''), true); return; }
         var r2 = await CamboAPI.post({ action:'helen_user_update_photo', username: username, photo_url: r.url });
-        if (!r2 || !r2.ok) { toast('❌ '+(r2&&r2.message||'Save failed'), true); return; }
+        if (!r2 || !r2.ok) { toast((r2&&r2.message||'Save failed'), true); return; }
         var idx = _users.findIndex(function(x){ return x.username === username; });
         if (idx >= 0) _users[idx].photo_url = r.url;
         renderTable();
-        toast('✅ Photo updated!');
-      } catch(err) { toast('❌ '+err.message, true); }
+        toast('Photo updated!');
+      } catch(err) { toast(err.message, true); }
     };
     reader.readAsDataURL(file);
-  } catch(err) { toast('❌ '+err.message, true); }
+  } catch(err) { toast(err.message, true); }
   e.target.value = '';
 });
 

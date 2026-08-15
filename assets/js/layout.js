@@ -446,7 +446,7 @@
         }
 
         btn.style.cssText = 'width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:default';
-        btn.textContent = '✓ Done';
+        btn.textContent = 'Done';
         setTimeout(function() { m.remove(); }, 900);
 
       } catch(err) {

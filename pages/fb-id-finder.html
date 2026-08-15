@@ -253,13 +253,13 @@
               <input class="fb-cfg-input" id="cfgAppSecret" placeholder="abcdef1234567890abcdef" type="password">
             </div>
           </div>
-          <button class="fb-cfg-save" onclick="saveCfg()">💾 រក្សាទុក</button>
+          <button class="fb-cfg-save" onclick="saveCfg()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>រក្សាទុក</button>
           <div class="fb-cfg-note">
-            📌 <b>របៀប Get App ID + Secret:</b><br>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><b>របៀប Get App ID + Secret:</b><br>
             1. ចូល <a href="https://developers.facebook.com/apps" target="_blank">developers.facebook.com/apps</a> → Login<br>
             2. <b>Create App</b> → ជ្រើស <b>"Other"</b> → <b>"Business"</b><br>
             3. App Dashboard → <b>Settings → Basic</b> → Copy <b>App ID</b> + <b>App Secret</b><br>
-            4. Paste ខាងលើ → រក្សាទុក → ស្វែងរក ID ដោយ automatic ✅
+            4. Paste ខាងលើ → រក្សាទុក → ស្វែងរក ID ដោយ automatic
           </div>
         </div>
       </div>
@@ -345,14 +345,14 @@ function saveCfg() {
   updateCfgStatus();
   toggleCfg();
   var btn = document.querySelector('.fb-cfg-save');
-  btn.textContent = '✓ រក្សាទុករួច!';
-  setTimeout(function(){ btn.textContent = '💾 រក្សាទុក'; }, 2000);
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>រក្សាទុករួច!';
+  setTimeout(function(){ btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>រក្សាទុក'; }, 2000);
 }
 function updateCfgStatus() {
   var cfg = loadCfg();
   var statusEl = document.getElementById('fbCfgStatus');
   if (cfg.appId && cfg.appSecret) {
-    statusEl.textContent = '✓ Setup រួច';
+    statusEl.textContent = 'Setup រួច';
     statusEl.className = 'fb-cfg-status set';
     document.getElementById('cfgAppId').value = cfg.appId;
     document.getElementById('cfgAppSecret').value = cfg.appSecret;
@@ -455,11 +455,11 @@ function showSuccess(id, method, inputUrl, name) {
   var methodClass = clsMap[method] || 'fetch';
   el.className = 'fb-result show fb-result-ok';
   el.innerHTML =
-    '<div class="fb-res-label ok">✓ រកឃើញ Facebook ID</div>'
+    '<div class="fb-res-label ok"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>រកឃើញ Facebook ID</div>'
     + (name ? '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">' + escHtml(name) + '</div>' : '')
     + '<div class="fb-id-box">'
     +   '<div class="fb-id-num" id="fbIdNum">' + id + '</div>'
-    +   '<button class="fb-copy-btn" id="fbCopyBtn" onclick="copyId(\'' + id + '\')">📋 Copy</button>'
+    +   '<button class="fb-copy-btn" id="fbCopyBtn" onclick="copyId(\'' + id + '\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>'
     + '</div>'
     + '<span class="fb-method-tag ' + methodClass + '">' + methodLabel + '</span>'
     + '<div style="margin-top:14px;font-size:11px;color:var(--muted)">'
@@ -473,7 +473,7 @@ function showNoCreds() {
   el.innerHTML =
     '<div class="fb-res-label err">⚙ ត្រូវការ Facebook App Credentials</div>'
     + '<div class="fb-err-box">'
-    +   '<div class="fb-err-icon">🔑</div>'
+    +   '<div class="fb-err-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'
     +   '<div>'
     +     '<div class="fb-err-msg">សូម setup <b>App ID</b> + <b>App Secret</b> ជាមុន</div>'
     +     '<div class="fb-err-hint" style="margin-top:8px">'
@@ -495,7 +495,7 @@ function showError(msg, hint) {
   el.innerHTML =
     '<div class="fb-res-label err">✗ មិនអាចទាញ ID ដោយស្វ័យប្រវត្តិ</div>'
     + '<div class="fb-err-box">'
-    +   '<div class="fb-err-icon">⚠️</div>'
+    +   '<div class="fb-err-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>'
     +   '<div>'
     +     '<div class="fb-err-msg">' + msg + '</div>'
     +   '</div>'
@@ -527,7 +527,7 @@ function manualStepsHtml(input) {
     +     'findmyfbid.in (ដំណើរការ)'
     +   '</a>'
     +   '<button onclick="copyToClip(\'' + encoded + '\')" style="display:inline-flex;align-items:center;gap:6px;background:rgba(148,163,184,.1);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'
-    +     '📋 Copy URL'
+    +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy URL'
     +   '</button>'
     + '</div>'
     /* steps */
@@ -549,10 +549,10 @@ function copyId(id) {
   navigator.clipboard.writeText(id).then(function() {
     var btn = document.getElementById('fbCopyBtn');
     if (!btn) return;
-    btn.textContent = '✓ Copied!';
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>Copied!';
     btn.className = 'fb-copy-btn copied';
     setTimeout(function() {
-      btn.textContent = '📋 Copy';
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy';
       btn.className = 'fb-copy-btn';
     }, 2000);
   });
@@ -653,7 +653,7 @@ function renderSites(sites) {
   body.innerHTML = '<div class="fb-sites-list">'
     + sites.map(function(s, i) {
         return '<div class="fb-site-item" id="fbSite_' + i + '" onclick="openSite(' + i + ',this)">'
-          + '<div class="fb-site-icon">🌐</div>'
+          + '<div class="fb-site-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>'
           + '<div class="fb-site-name" title="' + escHtml(s.name) + '">' + escHtml(s.name) + '</div>'
           + '<div class="fb-site-arr">›</div>'
           + '</div>';
