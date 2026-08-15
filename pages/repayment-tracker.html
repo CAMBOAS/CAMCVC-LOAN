@@ -498,10 +498,11 @@ function fmtDate(key) {
 function dateTs(key) {
   if (!key) return 0;
   try {
-    var s = String(key);
-    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (m) return new Date(m[1]+'-'+m[2]+'-'+m[3]).getTime();
-    var p = s.match(/^(\d{1,2})[,\s]+(\d{1,2})[,\s]+(\d{4})/);
+    /* Try full ISO parse first (preserves HH:MM:SS so same-day order is correct) */
+    var d = new Date(String(key));
+    if (!isNaN(d.getTime())) return d.getTime();
+    /* Fallback: DD/MM/YYYY or DD, MM, YYYY */
+    var p = String(key).match(/^(\d{1,2})[,\s]+(\d{1,2})[,\s]+(\d{4})/);
     if (p) return new Date(p[3]+'-'+p[2].padStart(2,'0')+'-'+p[1].padStart(2,'0')).getTime();
   } catch(e){}
   return 0;
