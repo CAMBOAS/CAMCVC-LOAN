@@ -115,6 +115,10 @@
     '.gc-img-msg{max-width:220px;border-radius:10px;display:block;cursor:zoom-in;margin-bottom:4px;}',
     '.gc-text{font-size:13.5px;}.gc-ts{font-size:9px;opacity:.55;margin-top:5px;text-align:right;letter-spacing:.01em;}',
     '.gc-bubble.theirs .gc-ts{text-align:left;}',
+    /* seen / sent receipt */
+    '.gc-receipt{display:flex;align-items:center;justify-content:flex-end;gap:3px;',
+    'font-size:10px;font-weight:600;margin-top:2px;margin-right:2px;padding-bottom:4px;}',
+    '.gc-receipt.seen{color:#22c55e;}.gc-receipt.sent{color:#94a3b8;}',
     '.gc-empty{text-align:center;color:var(--gc-muted);font-size:13px;margin:auto;padding:20px 0;}',
     '.gc-loading{display:flex;align-items:center;justify-content:center;padding:30px 0;}',
     '.gc-spin{width:22px;height:22px;border:3px solid rgba(124,92,255,.2);border-top-color:#7c5cff;border-radius:50%;animation:gcSpin .7s linear infinite;}',
@@ -283,19 +287,33 @@
     return '<div class="gc-msg-av'+(visible?'':' gc-av-hide')+'">'+inner+'</div>';
   }
 
+  var _SEEN_SVG='<svg width="14" height="10" viewBox="0 0 18 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 6 5 10 11 2"/><polyline points="7 6 11 10 17 2"/></svg>';
+  var _SENT_SVG='<svg width="12" height="10" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 6 5 10 13 2"/></svg>';
+
   /* ── Render messages ── */
   function gcRenderMsgs(msgs, scrollDown) {
     var el=document.getElementById('gcMsgs');
     var myUser=getMyUsername();
     if (!msgs.length){ el.innerHTML='<div class="gc-empty">No messages yet — say hi!</div>'; return; }
     var atBottom=el.scrollHeight-el.scrollTop<=el.clientHeight+80;
+
+    /* pre-compute receipt indices */
+    var lastMineIdx=-1, lastSeenMineIdx=-1;
+    for (var j=msgs.length-1; j>=0; j--) {
+      if (msgs[j].sender===myUser) {
+        if (lastMineIdx===-1) lastMineIdx=j;
+        if (lastSeenMineIdx===-1 && Number(msgs[j].is_read)===1) lastSeenMineIdx=j;
+        if (lastMineIdx!==-1 && lastSeenMineIdx!==-1) break;
+      }
+    }
+
     var html='', prevDate='';
     for (var i=0; i<msgs.length; i++) {
       var m=msgs[i];
       var mine=m.sender===myUser;
       var ds=fmtDate(m.created_at);
       if (ds!==prevDate){ html+='<div class="gc-date-sep"><span>'+esc(ds)+'</span></div>'; prevDate=ds; }
-      /* show avatar only on last consecutive message from them */
+      /* show avatar only on last consecutive theirs message */
       var isLastInSeq = !mine && (i===msgs.length-1 || msgs[i+1].sender===myUser);
       html+='<div class="gc-row '+(mine?'mine':'theirs')+'">';
       if (!mine) html+=_theirAvatar(isLastInSeq);
@@ -304,6 +322,12 @@
       if (m.body)      html+='<div class="gc-text">'+esc(m.body).replace(/\n/g,'<br>')+'</div>';
       html+='<div class="gc-ts">'+esc(fmtTime(m.created_at))+'</div>';
       html+='</div></div>';
+      /* receipt: show below the relevant mine message */
+      if (mine && i===lastSeenMineIdx) {
+        html+='<div class="gc-receipt seen">'+_SEEN_SVG+'Seen</div>';
+      } else if (mine && i===lastMineIdx && lastSeenMineIdx===-1) {
+        html+='<div class="gc-receipt sent">'+_SENT_SVG+'Sent</div>';
+      }
     }
     el.innerHTML=html;
     if (scrollDown||atBottom) el.scrollTop=el.scrollHeight;
