@@ -60,13 +60,14 @@
     .tm-card:hover .tm-av { border-color:rgba(124,92,255,.5) }
     .tm-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
 
-    /* ── Online dot ── */
-    .tm-online-dot {
+    /* ── Status dot ── */
+    .tm-status-dot {
       position:absolute; bottom:1px; right:1px;
       width:18px; height:18px; border-radius:50%;
-      background:#22c55e; border:3px solid var(--tm-card);
-      animation:tmPulse 1.8s ease-in-out infinite;
+      border:3px solid var(--tm-card);
     }
+    .tm-status-dot.online  { background:#22c55e; animation:tmPulse 1.8s ease-in-out infinite }
+    .tm-status-dot.offline { background:#94a3b8 }
     @keyframes tmPulse {
       0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,.6) }
       50%      { box-shadow:0 0 0 6px rgba(34,197,94,0) }
@@ -160,12 +161,13 @@
     }
     .pm-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
 
-    .pm-online-dot {
+    .pm-status-dot {
       position:absolute; bottom:4px; right:4px;
       width:20px; height:20px; border-radius:50%;
-      background:#22c55e; border:3px solid var(--tm-card);
-      animation:tmPulse 1.8s ease-in-out infinite;
+      border:3px solid var(--tm-card);
     }
+    .pm-status-dot.online  { background:#22c55e; animation:tmPulse 1.8s ease-in-out infinite }
+    .pm-status-dot.offline { background:#94a3b8 }
 
     .pm-name { font-size:17px; font-weight:800; color:var(--tm-text); margin-bottom:6px; text-align:center }
     .pm-username { font-size:11px; color:var(--tm-muted); margin-bottom:10px }
@@ -215,7 +217,7 @@
     <div class="pm-header">
       <div class="pm-av-wrap">
         <div class="pm-av" id="pmAv"></div>
-        <span class="pm-online-dot" id="pmOnlineDot" style="display:none"></span>
+        <span class="pm-status-dot offline" id="pmStatusDot"></span>
       </div>
       <div class="pm-name"  id="pmName"></div>
       <div class="pm-badges" id="pmBadges"></div>
@@ -326,7 +328,7 @@ function renderCard(u, idx) {
   return '<div class="tm-card" onclick="openProfile('+idx+')">'
     +'<div class="tm-av-wrap">'
       +'<div class="tm-av">'+avInner+'</div>'
-      +(online ? '<span class="tm-online-dot" title="Online"></span>' : '')
+      +'<span class="tm-status-dot '+(online?'online':'offline')+'" title="'+(online?'Online':'Offline')+'"></span>'
     +'</div>'
     +'<div class="tm-name">'+esc(name)+'</div>'
     +'<span class="tm-role '+roleCls(u.role)+'">'+esc(u.role||'Staff')+'</span>'
@@ -360,8 +362,9 @@ function openProfile(idx) {
   }
 
   document.getElementById('pmName').textContent  = name;
-  var dotEl = document.getElementById('pmOnlineDot');
-  dotEl.style.display = isOnline(u.last_seen) ? '' : 'none';
+  var dotEl = document.getElementById('pmStatusDot');
+  dotEl.className = 'pm-status-dot ' + (isOnline(u.last_seen) ? 'online' : 'offline');
+  dotEl.title     = isOnline(u.last_seen) ? 'Online' : 'Offline';
   document.getElementById('pmAdded').textContent = Number(u.loans_added||0);
   document.getElementById('pmEdited').textContent   = Number(u.loans_edited||0);
   document.getElementById('pmLastLogin').textContent= fmtLastActive(u.last_login||'');
