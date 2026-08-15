@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>(function(){document.documentElement.style.visibility='';})();</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <title>Team - HELEN LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=5">
+  <style>
+    .orb{display:none!important}.background{background:#27272a!important}.background::before{display:none!important}
+    body{background:#27272a!important}.sidebar{background:#27272a!important}
+    [data-theme="light"] .background{background:#f8fafc!important}[data-theme="light"] body{background:#f8fafc!important}
+    [data-theme="light"] .sidebar{background:#f8fafc!important}
+    html[data-theme="light"] .header-shell,html[data-theme="light"] .shared-topbar{background:#ffffff!important;border-bottom-color:rgba(0,0,0,.09)!important}
+    .sb-logo-wrap{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+    .sb-user-card{border-color:transparent!important;background:transparent!important}.sb-user-avatar{box-shadow:none!important}
+    .main-content{padding:0!important}
+
+    :root {
+      --tm-bg:#f1f5f9;--tm-card:#ffffff;--tm-text:#0f172a;--tm-muted:#64748b;
+      --tm-border:rgba(148,163,184,.2);--tm-shadow:0 2px 12px rgba(0,0,0,.07);
+    }
+    [data-theme="dark"] {
+      --tm-bg:#18181b;--tm-card:#1e293b;--tm-text:#f1f5f9;--tm-muted:#94a3b8;
+      --tm-border:rgba(148,163,184,.12);--tm-shadow:0 2px 16px rgba(0,0,0,.4);
+    }
+
+    /* ── Wrap ── */
+    .tm-wrap { padding:16px 20px 40px; overflow-y:auto; height:calc(100vh - 64px); box-sizing:border-box }
+    @media(max-width:980px){ .tm-wrap{ height:auto; padding:12px 12px 100px } }
+
+    /* ── Grid ── */
+    .tm-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px }
+    @media(max-width:480px){ .tm-grid{ grid-template-columns:repeat(2,1fr); gap:10px } }
+
+    /* ── Card ── */
+    .tm-card {
+      background:var(--tm-card); border-radius:18px; border:1px solid var(--tm-border);
+      box-shadow:var(--tm-shadow); padding:22px 16px 18px;
+      display:flex; flex-direction:column; align-items:center; gap:0; transition:.15s;
+    }
+    .tm-card:hover { border-color:rgba(124,92,255,.3); box-shadow:0 4px 20px rgba(124,92,255,.1) }
+
+    /* ── Avatar ── */
+    .tm-av {
+      width:72px; height:72px; border-radius:50%; overflow:hidden;
+      border:3px solid rgba(124,92,255,.2); background:rgba(124,92,255,.1);
+      display:flex; align-items:center; justify-content:center;
+      font-size:26px; font-weight:800; color:#7c5cff; margin-bottom:12px; flex-shrink:0;
+    }
+    .tm-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
+
+    /* ── Name & role ── */
+    .tm-name { font-size:13.5px; font-weight:800; color:var(--tm-text); margin-bottom:5px; line-height:1.3; text-align:center; word-break:break-word }
+    .tm-role { display:inline-block; font-size:10px; font-weight:700; padding:2px 10px; border-radius:20px; margin-bottom:6px }
+    .tm-role-admin { background:rgba(124,92,255,.12); color:#7c5cff }
+    .tm-role-staff  { background:rgba(59,130,246,.12); color:#2563eb }
+
+    /* ── Expiry badge ── */
+    .tm-exp { font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:6px; margin-bottom:14px }
+    .tm-exp-ok   { background:rgba(16,185,129,.12); color:#059669 }
+    .tm-exp-warn { background:rgba(245,158,11,.12);  color:#d97706 }
+    .tm-exp-red  { background:rgba(239,68,68,.12);   color:#dc2626 }
+
+    /* ── Divider ── */
+    .tm-divider { width:100%; height:1px; background:var(--tm-border); margin:0 0 14px }
+
+    /* ── Stats ── */
+    .tm-stats { display:flex; gap:0; width:100%; margin-bottom:14px }
+    .tm-stat { flex:1; text-align:center; padding:0 4px }
+    .tm-stat + .tm-stat { border-left:1px solid var(--tm-border) }
+    .tm-stat-val { font-size:18px; font-weight:800; color:var(--tm-text); line-height:1; margin-bottom:3px; font-variant-numeric:tabular-nums }
+    .tm-stat-lbl { font-size:9px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.05em }
+
+    /* ── Last active ── */
+    .tm-last { font-size:10.5px; color:var(--tm-muted); text-align:center }
+
+    /* ── State ── */
+    .tm-state { display:flex; align-items:center; justify-content:center; min-height:200px; color:var(--tm-muted); font-size:13px }
+    .tm-spin { width:26px; height:26px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:tmSpin .7s linear infinite; margin-right:10px; flex-shrink:0 }
+    @keyframes tmSpin{ to{ transform:rotate(360deg) } }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
+    <div class="tm-wrap">
+      <div id="tmState" class="tm-state"><div class="tm-spin"></div><span>Loading…</span></div>
+      <div class="tm-grid" id="tmGrid" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/layout.js?v=2"></script>
+<script src="../assets/js/dashboard-layout.js?v=1"></script>
+<script src="../assets/js/auth.js?v=2"></script>
+<script src="../assets/js/api.js?v=8"></script>
+<script>
+'use strict';
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtLastActive(dtStr) {
+  if (!dtStr) return 'Never';
+  try {
+    var s = String(dtStr).trim().replace(' ','T');
+    if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return '—';
+    var TZ = 'Asia/Phnom_Penh';
+    var parts = new Intl.DateTimeFormat('en-US',{
+      timeZone:TZ, hour12:false,
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit'
+    }).formatToParts(d);
+    var p = {}; parts.forEach(function(x){ p[x.type]=x.value; });
+    var h24  = parseInt(p.hour,10);
+    var ampm = h24>=12?'PM':'AM';
+    var h12  = h24%12||12;
+    var ppDate  = new Intl.DateTimeFormat('en-CA',{timeZone:TZ}).format(d);
+    var nowDate = new Intl.DateTimeFormat('en-CA',{timeZone:TZ}).format(new Date());
+    var datePart = (ppDate===nowDate) ? 'Today' : p.day+'/'+p.month+'/'+p.year.slice(2);
+    return datePart+' '+String(h12).padStart(2,'0')+':'+p.minute+' '+ampm;
+  } catch(e){ return '—'; }
+}
+
+function expBadge(expDate) {
+  if (!expDate) return '';
+  var ms = new Date(String(expDate)+'T23:59:59').getTime();
+  var d  = Math.ceil((ms - Date.now()) / 86400000);
+  if (d <= 0) return '<span class="tm-exp tm-exp-red">Expired</span>';
+  if (d <= 7) return '<span class="tm-exp tm-exp-warn">'+d+' days</span>';
+  return '<span class="tm-exp tm-exp-ok">'+d+' days</span>';
+}
+
+function renderCard(u) {
+  var name  = u.display_name || u.username || '?';
+  var init  = name.charAt(0).toUpperCase();
+  var photo = u.photo_url || '';
+  var avInner = photo
+    ? '<img src="'+esc(photo)+'" alt="'+esc(init)+'" onerror="this.parentNode.innerHTML=\''+esc(init)+'\'">'
+    : esc(init);
+  var roleCls = (u.role||'').toLowerCase().indexOf('admin') !== -1 ? 'tm-role-admin' : 'tm-role-staff';
+  var lastDt  = u.last_login || '';
+  return '<div class="tm-card">'
+    +'<div class="tm-av">'+avInner+'</div>'
+    +'<div class="tm-name">'+esc(name)+'</div>'
+    +'<span class="tm-role '+roleCls+'">'+esc(u.role||'Staff')+'</span>'
+    +expBadge(u.exp_date)
+    +'<div class="tm-divider"></div>'
+    +'<div class="tm-stats">'
+      +'<div class="tm-stat"><div class="tm-stat-val">'+Number(u.loans_added||0)+'</div><div class="tm-stat-lbl">Added</div></div>'
+      +'<div class="tm-stat"><div class="tm-stat-val">'+Number(u.loans_edited||0)+'</div><div class="tm-stat-lbl">Edited</div></div>'
+    +'</div>'
+    +'<div class="tm-divider"></div>'
+    +'<div class="tm-last">Last login: '+fmtLastActive(lastDt)+'</div>'
+    +'</div>';
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+  if (window.HelenAuth && !window.HelenAuth.check()) return;
+  try {
+    var res = await CamboAPI.post({ action: 'helen_team_list' });
+    var stateEl = document.getElementById('tmState');
+    var gridEl  = document.getElementById('tmGrid');
+    if (!res || !res.ok) {
+      stateEl.textContent = (res && res.message) || 'Error loading team';
+      return;
+    }
+    if (!res.users || !res.users.length) {
+      stateEl.textContent = 'No team members found';
+      return;
+    }
+    gridEl.innerHTML = res.users.map(renderCard).join('');
+    gridEl.style.display = '';
+    stateEl.style.display = 'none';
+  } catch(e) {
+    document.getElementById('tmState').textContent = 'Error loading team';
+  }
+});
+</script>
+</body>
+</html>

@@ -506,6 +506,28 @@ export default async function handler(req, res) {
       return res.json({ ok: r.affectedRows > 0, message: r.affectedRows > 0 ? 'Deleted' : 'Not found' });
     }
 
+    /* ── Team list (all authenticated users) ── */
+    if (action === 'helen_team_list') {
+      await ensureUserPhotoCol();
+      const [users] = await db().query(`
+        SELECT u.username, u.display_name, u.role, u.photo_url, u.exp_date, u.status,
+          COALESCE(s.loans_added, 0)  AS loans_added,
+          COALESCE(s.loans_edited, 0) AS loans_edited,
+          s.last_login
+        FROM helen_users u
+        LEFT JOIN (
+          SELECT actor_user,
+            SUM(CASE WHEN action='loan_add' THEN 1 ELSE 0 END)                              AS loans_added,
+            SUM(CASE WHEN action IN ('loan_edit','loan_paid','loan_recover') THEN 1 ELSE 0 END) AS loans_edited,
+            MAX(CASE WHEN action='user_login' THEN created_at ELSE NULL END)                 AS last_login
+          FROM helen_activity_log
+          GROUP BY actor_user
+        ) s ON s.actor_user = u.username
+        ORDER BY u.display_name
+      `);
+      return res.json({ ok: true, users });
+    }
+
     /* ── User list (Admin only) ── */
     if (action === 'helen_user_list') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });

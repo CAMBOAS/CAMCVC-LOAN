@@ -12,6 +12,7 @@
       'loan-list.html':       { title: t('បញ្ជីកម្ចី','Loan List'),       subtitle: t('តារាង និងការគ្រប់គ្រងអ្នកខ្ចីសរុប','Borrower list and full management') },
       'borrower-profile.html':{ title: t('Profile អ្នកខ្ចី','Borrower Profile'), subtitle: t('ព័ត៌មានលម្អិតអ្នកខ្ចី','Full borrower details and loan history') },
       'activity-log.html':  { title: t('Activity Log','Activity Log'), subtitle: t('កំណត់ហេតុសកម្មភាព','All system events and actions') },
+      'team.html':          { title: t('ក្រុម','Team'),               subtitle: t('សមាជិកក្រុម និងស្ថិតិ','Team members and activity stats') },
       'repayment-tracker.html': { title: t('Repayment Tracker','Repayment Tracker'), subtitle: t('តាមដានការសងប្រាក់','Track loan repayments and paid status') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
       'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
@@ -93,6 +94,7 @@
           ${link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment'))}
           ${link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder'))}
           ${link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log'))}
+          ${link('pages/team.html', ic.users, t('ក្រុម','Team'))}
           ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
         </ul>
       </nav>
@@ -165,6 +167,7 @@
       ${bnItem('index.html',              ic.dashboard, t('Dashboard','Dashboard'))}
       ${bnItem('pages/loan-list.html',    ic.loanlist,  t('កម្ចី','Loans'))}
       ${bnItem('pages/fb-id-finder.html', ic.facebook,  t('FB ID','FB ID'))}
+      ${bnItem('pages/team.html',         ic.users,     t('ក្រុម','Team'))}
       ${role === 'Admin' ? bnItem('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
     </nav>`;
   }
