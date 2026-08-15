@@ -172,8 +172,8 @@
             <table class="al-tbl" id="tblAll">
               <thead><tr>
                 <th>By</th>
-                <th>Action</th>
                 <th>Target / Detail</th>
+                <th>Action</th>
                 <th>Time</th>
               </tr></thead>
               <tbody id="tbodyAll"></tbody>
@@ -373,9 +373,9 @@ function rowAll(log) {
   if (log.action==='user_login' && detail.role) detailStr = esc(detail.role);
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td>'+badge(actionMap[log.action]||log.action, clsMap[log.action]||'edit')+'</td>'
     +'<td class="al-tbl-muted">'+(target?'<b style="color:var(--al-text)">'+esc(target)+'</b>':'')+
       (detailStr?' <span class="al-tbl-chip">'+detailStr+'</span>':'')+'</td>'
+    +'<td>'+badge(actionMap[log.action]||log.action, clsMap[log.action]||'edit')+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
