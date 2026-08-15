@@ -292,8 +292,9 @@
     var img=_chatImg;
     if (!text&&!img) return;
     var btn=document.getElementById('gcSendBtn'); btn.disabled=true;
-    await gcPost({ action:'helen_msg_send', to:_chatWith, body:text, image_url:img });
+    var r = await gcPost({ action:'helen_msg_send', to:_chatWith, body:text, image_url:img });
     input.value=''; gcClearImg();
+    if (r && r.ok) playSentSound();
     await gcLoadMsgs(true);
     btn.disabled=false;
     input.focus();
@@ -440,6 +441,14 @@
   function playReceiveSound() {
     _playTones([
       [1047, 0, 0.25, 0.10],  /* C6 — soft single note */
+    ]);
+  }
+
+  /* Soft ascending two-note (message sent by you) */
+  function playSentSound() {
+    _playTones([
+      [880,  0,    0.18, 0.08],  /* A5 */
+      [1047, 0.10, 0.18, 0.07],  /* C6 */
     ]);
   }
 
