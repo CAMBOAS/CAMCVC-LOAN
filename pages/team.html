@@ -21,11 +21,11 @@
     .main-content{padding:0!important}
 
     :root {
-      --tm-bg:#f1f5f9;--tm-card:#ffffff;--tm-text:#0f172a;--tm-muted:#64748b;
+      --tm-card:#ffffff;--tm-text:#0f172a;--tm-muted:#64748b;
       --tm-border:rgba(148,163,184,.2);--tm-shadow:0 2px 12px rgba(0,0,0,.07);
     }
     [data-theme="dark"] {
-      --tm-bg:#18181b;--tm-card:#1e293b;--tm-text:#f1f5f9;--tm-muted:#94a3b8;
+      --tm-card:#1e293b;--tm-text:#f1f5f9;--tm-muted:#94a3b8;
       --tm-border:rgba(148,163,184,.12);--tm-shadow:0 2px 16px rgba(0,0,0,.4);
     }
 
@@ -41,23 +41,27 @@
     .tm-card {
       background:var(--tm-card); border-radius:18px; border:1px solid var(--tm-border);
       box-shadow:var(--tm-shadow); padding:22px 16px 18px;
-      display:flex; flex-direction:column; align-items:center; gap:0; transition:.15s;
+      display:flex; flex-direction:column; align-items:center; gap:0;
+      transition:.15s; cursor:pointer;
     }
-    .tm-card:hover { border-color:rgba(124,92,255,.3); box-shadow:0 4px 20px rgba(124,92,255,.1) }
+    .tm-card:hover { border-color:rgba(124,92,255,.35); box-shadow:0 6px 24px rgba(124,92,255,.13); transform:translateY(-2px) }
+    .tm-card:active { transform:translateY(0) }
 
     /* ── Avatar ── */
     .tm-av {
       width:72px; height:72px; border-radius:50%; overflow:hidden;
       border:3px solid rgba(124,92,255,.2); background:rgba(124,92,255,.1);
       display:flex; align-items:center; justify-content:center;
-      font-size:26px; font-weight:800; color:#7c5cff; margin-bottom:12px; flex-shrink:0;
+      font-size:26px; font-weight:800; color:#7c5cff; margin-bottom:12px; flex-shrink:0; transition:.15s;
     }
+    .tm-card:hover .tm-av { border-color:rgba(124,92,255,.5) }
     .tm-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
 
     /* ── Name & role ── */
     .tm-name { font-size:13.5px; font-weight:800; color:var(--tm-text); margin-bottom:5px; line-height:1.3; text-align:center; word-break:break-word }
     .tm-role { display:inline-block; font-size:10px; font-weight:700; padding:2px 10px; border-radius:20px; margin-bottom:6px }
     .tm-role-admin { background:rgba(124,92,255,.12); color:#7c5cff }
+    .tm-role-owner { background:rgba(245,158,11,.12); color:#d97706 }
     .tm-role-staff  { background:rgba(59,130,246,.12); color:#2563eb }
 
     /* ── Expiry badge ── */
@@ -83,6 +87,76 @@
     .tm-state { display:flex; align-items:center; justify-content:center; min-height:200px; color:var(--tm-muted); font-size:13px }
     .tm-spin { width:26px; height:26px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:tmSpin .7s linear infinite; margin-right:10px; flex-shrink:0 }
     @keyframes tmSpin{ to{ transform:rotate(360deg) } }
+
+    /* ══════════════════════════════
+       PROFILE MODAL
+    ══════════════════════════════ */
+    .pm-backdrop {
+      position:fixed; inset:0; z-index:1000;
+      background:rgba(0,0,0,.45); backdrop-filter:blur(4px);
+      display:flex; align-items:center; justify-content:center; padding:16px;
+      opacity:0; pointer-events:none; transition:opacity .2s;
+    }
+    .pm-backdrop.pm-open { opacity:1; pointer-events:auto }
+
+    .pm-box {
+      background:var(--tm-card); border-radius:24px; border:1px solid var(--tm-border);
+      box-shadow:0 24px 60px rgba(0,0,0,.25); width:100%; max-width:360px;
+      position:relative; overflow:hidden;
+      transform:translateY(20px) scale(.97); transition:transform .22s, opacity .22s;
+      opacity:0;
+    }
+    .pm-backdrop.pm-open .pm-box { transform:translateY(0) scale(1); opacity:1 }
+
+    /* header band */
+    .pm-header {
+      background:linear-gradient(135deg,rgba(124,92,255,.18) 0%,rgba(99,102,241,.08) 100%);
+      padding:32px 24px 20px; display:flex; flex-direction:column; align-items:center; gap:0;
+      border-bottom:1px solid var(--tm-border);
+    }
+
+    /* close btn */
+    .pm-close {
+      position:absolute; top:12px; right:12px;
+      width:32px; height:32px; border-radius:50%; border:none;
+      background:rgba(148,163,184,.15); color:var(--tm-muted);
+      display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s;
+    }
+    .pm-close:hover { background:rgba(239,68,68,.15); color:#dc2626 }
+
+    /* big avatar */
+    .pm-av {
+      width:100px; height:100px; border-radius:50%; overflow:hidden;
+      border:4px solid rgba(124,92,255,.25); background:rgba(124,92,255,.1);
+      display:flex; align-items:center; justify-content:center;
+      font-size:38px; font-weight:800; color:#7c5cff; margin-bottom:14px; flex-shrink:0;
+    }
+    .pm-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
+
+    .pm-name { font-size:17px; font-weight:800; color:var(--tm-text); margin-bottom:6px; text-align:center }
+    .pm-username { font-size:11px; color:var(--tm-muted); margin-bottom:10px }
+    .pm-badges { display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center }
+
+    /* body */
+    .pm-body { padding:20px 24px 24px; display:flex; flex-direction:column; gap:16px }
+
+    /* info rows */
+    .pm-info-row { display:flex; flex-direction:column; gap:10px }
+    .pm-info-item { display:flex; align-items:center; justify-content:space-between; gap:8px }
+    .pm-info-label { font-size:11px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.05em }
+    .pm-info-val { font-size:12.5px; font-weight:700; color:var(--tm-text) }
+
+    /* stat row in modal */
+    .pm-stats { display:flex; gap:0; border:1px solid var(--tm-border); border-radius:14px; overflow:hidden }
+    .pm-stat { flex:1; padding:14px 8px; text-align:center; background:rgba(124,92,255,.04) }
+    .pm-stat + .pm-stat { border-left:1px solid var(--tm-border) }
+    .pm-stat-val { font-size:22px; font-weight:800; color:#7c5cff; line-height:1; margin-bottom:4px; font-variant-numeric:tabular-nums }
+    .pm-stat-lbl { font-size:9px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.05em }
+
+    /* status dot */
+    .pm-status-dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; flex-shrink:0 }
+    .pm-status-active   { background:#10b981 }
+    .pm-status-inactive { background:#94a3b8 }
   </style>
 </head>
 <body>
@@ -98,12 +172,49 @@
   </main>
 </div>
 
+<!-- Profile Modal -->
+<div class="pm-backdrop" id="pmBackdrop" onclick="handleBackdropClick(event)">
+  <div class="pm-box" id="pmBox">
+    <button class="pm-close" onclick="closeProfile()" title="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="pm-header">
+      <div class="pm-av" id="pmAv"></div>
+      <div class="pm-name"  id="pmName"></div>
+      <div class="pm-username" id="pmUsername"></div>
+      <div class="pm-badges" id="pmBadges"></div>
+    </div>
+    <div class="pm-body">
+      <div class="pm-stats">
+        <div class="pm-stat"><div class="pm-stat-val" id="pmAdded">0</div><div class="pm-stat-lbl">Loans Added</div></div>
+        <div class="pm-stat"><div class="pm-stat-val" id="pmEdited">0</div><div class="pm-stat-lbl">Loans Edited</div></div>
+      </div>
+      <div class="pm-info-row">
+        <div class="pm-info-item">
+          <span class="pm-info-label">Status</span>
+          <span class="pm-info-val" id="pmStatus"></span>
+        </div>
+        <div class="pm-info-item">
+          <span class="pm-info-label">Expires</span>
+          <span class="pm-info-val" id="pmExpires"></span>
+        </div>
+        <div class="pm-info-item">
+          <span class="pm-info-label">Last Login</span>
+          <span class="pm-info-val" id="pmLastLogin"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="../assets/js/layout.js?v=15"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
 <script src="../assets/js/auth.js?v=2"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
 'use strict';
+
+var _users = [];
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -131,6 +242,17 @@ function fmtLastActive(dtStr) {
   } catch(e){ return '—'; }
 }
 
+function fmtExpiry(expDate) {
+  if (!expDate) return '—';
+  var ms = new Date(String(expDate)+'T23:59:59').getTime();
+  var d  = Math.ceil((ms - Date.now()) / 86400000);
+  var parts = String(expDate).split('-');
+  var label = parts.length===3 ? parts[2]+'/'+parts[1]+'/'+parts[0] : expDate;
+  if (d <= 0)  return label+' <span style="color:#dc2626;font-size:10px">(Expired)</span>';
+  if (d <= 7)  return label+' <span style="color:#d97706;font-size:10px">('+d+' days)</span>';
+  return label+' <span style="color:#059669;font-size:10px">('+d+' days)</span>';
+}
+
 function expBadge(expDate) {
   if (!expDate) return '';
   var ms = new Date(String(expDate)+'T23:59:59').getTime();
@@ -140,19 +262,25 @@ function expBadge(expDate) {
   return '<span class="tm-exp tm-exp-ok">'+d+' days</span>';
 }
 
-function renderCard(u) {
+function roleCls(role) {
+  var r = (role||'').toLowerCase();
+  if (r.indexOf('admin') !== -1)  return 'tm-role-admin';
+  if (r.indexOf('owner') !== -1)  return 'tm-role-owner';
+  return 'tm-role-staff';
+}
+
+function renderCard(u, idx) {
   var name  = u.display_name || u.username || '?';
   var init  = name.charAt(0).toUpperCase();
   var photo = u.photo_url || '';
   var avInner = photo
     ? '<img src="'+esc(photo)+'" alt="'+esc(init)+'" onerror="this.parentNode.innerHTML=\''+esc(init)+'\'">'
     : esc(init);
-  var roleCls = (u.role||'').toLowerCase().indexOf('admin') !== -1 ? 'tm-role-admin' : 'tm-role-staff';
-  var lastDt  = u.last_login || '';
-  return '<div class="tm-card">'
+  var lastDt = u.last_login || '';
+  return '<div class="tm-card" onclick="openProfile('+idx+')">'
     +'<div class="tm-av">'+avInner+'</div>'
     +'<div class="tm-name">'+esc(name)+'</div>'
-    +'<span class="tm-role '+roleCls+'">'+esc(u.role||'Staff')+'</span>'
+    +'<span class="tm-role '+roleCls(u.role)+'">'+esc(u.role||'Staff')+'</span>'
     +expBadge(u.exp_date)
     +'<div class="tm-divider"></div>'
     +'<div class="tm-stats">'
@@ -164,6 +292,62 @@ function renderCard(u) {
     +'</div>';
 }
 
+/* ── Modal ── */
+function openProfile(idx) {
+  var u = _users[idx];
+  if (!u) return;
+
+  var name  = u.display_name || u.username || '?';
+  var init  = name.charAt(0).toUpperCase();
+  var photo = u.photo_url || '';
+
+  /* avatar */
+  var avEl = document.getElementById('pmAv');
+  if (photo) {
+    avEl.innerHTML = '<img src="'+esc(photo)+'" alt="'+esc(init)+'" onerror="this.parentNode.innerHTML=\''+esc(init)+'\'">';
+  } else {
+    avEl.textContent = init;
+  }
+
+  document.getElementById('pmName').textContent     = name;
+  document.getElementById('pmUsername').textContent = '@'+esc(u.username||'');
+  document.getElementById('pmAdded').textContent    = Number(u.loans_added||0);
+  document.getElementById('pmEdited').textContent   = Number(u.loans_edited||0);
+  document.getElementById('pmLastLogin').textContent= fmtLastActive(u.last_login||'');
+
+  /* badges */
+  var rc = roleCls(u.role);
+  document.getElementById('pmBadges').innerHTML =
+    '<span class="tm-role '+rc+'">'+esc(u.role||'Staff')+'</span>'
+    + expBadge(u.exp_date);
+
+  /* status */
+  var isActive = (u.status||'active') === 'active';
+  document.getElementById('pmStatus').innerHTML =
+    '<span class="pm-status-dot '+(isActive?'pm-status-active':'pm-status-inactive')+'"></span>'
+    +(isActive ? 'Active' : 'Inactive');
+
+  /* expires */
+  document.getElementById('pmExpires').innerHTML = fmtExpiry(u.exp_date);
+
+  document.getElementById('pmBackdrop').classList.add('pm-open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProfile() {
+  document.getElementById('pmBackdrop').classList.remove('pm-open');
+  document.body.style.overflow = '';
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('pmBackdrop')) closeProfile();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeProfile();
+});
+
+/* ── Load ── */
 document.addEventListener('DOMContentLoaded', async function() {
   if (window.HelenAuth && !window.HelenAuth.check()) return;
   try {
@@ -178,7 +362,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       stateEl.textContent = 'No team members found';
       return;
     }
-    gridEl.innerHTML = res.users.map(renderCard).join('');
+    _users = res.users;
+    gridEl.innerHTML = _users.map(renderCard).join('');
     gridEl.style.display = '';
     stateEl.style.display = 'none';
   } catch(e) {
