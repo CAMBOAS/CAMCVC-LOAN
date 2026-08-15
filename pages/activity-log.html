@@ -97,8 +97,10 @@
     /* ── Avatar ── */
     .al-av { width:36px; height:36px; border-radius:50%; flex-shrink:0; background:rgba(124,92,255,.12); display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#7c5cff; vertical-align:middle; overflow:hidden; border:2px solid rgba(124,92,255,.2) }
     .al-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
+    .al-av-sm { width:30px; height:30px; font-size:11px; border-width:1.5px }
     .al-actor-cell { display:flex; align-items:center; gap:9px }
     .al-actor-name { font-weight:700; font-size:12.5px }
+    .al-borrow-cell { display:flex; align-items:center; gap:8px }
 
     /* ── Load more ── */
     .al-load-more { text-align:center; padding:14px }
@@ -357,6 +359,22 @@ function actorCell(log) {
   return '<div class="al-actor-cell">'+avatar(log)+'<span class="al-actor-name">'+esc(log.actor||'—')+'</span></div>';
 }
 
+function borrowerAvatar(log) {
+  var name = log.target || '';
+  if (!name) return '';
+  var init = name.charAt(0).toUpperCase();
+  var photo = '';
+  if (log.borrower_photo) {
+    photo = log.borrower_photo;
+  } else if ((log.action||'').startsWith('user_') && log.target) {
+    photo = _photoCache[log.target] || '';
+  }
+  if (photo) {
+    return '<span class="al-av al-av-sm"><img src="'+esc(photo)+'" alt="'+esc(init)+'" onerror="this.parentNode.innerHTML=\''+init+'\'"></span>';
+  }
+  return '<span class="al-av al-av-sm al-av-init">'+init+'</span>';
+}
+
 function fmtDateTime(dt) {
   try {
     // MySQL dateStrings:true returns UTC as "YYYY-MM-DD HH:MM:SS" — force UTC parse
@@ -434,8 +452,10 @@ function rowAll(log) {
   if (log.action==='user_login' && detail.role) detailStr = esc(detail.role);
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-muted">'+(target?'<b style="color:var(--al-text)">'+esc(target)+'</b>':'')+
-      (detailStr?' <span class="al-tbl-chip">'+detailStr+'</span>':'')+'</td>'
+    +'<td class="al-tbl-muted"><div class="al-borrow-cell">'
+    +(target ? borrowerAvatar(log) : '')
+    +(target ? '<span><b style="color:var(--al-text)">'+esc(target)+'</b>'+(detailStr?' <span class="al-tbl-chip">'+detailStr+'</span>':'')+'</span>' : '')
+    +'</div></td>'
     +(function(){ var t=actionSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+'</td>':'<td>'+badge(esc(log.action),'edit')+'</td>'; })()
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
@@ -456,7 +476,7 @@ function rowAdd(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
     +'<td style="font-weight:700;color:#16a34a">'+(detail.money?'$'+esc(String(detail.money)):'—')+'</td>'
     +'<td>'+(detail.status?badge(detail.status,'paid'):'—')+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
@@ -474,7 +494,7 @@ function rowEdit(log) {
   if (log.action==='loan_paid') extra = detail.paid ? ' <span class="al-tbl-chip b-paid">Paid</span>' : ' <span class="al-tbl-chip b-logout">Unpaid</span>';
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
     +(function(){ var t=editSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+extra+'</td>':'<td>'+badge(esc(log.action),'edit')+extra+'</td>'; })()
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
@@ -483,7 +503,7 @@ function rowEdit(log) {
 function rowDelete(log) {
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -502,7 +522,7 @@ function rowUser(log) {
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
     +(function(){ var t=actSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+'</td>':'<td>'+badge(esc(log.action),'user')+'</td>'; })()
-    +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
     +'<td class="al-tbl-muted">'+(detailStr?'<span class="al-tbl-chip">'+detailStr+'</span>':'—')+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';

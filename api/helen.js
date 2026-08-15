@@ -355,7 +355,7 @@ export default async function handler(req, res) {
       const orderLimit  = ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
       let logs;
       try {
-        const sqlJoin = 'SELECT l.*, u.photo_url AS actor_photo FROM helen_activity_log l LEFT JOIN helen_users u ON l.actor_user = u.username' + whereClause + orderLimit;
+        const sqlJoin = 'SELECT l.*, u.photo_url AS actor_photo, (SELECT b.photo_url FROM helen_loans b WHERE b.full_name = l.target AND b.photo_url IS NOT NULL AND b.photo_url != \'\' ORDER BY b.loan_key DESC LIMIT 1) AS borrower_photo FROM helen_activity_log l LEFT JOIN helen_users u ON l.actor_user = u.username' + whereClause + orderLimit;
         const [rows] = await db().query(sqlJoin, [...params, limit, offset]);
         logs = rows;
       } catch(e) {
