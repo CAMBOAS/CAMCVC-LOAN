@@ -99,13 +99,21 @@
     '.gc-msgs::-webkit-scrollbar{width:4px;}.gc-msgs::-webkit-scrollbar-thumb{background:rgba(148,163,184,.3);border-radius:2px;}',
     '.gc-date-sep{text-align:center;margin:10px 0 4px;}',
     '.gc-date-sep span{font-size:10px;font-weight:700;color:var(--gc-muted);background:rgba(148,163,184,.12);padding:3px 10px;border-radius:10px;}',
-    '.gc-row{display:flex;margin:2px 0;}.gc-row.mine{justify-content:flex-end;}.gc-row.theirs{justify-content:flex-start;}',
-    '.gc-bubble{max-width:75%;border-radius:16px;padding:9px 12px;word-break:break-word;line-height:1.5;}',
-    '.gc-bubble.mine{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-bottom-right-radius:4px;}',
-    '.gc-bubble.theirs{background:rgba(148,163,184,.15);color:var(--gc-text);border-bottom-left-radius:4px;}',
-    '[data-theme="dark"] .gc-bubble.theirs{background:rgba(148,163,184,.2);}',
+    '.gc-row{display:flex;margin:1px 0;align-items:flex-end;gap:6px;}.gc-row.mine{justify-content:flex-end;}.gc-row.theirs{justify-content:flex-start;}',
+    /* avatar beside left bubbles */
+    '.gc-msg-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;overflow:hidden;',
+    'background:rgba(124,92,255,.1);display:flex;align-items:center;justify-content:center;',
+    'font-size:11px;font-weight:800;color:#7c5cff;border:1.5px solid rgba(124,92,255,.18);}',
+    '.gc-msg-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}',
+    '.gc-msg-av.gc-av-hide{visibility:hidden;}',
+    /* bubbles */
+    '.gc-bubble{max-width:72%;border-radius:18px;padding:9px 13px;word-break:break-word;line-height:1.55;}',
+    '.gc-bubble.mine{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-bottom-right-radius:5px;box-shadow:0 2px 10px rgba(124,58,237,.25);}',
+    '.gc-bubble.theirs{background:#ffffff;color:var(--gc-text);border-bottom-left-radius:5px;',
+    'border:1px solid rgba(148,163,184,.22);box-shadow:0 1px 6px rgba(0,0,0,.07);}',
+    '[data-theme="dark"] .gc-bubble.theirs{background:rgba(255,255,255,.07);border-color:rgba(148,163,184,.18);box-shadow:0 1px 6px rgba(0,0,0,.25);}',
     '.gc-img-msg{max-width:220px;border-radius:10px;display:block;cursor:zoom-in;margin-bottom:4px;}',
-    '.gc-text{font-size:13.5px;}.gc-ts{font-size:9.5px;opacity:.6;margin-top:4px;text-align:right;}',
+    '.gc-text{font-size:13.5px;}.gc-ts{font-size:9px;opacity:.55;margin-top:5px;text-align:right;letter-spacing:.01em;}',
     '.gc-bubble.theirs .gc-ts{text-align:left;}',
     '.gc-empty{text-align:center;color:var(--gc-muted);font-size:13px;margin:auto;padding:20px 0;}',
     '.gc-loading{display:flex;align-items:center;justify-content:center;padding:30px 0;}',
@@ -182,9 +190,11 @@
   var _chatWith   = null;
   var _chatImg    = '';
   var _chatPoll   = null;
-  var _unreadPoll = null;
-  var _prevCounts = {};  // sender → last known count
-  var _lastMsgId  = 0;   // last seen message id inside open chat
+  var _unreadPoll    = null;
+  var _prevCounts    = {};
+  var _lastMsgId     = 0;
+  var _chatWithName  = '';
+  var _chatWithPhoto = '';
 
   /* ── Wire DOM events ── */
   function wire() {
@@ -205,8 +215,10 @@
   /* ── Open chat ── */
   function gcOpen(username, displayName, photoUrl, online) {
     if (!getMyUsername()) return;
-    _chatWith    = username;
-    _chatImg     = '';
+    _chatWith      = username;
+    _chatWithName  = displayName || username;
+    _chatWithPhoto = photoUrl || '';
+    _chatImg       = '';
     var name     = displayName || username;
     var init     = (name||'?').charAt(0).toUpperCase();
     var avEl     = document.getElementById('gcHdAv');
@@ -262,6 +274,15 @@
     if (card){ var b=card.querySelector('.tm-unread'); if(b) b.remove(); }
   }
 
+  /* ── Avatar HTML for left bubbles ── */
+  function _theirAvatar(visible) {
+    var init = (_chatWithName||_chatWith||'?').charAt(0).toUpperCase();
+    var inner = _chatWithPhoto
+      ? '<img src="'+esc(_chatWithPhoto)+'" alt="'+esc(init)+'" onerror="this.parentNode.innerHTML=\''+esc(init)+'\'">'
+      : esc(init);
+    return '<div class="gc-msg-av'+(visible?'':' gc-av-hide')+'">'+inner+'</div>';
+  }
+
   /* ── Render messages ── */
   function gcRenderMsgs(msgs, scrollDown) {
     var el=document.getElementById('gcMsgs');
@@ -269,17 +290,21 @@
     if (!msgs.length){ el.innerHTML='<div class="gc-empty">No messages yet — say hi!</div>'; return; }
     var atBottom=el.scrollHeight-el.scrollTop<=el.clientHeight+80;
     var html='', prevDate='';
-    msgs.forEach(function(m){
+    for (var i=0; i<msgs.length; i++) {
+      var m=msgs[i];
       var mine=m.sender===myUser;
       var ds=fmtDate(m.created_at);
       if (ds!==prevDate){ html+='<div class="gc-date-sep"><span>'+esc(ds)+'</span></div>'; prevDate=ds; }
+      /* show avatar only on last consecutive message from them */
+      var isLastInSeq = !mine && (i===msgs.length-1 || msgs[i+1].sender===myUser);
       html+='<div class="gc-row '+(mine?'mine':'theirs')+'">';
+      if (!mine) html+=_theirAvatar(isLastInSeq);
       html+='<div class="gc-bubble '+(mine?'mine':'theirs')+'">';
       if (m.image_url) html+='<img class="gc-img-msg" src="'+esc(m.image_url)+'" onclick="window.open(\''+esc(m.image_url)+'\',\'_blank\')" loading="lazy">';
       if (m.body)      html+='<div class="gc-text">'+esc(m.body).replace(/\n/g,'<br>')+'</div>';
       html+='<div class="gc-ts">'+esc(fmtTime(m.created_at))+'</div>';
       html+='</div></div>';
-    });
+    }
     el.innerHTML=html;
     if (scrollDown||atBottom) el.scrollTop=el.scrollHeight;
   }
