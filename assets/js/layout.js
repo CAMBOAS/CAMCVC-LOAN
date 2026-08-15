@@ -198,8 +198,16 @@
     document.body.appendChild(m);
     document.getElementById('hlLogoutCancel').onclick = function() { m.remove(); };
     m.addEventListener('click', function(e) { if (e.target === m) m.remove(); });
-    document.getElementById('hlLogoutOk').onclick = function() {
+    document.getElementById('hlLogoutOk').onclick = async function() {
       m.remove();
+      try {
+        if (window.CamboAPI) {
+          await Promise.race([
+            window.CamboAPI.post({ action: 'helen_user_logout' }),
+            new Promise(function(r){ setTimeout(r, 800); })
+          ]);
+        }
+      } catch(e) {}
       if (window.HelenAuth) window.HelenAuth.logout();
       else location.href = getBase() + 'pages/login.html';
     };

@@ -82,6 +82,8 @@
     .al-icon-recover{ background:rgba(99,102,241,.12) }
     .al-icon-login  { background:rgba(124,92,255,.12) }
     .al-icon-user   { background:rgba(245,158,11,.12) }
+    .al-c-muted  { background:rgba(148,163,184,.12); color:#64748b }
+    .al-icon-muted { background:rgba(148,163,184,.1) }
 
     /* ── Empty / Loading ── */
     .al-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:250px; gap:12px; color:var(--al-muted); font-size:14px }
@@ -136,6 +138,7 @@
           <option value="loan_recover">Loan Recovered</option>
           <option value="loan_paid">Paid Toggled</option>
           <option value="user_login">User Login</option>
+          <option value="user_logout">User Logout</option>
           <option value="user_add">User Added</option>
           <option value="user_edit">User Edited</option>
           <option value="user_delete">User Deleted</option>
@@ -199,6 +202,7 @@ var ACTION_META = {
   loan_recover: { label:'Loan Recovered', icon:'↩️', cls:'recover'},
   loan_paid:    { label:'Paid Toggle',    icon:'✅', cls:'paid'   },
   user_login:   { label:'User Login',     icon:'🔑', cls:'login'  },
+  user_logout:  { label:'User Logout',    icon:'🚪', cls:'muted'  },
   user_add:     { label:'User Added',     icon:'👤', cls:'user'   },
   user_edit:    { label:'User Edited',    icon:'👤', cls:'user'   },
   user_delete:  { label:'User Deleted',   icon:'👤', cls:'delete' },

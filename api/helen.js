@@ -331,6 +331,12 @@ export default async function handler(req, res) {
       return res.json({ ok: true, loan, history });
     }
 
+    /* ── Logout log ── */
+    if (action === 'helen_user_logout') {
+      logActivity('user_logout', actor, _bu, null, null).catch(()=>{});
+      return res.json({ ok: true });
+    }
+
     /* ── Activity Log list ── */
     if (action === 'helen_activity_list') {
       await ensureActivityLogTable();
