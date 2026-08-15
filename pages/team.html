@@ -137,16 +137,21 @@
     /* ══════════════════════════════
        CHAT MODAL
     ══════════════════════════════ */
-    .chat-bd { position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.5); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; padding:12px; opacity:0; pointer-events:none; transition:opacity .2s }
-    .chat-bd.chat-open { opacity:1; pointer-events:auto }
+    .chat-bd { position:fixed; inset:0; z-index:1100; background:transparent; pointer-events:none; }
+    .chat-bd.chat-open { pointer-events:none; }
 
     .chat-box {
+      position:fixed; bottom:24px; right:24px;
       background:var(--tm-card); border-radius:22px; border:1px solid var(--tm-border);
-      box-shadow:0 28px 70px rgba(0,0,0,.3); width:100%; max-width:420px;
-      height:min(600px, calc(100vh - 80px)); display:flex; flex-direction:column;
-      transform:translateY(24px) scale(.96); transition:transform .25s, opacity .25s; opacity:0; overflow:hidden;
+      box-shadow:0 8px 40px rgba(0,0,0,.18); width:360px; max-width:calc(100vw - 32px);
+      height:min(560px, calc(100vh - 120px)); display:flex; flex-direction:column;
+      transform:translateY(30px) scale(.95); transition:transform .25s, opacity .25s; opacity:0; overflow:hidden;
+      pointer-events:none; z-index:1100;
     }
-    .chat-bd.chat-open .chat-box { transform:translateY(0) scale(1); opacity:1 }
+    .chat-bd.chat-open .chat-box { transform:translateY(0) scale(1); opacity:1; pointer-events:auto; }
+    @media(max-width:480px){
+      .chat-box{ bottom:80px; right:12px; left:12px; width:auto; }
+    }
 
     /* Header */
     .chat-hd {
@@ -468,7 +473,6 @@ function openChat(idx) {
   document.getElementById('chatInput').value='';
   document.getElementById('chatMsgs').innerHTML='<div class="chat-loading"><div class="chat-spin-sm"></div></div>';
   document.getElementById('chatBd').classList.add('chat-open');
-  document.body.style.overflow='hidden';
   loadChatMsgs(true);
   if (_chatPoll) clearInterval(_chatPoll);
   _chatPoll=setInterval(function(){ loadChatMsgs(false); }, 4000);
@@ -481,7 +485,6 @@ function openChat(idx) {
 
 function closeChat() {
   document.getElementById('chatBd').classList.remove('chat-open');
-  document.body.style.overflow='';
   if (_chatPoll){ clearInterval(_chatPoll); _chatPoll=null; }
   _chatWith=null; _chatU=null;
   loadUnreadCounts();
