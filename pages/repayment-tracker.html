@@ -226,7 +226,7 @@
     .rt-dp-save:active { transform:none }
     .rt-dp-save:disabled { opacity:.5; cursor:not-allowed; transform:none }
     /* delete btn */
-    .rt-dp-del { width:100%; padding:9px; border-radius:10px; border:1px solid rgba(239,68,68,.35); background:rgba(239,68,68,.07); color:#f87171; font-size:12.5px; font-weight:700; cursor:pointer; transition:.15s; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:7px }
+    .rt-dp-del { width:100%; padding:9px; border-radius:10px; border:1px solid rgba(239,68,68,.35); background:rgba(239,68,68,.07); color:#f87171; font-size:12.5px; font-weight:700; cursor:pointer; transition:.15s; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px }
     .rt-dp-del:hover { background:rgba(239,68,68,.18); border-color:rgba(239,68,68,.6) }
     .rt-dp-del:active { transform:none }
     .rt-dp-del:disabled { opacity:.4; cursor:not-allowed }
@@ -487,16 +487,17 @@
                 </label>
               </div>
 
-              <!-- Save -->
-              <button class="rt-dp-save" id="dpSaveBtn" onclick="saveLoan()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save Changes
-              </button>
-              <!-- Delete -->
-              <button class="rt-dp-del" id="dpDelBtn" onclick="confirmDelete()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                Delete Borrower
-              </button>
+              <!-- Action row: Delete (left) + Save (right) -->
+              <div style="display:flex;gap:8px">
+                <button class="rt-dp-del" id="dpDelBtn" onclick="confirmDelete()" style="flex:1;margin-top:0">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  Delete
+                </button>
+                <button class="rt-dp-save" id="dpSaveBtn" onclick="saveLoan()" style="flex:2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  Save Changes
+                </button>
+              </div>
 
             </div><!-- rt-dp-body -->
           </div><!-- rtDetailContent -->
