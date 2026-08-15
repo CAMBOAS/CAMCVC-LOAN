@@ -158,12 +158,12 @@
 
       <!-- Tab bar -->
       <div class="al-tabs" id="alTabBar">
-        <button class="al-tab al-tab-active" data-tab="all"    onclick="switchTab('all')">    📋 All Activity  <span class="al-tab-badge" id="tbAll">0</span></button>
-        <button class="al-tab"               data-tab="auth"   onclick="switchTab('auth')">   🔑 Login / Logout <span class="al-tab-badge" id="tbAuth">0</span></button>
-        <button class="al-tab"               data-tab="add"    onclick="switchTab('add')">    ➕ Loans Added   <span class="al-tab-badge" id="tbAdd">0</span></button>
-        <button class="al-tab"               data-tab="edit"   onclick="switchTab('edit')">   ✏️ Loans Edited  <span class="al-tab-badge" id="tbEdit">0</span></button>
-        <button class="al-tab"               data-tab="delete" onclick="switchTab('delete')"> 🗑️ Loans Deleted <span class="al-tab-badge" id="tbDelete">0</span></button>
-        <button class="al-tab" id="tabUsers" data-tab="users"  onclick="switchTab('users')" style="display:none"> 👤 Users <span class="al-tab-badge" id="tbUsers">0</span></button>
+        <button class="al-tab al-tab-active" data-tab="all"    onclick="switchTab('all')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> All Activity <span class="al-tab-badge" id="tbAll">0</span></button>
+        <button class="al-tab"               data-tab="auth"   onclick="switchTab('auth')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Login / Logout <span class="al-tab-badge" id="tbAuth">0</span></button>
+        <button class="al-tab"               data-tab="add"    onclick="switchTab('add')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Loans Added <span class="al-tab-badge" id="tbAdd">0</span></button>
+        <button class="al-tab"               data-tab="edit"   onclick="switchTab('edit')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Loans Edited <span class="al-tab-badge" id="tbEdit">0</span></button>
+        <button class="al-tab"               data-tab="delete" onclick="switchTab('delete')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Loans Deleted <span class="al-tab-badge" id="tbDelete">0</span></button>
+        <button class="al-tab" id="tabUsers" data-tab="users"  onclick="switchTab('users')" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Users <span class="al-tab-badge" id="tbUsers">0</span></button>
       </div>
 
       <!-- ── Panel: All Activity ── -->
@@ -395,20 +395,35 @@ function fmtDateTime(dt) {
 function badge(label, cls) {
   return '<span class="al-tbl-chip b-'+cls+'">'+esc(label)+'</span>';
 }
+function badgeSvg(svg, text, cls) {
+  return '<span class="al-tbl-chip b-'+cls+'" style="display:inline-flex;align-items:center;gap:3px">'+svg+esc(text)+'</span>';
+}
+
+var _ic = {
+  add:     '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+  edit:    '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  trash:   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>',
+  recover: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>',
+  check:   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  login:   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>',
+  logout:  '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  user:    '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+};
 
 /* ── Render helpers per panel ── */
 function rowAll(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
-  var actionMap = {
-    loan_add:'➕ Loan Added', loan_edit:'✏️ Loan Edited', loan_delete:'🗑️ Loan Deleted',
-    loan_recover:'↩️ Recovered', loan_paid:'✅ Paid Toggle',
-    user_login:'🔑 Login', user_logout:'🚪 Logout',
-    user_add:'👤 User Added', user_edit:'👤 User Edited', user_delete:'👤 User Deleted'
-  };
-  var clsMap = {
-    loan_add:'add', loan_edit:'edit', loan_delete:'delete', loan_recover:'recover',
-    loan_paid:'paid', user_login:'login', user_logout:'logout',
-    user_add:'user', user_edit:'user', user_delete:'delete'
+  var actionSvgMap = {
+    loan_add:     [_ic.add,     'Loan Added',  'add'],
+    loan_edit:    [_ic.edit,    'Loan Edited', 'edit'],
+    loan_delete:  [_ic.trash,   'Loan Deleted','delete'],
+    loan_recover: [_ic.recover, 'Recovered',   'recover'],
+    loan_paid:    [_ic.check,   'Paid Toggle', 'paid'],
+    user_login:   [_ic.login,   'Login',       'login'],
+    user_logout:  [_ic.logout,  'Logout',      'logout'],
+    user_add:     [_ic.user,    'User Added',  'user'],
+    user_edit:    [_ic.edit,    'User Edited', 'user'],
+    user_delete:  [_ic.trash,   'User Deleted','delete'],
   };
   var target = log.target || '';
   var detailStr = '';
@@ -421,7 +436,7 @@ function rowAll(log) {
     +'<td>'+actorCell(log)+'</td>'
     +'<td class="al-tbl-muted">'+(target?'<b style="color:var(--al-text)">'+esc(target)+'</b>':'')+
       (detailStr?' <span class="al-tbl-chip">'+detailStr+'</span>':'')+'</td>'
-    +'<td>'+badge(actionMap[log.action]||log.action, clsMap[log.action]||'edit')+'</td>'
+    +(function(){ var t=actionSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+'</td>':'<td>'+badge(esc(log.action),'edit')+'</td>'; })()
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -432,7 +447,7 @@ function rowAuth(log) {
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
     +'<td class="al-tbl-muted">'+esc(detail.role||'—')+'</td>'
-    +'<td>'+badge(isLogin?'🔑 Login':'🚪 Logout', isLogin?'login':'logout')+'</td>'
+    +'<td>'+(isLogin?badgeSvg(_ic.login,'Login','login'):badgeSvg(_ic.logout,'Logout','logout'))+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -450,14 +465,17 @@ function rowAdd(log) {
 
 function rowEdit(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
-  var editMap = { loan_edit:'✏️ Edited', loan_paid:'✅ Paid Toggle', loan_recover:'↩️ Recovered' };
-  var clsMap  = { loan_edit:'edit', loan_paid:'paid', loan_recover:'recover' };
+  var editSvgMap = {
+    loan_edit:    [_ic.edit,    'Edited',      'edit'],
+    loan_paid:    [_ic.check,   'Paid Toggle', 'paid'],
+    loan_recover: [_ic.recover, 'Recovered',   'recover'],
+  };
   var extra = '';
   if (log.action==='loan_paid') extra = detail.paid ? ' <span class="al-tbl-chip b-paid">Paid</span>' : ' <span class="al-tbl-chip b-logout">Unpaid</span>';
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
     +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
-    +'<td>'+badge(editMap[log.action]||log.action, clsMap[log.action]||'edit')+extra+'</td>'
+    +(function(){ var t=editSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+extra+'</td>':'<td>'+badge(esc(log.action),'edit')+extra+'</td>'; })()
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -472,15 +490,18 @@ function rowDelete(log) {
 
 function rowUser(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
-  var actMap = { user_add:'👤 Added', user_edit:'✏️ Edited', user_delete:'🗑️ Deleted' };
-  var clsMap = { user_add:'user', user_edit:'edit', user_delete:'delete' };
+  var actSvgMap = {
+    user_add:    [_ic.user,  'Added',   'user'],
+    user_edit:   [_ic.edit,  'Edited',  'edit'],
+    user_delete: [_ic.trash, 'Deleted', 'delete'],
+  };
   var detailStr = '';
   if (log.action==='user_add' && detail.role) detailStr = esc(detail.role);
   if (log.action==='user_edit' && detail.old_name && detail.new_name && detail.old_name!==detail.new_name)
     detailStr = esc(detail.old_name)+' → '+esc(detail.new_name);
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td>'+badge(actMap[log.action]||log.action, clsMap[log.action]||'user')+'</td>'
+    +(function(){ var t=actSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+'</td>':'<td>'+badge(esc(log.action),'user')+'</td>'; })()
     +'<td class="al-tbl-name">'+esc(log.target||'—')+'</td>'
     +'<td class="al-tbl-muted">'+(detailStr?'<span class="al-tbl-chip">'+detailStr+'</span>':'—')+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
