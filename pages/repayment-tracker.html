@@ -468,6 +468,12 @@
               <!-- Loan Info -->
               <div class="rt-dp-section">
                 <div class="rt-dp-section-title">Loan Info</div>
+                <div class="rt-dp-row full">
+                  <div class="rt-dp-field">
+                    <label class="rt-dp-label">Loan Date</label>
+                    <input class="rt-dp-input" id="dpInDate" type="datetime-local">
+                  </div>
+                </div>
                 <div class="rt-dp-row">
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">Amount ($)</label>
@@ -620,6 +626,17 @@ function dateTs(key) {
     if (p) return new Date(p[3]+'-'+p[2].padStart(2,'0')+'-'+p[1].padStart(2,'0')).getTime();
   } catch(e){}
   return 0;
+}
+
+function toDatetimeLocal(dtStr) {
+  if (!dtStr) return '';
+  try {
+    var normalized = String(dtStr).replace(' ', 'T');
+    var d = new Date(normalized);
+    if (isNaN(d.getTime())) return '';
+    var pad = function(n){ return String(n).padStart(2,'0'); };
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+  } catch(e){ return ''; }
 }
 
 function isVideoUrl(url) {
@@ -1167,6 +1184,7 @@ function populateDetail(loan) {
   document.getElementById('dpInNid').value    = loan.NationalID  || '';
   document.getElementById('dpInPhone').value  = loan.Phone       || '';
   document.getElementById('dpInDob').value    = loan.DOB         || '';
+  document.getElementById('dpInDate').value   = toDatetimeLocal(loan.DateTime);
   document.getElementById('dpInMoney').value  = loan.Money != null ? loan.Money : '';
   document.getElementById('dpInNote').value   = loan.Note        || '';
 
@@ -1206,8 +1224,10 @@ function onDetailPaidChange() {
 
 /* ── Build loan obj from form ── */
 function buildLoanObj(loan) {
+  var rawDate = document.getElementById('dpInDate').value;
+  var newDateTime = rawDate ? rawDate.replace('T',' ')+':00' : loan.DateTime;
   return {
-    DateTime:    loan.DateTime,
+    DateTime:    newDateTime,
     FullName:    document.getElementById('dpInName').value.trim()  || loan.FullName,
     NationalID:  document.getElementById('dpInNid').value.trim()   || loan.NationalID,
     Phone:       document.getElementById('dpInPhone').value.trim(),
@@ -1236,7 +1256,7 @@ async function autoSaveLoan(showToast) {
   try {
     var updated = buildLoanObj(loan);
     var res = await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:updated });
-    if (res && res.ok) { Object.assign(loan, updated); }
+    if (res && res.ok) { if (updated.DateTime !== _selectedKey) _selectedKey = updated.DateTime; Object.assign(loan, updated); }
     if (showToast) toast(res && res.ok ? 'Saved!' : (res&&res.message||'Save failed'));
   } catch(e) { if (showToast) toast('Error: '+e.message); }
 }
@@ -1253,6 +1273,7 @@ async function saveLoan() {
     var updatedLoan = buildLoanObj(loan);
     var res = await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:updatedLoan });
     if (res && res.ok) {
+      if (updatedLoan.DateTime !== _selectedKey) _selectedKey = updatedLoan.DateTime;
       Object.assign(loan, updatedLoan);
       render();
       populateDetail(loan);
