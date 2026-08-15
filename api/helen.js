@@ -346,21 +346,21 @@ export default async function handler(req, res) {
       const fAct   = String(body.filter_action||'').trim();
       /* Non-Admin can only see their own activity — force actor_user to self */
       const fUser  = isAdmin ? String(body.filter_actor||'').trim() : _bu;
-      let sql = 'SELECT * FROM helen_activity_log';
+      let sql = 'SELECT l.*, u.photo_url AS actor_photo FROM helen_activity_log l LEFT JOIN helen_users u ON l.actor_user = u.username';
       const params = [];
       const wheres = [];
-      if (fAct)  { wheres.push('action=?');     params.push(fAct); }
-      if (fUser) { wheres.push('actor_user=?'); params.push(fUser); }
+      if (fAct)  { wheres.push('l.action=?');     params.push(fAct); }
+      if (fUser) { wheres.push('l.actor_user=?'); params.push(fUser); }
       if (wheres.length) sql += ' WHERE ' + wheres.join(' AND ');
-      sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+      sql += ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
       params.push(limit, offset);
       const [logs] = await db().query(sql, params);
       /* Total count respects same filter */
-      let countSql = 'SELECT COUNT(*) AS total FROM helen_activity_log';
+      let countSql = 'SELECT COUNT(*) AS total FROM helen_activity_log l';
       const countParams = [];
       const countWheres = [];
-      if (fAct)  { countWheres.push('action=?');     countParams.push(fAct); }
-      if (fUser) { countWheres.push('actor_user=?'); countParams.push(fUser); }
+      if (fAct)  { countWheres.push('l.action=?');     countParams.push(fAct); }
+      if (fUser) { countWheres.push('l.actor_user=?'); countParams.push(fUser); }
       if (countWheres.length) countSql += ' WHERE ' + countWheres.join(' AND ');
       const [[tot]] = await db().query(countSql, countParams);
       return res.json({ ok: true, logs, total: tot.total, is_admin: isAdmin });
