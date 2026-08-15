@@ -277,6 +277,29 @@ export default async function handler(req, res) {
       });
     }
 
+    /* ── Borrower Profile (single loan + history by same NID) ── */
+    if (action === 'helen_loan_profile') {
+      const key = String(body.key || '').trim();
+      if (!key) return res.json({ ok: false, message: 'key required' });
+      await ensureCreatedByUserCol();
+      const [rows] = await db().query(
+        `SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.loan_key=? AND l.deleted_at IS NULL`,
+        [key]
+      );
+      if (!rows.length) return res.json({ ok: false, message: 'Borrower not found' });
+      const loan = rowToLoan(rows[0]);
+      let history = [];
+      const nid = rows[0].national_id;
+      if (nid) {
+        const [hist] = await db().query(
+          `SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.national_id=? AND l.deleted_at IS NULL ORDER BY l.loan_key DESC`,
+          [nid]
+        );
+        history = hist.map(rowToLoan);
+      }
+      return res.json({ ok: true, loan, history });
+    }
+
     /* ── Infor only ── */
     if (action === 'helen_infor') {
       const [infor] = await db().query('SELECT type, value FROM helen_infor ORDER BY id');

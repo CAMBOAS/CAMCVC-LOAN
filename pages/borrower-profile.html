@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>(function(){document.documentElement.style.visibility='';})();</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <title>Borrower Profile - HELEN LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=5">
+  <style>
+    .orb { display:none !important }
+    .background { background:#27272a !important }
+    .background::before { display:none !important }
+    body { background:#27272a !important }
+    .sidebar { background:#27272a !important }
+    [data-theme="light"] .background { background:#f8fafc !important }
+    [data-theme="light"] body { background:#f8fafc !important }
+    [data-theme="light"] .sidebar { background:#f8fafc !important }
+    html[data-theme="light"] .header-shell,
+    html[data-theme="light"] .shared-topbar { background:#ffffff !important; border-bottom-color:rgba(0,0,0,.09) !important }
+    .sb-logo-wrap { background:transparent !important; border-color:transparent !important; box-shadow:none !important }
+    .sb-user-card { border-color:transparent !important; background:transparent !important }
+    .sb-user-avatar { box-shadow:none !important }
+    .main-content { padding:0 !important }
+
+    :root {
+      --bp-bg: #f1f5f9;
+      --bp-card: #ffffff;
+      --bp-card2: #f8fafc;
+      --bp-text: #0f172a;
+      --bp-muted: #64748b;
+      --bp-border: rgba(148,163,184,.2);
+      --bp-shadow: 0 2px 16px rgba(0,0,0,.07);
+    }
+    [data-theme="dark"] {
+      --bp-bg: #18181b;
+      --bp-card: #1e293b;
+      --bp-card2: #0f172a;
+      --bp-text: #f1f5f9;
+      --bp-muted: #94a3b8;
+      --bp-border: rgba(148,163,184,.12);
+      --bp-shadow: 0 2px 20px rgba(0,0,0,.4);
+    }
+
+    .bp-wrap {
+      padding: 16px 20px 40px;
+      overflow-y: auto;
+      height: calc(100vh - 64px);
+      box-sizing: border-box;
+    }
+    @media (max-width:980px) {
+      .bp-wrap { height:auto; padding:14px 12px 100px }
+    }
+
+    /* ── Loading / Error ── */
+    .bp-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; gap:12px; color:var(--bp-muted); font-size:14px }
+    .bp-spin { width:32px; height:32px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:bpSpin .7s linear infinite }
+    @keyframes bpSpin { to { transform:rotate(360deg) } }
+
+    /* ── Top bar (back + actions) ── */
+    .bp-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px }
+    .bp-back-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:1.5px solid var(--bp-border); background:var(--bp-card); color:var(--bp-muted); font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; transition:.15s; font-family:inherit }
+    .bp-back-btn:hover { color:var(--bp-text); border-color:#7c5cff; background:rgba(124,92,255,.06) }
+    .bp-actions { display:flex; gap:8px }
+    .bp-action-btn { display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:10px; border:none; font-size:13px; font-weight:600; cursor:pointer; transition:.15s; font-family:inherit }
+    .bp-btn-edit { background:rgba(124,92,255,.12); color:#7c5cff }
+    .bp-btn-edit:hover { background:rgba(124,92,255,.22) }
+    .bp-btn-del  { background:rgba(239,68,68,.1); color:#ef4444 }
+    .bp-btn-del:hover  { background:rgba(239,68,68,.2) }
+
+    /* ── Hero Card ── */
+    .bp-hero { background:var(--bp-card); border-radius:22px; padding:28px 24px 22px; margin-bottom:16px; box-shadow:var(--bp-shadow); border:1px solid var(--bp-border); display:flex; align-items:flex-start; gap:22px; flex-wrap:wrap }
+    .bp-avatar-wrap { position:relative; flex-shrink:0 }
+    .bp-avatar { width:82px; height:82px; border-radius:50%; background:rgba(124,92,255,.12); border:3px solid rgba(124,92,255,.3); display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:zoom-in }
+    .bp-avatar img { width:100%; height:100%; object-fit:cover }
+    .bp-avatar-init { font-size:30px; font-weight:800; color:#7c5cff; line-height:1 }
+    .bp-hero-info { flex:1; min-width:0 }
+    .bp-hero-name { font-size:22px; font-weight:800; color:var(--bp-text); margin:0 0 6px; word-break:break-word }
+    .bp-hero-meta { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:10px }
+    .bp-nid-badge { font-family:monospace; font-size:12px; font-weight:700; color:#60a5fa; background:rgba(96,165,250,.1); padding:3px 10px; border-radius:8px; border:1px solid rgba(96,165,250,.2) }
+    .bp-hero-stats { display:flex; flex-wrap:wrap; gap:14px; margin-top:2px }
+    .bp-hero-stat { display:flex; flex-direction:column; gap:2px }
+    .bp-hero-stat-label { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--bp-muted) }
+    .bp-hero-stat-val { font-size:13px; font-weight:700; color:var(--bp-text) }
+
+    /* ── Grid ── */
+    .bp-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px }
+    @media (max-width:600px) { .bp-grid { grid-template-columns:1fr } }
+    .bp-card { background:var(--bp-card); border-radius:18px; padding:18px 20px; box-shadow:var(--bp-shadow); border:1px solid var(--bp-border) }
+    .bp-card-full { grid-column:1/-1 }
+    .bp-card-title { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--bp-muted); margin:0 0 14px }
+
+    /* ── Info rows ── */
+    .bp-info-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--bp-border) }
+    .bp-info-row:last-child { border-bottom:none; padding-bottom:0 }
+    .bp-info-row:first-child { padding-top:0 }
+    .bp-info-lbl { font-size:12px; color:var(--bp-muted); font-weight:500 }
+    .bp-info-val { font-size:13px; color:var(--bp-text); font-weight:600; text-align:right; word-break:break-word; max-width:60% }
+
+    /* ── Amount display ── */
+    .bp-amount { font-size:28px; font-weight:800; color:#22c55e; line-height:1; margin-bottom:4px }
+    .bp-amount-sub { font-size:11px; color:var(--bp-muted); font-weight:500 }
+
+    /* ── Status tags ── */
+    .bp-tag { display:inline-flex; align-items:center; padding:3px 10px; border-radius:8px; font-size:11.5px; font-weight:700 }
+    .bp-tag-black { background:rgba(239,68,68,.12); color:#ef4444 }
+    .bp-tag-good  { background:rgba(34,197,94,.12); color:#22c55e }
+    .bp-tag-normal{ background:rgba(100,116,139,.12); color:#94a3b8 }
+    .bp-tag-risk  { background:rgba(245,158,11,.12); color:#f59e0b }
+    .bp-tag-poor  { background:rgba(249,115,22,.12); color:#f97316 }
+    .bp-tag-done  { background:rgba(99,102,241,.12); color:#6366f1 }
+
+    /* ── Paid pill ── */
+    .bp-paid-yes { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:8px; font-size:11.5px; font-weight:700; background:rgba(34,197,94,.12); color:#22c55e }
+    .bp-paid-no  { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:8px; font-size:11.5px; font-weight:700; background:rgba(148,163,184,.1); color:var(--bp-muted) }
+
+    /* ── Social links ── */
+    .bp-social-list { display:flex; flex-direction:column; gap:10px }
+    .bp-social-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:12px; background:var(--bp-card2); border:1px solid var(--bp-border) }
+    .bp-social-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0 }
+    .bp-social-detail { flex:1; min-width:0 }
+    .bp-social-name { font-size:13px; font-weight:700; color:var(--bp-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .bp-social-sub  { font-size:11px; color:var(--bp-muted); font-family:monospace; margin-top:2px }
+    .bp-social-link { color:#60a5fa; font-size:18px; text-decoration:none; flex-shrink:0 }
+    .bp-social-link:hover { color:#93c5fd }
+
+    /* ── Note ── */
+    .bp-note-text { font-size:13.5px; color:var(--bp-text); line-height:1.7; white-space:pre-wrap; word-break:break-word }
+
+    /* ── Photos ── */
+    .bp-photos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px }
+    .bp-photo-thumb { width:100%; aspect-ratio:1; border-radius:10px; object-fit:cover; cursor:zoom-in; transition:.15s; border:2px solid transparent }
+    .bp-photo-thumb:hover { border-color:#7c5cff; transform:scale(1.04) }
+
+    /* ── Lightbox ── */
+    .bp-lightbox { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.88); cursor:zoom-out; animation:bpFade .15s ease }
+    .bp-lightbox img { max-width:90vw; max-height:88vh; border-radius:14px; object-fit:contain; box-shadow:0 24px 64px rgba(0,0,0,.8) }
+    @keyframes bpFade { from { opacity:0 } to { opacity:1 } }
+
+    /* ── History table ── */
+    .bp-hist-wrap { overflow-x:auto }
+    .bp-hist-tbl { width:100%; border-collapse:collapse; font-size:12.5px }
+    .bp-hist-tbl th { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--bp-muted); padding:0 10px 10px; text-align:left; white-space:nowrap }
+    .bp-hist-tbl td { padding:10px; border-top:1px solid var(--bp-border); color:var(--bp-text); vertical-align:middle }
+    .bp-hist-tbl tr.bp-hist-current td { background:rgba(124,92,255,.06) }
+    .bp-hist-tbl tr:hover td { background:rgba(148,163,184,.05) }
+    .bp-hist-link { color:#60a5fa; text-decoration:none; font-weight:600; font-size:12px; background:rgba(96,165,250,.1); padding:2px 8px; border-radius:6px; display:inline-block }
+    .bp-hist-link:hover { background:rgba(96,165,250,.2) }
+
+    /* ── Gender ── */
+    .bp-gender-f { color:#f472b6; font-weight:700 }
+    .bp-gender-m { color:#60a5fa; font-weight:700 }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
+    <div class="bp-wrap" id="bpWrap">
+      <div class="bp-state" id="bpLoading">
+        <div class="bp-spin"></div>
+        <span>Loading profile…</span>
+      </div>
+      <div id="bpContent" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/layout.js?v=2"></script>
+<script src="../assets/js/dashboard-layout.js?v=1"></script>
+<script src="../assets/js/auth.js?v=2"></script>
+<script src="../assets/js/api.js?v=8"></script>
+<script>
+'use strict';
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(dt) {
+  if (!dt) return '—';
+  try {
+    var d = new Date(dt);
+    var dd = String(d.getDate()).padStart(2,'0');
+    var mm = String(d.getMonth()+1).padStart(2,'0');
+    return dd+'/'+mm+'/'+d.getFullYear();
+  } catch(e) { return String(dt).substring(0,10); }
+}
+
+function statusTag(s) {
+  var v = (s||'').trim().toLowerCase();
+  if (!v) return '<span class="bp-tag bp-tag-normal">—</span>';
+  if (v==='good')        return '<span class="bp-tag bp-tag-good">Good</span>';
+  if (v==='normal')      return '<span class="bp-tag bp-tag-normal">Normal</span>';
+  if (v==='blacklisted') return '<span class="bp-tag bp-tag-black">BlackListed</span>';
+  if (v.includes('high')||v.includes('risk')) return '<span class="bp-tag bp-tag-risk">High Risk</span>';
+  if (v==='poor')        return '<span class="bp-tag bp-tag-poor">Poor</span>';
+  if (v==='done')        return '<span class="bp-tag bp-tag-done">Done</span>';
+  return '<span class="bp-tag bp-tag-normal">'+esc(s)+'</span>';
+}
+
+function nameColor(name) {
+  var colors = ['#7c5cff','#06b6d4','#10b981','#f59e0b','#ef4444','#6366f1','#ec4899','#8b5cf6'];
+  var h = 0;
+  for (var i=0;i<(name||'').length;i++) h = (h*31+name.charCodeAt(i))&0xfffffff;
+  return colors[h % colors.length];
+}
+
+function avatarHtml(l, size) {
+  size = size || 82;
+  var src = l.photo_url || (l.photos && l.photos[0]) || '';
+  if (src) {
+    return '<div class="bp-avatar" style="width:'+size+'px;height:'+size+'px" onclick="showLightbox(\''+esc(src)+'\')">'
+      + '<img src="'+esc(src)+'" loading="lazy"></div>';
+  }
+  var name = l.FullName || '?';
+  var parts = name.trim().split(/\s+/);
+  var init = parts.length>=2 ? (parts[0][0]+parts[parts.length-1][0]).toUpperCase() : (name[0]||'?').toUpperCase();
+  var color = nameColor(name);
+  return '<div class="bp-avatar" style="width:'+size+'px;height:'+size+'px;background:'+color+';border-color:'+color+';border-opacity:.3;cursor:default">'
+    + '<span class="bp-avatar-init" style="font-size:'+(size*0.33)+'px">'+esc(init)+'</span></div>';
+}
+
+function platformIcon(platform) {
+  var p = (platform||'Facebook').toLowerCase();
+  if (p.includes('facebook') || p.includes('fb')) {
+    return '<div class="bp-social-icon" style="background:rgba(24,119,242,.15)">'
+      + '<svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>'
+      + '</div>';
+  }
+  if (p.includes('instagram') || p.includes('ig')) {
+    return '<div class="bp-social-icon" style="background:rgba(225,48,108,.15)">'
+      + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e1306c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#e1306c" stroke="none"/></svg>'
+      + '</div>';
+  }
+  if (p.includes('tiktok') || p.includes('tik')) {
+    return '<div class="bp-social-icon" style="background:rgba(0,0,0,.1)">'
+      + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:#333"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.96a8.13 8.13 0 004.77 1.54V7.06a4.85 4.85 0 01-1-.37z"/></svg>'
+      + '</div>';
+  }
+  return '<div class="bp-social-icon" style="background:rgba(148,163,184,.12)">'
+    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>'
+    + '</div>';
+}
+
+function showLightbox(src) {
+  var existing = document.querySelector('.bp-lightbox');
+  if (existing) existing.remove();
+  var lb = document.createElement('div');
+  lb.className = 'bp-lightbox';
+  lb.innerHTML = '<img src="'+esc(src)+'" alt="photo">';
+  lb.onclick = function() { lb.remove(); };
+  document.body.appendChild(lb);
+}
+window.showLightbox = showLightbox;
+
+function renderProfile(loan, history, key) {
+  var html = '';
+
+  /* ── Top bar ── */
+  html += '<div class="bp-topbar">'
+    + '<a href="loan-list.html" class="bp-back-btn">'
+    + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>'
+    + 'Back to Loan List</a>'
+    + '<div class="bp-actions">'
+    + '<button class="bp-action-btn bp-btn-edit" onclick="openEdit()">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+    + 'Edit</button>'
+    + '</div>'
+    + '</div>';
+
+  /* ── Hero ── */
+  var genderHtml = '';
+  var g = (loan.Gender||'').toLowerCase();
+  if (g.includes('ស្ត្រី')||g.includes('female')||g==='f') genderHtml = '<span class="bp-gender-f">♀ '+esc(loan.Gender)+'</span>';
+  else if (g.includes('ប្រុស')||g.includes('male')||g==='m') genderHtml = '<span class="bp-gender-m">♂ '+esc(loan.Gender)+'</span>';
+  else genderHtml = esc(loan.Gender||'—');
+
+  html += '<div class="bp-hero">'
+    + '<div class="bp-avatar-wrap">'+avatarHtml(loan, 82)+'</div>'
+    + '<div class="bp-hero-info">'
+    + '<div class="bp-hero-name">'+esc(loan.FullName||'—')+'</div>'
+    + '<div class="bp-hero-meta">'
+    + (loan.NationalID ? '<span class="bp-nid-badge">'+esc(loan.NationalID)+'</span>' : '')
+    + statusTag(loan.Status)
+    + (loan.Paid ? '<span class="bp-paid-yes">✓ Paid</span>' : '')
+    + '</div>'
+    + '<div class="bp-hero-stats">'
+    + (loan.DOB ? '<div class="bp-hero-stat"><span class="bp-hero-stat-label">Date of Birth</span><span class="bp-hero-stat-val">'+esc(loan.DOB)+'</span></div>' : '')
+    + (loan.Phone ? '<div class="bp-hero-stat"><span class="bp-hero-stat-label">Phone</span><a href="tel:'+esc(loan.Phone)+'" style="color:#60a5fa;font-weight:700;font-size:13px;text-decoration:none">'+esc(loan.Phone)+'</a></div>' : '')
+    + (loan.Gender ? '<div class="bp-hero-stat"><span class="bp-hero-stat-label">Gender</span><span class="bp-hero-stat-val">'+genderHtml+'</span></div>' : '')
+    + '</div>'
+    + '</div>'
+    + '</div>';
+
+  /* ── Main grid ── */
+  html += '<div class="bp-grid">';
+
+  /* Loan Details card */
+  html += '<div class="bp-card">'
+    + '<div class="bp-card-title">Loan Details</div>'
+    + (loan.Money ? '<div class="bp-amount">$'+esc(String(loan.Money))+'</div><div class="bp-amount-sub">Loan Amount</div><div style="height:14px"></div>' : '')
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Status</span><span class="bp-info-val">'+statusTag(loan.Status)+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Paid</span><span class="bp-info-val">'+(loan.Paid ? '<span class="bp-paid-yes">✓ Paid</span>' : '<span class="bp-paid-no">— Not Paid</span>')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Group</span><span class="bp-info-val">'+esc(loan.Groups||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Date Added</span><span class="bp-info-val">'+fmtDate(loan.DateTime)+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Created By</span><span class="bp-info-val" style="color:#a78bfa">'+esc(loan.created_by||'—')+'</span></div>'
+    + '</div>';
+
+  /* Personal Info card */
+  html += '<div class="bp-card">'
+    + '<div class="bp-card-title">Personal Info</div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Full Name</span><span class="bp-info-val">'+esc(loan.FullName||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">National ID</span><span class="bp-info-val" style="font-family:monospace;color:#60a5fa">'+esc(loan.NationalID||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Date of Birth</span><span class="bp-info-val">'+esc(loan.DOB||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Phone</span><span class="bp-info-val"><a href="tel:'+esc(loan.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(loan.Phone||'—')+'</a></span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Gender</span><span class="bp-info-val">'+genderHtml+'</span></div>'
+    + '</div>';
+
+  /* Social Media card */
+  var socialLinks = loan.social_links || [];
+  if (socialLinks.length) {
+    html += '<div class="bp-card bp-card-full">'
+      + '<div class="bp-card-title">Social Media</div>'
+      + '<div class="bp-social-list">';
+    socialLinks.forEach(function(sl) {
+      var url = (sl.url||'').trim();
+      var linkBtn = url ? '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" class="bp-social-link" title="Open link">🔗</a>' : '';
+      html += '<div class="bp-social-item">'
+        + platformIcon(sl.platform)
+        + '<div class="bp-social-detail">'
+        + '<div class="bp-social-name">'+esc(sl.name||sl.platform||'—')+'</div>'
+        + (sl.id||sl.fbid ? '<div class="bp-social-sub">ID: '+esc(sl.id||sl.fbid||'')+'</div>' : '')
+        + '</div>'
+        + linkBtn
+        + '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  /* Note card */
+  if (loan.Note && loan.Note.trim()) {
+    html += '<div class="bp-card bp-card-full">'
+      + '<div class="bp-card-title">Note</div>'
+      + '<div class="bp-note-text">'+esc(loan.Note)+'</div>'
+      + '</div>';
+  }
+
+  /* Photos */
+  var allPhotos = [];
+  if (loan.photo_url) allPhotos.push(loan.photo_url);
+  if (loan.photos) loan.photos.forEach(function(p){ if(p && p!==loan.photo_url) allPhotos.push(p); });
+  if (allPhotos.length) {
+    html += '<div class="bp-card bp-card-full">'
+      + '<div class="bp-card-title">Photos ('+allPhotos.length+')</div>'
+      + '<div class="bp-photos-grid">';
+    allPhotos.forEach(function(src) {
+      html += '<img class="bp-photo-thumb" src="'+esc(src)+'" loading="lazy" onclick="showLightbox(\''+esc(src)+'\')">';
+    });
+    html += '</div></div>';
+  }
+
+  /* Loan History */
+  if (history && history.length > 1) {
+    html += '<div class="bp-card bp-card-full">'
+      + '<div class="bp-card-title">Loan History — '+esc(loan.NationalID)+' ('+history.length+' records)</div>'
+      + '<div class="bp-hist-wrap"><table class="bp-hist-tbl">'
+      + '<thead><tr>'
+      + '<th>#</th><th>Date</th><th>Amount</th><th>Status</th><th>Paid</th><th>Group</th><th>Created By</th><th></th>'
+      + '</tr></thead><tbody>';
+    history.forEach(function(h, i) {
+      var isCurrent = h.DateTime === loan.DateTime;
+      html += '<tr'+(isCurrent?' class="bp-hist-current"':'')+'>'
+        + '<td style="color:var(--bp-muted);font-size:11px">'+(i+1)+'</td>'
+        + '<td style="white-space:nowrap">'+fmtDate(h.DateTime)+'</td>'
+        + '<td style="color:#22c55e;font-weight:700">'+(h.Money?'$'+h.Money:'—')+'</td>'
+        + '<td>'+statusTag(h.Status)+'</td>'
+        + '<td>'+(h.Paid?'<span class="bp-paid-yes">✓</span>':'<span style="color:var(--bp-muted)">—</span>')+'</td>'
+        + '<td style="font-size:12px">'+esc(h.Groups||'—')+'</td>'
+        + '<td style="font-size:12px;color:#a78bfa">'+esc(h.created_by||'—')+'</td>'
+        + '<td>'+(isCurrent?'<span style="font-size:11px;color:#7c5cff;font-weight:700">Current</span>':'<a href="borrower-profile.html?key='+encodeURIComponent(h.DateTime||'')+'" class="bp-hist-link">View</a>')+'</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+
+  html += '</div>'; /* end grid */
+
+  document.getElementById('bpContent').innerHTML = html;
+  document.getElementById('bpLoading').style.display = 'none';
+  document.getElementById('bpContent').style.display = 'block';
+
+  /* store loan for edit action */
+  window._bpLoan = loan;
+}
+
+function openEdit() {
+  var loan = window._bpLoan;
+  if (!loan) return;
+  /* Navigate to loan-list with the key so user can edit */
+  location.href = 'loan-list.html?edit=' + encodeURIComponent(loan.DateTime||'');
+}
+
+async function loadProfile() {
+  var params = new URLSearchParams(location.search);
+  var key = params.get('key');
+  if (!key) {
+    document.getElementById('bpLoading').innerHTML = '<div style="color:#ef4444;font-size:14px">No borrower key provided</div>';
+    return;
+  }
+
+  try {
+    var data = await window.CamboAPI.post({ action: 'helen_loan_profile', key: key });
+    if (!data || !data.ok) {
+      document.getElementById('bpLoading').innerHTML = '<div style="color:#ef4444;font-size:14px">'
+        + esc(data && data.message || 'Failed to load profile') + '</div>';
+      return;
+    }
+    renderProfile(data.loan, data.history, key);
+  } catch(e) {
+    document.getElementById('bpLoading').innerHTML = '<div style="color:#ef4444;font-size:14px">Error: '+esc(e.message)+'</div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.HelenAuth && !window.HelenAuth.check()) return;
+  loadProfile();
+});
+</script>
+</body>
+</html>

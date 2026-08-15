@@ -9,7 +9,8 @@
   function getPageMeta() {
     return {
       'index.html':     { title: t('Dashboard','Dashboard'),   subtitle: t('ការវិភាគ និងទិដ្ឋភាពទូទៅ','Analytics & overview') },
-      'loan-list.html':    { title: t('បញ្ជីកម្ចី','Loan List'),     subtitle: t('តារាង និងការគ្រប់គ្រងអ្នកខ្ចីសរុប','Borrower list and full management') },
+      'loan-list.html':       { title: t('បញ្ជីកម្ចី','Loan List'),       subtitle: t('តារាង និងការគ្រប់គ្រងអ្នកខ្ចីសរុប','Borrower list and full management') },
+      'borrower-profile.html':{ title: t('Profile អ្នកខ្ចី','Borrower Profile'), subtitle: t('ព័ត៌មានលម្អិតអ្នកខ្ចី','Full borrower details and loan history') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
       'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },

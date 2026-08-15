@@ -1300,7 +1300,7 @@ function renderTable() {
     var trClass = isPaint ? ' class="lr-row-paint"' : isHL ? ' class="lr-row-highlight"' : isGroup ? ' class="lr-row-group"' : isMonth ? ' class="lr-row-month"' : '';
     return '<tr'+trClass+'>'
       + '<td style="color:var(--muted);font-size:11px">'+esc(String(i+1))+'</td>'
-      + '<td style="font-weight:700"><span class="lr-name-link" data-dt="'+esc(l.DateTime||'')+'" style="display:inline-flex;align-items:center">'+avatarHtml(l)+esc(l.FullName||'—')+'</span></td>'
+      + '<td style="font-weight:700"><span style="display:inline-flex;align-items:center;gap:3px"><a href="borrower-profile.html?key='+encodeURIComponent(l.DateTime||'')+'" class="lr-avatar-plink" onclick="event.stopPropagation()" title="View Profile" style="display:inline-flex;flex-shrink:0;text-decoration:none">'+avatarHtml(l)+'</a><span class="lr-name-link" data-dt="'+esc(l.DateTime||'')+'" style="cursor:pointer">'+esc(l.FullName||'—')+'</span></span></td>'
       + '<td style="font-family:monospace;font-size:11.5px;color:#60a5fa">'+esc(l.NationalID||'—')+'</td>'
       + '<td style="font-size:11px;color:var(--muted)">'+esc(l.DOB||'—')+'</td>'
       + '<td style="font-size:12px"><a href="tel:'+esc(l.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(l.Phone||'—')+'</a></td>'
@@ -3420,7 +3420,18 @@ function sheetDelete() {
   openConfirm(loan);
 }
 
-loadData();
+loadData().then(function() {
+  /* If redirected from Borrower Profile with ?edit=key, open edit modal */
+  var editKey = new URLSearchParams(location.search).get('edit');
+  if (editKey) {
+    history.replaceState(null, '', 'loan-list.html');
+    var tryOpen = function() {
+      var loan = _allLoans.find(function(x){ return x.DateTime === editKey; });
+      if (loan) { openEditModal(loan); }
+    };
+    setTimeout(tryOpen, 400);
+  }
+});
 
 /* Auto-kickout: check expiry every 60s — redirects to login if session expired */
 setInterval(function() { HelenAuth.check(); }, 60 * 1000);
