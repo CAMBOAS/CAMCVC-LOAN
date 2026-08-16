@@ -273,10 +273,6 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           Notifications
         </button>
-        <button class="st-tab" onclick="switchTab(4,this);loadPermMatrix()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Permissions
-        </button>
       </div>
 
       <!-- ══ Panel 0: User Management ══ -->
@@ -336,6 +332,38 @@
             </table>
           </div>
           <div class="um-tbl-footer" id="umFooter"></div>
+        </div>
+
+        <!-- ── Permission Matrix ── -->
+        <div class="glass-card" style="padding:0;overflow:hidden;margin-top:4px">
+          <div style="display:flex;align-items:center;gap:8px;padding:12px 16px 10px;border-bottom:1px solid rgba(148,163,184,.1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span style="font-size:13px;font-weight:700;flex:1">Role Permissions</span>
+            <span class="perm-status" id="permStatus"></span>
+            <button class="perm-save-btn" id="permSaveBtn" onclick="savePerms()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save
+            </button>
+          </div>
+          <div class="perm-wrap">
+            <table class="perm-tbl" id="permMatrix">
+              <thead>
+                <tr>
+                  <th class="perm-th-left" style="min-width:160px">Permission</th>
+                  <th><span class="perm-role-admin">Admin</span></th>
+                  <th>Owner</th>
+                  <th>Staff Loan</th>
+                  <th>Staff</th>
+                  <th>Moderator</th>
+                  <th>Viewer</th>
+                  <th>Tester</th>
+                </tr>
+              </thead>
+              <tbody id="permBody">
+                <tr><td colspan="8" style="text-align:center;padding:16px;color:var(--muted);font-size:12px">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div><!-- /Panel 0 -->
@@ -482,49 +510,6 @@
 
         </div>
       </div><!-- /Panel 3 -->
-
-      <!-- ══ Panel 4: Permissions ══ -->
-      <div class="st-panel" id="stPanel4">
-
-        <div class="st-panel-toolbar">
-          <div class="st-panel-title">Role-based access control — configure what each role can do</div>
-        </div>
-
-        <div class="glass-card" style="padding:0;overflow:hidden">
-          <div class="perm-wrap">
-            <table class="perm-tbl" id="permMatrix">
-              <thead>
-                <tr>
-                  <th class="perm-th-left" style="min-width:170px">Permission</th>
-                  <th><span class="perm-role-admin">Admin</span></th>
-                  <th>Owner</th>
-                  <th>Staff Loan</th>
-                  <th>Staff</th>
-                  <th>Moderator</th>
-                  <th>Viewer</th>
-                  <th>Tester</th>
-                </tr>
-              </thead>
-              <tbody id="permBody">
-                <!-- filled by renderPermMatrix() -->
-              </tbody>
-            </table>
-          </div>
-          <div class="perm-footer">
-            <button class="perm-save-btn" id="permSaveBtn" onclick="savePerms()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Save Permissions
-            </button>
-            <span class="perm-status" id="permStatus"></span>
-          </div>
-        </div>
-
-        <div class="perm-note">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Admin always has all permissions and cannot be restricted. Changes take effect immediately for all users on their next page load.
-        </div>
-
-      </div><!-- /Panel 4 -->
 
     </div><!-- /st-wrap -->
   </div>
@@ -1043,6 +1028,7 @@ async function saveNotif() {
 
 loadUsers();
 loadNotif();
+loadPermMatrix();
 
 /* ── Permission Matrix ── */
 var _PM_ROLES = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
@@ -1054,8 +1040,6 @@ var _PM_PERMS = [
   { key:'actAll',   label:'Activity Log (all users)' },
   { key:'actOwn',   label:'Activity Log (own)' }
 ];
-
-var _pmLoaded = false;
 
 function renderPermMatrix(perms) {
   var body = document.getElementById('permBody');
@@ -1074,17 +1058,13 @@ function renderPermMatrix(perms) {
 }
 
 async function loadPermMatrix() {
-  if (_pmLoaded) return;
-  var st = document.getElementById('permStatus');
-  if (st) { st.className='perm-status'; st.textContent='Loading…'; }
   try {
     var res = await CamboAPI.post({ action:'helen_perms_get' });
     if (!res || !res.ok) throw new Error(res&&res.message||'Load failed');
     renderPermMatrix(res.perms);
-    _pmLoaded = true;
-    if (st) { st.textContent=''; }
   } catch(e) {
-    if (st) { st.className='perm-status err'; st.textContent='Failed to load: '+e.message; }
+    var body = document.getElementById('permBody');
+    if (body) body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:14px;color:#f87171;font-size:12px">Failed to load permissions</td></tr>';
   }
 }
 
@@ -1109,11 +1089,8 @@ async function savePerms() {
     if (!res || !res.ok) throw new Error(res&&res.message||'Save failed');
     /* Update in-memory + localStorage */
     if (window.helenUpdatePerms) window.helenUpdatePerms(perms);
-    /* Re-render so Admin column stays locked */
-    _pmLoaded = false;
     renderPermMatrix(perms);
-    _pmLoaded = true;
-    if (st) { st.className='perm-status ok'; st.textContent='Saved successfully!'; setTimeout(function(){ if(st)st.textContent=''; },3000); }
+    if (st) { st.className='perm-status ok'; st.textContent='Saved!'; setTimeout(function(){ if(st)st.textContent=''; },3000); }
   } catch(e) {
     if (st) { st.className='perm-status err'; st.textContent='Error: '+e.message; }
   }
