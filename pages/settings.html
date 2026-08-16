@@ -159,6 +159,30 @@
 
     .um-tbl-footer { padding:10px 14px; font-size:11.5px; color:var(--muted); border-top:1px solid rgba(148,163,184,.08); flex-shrink:0 }
 
+    /* ── Permission matrix ── */
+    .perm-wrap { overflow-x:auto; border-radius:14px }
+    table.perm-tbl { width:100%; border-collapse:collapse; font-size:12.5px; min-width:600px }
+    .perm-tbl th { padding:10px 12px; text-align:center; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid rgba(148,163,184,.12); white-space:nowrap; background:var(--card) }
+    .perm-tbl th.perm-th-left { text-align:left }
+    .perm-tbl td { padding:10px 12px; border-bottom:1px solid rgba(148,163,184,.07); text-align:center; vertical-align:middle }
+    .perm-tbl td.perm-td-label { text-align:left; font-weight:600; color:var(--text); white-space:nowrap }
+    .perm-tbl tr:last-child td { border-bottom:none }
+    .perm-tbl tr:hover td { background:rgba(148,163,184,.04) }
+    .perm-cb-wrap { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; transition:.15s }
+    .perm-cb-wrap:has(input:checked) { background:rgba(99,102,241,.12) }
+    .perm-cb { width:16px; height:16px; accent-color:#6366f1; cursor:pointer }
+    .perm-cb:disabled { cursor:not-allowed; opacity:.45 }
+    .perm-role-admin { color:#f59e0b; font-weight:800 }
+    .perm-role-lock { font-size:10px; color:var(--muted) }
+    .perm-footer { display:flex; align-items:center; gap:12px; padding:14px 16px; border-top:1px solid rgba(148,163,184,.1) }
+    .perm-save-btn { display:flex; align-items:center; gap:6px; background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border:none; border-radius:10px; padding:9px 18px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .perm-save-btn:hover { opacity:.88 }
+    .perm-save-btn:disabled { opacity:.5; cursor:not-allowed }
+    .perm-status { font-size:12px; color:var(--muted) }
+    .perm-status.ok  { color:#4ade80 }
+    .perm-status.err { color:#f87171 }
+    .perm-note { font-size:11.5px; color:var(--muted); background:rgba(148,163,184,.07); border-radius:10px; padding:10px 14px; line-height:1.5 }
+
     /* ── Tab bar ── */
     .st-tabs { display:flex; gap:3px; flex-shrink:0; background:rgba(148,163,184,.07); border-radius:13px; padding:4px; overflow-x:auto }
     .st-tabs::-webkit-scrollbar { display:none }
@@ -248,6 +272,10 @@
         <button class="st-tab" onclick="switchTab(3,this)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           Notifications
+        </button>
+        <button class="st-tab" onclick="switchTab(4,this);loadPermMatrix()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Permissions
         </button>
       </div>
 
@@ -454,6 +482,49 @@
 
         </div>
       </div><!-- /Panel 3 -->
+
+      <!-- ══ Panel 4: Permissions ══ -->
+      <div class="st-panel" id="stPanel4">
+
+        <div class="st-panel-toolbar">
+          <div class="st-panel-title">Role-based access control — configure what each role can do</div>
+        </div>
+
+        <div class="glass-card" style="padding:0;overflow:hidden">
+          <div class="perm-wrap">
+            <table class="perm-tbl" id="permMatrix">
+              <thead>
+                <tr>
+                  <th class="perm-th-left" style="min-width:170px">Permission</th>
+                  <th><span class="perm-role-admin">Admin</span></th>
+                  <th>Owner</th>
+                  <th>Staff Loan</th>
+                  <th>Staff</th>
+                  <th>Moderator</th>
+                  <th>Viewer</th>
+                  <th>Tester</th>
+                </tr>
+              </thead>
+              <tbody id="permBody">
+                <!-- filled by renderPermMatrix() -->
+              </tbody>
+            </table>
+          </div>
+          <div class="perm-footer">
+            <button class="perm-save-btn" id="permSaveBtn" onclick="savePerms()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Permissions
+            </button>
+            <span class="perm-status" id="permStatus"></span>
+          </div>
+        </div>
+
+        <div class="perm-note">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Admin always has all permissions and cannot be restricted. Changes take effect immediately for all users on their next page load.
+        </div>
+
+      </div><!-- /Panel 4 -->
 
     </div><!-- /st-wrap -->
   </div>
@@ -972,6 +1043,82 @@ async function saveNotif() {
 
 loadUsers();
 loadNotif();
+
+/* ── Permission Matrix ── */
+var _PM_ROLES = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
+var _PM_PERMS = [
+  { key:'settings', label:'Settings (User Mgmt)' },
+  { key:'write',    label:'Add / Edit Loan' },
+  { key:'delete',   label:'Delete Loan' },
+  { key:'reports',  label:'Reports' },
+  { key:'actAll',   label:'Activity Log (all users)' },
+  { key:'actOwn',   label:'Activity Log (own)' }
+];
+
+var _pmLoaded = false;
+
+function renderPermMatrix(perms) {
+  var body = document.getElementById('permBody');
+  if (!body) return;
+  body.innerHTML = _PM_PERMS.map(function(p) {
+    var cells = _PM_ROLES.map(function(role) {
+      var isAdmin   = role === 'Admin';
+      var isLocked  = isAdmin; /* Admin always has all perms */
+      var checked   = isAdmin || (Array.isArray(perms[p.key]) && perms[p.key].indexOf(role) !== -1);
+      var disabled  = isLocked ? 'disabled' : '';
+      var title     = isLocked ? 'Admin always has this permission' : '';
+      return '<td><span class="perm-cb-wrap"><input type="checkbox" class="perm-cb" data-perm="'+p.key+'" data-role="'+_esc(role)+'" '+(checked?'checked':'')+' '+disabled+' title="'+title+'"></span></td>';
+    }).join('');
+    return '<tr><td class="perm-td-label">'+_esc(p.label)+'</td>'+cells+'</tr>';
+  }).join('');
+}
+
+async function loadPermMatrix() {
+  if (_pmLoaded) return;
+  var st = document.getElementById('permStatus');
+  if (st) { st.className='perm-status'; st.textContent='Loading…'; }
+  try {
+    var res = await CamboAPI.post({ action:'helen_perms_get' });
+    if (!res || !res.ok) throw new Error(res&&res.message||'Load failed');
+    renderPermMatrix(res.perms);
+    _pmLoaded = true;
+    if (st) { st.textContent=''; }
+  } catch(e) {
+    if (st) { st.className='perm-status err'; st.textContent='Failed to load: '+e.message; }
+  }
+}
+
+async function savePerms() {
+  var btn = document.getElementById('permSaveBtn');
+  var st  = document.getElementById('permStatus');
+  if (btn) btn.disabled = true;
+  if (st)  { st.className='perm-status'; st.textContent='Saving…'; }
+  var perms = {};
+  _PM_PERMS.forEach(function(p) {
+    perms[p.key] = [];
+    _PM_ROLES.forEach(function(role) {
+      var cb = document.querySelector('[data-perm="'+p.key+'"][data-role="'+role+'"]');
+      if (cb && cb.checked) perms[p.key].push(role);
+    });
+  });
+  /* Admin always included in settings */
+  if (!perms.settings) perms.settings = [];
+  if (perms.settings.indexOf('Admin') === -1) perms.settings.unshift('Admin');
+  try {
+    var res = await CamboAPI.post({ action:'helen_perms_set', perms:perms });
+    if (!res || !res.ok) throw new Error(res&&res.message||'Save failed');
+    /* Update in-memory + localStorage */
+    if (window.helenUpdatePerms) window.helenUpdatePerms(perms);
+    /* Re-render so Admin column stays locked */
+    _pmLoaded = false;
+    renderPermMatrix(perms);
+    _pmLoaded = true;
+    if (st) { st.className='perm-status ok'; st.textContent='Saved successfully!'; setTimeout(function(){ if(st)st.textContent=''; },3000); }
+  } catch(e) {
+    if (st) { st.className='perm-status err'; st.textContent='Error: '+e.message; }
+  }
+  if (btn) btn.disabled = false;
+}
 </script>
 </body>
 </html>

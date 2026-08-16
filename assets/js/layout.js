@@ -56,15 +56,36 @@
   }
 
   var _PERMS = {
-    delete:   ['Admin','Owner','Moderator'],
+    settings: ['Admin'],
     write:    ['Admin','Owner','Staff Loan','Staff','Moderator','Tester'],
+    delete:   ['Admin','Owner','Moderator'],
     reports:  ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer'],
     actAll:   ['Admin','Owner','Moderator'],
-    settings: ['Admin']
+    actOwn:   ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester']
   };
+  /* merge saved overrides from localStorage */
+  (function(){
+    try {
+      var saved = JSON.parse(localStorage.getItem('helenPerms')||'null');
+      if (saved && typeof saved==='object') Object.keys(saved).forEach(function(k){ _PERMS[k]=saved[k]; });
+    } catch(e){}
+  })();
   window.helenCan = function(perm) {
     var role = getAuthRole();
     return (_PERMS[perm]||[]).indexOf(role) !== -1;
+  };
+  /* called by settings page after saving to DB */
+  window.helenUpdatePerms = function(perms) {
+    Object.keys(perms).forEach(function(k){ _PERMS[k]=perms[k]; });
+    try { localStorage.setItem('helenPerms', JSON.stringify(_PERMS)); } catch(e){}
+  };
+  /* fetch fresh perms from DB and cache — call once on login/init */
+  window.helenSyncPerms = async function() {
+    try {
+      if (typeof CamboAPI==='undefined') return;
+      var r = await CamboAPI.post({ action:'helen_perms_get' });
+      if (r && r.ok && r.perms) window.helenUpdatePerms(r.perms);
+    } catch(e){}
   };
 
   function buildSidebar() {
@@ -700,5 +721,7 @@
       _s.src = getBase() + 'assets/js/chat-global.js?v=8';
       document.head.appendChild(_s);
     }
+    /* Sync role permissions from DB (non-blocking) */
+    if (_pg !== 'login.html') setTimeout(function(){ window.helenSyncPerms && window.helenSyncPerms(); }, 500);
   });
 })();

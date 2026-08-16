@@ -794,6 +794,38 @@ export default async function handler(req, res) {
       return res.json({ ok: false, message: 'Invalid type' });
     }
 
+    /* ── Permission matrix defaults ── */
+    function defaultPerms() {
+      return {
+        settings: ['Admin'],
+        write:    ['Admin','Owner','Staff Loan','Staff','Moderator','Tester'],
+        delete:   ['Admin','Owner','Moderator'],
+        reports:  ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer'],
+        actAll:   ['Admin','Owner','Moderator'],
+        actOwn:   ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester']
+      };
+    }
+
+    /* ── Get role permissions ── */
+    if (action === 'helen_perms_get') {
+      const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="permissions" LIMIT 1');
+      const perms = rows.length ? JSON.parse(rows[0].value) : defaultPerms();
+      return res.json({ ok:true, perms });
+    }
+
+    /* ── Save role permissions (Admin only) ── */
+    if (action === 'helen_perms_set') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const perms = body.perms;
+      if (!perms || typeof perms !== 'object') return res.json({ ok:false, message:'perms required' });
+      if (!Array.isArray(perms.settings)) perms.settings = ['Admin'];
+      if (!perms.settings.includes('Admin')) perms.settings = ['Admin', ...perms.settings];
+      await db().query('DELETE FROM helen_infor WHERE type="permissions"');
+      await db().query('INSERT INTO helen_infor (type, value) VALUES ("permissions", ?)', [JSON.stringify(perms)]);
+      logActivity('perms_update', actor, _bu, null, perms).catch(()=>{});
+      return res.json({ ok:true });
+    }
+
     /* ── Notif settings get ── */
     if (action === 'helen_notif_get') {
       const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="notif"');
