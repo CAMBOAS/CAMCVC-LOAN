@@ -160,28 +160,25 @@
     .um-tbl-footer { padding:10px 14px; font-size:11.5px; color:var(--muted); border-top:1px solid rgba(148,163,184,.08); flex-shrink:0 }
 
     /* ── Permission matrix ── */
-    .perm-wrap { overflow-x:auto; border-radius:14px }
-    table.perm-tbl { width:100%; border-collapse:collapse; font-size:12.5px; min-width:600px }
-    .perm-tbl th { padding:10px 12px; text-align:center; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid rgba(148,163,184,.12); white-space:nowrap; background:var(--card) }
+    .perm-wrap { overflow-x:auto }
+    table.perm-tbl { width:100%; border-collapse:collapse; font-size:11.5px; min-width:540px }
+    .perm-tbl th { padding:6px 10px; text-align:center; font-size:9.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid rgba(148,163,184,.12); white-space:nowrap; background:var(--card) }
     .perm-tbl th.perm-th-left { text-align:left }
-    .perm-tbl td { padding:10px 12px; border-bottom:1px solid rgba(148,163,184,.07); text-align:center; vertical-align:middle }
-    .perm-tbl td.perm-td-label { text-align:left; font-weight:600; color:var(--text); white-space:nowrap }
+    .perm-tbl td { padding:5px 10px; border-bottom:1px solid rgba(148,163,184,.06); text-align:center; vertical-align:middle }
+    .perm-tbl td.perm-td-label { text-align:left; font-weight:600; color:var(--text); white-space:nowrap; font-size:11.5px }
     .perm-tbl tr:last-child td { border-bottom:none }
     .perm-tbl tr:hover td { background:rgba(148,163,184,.04) }
-    .perm-cb-wrap { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; transition:.15s }
-    .perm-cb-wrap:has(input:checked) { background:rgba(99,102,241,.12) }
-    .perm-cb { width:16px; height:16px; accent-color:#6366f1; cursor:pointer }
-    .perm-cb:disabled { cursor:not-allowed; opacity:.45 }
+    .perm-cb-wrap { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; transition:.15s }
+    .perm-cb-wrap:has(input:checked) { background:rgba(99,102,241,.1) }
+    .perm-cb { width:13px; height:13px; accent-color:#6366f1; cursor:pointer }
+    .perm-cb:disabled { cursor:not-allowed; opacity:.4 }
     .perm-role-admin { color:#f59e0b; font-weight:800 }
-    .perm-role-lock { font-size:10px; color:var(--muted) }
-    .perm-footer { display:flex; align-items:center; gap:12px; padding:14px 16px; border-top:1px solid rgba(148,163,184,.1) }
-    .perm-save-btn { display:flex; align-items:center; gap:6px; background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border:none; border-radius:10px; padding:9px 18px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .perm-save-btn { display:flex; align-items:center; gap:5px; background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s; flex-shrink:0 }
     .perm-save-btn:hover { opacity:.88 }
     .perm-save-btn:disabled { opacity:.5; cursor:not-allowed }
-    .perm-status { font-size:12px; color:var(--muted) }
+    .perm-status { font-size:11.5px; color:var(--muted) }
     .perm-status.ok  { color:#4ade80 }
     .perm-status.err { color:#f87171 }
-    .perm-note { font-size:11.5px; color:var(--muted); background:rgba(148,163,184,.07); border-radius:10px; padding:10px 14px; line-height:1.5 }
 
     /* ── Tab bar ── */
     .st-tabs { display:flex; gap:3px; flex-shrink:0; background:rgba(148,163,184,.07); border-radius:13px; padding:4px; overflow-x:auto }
@@ -336,9 +333,9 @@
 
         <!-- ── Permission Matrix ── -->
         <div class="glass-card" style="padding:0;overflow:hidden;margin-top:4px">
-          <div style="display:flex;align-items:center;gap:8px;padding:12px 16px 10px;border-bottom:1px solid rgba(148,163,184,.1)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span style="font-size:13px;font-weight:700;flex:1">Role Permissions</span>
+          <div style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid rgba(148,163,184,.1)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span style="font-size:12px;font-weight:700;flex:1">Role Permissions</span>
             <span class="perm-status" id="permStatus"></span>
             <button class="perm-save-btn" id="permSaveBtn" onclick="savePerms()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
