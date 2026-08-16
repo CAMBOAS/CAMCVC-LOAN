@@ -511,6 +511,57 @@ export default async function handler(req, res) {
       return res.json({ ok: r.affectedRows > 0, message: r.affectedRows > 0 ? 'Deleted' : 'Not found' });
     }
 
+    /* ── Repayment entries table ── */
+    async function ensureRepaymentsTable() {
+      await db().query(`CREATE TABLE IF NOT EXISTS helen_repayments (
+        id       INT AUTO_INCREMENT PRIMARY KEY,
+        loan_key VARCHAR(255) NOT NULL,
+        type     ENUM('payment','discount') NOT NULL DEFAULT 'payment',
+        amount   DECIMAL(10,2) NOT NULL DEFAULT 0,
+        paid_at  DATETIME NOT NULL,
+        note     TEXT,
+        created_at DATETIME DEFAULT NOW(),
+        INDEX idx_rp_key (loan_key)
+      )`).catch(()=>{});
+    }
+
+    /* ── List repayment entries ── */
+    if (action === 'helen_repayment_list') {
+      const key = String(body.key||'').trim();
+      if (!key) return res.json({ ok:false, message:'key required' });
+      await ensureRepaymentsTable();
+      const [rows] = await db().query('SELECT * FROM helen_repayments WHERE loan_key=? ORDER BY paid_at ASC', [key]);
+      return res.json({ ok:true, entries: rows });
+    }
+
+    /* ── Add repayment entry ── */
+    if (action === 'helen_repayment_add') {
+      if (_bv.role === 'Viewer') return res.json({ ok:false, message:'Permission denied', code:403 });
+      const key    = String(body.key||'').trim();
+      const type   = body.type === 'discount' ? 'discount' : 'payment';
+      const amount = parseFloat(body.amount)||0;
+      const paidAt = String(body.paid_at||'').trim() || new Date().toISOString().replace('T',' ').substring(0,19);
+      const note   = String(body.note||'').trim();
+      if (!key || amount <= 0) return res.json({ ok:false, message:'key and amount required' });
+      await ensureRepaymentsTable();
+      const [r] = await db().query(
+        'INSERT INTO helen_repayments (loan_key, type, amount, paid_at, note) VALUES (?,?,?,?,?)',
+        [key, type, amount, paidAt, note||null]
+      );
+      logActivity('repayment_add', actor, _bu, key, { type, amount }).catch(()=>{});
+      return res.json({ ok:true, id: r.insertId });
+    }
+
+    /* ── Delete repayment entry ── */
+    if (action === 'helen_repayment_delete') {
+      if (_bv.role === 'Viewer') return res.json({ ok:false, message:'Permission denied', code:403 });
+      const id = parseInt(body.id)||0;
+      if (!id) return res.json({ ok:false, message:'id required' });
+      await ensureRepaymentsTable();
+      await db().query('DELETE FROM helen_repayments WHERE id=?', [id]);
+      return res.json({ ok:true });
+    }
+
     /* ── Messages ── */
     async function ensureMessagesTable() {
       await db().query(`CREATE TABLE IF NOT EXISTS helen_messages (
