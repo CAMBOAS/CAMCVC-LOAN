@@ -469,12 +469,12 @@
         <!-- KPI Row -->
         <div class="lr-kpi-row" id="lrKpiRow">
           <!-- Skeleton KPIs -->
-          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">�</div></div>
-          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">�</div></div>
-          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">�</div></div>
-          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">�</div></div>
-          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">�</div></div>
-          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">�</div></div>
+          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">?</div></div>
+          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">?</div></div>
+          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">?</div></div>
+          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">?</div></div>
+          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">?</div></div>
+          <div class="glass-card lr-kpi"><div class="lr-kpi-label">Loading...</div><div class="lr-kpi-val">?</div></div>
         </div>
 
         <!-- Charts Row -->
@@ -484,7 +484,7 @@
             <h3 class="lr-card-title">?????</h3>
             <p class="lr-card-sub">Top Groups by Borrowers</p>
             <div class="lr-bar-list" id="lrGroupBars">
-              <div class="lr-loading" style="padding:20px">�</div>
+              <div class="lr-loading" style="padding:20px">?</div>
             </div>
           </div>
 
@@ -493,7 +493,7 @@
             <h3 class="lr-card-title">?????????????????</h3>
             <p class="lr-card-sub">Monthly New Borrowers</p>
             <div class="lr-month-list" id="lrMonthList">
-              <div class="lr-loading" style="padding:12px">�</div>
+              <div class="lr-loading" style="padding:12px">?</div>
             </div>
           </div>
 
@@ -558,9 +558,9 @@
                 </div>
                 <div class="lr-fpanel-body">
                   <div class="lr-fpanel-row">
-                    <label class="lr-fpanel-label" style="--sect-c:#a78bfa">???????? � Status</label>
+                    <label class="lr-fpanel-label" style="--sect-c:#a78bfa">???????? ? Status</label>
                     <select class="lr-fpanel-select" id="lrFStatus" onchange="setFPChip('status',this.value)">
-                      <option value="">� All Statuses �</option>
+                      <option value="">? All Statuses ?</option>
                       <option value="Good">Good</option>
                       <option value="Normal">Normal</option>
                       <option value="BlackListed">BlackListed</option>
@@ -568,18 +568,18 @@
                     </select>
                   </div>
                   <div class="lr-fpanel-row">
-                    <label class="lr-fpanel-label" style="--sect-c:#06b6d4">??? � Gender</label>
+                    <label class="lr-fpanel-label" style="--sect-c:#06b6d4">??? ? Gender</label>
                     <select class="lr-fpanel-select" id="lrFGender" onchange="setFPChip('gender',this.value)">
-                      <option value="">� All Genders �</option>
+                      <option value="">? All Genders ?</option>
                       <option value="Male">Male / ?????</option>
                       <option value="Female">Female / ????</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
                   <div class="lr-fpanel-row">
-                    <label class="lr-fpanel-label" style="--sect-c:#f59e0b">????? � Groups</label>
+                    <label class="lr-fpanel-label" style="--sect-c:#f59e0b">????? ? Groups</label>
                     <select class="lr-fpanel-select" id="lrFGroup" onchange="setFPChip('group',this.value)">
-                      <option value="">� All Groups �</option>
+                      <option value="">? All Groups ?</option>
                     </select>
                   </div>
                 </div>
@@ -620,8 +620,8 @@
             </table>
           </div>
           <div class="lr-tbl-footer">
-            <span id="lrFootInfo">�</span>
-            <span id="lrFootCount" style="font-weight:700;color:var(--text)">�</span>
+            <span id="lrFootInfo">?</span>
+            <span id="lrFootCount" style="font-weight:700;color:var(--text)">?</span>
           </div>
         </div>
 
@@ -631,8 +631,8 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../assets/js/layout.js?v=16"></script>
-<script src="../assets/js/dashboard-layout.js?v=16"></script>
+<script src="../assets/js/layout.js?v=18"></script>
+<script src="../assets/js/dashboard-layout.js?v=18"></script>
 <script src="../assets/js/api.js?v=7"></script>
 <script>
 var _allLoans   = [];
@@ -680,13 +680,13 @@ function openFBID(inputId) {
   var url = /^https?:\/\//i.test(val) ? val : 'https://' + val;
   window.open(url, '_blank', 'noopener,noreferrer');
 }
-function fmtMoney(v) { var n=Number(v||0); return isNaN(n)?'�':'$'+n.toFixed(2).replace(/\.00$/,''); }
+function fmtMoney(v) { var n=Number(v||0); return isNaN(n)?'?':'$'+n.toFixed(2).replace(/\.00$/,''); }
 function fmtDate(dt) {
-  if (!dt) return '�';
+  if (!dt) return '?';
   var s = String(dt);
   var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return m[3]+'/'+m[2]+'/'+m[1];
-  return s.split('T')[0] || '�';
+  return s.split('T')[0] || '?';
 }
 function fmtDOB(el) {
   var v = el.value.replace(/\D/g, '').slice(0, 8);
@@ -709,7 +709,7 @@ function ymdToDMY(s) {
 function onDatePick(inputEl, displayId) {
   var v = inputEl.value;
   var el = document.getElementById(displayId);
-  if (el) el.textContent = v ? ymdToDMY(v) : '�';
+  if (el) el.textContent = v ? ymdToDMY(v) : '?';
 }
 function today_ymd() {
   var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -725,7 +725,7 @@ function toast(msg, err) {
 /* -- Status tag -- */
 function statusTag(s) {
   var v = (s||'').trim();
-  if (!v) return '<span class="tag tag-def">�</span>';
+  if (!v) return '<span class="tag tag-def">?</span>';
   var lower = v.toLowerCase();
   if (lower==='good')       return '<span class="tag tag-good">Good</span>';
   if (lower==='normal')     return '<span class="tag tag-normal">Normal</span>';
@@ -738,7 +738,7 @@ function genderTag(g) {
   if (v==='male'||v==='?????')   return '<span class="tag tag-m">?????</span>';
   if (v==='female'||v==='????') return '<span class="tag tag-f">????</span>';
   if (v) return '<span class="tag tag-o">'+esc(g)+'</span>';
-  return '�';
+  return '?';
 }
 
 /* -- Status colors -- */
@@ -795,7 +795,7 @@ async function updateLoanStatus(loan, newStatus) {
 
 /* -- HelenInfor (Groups + Statuses from Google Sheet) -- */
 var _helenInfor = { groups: [], statuses: [], socialMedia: [] };
-/* -- Load data (Retry + Timeout) � single combined request -- */
+/* -- Load data (Retry + Timeout) ? single combined request -- */
 async function loadData() {
   var _refreshBtn = document.querySelector('.lr-btn-refresh');
   if (_refreshBtn) _refreshBtn.classList.add('spinning');
@@ -827,7 +827,7 @@ async function loadData() {
   if (!success) {
     _allLoans = [];
     console.error('[HELEN LOAN] loadData failed after 3 attempts');
-    toast('? ???????????? Server � ??? Refresh ???????', true);
+    toast('? ???????????? Server ? ??? Refresh ???????', true);
   }
 
   populateFilters(); applyFilter(); renderCharts();
@@ -959,7 +959,7 @@ function renderTable() {
 
   var html = arr.map(function(l, i){
     var money = Number(l.Money||0);
-    var moneyHtml = isNaN(money) || money===0 ? '<span style="color:var(--muted)">�</span>' : '<span style="color:#34d399;font-weight:700">'+fmtMoney(money)+'</span>';
+    var moneyHtml = isNaN(money) || money===0 ? '<span style="color:var(--muted)">?</span>' : '<span style="color:#34d399;font-weight:700">'+fmtMoney(money)+'</span>';
     var rowStatus = (l.Status||'').trim().toLowerCase();
     var isHL    = _kpiActive    && rowStatus === _kpiActive.toLowerCase();
     var isPaint = _paintStatus  && rowStatus === _paintStatus.toLowerCase();
@@ -968,21 +968,21 @@ function renderTable() {
     var trClass = isPaint ? ' class="lr-row-paint"' : isHL ? ' class="lr-row-highlight"' : isGroup ? ' class="lr-row-group"' : isMonth ? ' class="lr-row-month"' : '';
     return '<tr'+trClass+'>'
       + '<td style="color:var(--muted);font-size:11px">'+esc(String(l._idx||i+1))+'</td>'
-      + '<td style="font-weight:700"><span class="lr-name-link" data-dt="'+esc(l.DateTime||'')+'">'+esc(l.FullName||'�')+'</span></td>'
-      + '<td style="font-family:monospace;font-size:11.5px;color:#60a5fa">'+esc(l.NationalID||'�')+'</td>'
-      + '<td style="font-size:11px;color:var(--muted)">'+esc(l.DOB||'�')+'</td>'
-      + '<td style="font-size:12px"><a href="tel:'+esc(l.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(l.Phone||'�')+'</a></td>'
+      + '<td style="font-weight:700"><span class="lr-name-link" data-dt="'+esc(l.DateTime||'')+'">'+esc(l.FullName||'?')+'</span></td>'
+      + '<td style="font-family:monospace;font-size:11.5px;color:#60a5fa">'+esc(l.NationalID||'?')+'</td>'
+      + '<td style="font-size:11px;color:var(--muted)">'+esc(l.DOB||'?')+'</td>'
+      + '<td style="font-size:12px"><a href="tel:'+esc(l.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(l.Phone||'?')+'</a></td>'
       + '<td>'+genderTag(l.Gender)+'</td>'
-      + '<td style="font-size:12px">'+esc(l.Groups||'�')+'</td>'
+      + '<td style="font-size:12px">'+esc(l.Groups||'?')+'</td>'
       + '<td style="text-align:right">'+moneyHtml+'</td>'
       + '<td>'+statusTag(l.Status)+'</td>'
       + '<td style="font-size:11px;color:var(--muted)">'+fmtDate(l.DateTime)+'</td>'
-      + '<td style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(l.Note||'')+'">'+esc(l.Note||'�')+'</td>'
-      + '<td style="font-size:11px;color:var(--text);white-space:nowrap">'+esc(l.FBName||'�')+'</td>'
-      + (function(){ var u=String(l.URL||'').trim(); return u && /^https?:\/\//i.test(u) ? '<td style="text-align:center"><a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" style="color:#60a5fa;font-size:11px">??</a></td>' : '<td style="color:var(--muted);font-size:11px;text-align:center">�</td>'; })()
-      + '<td style="font-family:monospace;font-size:10px;color:var(--muted);white-space:nowrap">'+esc(l.ID||'�')+'</td>'
-      + (function(){ var fb=String(l.FBID||'').trim(); if(!fb) return '<td style="text-align:center;color:var(--muted);font-size:11px">�</td>'; var href=/^https?:\/\//i.test(fb)?fb:'https://'+fb; return '<td style="text-align:center"><a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="'+esc(fb)+'" style="color:#60a5fa;display:inline-flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>'; })()
-      + '<td style="text-align:center"><button class="lr-del-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'�')+'" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>'
+      + '<td style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(l.Note||'')+'">'+esc(l.Note||'?')+'</td>'
+      + '<td style="font-size:11px;color:var(--text);white-space:nowrap">'+esc(l.FBName||'?')+'</td>'
+      + (function(){ var u=String(l.URL||'').trim(); return u && /^https?:\/\//i.test(u) ? '<td style="text-align:center"><a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" style="color:#60a5fa;font-size:11px">??</a></td>' : '<td style="color:var(--muted);font-size:11px;text-align:center">?</td>'; })()
+      + '<td style="font-family:monospace;font-size:10px;color:var(--muted);white-space:nowrap">'+esc(l.ID||'?')+'</td>'
+      + (function(){ var fb=String(l.FBID||'').trim(); if(!fb) return '<td style="text-align:center;color:var(--muted);font-size:11px">?</td>'; var href=/^https?:\/\//i.test(fb)?fb:'https://'+fb; return '<td style="text-align:center"><a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" title="'+esc(fb)+'" style="color:#60a5fa;display:inline-flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>'; })()
+      + '<td style="text-align:center"><button class="lr-del-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'?')+'" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>'
       + '</tr>';
   }).join('');
 
@@ -1040,7 +1040,7 @@ function renderMonthlyTrend() {
       var barH  = max > 0 ? Math.max(Math.round(m.count / max * BAR_MAX_H), m.count > 0 ? 4 : 2) : 2;
       var isAct = _monthActive === m.key;
       var cls   = 'lr-month-col' + (isAct ? ' lr-month-active' : '');
-      return '<div class="' + cls + '" data-month="' + m.key + '" title="' + m.label + ' � ' + m.count + ' borrowers">'
+      return '<div class="' + cls + '" data-month="' + m.key + '" title="' + m.label + ' ? ' + m.count + ' borrowers">'
         + '<span class="lr-month-val' + (m.isCurrent ? '" style="color:#22d3ee' : '') + '">' + (m.count || '') + '</span>'
         + '<div class="lr-month-bar-wrap"><div class="lr-month-bar' + (m.isCurrent && !isAct ? ' current' : '') + '" style="height:' + barH + 'px"></div></div>'
         + '<div class="lr-month-divider"></div>'
@@ -1146,9 +1146,9 @@ function renderStatusDonut() {
   );
   svg.innerHTML = parts.join('');
 
-  /* Random slow spin � direction & speed change each render */
+  /* Random slow spin ? direction & speed change each render */
   var _spinDir = Math.random() > 0.5 ? 'lr-spin-cw' : 'lr-spin-ccw';
-  var _spinDur = (10 + Math.random() * 14).toFixed(1); /* 10�24s per rotation */
+  var _spinDur = (10 + Math.random() * 14).toFixed(1); /* 10?24s per rotation */
   var ring = document.getElementById('lrStatusRing');
   if (ring) ring.style.animation = _spinDir + ' ' + _spinDur + 's linear infinite';
 
@@ -1228,7 +1228,7 @@ function renderGroupBars() {
     var color = GROUP_COLORS_HEX[i % GROUP_COLORS_HEX.length];
     var rgb   = GROUP_COLORS_RGB[i % GROUP_COLORS_RGB.length];
     var isAct = _groupActive && _groupActive.name === e.name;
-    var name  = e.name.length > 20 ? e.name.slice(0,19)+'�' : e.name;
+    var name  = e.name.length > 20 ? e.name.slice(0,19)+'?' : e.name;
     return '<div class="lr-bar-item-wrap'+(isAct?' lr-group-active':'')+'"'
       + ' data-group="'+esc(e.name)+'" data-color="'+color+'" data-rgb="'+rgb+'"'
       + (isAct?' style="--group-color:'+color+';--group-rgb:'+rgb+'"':'')
@@ -1241,7 +1241,7 @@ function renderGroupBars() {
       + '</div>';
   }).join('');
 
-  document.getElementById('lrGroupBars').innerHTML = html || '<div class="lr-loading" style="padding:16px">�</div>';
+  document.getElementById('lrGroupBars').innerHTML = html || '<div class="lr-loading" style="padding:16px">?</div>';
 }
 
 
@@ -1254,7 +1254,7 @@ function toggleLrFilters() {
   btn.classList.toggle('lr-filter-on', open);
   if (open) closeActionsPanel();
 }
-function closeActionsPanel() { /* no-op � kept for callers */ }
+function closeActionsPanel() { /* no-op ? kept for callers */ }
 
 /* -- Export Modal -- */
 var LREX_COLS = [
@@ -1357,7 +1357,7 @@ function renderExportPreview() {
   wrap.innerHTML = '<table><thead><tr>' + th + '</tr></thead><tbody>' + rows + totalRow + '</tbody></table>';
 
   var info = document.getElementById('lrExFooterInfo');
-  if (info) info.textContent = data.length + ' records' + (hasMoney ? ' � $' + totalMoney.toFixed(2) : '');
+  if (info) info.textContent = data.length + ' records' + (hasMoney ? ' ? $' + totalMoney.toFixed(2) : '');
 }
 
 function lrexGetData() {
@@ -1392,7 +1392,7 @@ function lrexBuildTableHTML(data, cols) {
   return h + '</tbody></table>';
 }
 
-/* Canvas-based table renderer � no html2canvas, works with Khmer text */
+/* Canvas-based table renderer ? no html2canvas, works with Khmer text */
 function lrexRenderToCanvas(data, cols) {
   var dark = !(document.documentElement.getAttribute('data-theme') === 'light');
   var SC=2, PH=14, PV=9, FS=13, HFS=11, OUTER=20;
@@ -1418,7 +1418,7 @@ function lrexRenderToCanvas(data, cols) {
     return Math.ceil(w) + 4;
   });
 
-  /* A4 at 96dpi: 794 � 1123px
+  /* A4 at 96dpi: 794 ? 1123px
      - Width : always A4 minimum; auto-expands if columns are wider
      - Height: always A4 minimum; auto-expands if rows are taller          */
   var A4_W = 794, A4_H = 1123;
@@ -1444,7 +1444,7 @@ function lrexRenderToCanvas(data, cols) {
 
   /* title */
   ctx.font='bold 12px system-ui,sans-serif'; ctx.fillStyle='#94a3b8';
-  ctx.fillText('Helen Loan Report � '+new Date().toLocaleDateString('en-GB')+' ('+data.length+' records)',OUTER,22);
+  ctx.fillText('Helen Loan Report ? '+new Date().toLocaleDateString('en-GB')+' ('+data.length+' records)',OUTER,22);
 
   var y=TITLE_H, totalMoney=0;
 
@@ -1474,7 +1474,7 @@ function lrexRenderToCanvas(data, cols) {
     y+=ROW_H;
   });
 
-  /* total row � only if toggled on */
+  /* total row ? only if toggled on */
   if (lrexShowTotal) {
     ctx.fillStyle=dark?'rgba(245,158,11,.07)':'rgba(245,158,11,.05)';
     ctx.fillRect(OUTER,y,W-OUTER*2,ROW_H);
@@ -1550,7 +1550,7 @@ function doExportPdf() {
   var html = '<!doctype html><html><head><meta charset="utf-8"><title>Loan Report</title>'
     + '<style>body{margin:16px;font-family:system-ui,sans-serif}h3{font-size:13px;margin-bottom:10px;color:#1e293b}'
     + '@media print{@page{margin:10mm}body{margin:0}}</style></head><body>'
-    + '<h3>Helen Loan Report � '+now.toLocaleDateString('en-GB')+' ('+data.length+' records)</h3>'
+    + '<h3>Helen Loan Report ? '+now.toLocaleDateString('en-GB')+' ('+data.length+' records)</h3>'
     + lrexBuildTableHTML(data, cols)
     + '<script>window.onload=function(){window.print();}<\/script></body></html>';
   var w = window.open('','_blank','width=950,height=700');
@@ -1581,7 +1581,7 @@ function doShareTelegram() {
           document.body.appendChild(a); a.click(); document.body.removeChild(a);
           setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
           setTimeout(function(){ window.open('https://t.me', '_blank'); }, 600);
-          toast('Image saved � open Telegram to share');
+          toast('Image saved ? open Telegram to share');
         }
       } catch(e2) { toast('Share cancelled', true); }
     }, 'image/jpeg', 0.92);
@@ -1621,7 +1621,7 @@ function updateFilterBadge() {
   if (badge) badge.style.display = active ? 'block' : 'none';
 }
 
-function renderFPGroups() { /* no-op � populateFilters() fills #lrFGroup select directly */ }
+function renderFPGroups() { /* no-op ? populateFilters() fills #lrFGroup select directly */ }
 
 document.addEventListener('click', function(e) {
   var panel = document.getElementById('lrFilterPanel');
@@ -1659,7 +1659,7 @@ var _deleteLoan = null;
 
 function openConfirm(loan) {
   _deleteLoan = loan;
-  document.getElementById('lrConfirmName').textContent = loan.FullName || '�';
+  document.getElementById('lrConfirmName').textContent = loan.FullName || '?';
   var btn = document.getElementById('lrConfirmDelBtn');
   btn.disabled = false;
   btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>??????';
@@ -1679,7 +1679,7 @@ async function confirmDelete() {
   try {
     var res = await CamboAPI.post({ action: 'helen_loan_delete', key: _deleteLoan.DateTime });
     if (res && res.ok) {
-      toast('??? ???????????? � ?????? Trash');
+      toast('??? ???????????? ? ?????? Trash');
       closeConfirm();
       loadData();
     } else {
@@ -1736,13 +1736,13 @@ function openAddModal() {
     +'<div class="lr-add-field"><div class="lr-add-label">'+svgID+' National ID</div><input class="lr-add-input" id="af_NationalID" placeholder="XXX-XXX-XXX..."></div>'
     +'<div class="lr-add-field"><div class="lr-add-label">'+svgCal+' Date of Birth (DOB)</div><input class="lr-add-input" id="af_DOB" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="fmtDOB(this)"></div>'
     +'<div class="lr-add-field"><div class="lr-add-label">'+svgPhone+' Phone</div><input class="lr-add-input" id="af_Phone" placeholder="0XX XXX XXX"></div>'
-    +'<div class="lr-add-field"><div class="lr-add-label">'+svgGender+' Gender</div><select class="lr-add-input" id="af_Gender"><option value="">� Select �</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>'
-    +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgGroup+' Group</div><select class="lr-add-input" id="af_Groups"><option value="">� Select �</option>'+groupOpts+'</select></div>'
+    +'<div class="lr-add-field"><div class="lr-add-label">'+svgGender+' Gender</div><select class="lr-add-input" id="af_Gender"><option value="">? Select ?</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>'
+    +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgGroup+' Group</div><select class="lr-add-input" id="af_Groups"><option value="">? Select ?</option>'+groupOpts+'</select></div>'
     +'</div>'
     +''
     +'<div class="lr-add-grid">'
     +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgMoney+' Loan Amount ($)</div><input class="lr-add-input" id="af_Money" type="number" min="0" placeholder="0.00"></div>'
-    +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgStatus+' Status <span style="color:#ef4444;margin-left:2px">*</span></div><select class="lr-add-input" id="af_Status"><option value="">� Select �</option>'+statusOpts+'</select></div>'
+    +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgStatus+' Status <span style="color:#ef4444;margin-left:2px">*</span></div><select class="lr-add-input" id="af_Status"><option value="">? Select ?</option>'+statusOpts+'</select></div>'
     +'</div></div></div>'
     +'<div class="lr-modal-col">'
     +'<div class="lr-sec-box" style="height:100%;box-sizing:border-box">'
@@ -1885,7 +1885,7 @@ async function saveAdd() {
     if (res && res.ok) {
       toast('? Added successfully');
       closeAddModal();
-      /* Optimistic update � no reload needed */
+      /* Optimistic update ? no reload needed */
       var newEntry = Object.assign({}, loan, {
         DateTime: loan.DateTime || today_ymd() + 'T00:00:00',
         _date: (loan.DateTime || today_ymd() + 'T00:00:00').split('T')[0]
@@ -1898,7 +1898,7 @@ async function saveAdd() {
       btn.disabled = false; btn.innerHTML = _addBtnHTML;
     }
   } catch(e) {
-    toast(e.message === 'timeout' ? '?? Request timeout � ??? Try Again' : '? Network error', true);
+    toast(e.message === 'timeout' ? '?? Request timeout ? ??? Try Again' : '? Network error', true);
     btn.disabled = false; btn.innerHTML = _addBtnHTML;
   }
 }
@@ -1921,11 +1921,11 @@ function openEditModal(loan) {
     return '<option value="'+esc(v)+'"'+(v===(loan.FacebookCom||'').trim()?' selected':'')+'>'+esc(v)+'</option>';
   }).join('');
   var smFieldE   = smOptsE
-    ? '<select class="lr-add-input" id="ef_FacebookCom" onchange="updateFBID(\'ef\')"><option value="">� Select �</option>'+smOptsE+'</select>'
+    ? '<select class="lr-add-input" id="ef_FacebookCom" onchange="updateFBID(\'ef\')"><option value="">? Select ?</option>'+smOptsE+'</select>'
     : '<input class="lr-add-input" id="ef_FacebookCom" value="'+curFBCom+'" placeholder="https://facebook.com/..." oninput="updateFBID(\'ef\')">';
   var _gNorm = {'?????':'Male','male':'Male','????':'Female','female':'Female','??????':'Other','other':'Other'};
   var _gSel  = _gNorm[(loan.Gender||'').trim()] || _gNorm[(loan.Gender||'').trim().toLowerCase()] || (loan.Gender||'');
-  var genderOpts = '<option value="">� Select �</option>'
+  var genderOpts = '<option value="">? Select ?</option>'
     +'<option value="Male"'  +(_gSel==='Male'  ?' selected':'')+'>Male</option>'
     +'<option value="Female"'+(_gSel==='Female'?' selected':'')+'>Female</option>'
     +'<option value="Other"' +(_gSel==='Other' ?' selected':'')+'>Other</option>';
@@ -1940,7 +1940,7 @@ function openEditModal(loan) {
   var svgStatus = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>';
   var svgNote   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
 
-  document.getElementById('lrModalName').textContent = loan.FullName || '�';
+  document.getElementById('lrModalName').textContent = loan.FullName || '?';
   document.getElementById('lrEditForm').innerHTML =
     '<div class="lr-modal-cols">'
     +'<div class="lr-modal-col"><div class="lr-sec-box" style="height:100%;box-sizing:border-box">'
@@ -1951,12 +1951,12 @@ function openEditModal(loan) {
     +'<div class="lr-add-field"><div class="lr-add-label">'+svgCal+' Date of Birth (DOB)</div><input class="lr-add-input" id="ef_DOB" value="'+esc(loan.DOB||'')+'" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="fmtDOB(this)"></div>'
     +'<div class="lr-add-field"><div class="lr-add-label">'+svgPhone+' Phone</div><input class="lr-add-input" id="ef_Phone" value="'+esc(loan.Phone||'')+'" placeholder="0XX XXX XXX"></div>'
     +'<div class="lr-add-field"><div class="lr-add-label">'+svgGender+' Gender</div><select class="lr-add-input" id="ef_Gender">'+genderOpts+'</select></div>'
-    +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgGroup+' Group</div><select class="lr-add-input" id="ef_Groups"><option value="">� Select �</option>'+groupOpts+'</select></div>'
+    +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgGroup+' Group</div><select class="lr-add-input" id="ef_Groups"><option value="">? Select ?</option>'+groupOpts+'</select></div>'
     +'</div>'
     +''
     +'<div class="lr-add-grid">'
     +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgMoney+' Loan Amount ($)</div><input class="lr-add-input" id="ef_Money" type="number" min="0" value="'+esc(loan.Money||'')+'" placeholder="0.00"></div>'
-    +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgStatus+' Status <span style="color:#ef4444;margin-left:2px">*</span></div><select class="lr-add-input" id="ef_Status"><option value="">� Select �</option>'+statusOpts+'</select></div>'
+    +'<div class="lr-add-field" style="margin-bottom:0"><div class="lr-add-label">'+svgStatus+' Status <span style="color:#ef4444;margin-left:2px">*</span></div><select class="lr-add-input" id="ef_Status"><option value="">? Select ?</option>'+statusOpts+'</select></div>'
     +'</div></div></div>'
     +'<div class="lr-modal-col">'
     +'<div class="lr-sec-box" style="height:100%;box-sizing:border-box">'
@@ -1995,7 +1995,7 @@ async function saveEdit() {
   if (!_editLoan) return;
   var btn = document.getElementById('lrSaveBtn');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving�';
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving?';
   var newDate = document.getElementById('ef_DateTime').value.trim();
   var updated = {
     DateTime:    newDate ? (parseDMY(newDate) || newDate) + 'T00:00:00' : _editLoan.DateTime,
@@ -2022,7 +2022,7 @@ async function saveEdit() {
     ]);
     if (res && res.ok) {
       toast('? Saved successfully');
-      /* Optimistic update � patch local object, re-render immediately */
+      /* Optimistic update ? patch local object, re-render immediately */
       Object.assign(_editLoan, updated);
       _editLoan._date = (updated.DateTime || _editLoan.DateTime || '').split('T')[0];
       btn.disabled = false; btn.innerHTML = _saveBtnHTML;
@@ -2033,7 +2033,7 @@ async function saveEdit() {
       btn.disabled = false; btn.innerHTML = _saveBtnHTML;
     }
   } catch(e) {
-    toast(e.message === 'timeout' ? '?? Request timeout � ??? Try Again' : '? Network error', true);
+    toast(e.message === 'timeout' ? '?? Request timeout ? ??? Try Again' : '? Network error', true);
     btn.disabled = false; btn.innerHTML = _saveBtnHTML;
   }
 }
@@ -2123,7 +2123,7 @@ loadData();
     </div>
     <div class="lr-confirm-title">?????????????</div>
     <div class="lr-confirm-name" id="lrConfirmName"></div>
-    <div class="lr-confirm-sub">????????????????????????????????<br>???????????????????? Trash � ??????? Recover ?????????? Trash?</div>
+    <div class="lr-confirm-sub">????????????????????????????????<br>???????????????????? Trash ? ??????? Recover ?????????? Trash?</div>
     <div class="lr-confirm-btns">
       <button class="lr-confirm-cancel" onclick="closeConfirm()">????????</button>
       <button class="lr-confirm-delete" id="lrConfirmDelBtn" onclick="confirmDelete()">

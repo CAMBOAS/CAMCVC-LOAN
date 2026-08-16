@@ -38,10 +38,10 @@
       --rt-input-border: rgba(203,213,225,1);
     }
 
-    /* ── Outer wrap ── */
+    /* -- Outer wrap -- */
     .rt-wrap { padding:16px 18px 40px; }
 
-    /* ── KPI ── */
+    /* -- KPI -- */
     .rt-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px }
     @media(max-width:900px){ .rt-kpi-row{ grid-template-columns:repeat(3,1fr) } }
     @media(max-width:580px){ .rt-kpi-row{ grid-template-columns:repeat(2,1fr) } }
@@ -53,14 +53,14 @@
     .rt-progress-wrap { height:5px; background:var(--rt-border); border-radius:3px; overflow:hidden; margin-top:5px }
     .rt-progress-bar { height:100%; border-radius:3px; background:linear-gradient(90deg,#a78bfa,#7c5cff); transition:width .6s ease }
 
-    /* ── Toolbar card (rectangle) ── */
+    /* -- Toolbar card (rectangle) -- */
     .rt-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; background:rgba(167,139,250,.05); border:1.5px solid rgba(167,139,250,.22); border-radius:13px; padding:10px 14px }
     [data-theme="light"] .rt-toolbar { background:rgba(255,255,255,.96); border-color:rgba(167,139,250,.3); box-shadow:0 2px 10px rgba(167,139,250,.08) }
     .rt-group-sel { background:var(--rt-input); border:1px solid var(--rt-input-border); color:var(--rt-text); border-radius:8px; padding:6px 10px; font-size:12px; font-family:inherit; cursor:pointer; outline:none }
     .rt-refresh-btn { display:flex; align-items:center; gap:5px; background:var(--rt-input); border:1px solid var(--rt-input-border); color:var(--rt-muted); border-radius:8px; padding:6px 11px; font-size:12px; font-family:inherit; cursor:pointer; transition:.15s }
     .rt-refresh-btn:hover { color:var(--rt-accent); border-color:var(--rt-accent) }
 
-    /* ── Search ── */
+    /* -- Search -- */
     .rt-search-wrap { position:relative; flex:1; min-width:160px; max-width:300px }
     .rt-search-icon { position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--rt-muted); pointer-events:none; display:flex }
     .rt-search { width:100%; background:var(--rt-card); border:1px solid var(--rt-border); color:var(--rt-text); border-radius:8px; padding:6px 28px 6px 30px; font-size:12px; font-family:inherit; outline:none; box-sizing:border-box; transition:border-color .15s }
@@ -72,7 +72,7 @@
     /* highlight matched text */
     .rt-hl { background:rgba(167,139,250,.28); border-radius:2px; padding:0 1px }
 
-    /* ── Date filter ── */
+    /* -- Date filter -- */
     .rt-date-sep { width:1px; height:18px; background:var(--rt-input-border); flex-shrink:0 }
     .rt-custom-row { flex-basis:100%; display:none; align-items:center; gap:8px; padding-top:8px; border-top:1px solid var(--rt-border); margin-top:2px; flex-wrap:wrap }
     .rt-custom-row.show { display:flex }
@@ -84,19 +84,19 @@
     .rt-date-clear { padding:5px 10px; border-radius:8px; border:1px solid var(--rt-input-border); background:transparent; color:var(--rt-muted); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
     .rt-date-clear:hover { color:var(--rt-red); border-color:var(--rt-red) }
 
-    /* ── Tabs ── */
-    /* ── Tabs (inline, right side of toolbar) ── */
+    /* -- Tabs -- */
+    /* -- Tabs (inline, right side of toolbar) -- */
     .rt-tabs { display:flex; gap:4px; margin-left:auto; flex-shrink:0 }
     .rt-tab { padding:5px 11px; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; border:1.5px solid var(--rt-input-border); background:var(--rt-input); color:var(--rt-muted); transition:.15s; display:flex; align-items:center; gap:5px; white-space:nowrap }
     .rt-tab:hover { color:var(--rt-text); border-color:rgba(167,139,250,.35) }
     .rt-tab.active { background:rgba(167,139,250,.15); border-color:rgba(167,139,250,.55); color:var(--rt-accent) }
     .rt-tab-badge { font-size:10px; font-weight:800; padding:1px 6px; border-radius:5px; background:rgba(167,139,250,.18); color:var(--rt-accent); min-width:16px; text-align:center }
 
-    /* ── Split body ── */
+    /* -- Split body -- */
     .rt-body { display:grid; grid-template-columns:1fr 360px; gap:14px; align-items:start }
     @media(max-width:960px){ .rt-body{ grid-template-columns:1fr } }
 
-    /* ── Table panel ── */
+    /* -- Table panel -- */
     .rt-tbl-wrap { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; overflow:hidden }
     .rt-tbl { width:100%; border-collapse:collapse; font-size:12px }
     .rt-tbl thead th { padding:9px 10px; text-align:left; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--rt-muted); border-bottom:1px solid var(--rt-border); white-space:nowrap; cursor:pointer; user-select:none }
@@ -107,17 +107,17 @@
     .rt-tbl tbody tr.rt-row-selected { background:rgba(167,139,250,.12) !important }
     .rt-tbl td { padding:9px 10px; vertical-align:middle; color:var(--rt-text) }
 
-    /* ── Avatar (table) ── */
+    /* -- Avatar (table) -- */
     .rt-av { width:32px; height:32px; border-radius:50%; overflow:hidden; flex-shrink:0; background:rgba(167,139,250,.12); border:1.5px solid rgba(167,139,250,.25); display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:var(--rt-accent) }
     .rt-av img { width:100%; height:100%; object-fit:cover; display:block }
     .rt-name-cell { display:flex; align-items:center; gap:8px }
     .rt-name-text { font-weight:700; font-size:12.5px; line-height:1.2 }
     .rt-nid { font-size:10px; color:var(--rt-muted) }
 
-    /* ── Status tag ── */
+    /* -- Status tag -- */
     .rt-tag { display:inline-flex; align-items:center; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:700; white-space:nowrap }
 
-    /* ── Paid btn (table) ── */
+    /* -- Paid btn (table) -- */
     .rt-paid-btn { border:1.5px solid rgba(148,163,184,.3); background:rgba(148,163,184,.08); color:rgba(148,163,184,.55); border-radius:6px; width:28px; height:24px; cursor:pointer; transition:.15s; display:inline-flex; align-items:center; justify-content:center; padding:0 }
     .rt-paid-btn:hover { background:rgba(34,197,94,.12); border-color:#22c55e; color:#22c55e }
     .rt-paid-btn.paid { background:rgba(34,197,94,.16); border:2px solid #22c55e; color:#22c55e }
@@ -126,18 +126,18 @@
     [data-theme="light"] .rt-paid-btn { border-color:rgba(100,116,139,.3); color:rgba(100,116,139,.5) }
     [data-theme="light"] .rt-paid-btn.paid { background:rgba(21,128,61,.1); border-color:#16a34a; color:#16a34a }
 
-    /* ── Money ── */
+    /* -- Money -- */
     .rt-money { font-variant-numeric:tabular-nums; font-weight:700; text-align:right; white-space:nowrap }
     .rt-money-paid { color:var(--rt-green) }
 
-    /* ── Empty/loading ── */
+    /* -- Empty/loading -- */
     .rt-state { display:flex; align-items:center; justify-content:center; gap:10px; padding:36px; color:var(--rt-muted); font-size:13px }
     .rt-spin { width:18px; height:18px; border:2.5px solid rgba(167,139,250,.25); border-top-color:var(--rt-accent); border-radius:50%; animation:rtSpin .6s linear infinite; flex-shrink:0 }
     @keyframes rtSpin { to{transform:rotate(360deg)} }
 
-    /* ══════════════════════════════
+    /* ------------------------------
        DETAIL PANEL
-    ══════════════════════════════ */
+    ------------------------------ */
     .rt-detail { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; overflow:hidden; position:sticky; top:16px; max-height:calc(100vh - 100px); overflow-y:auto }
 
     /* empty state */
@@ -146,10 +146,10 @@
     .rt-detail-empty-title { font-size:13px; font-weight:700; color:var(--rt-muted) }
     .rt-detail-empty-sub { font-size:11.5px }
 
-    /* ── Header ── */
+    /* -- Header -- */
     .rt-dp-hdr { padding:18px 18px 14px; border-bottom:1px solid var(--rt-border); display:flex; align-items:center; gap:14px; background:rgba(167,139,250,.04) }
 
-    /* Photo wrap — camera badge on hover */
+    /* Photo wrap � camera badge on hover */
     .rt-dp-photo-wrap { position:relative; width:72px; height:72px; flex-shrink:0 }
     .rt-dp-photo { width:72px; height:72px; border-radius:50%; overflow:hidden; background:rgba(167,139,250,.12); border:2.5px solid rgba(167,139,250,.35); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; color:var(--rt-accent); cursor:zoom-in }
     .rt-dp-photo img { width:100%; height:100%; object-fit:cover; display:block }
@@ -163,7 +163,7 @@
     .rt-dp-meta { display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:6px }
     .rt-dp-chip { font-size:10.5px; color:var(--rt-muted); display:flex; align-items:center; gap:3px }
 
-    /* ── Gallery ── */
+    /* -- Gallery -- */
     .rt-gallery { padding:12px 18px 14px; border-bottom:1px solid var(--rt-border) }
     .rt-gallery-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px }
     .rt-gallery-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--rt-accent) }
@@ -187,7 +187,7 @@
     .rt-gadd:hover { background:rgba(167,139,250,.08); border-color:rgba(167,139,250,.55); color:var(--rt-accent) }
     .rt-gadd-lbl { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em }
 
-    /* ── Upload overlay ── */
+    /* -- Upload overlay -- */
     .rt-upload-ov { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.7); backdrop-filter:blur(5px); animation:rtFadeIn .15s }
     @keyframes rtFadeIn { from{opacity:0} to{opacity:1} }
     .rt-upload-box { background:rgba(20,20,30,.97); border:1px solid rgba(167,139,250,.35); border-radius:16px; padding:28px 36px; text-align:center; min-width:200px; box-shadow:0 24px 64px rgba(0,0,0,.6) }
@@ -197,7 +197,7 @@
     .rt-upload-bar-wrap { height:4px; background:rgba(255,255,255,.1); border-radius:2px; overflow:hidden; margin-top:10px; width:140px }
     .rt-upload-bar { height:100%; background:linear-gradient(90deg,#7c5cff,#a78bfa); border-radius:2px; transition:width .3s }
 
-    /* ── Body / Form ── */
+    /* -- Body / Form -- */
     .rt-dp-body { padding:14px 18px }
     .rt-dp-section { margin-bottom:16px }
     .rt-dp-section-title { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--rt-accent); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--rt-border) }
@@ -283,31 +283,31 @@
       <div class="rt-kpi-row">
         <div class="rt-kpi">
           <div class="rt-kpi-label">Total Loans</div>
-          <div class="rt-kpi-val" id="kpiTotal">—</div>
+          <div class="rt-kpi-val" id="kpiTotal">�</div>
           <div class="rt-kpi-sub">borrowers</div>
           <div class="rt-kpi-bar" style="background:#a78bfa;width:100%"></div>
         </div>
         <div class="rt-kpi">
           <div class="rt-kpi-label">Total Borrowed</div>
-          <div class="rt-kpi-val" id="kpiAmount">—</div>
-          <div class="rt-kpi-sub" id="kpiAmountSub">—</div>
+          <div class="rt-kpi-val" id="kpiAmount">�</div>
+          <div class="rt-kpi-sub" id="kpiAmountSub">�</div>
           <div class="rt-kpi-bar" style="background:#6366f1;width:100%"></div>
         </div>
         <div class="rt-kpi">
           <div class="rt-kpi-label">Paid</div>
-          <div class="rt-kpi-val" id="kpiPaid" style="color:#4ade80">—</div>
-          <div class="rt-kpi-sub" id="kpiPaidSub">—</div>
+          <div class="rt-kpi-val" id="kpiPaid" style="color:#4ade80">�</div>
+          <div class="rt-kpi-sub" id="kpiPaidSub">�</div>
           <div class="rt-kpi-bar" id="kpiPaidBar" style="background:#4ade80;width:0%"></div>
         </div>
         <div class="rt-kpi">
           <div class="rt-kpi-label">Outstanding</div>
-          <div class="rt-kpi-val" id="kpiOut" style="color:#fb923c">—</div>
-          <div class="rt-kpi-sub" id="kpiOutSub">—</div>
+          <div class="rt-kpi-val" id="kpiOut" style="color:#fb923c">�</div>
+          <div class="rt-kpi-sub" id="kpiOutSub">�</div>
           <div class="rt-kpi-bar" id="kpiOutBar" style="background:#fb923c;width:100%"></div>
         </div>
         <div class="rt-kpi">
           <div class="rt-kpi-label">% Collected</div>
-          <div class="rt-kpi-val" id="kpiPct" style="color:#a78bfa">—</div>
+          <div class="rt-kpi-val" id="kpiPct" style="color:#a78bfa">�</div>
           <div class="rt-progress-wrap"><div class="rt-progress-bar" id="kpiProgress" style="width:0%"></div></div>
         </div>
       </div>
@@ -320,8 +320,8 @@
           <span class="rt-search-icon">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </span>
-          <input class="rt-search" id="rtSearch" type="text" placeholder="Search name, NID, phone…" oninput="applySearch()" autocomplete="off">
-          <button class="rt-search-clear" id="rtSearchClear" onclick="clearSearch()" title="Clear">✕</button>
+          <input class="rt-search" id="rtSearch" type="text" placeholder="Search name, NID, phone�" oninput="applySearch()" autocomplete="off">
+          <button class="rt-search-clear" id="rtSearchClear" onclick="clearSearch()" title="Clear">?</button>
         </div>
         <select class="rt-group-sel" id="rtGroupSel" onchange="applyFilter()">
           <option value="">All Groups</option>
@@ -336,7 +336,7 @@
           <option value="last30">Last 30 Days</option>
           <option value="last3m">Last 3 Months</option>
           <option value="year">This Year</option>
-          <option value="custom">Custom Range…</option>
+          <option value="custom">Custom Range�</option>
         </select>
         <button class="rt-refresh-btn" onclick="loadData()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -352,10 +352,10 @@
         <div class="rt-custom-row" id="rtCustomRow">
           <span class="rt-date-lbl">From</span>
           <input class="rt-date-input" type="date" id="rtDateFrom" onchange="applyDateFilter()">
-          <span class="rt-date-arr">→</span>
+          <span class="rt-date-arr">?</span>
           <span class="rt-date-lbl">To</span>
           <input class="rt-date-input" type="date" id="rtDateTo" onchange="applyDateFilter()">
-          <button class="rt-date-clear" onclick="clearDateFilter()">✕ Clear</button>
+          <button class="rt-date-clear" onclick="clearDateFilter()">? Clear</button>
         </div>
       </div>
       <div id="rtCountLabel" style="display:none"></div>
@@ -365,7 +365,7 @@
 
         <!-- LEFT: Table -->
         <div class="rt-tbl-wrap">
-          <div id="rtState" class="rt-state"><div class="rt-spin"></div><span>Loading…</span></div>
+          <div id="rtState" class="rt-state"><div class="rt-spin"></div><span>Loading�</span></div>
           <table class="rt-tbl" id="rtTbl" style="display:none">
             <thead>
               <tr>
@@ -393,7 +393,7 @@
 
           <div id="rtDetailContent" style="display:none">
 
-            <!-- ── Header ── -->
+            <!-- -- Header -- -->
             <div class="rt-dp-hdr">
               <!-- Photo wrap -->
               <div class="rt-dp-photo-wrap">
@@ -404,8 +404,8 @@
                 </div>
               </div>
               <div class="rt-dp-info">
-                <div class="rt-dp-name" id="dpName">—</div>
-                <div class="rt-dp-nid"  id="dpNid">—</div>
+                <div class="rt-dp-name" id="dpName">�</div>
+                <div class="rt-dp-nid"  id="dpNid">�</div>
                 <div class="rt-dp-meta">
                   <span class="rt-dp-chip" id="dpPhone"></span>
                   <span class="rt-dp-chip" id="dpGender"></span>
@@ -414,7 +414,7 @@
               </div>
             </div>
 
-            <!-- ── Media Gallery ── -->
+            <!-- -- Media Gallery -- -->
             <div class="rt-gallery">
               <div class="rt-gallery-hdr">
                 <span class="rt-gallery-title">Media Gallery</span>
@@ -425,7 +425,7 @@
               </div>
             </div>
 
-            <!-- ── Edit form ── -->
+            <!-- -- Edit form -- -->
             <div class="rt-dp-body">
 
               <!-- Personal Info -->
@@ -449,9 +449,9 @@
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">Gender</label>
                     <select class="rt-dp-input" id="dpInGender">
-                      <option value="">—</option>
-                      <option value="ប្រុស">ប្រុស</option>
-                      <option value="ស្រី">ស្រី</option>
+                      <option value="">�</option>
+                      <option value="?????">?????</option>
+                      <option value="????">????</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                     </select>
@@ -560,7 +560,7 @@
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     </div>
     <div class="rt-del-title">Delete Borrower?</div>
-    <div class="rt-del-msg">You are about to delete <span class="rt-del-name" id="rtDelName">—</span>.<br>This will move them to Trash and can be recovered later.</div>
+    <div class="rt-del-msg">You are about to delete <span class="rt-del-name" id="rtDelName">�</span>.<br>This will move them to Trash and can be recovered later.</div>
     <div class="rt-del-btns">
       <button class="rt-del-cancel" onclick="closeDeleteConfirm()">Cancel</button>
       <button class="rt-del-ok" id="rtDelOkBtn" onclick="doDelete()">
@@ -574,8 +574,8 @@
 <!-- Toast -->
 <div class="rt-toast" id="rtToast"></div>
 
-<script src="../assets/js/layout.js?v=16"></script>
-<script src="../assets/js/dashboard-layout.js?v=16"></script>
+<script src="../assets/js/layout.js?v=18"></script>
+<script src="../assets/js/dashboard-layout.js?v=18"></script>
 <script src="../assets/js/auth.js?v=3"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
@@ -594,17 +594,17 @@ var _datePreset = '';
 var _dateFrom   = '';
 var _dateTo     = '';
 
-/* ── Helpers ── */
+/* -- Helpers -- */
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function fmtMoney(v) {
   var n = Number(v);
-  if (isNaN(n) || v === '' || v == null) return '—';
+  if (isNaN(n) || v === '' || v == null) return '�';
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:2 });
 }
 
 function fmtDate(key) {
-  if (!key) return '—';
+  if (!key) return '�';
   try {
     var s = String(key);
     var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -643,7 +643,7 @@ function isVideoUrl(url) {
   return /\.(mp4|webm|mov|avi|mkv|m4v|ogg)$/i.test(url) || (url.indexOf('/video/upload/') !== -1);
 }
 
-/* For Cloudinary video URLs: swap extension → .jpg to get auto thumbnail */
+/* For Cloudinary video URLs: swap extension ? .jpg to get auto thumbnail */
 function videoThumbUrl(url) {
   return url
     .replace('/video/upload/', '/video/upload/c_fill,w_128,h_128,so_auto/')
@@ -656,7 +656,7 @@ var STATUS_COLORS = {
 };
 function statusTag(s) {
   var v = (s||'').trim();
-  if (!v) return '<span class="rt-tag" style="background:rgba(100,116,139,.12);color:#64748b">—</span>';
+  if (!v) return '<span class="rt-tag" style="background:rgba(100,116,139,.12);color:#64748b">�</span>';
   var col = STATUS_COLORS[v] || '#94a3b8';
   return '<span class="rt-tag" style="background:'+col+'22;color:'+col+'">'+esc(v)+'</span>';
 }
@@ -669,7 +669,7 @@ function avatar(loan) {
   return '<span class="rt-av">'+init+'</span>';
 }
 
-/* ── Toast ── */
+/* -- Toast -- */
 var _toastTimer = null;
 function toast(msg) {
   var el = document.getElementById('rtToast');
@@ -679,7 +679,7 @@ function toast(msg) {
   _toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2800);
 }
 
-/* ── Upload overlay ── */
+/* -- Upload overlay -- */
 var _uploadOv = null;
 function showUploadOv(label) {
   if (_uploadOv) _uploadOv.remove();
@@ -688,7 +688,7 @@ function showUploadOv(label) {
   _uploadOv.innerHTML =
     '<div class="rt-upload-box">'
     +'<div class="rt-upload-spin"></div>'
-    +'<div class="rt-upload-lbl" id="uploadOvLbl">'+esc(label||'Uploading…')+'</div>'
+    +'<div class="rt-upload-lbl" id="uploadOvLbl">'+esc(label||'Uploading�')+'</div>'
     +'<div class="rt-upload-pct" id="uploadOvPct"></div>'
     +'<div class="rt-upload-bar-wrap"><div class="rt-upload-bar" id="uploadOvBar" style="width:0%"></div></div>'
     +'</div>';
@@ -704,7 +704,7 @@ function hideUploadOv() {
   if (_uploadOv) { _uploadOv.remove(); _uploadOv = null; }
 }
 
-/* ── Upload: image (server-side via helen_upload_photo) ── */
+/* -- Upload: image (server-side via helen_upload_photo) -- */
 async function uploadImage(file) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
@@ -720,7 +720,7 @@ async function uploadImage(file) {
   });
 }
 
-/* ── Upload: video (browser-direct to Cloudinary via signature) ── */
+/* -- Upload: video (browser-direct to Cloudinary via signature) -- */
 async function uploadVideo(file) {
   var sig = await CamboAPI.post({ action:'helen_get_upload_sig' });
   if (!sig || !sig.ok) throw new Error('Could not get upload signature');
@@ -748,10 +748,10 @@ async function uploadVideo(file) {
   });
 }
 
-/* ── Unified upload (auto-detect image vs video) ── */
+/* -- Unified upload (auto-detect image vs video) -- */
 async function uploadMedia(file, labelOverride) {
   var isVid = file.type.startsWith('video/');
-  showUploadOv(labelOverride || (isVid ? 'Uploading video…' : 'Uploading photo…'));
+  showUploadOv(labelOverride || (isVid ? 'Uploading video�' : 'Uploading photo�'));
   try {
     var url = isVid ? await uploadVideo(file) : await uploadImage(file);
     hideUploadOv();
@@ -762,7 +762,7 @@ async function uploadMedia(file, labelOverride) {
   }
 }
 
-/* ── Main photo change (avatar) ── */
+/* -- Main photo change (avatar) -- */
 async function onMainPhotoChange(input) {
   var file = input.files && input.files[0];
   input.value = '';
@@ -770,7 +770,7 @@ async function onMainPhotoChange(input) {
   var loan = _loans.find(function(l){ return l.DateTime===_selectedKey; });
   if (!loan) return;
   try {
-    var url = await uploadMedia(file, 'Changing profile photo…');
+    var url = await uploadMedia(file, 'Changing profile photo�');
     loan.photo_url = url;
     /* Update avatar in header immediately */
     var init = (loan.FullName||'?').charAt(0).toUpperCase();
@@ -784,7 +784,7 @@ async function onMainPhotoChange(input) {
   } catch(e) { toast('Error: '+e.message); }
 }
 
-/* ── Add media to gallery ── */
+/* -- Add media to gallery -- */
 async function onMediaAdd(input) {
   var file = input.files && input.files[0];
   input.value = '';
@@ -801,7 +801,7 @@ async function onMediaAdd(input) {
   } catch(e) { toast('Error: '+e.message); }
 }
 
-/* ── Remove gallery item ── */
+/* -- Remove gallery item -- */
 async function removeMedia(idx) {
   if (!_selectedKey) return;
   var loan = _loans.find(function(l){ return l.DateTime===_selectedKey; });
@@ -812,7 +812,7 @@ async function removeMedia(idx) {
   toast('Removed');
 }
 
-/* ── Render gallery strip ── */
+/* -- Render gallery strip -- */
 function renderGallery(loan) {
   var strip = document.getElementById('dpGalleryStrip');
   var countEl = document.getElementById('dpGalleryCount');
@@ -828,7 +828,7 @@ function renderGallery(loan) {
       : '';
     return '<div class="rt-gi" onclick="openMediaLightbox('+i+')" title="View">'
       + mediaEl + vidIcon
-      + '<button class="rt-gi-rm" onclick="event.stopPropagation();removeMedia('+i+')" title="Remove">✕</button>'
+      + '<button class="rt-gi-rm" onclick="event.stopPropagation();removeMedia('+i+')" title="Remove">?</button>'
       + '</div>';
   }).join('');
   /* Add button */
@@ -839,7 +839,7 @@ function renderGallery(loan) {
   strip.innerHTML = html;
 }
 
-/* ── Lightbox: main photo or gallery item ── */
+/* -- Lightbox: main photo or gallery item -- */
 function openMediaLightbox(galleryIdx) {
   var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
   if (!loan) return;
@@ -880,7 +880,7 @@ function openMediaLightbox(galleryIdx) {
   document.body.appendChild(ov);
 }
 
-/* ── Search helpers ── */
+/* -- Search helpers -- */
 function applySearch() {
   _search = (document.getElementById('rtSearch').value || '').trim();
   document.getElementById('rtSearchClear').classList.toggle('show', _search.length > 0);
@@ -904,7 +904,7 @@ function highlight(text, q) {
     + esc(s.substring(idx+q.length));
 }
 
-/* ── Date range helpers ── */
+/* -- Date range helpers -- */
 function dateRangeBounds() {
   if (!_datePreset) return null;
   var now = new Date();
@@ -946,7 +946,7 @@ function dateRangeBounds() {
   return null;
 }
 
-/* ── Filter + sort ── */
+/* -- Filter + sort -- */
 function filtered() {
   var q = _search.toLowerCase();
   var bounds = dateRangeBounds();
@@ -975,7 +975,7 @@ function filtered() {
   return list;
 }
 
-/* ── KPIs ── */
+/* -- KPIs -- */
 function renderKPIs() {
   var all    = _group ? _loans.filter(function(l){ return l.Groups === _group; }) : _loans;
   var total  = all.length;
@@ -1004,7 +1004,7 @@ function renderKPIs() {
   document.getElementById('badgePaid').textContent   = _loans.filter(function(l){ return l.Paid; }).length;
 }
 
-/* ── Render table ── */
+/* -- Render table -- */
 function renderTable() {
   var list  = filtered();
   var tbody = document.getElementById('rtTbody');
@@ -1033,8 +1033,8 @@ function renderTable() {
     var q = _search;
     return '<tr class="'+(isSel?'rt-row-selected':'')+'" onclick="selectLoan(\''+k+'\')">'
       +'<td style="color:var(--rt-muted);font-size:10.5px">'+(i+1)+'</td>'
-      +'<td><div class="rt-name-cell">'+avatar(l)+'<div><div class="rt-name-text">'+highlight(l.FullName||'—',q)+'</div><div class="rt-nid">'+highlight(l.NationalID||'',q)+'</div></div></div></td>'
-      +'<td style="font-size:11.5px">'+highlight(l.Groups||'—',q)+'</td>'
+      +'<td><div class="rt-name-cell">'+avatar(l)+'<div><div class="rt-name-text">'+highlight(l.FullName||'�',q)+'</div><div class="rt-nid">'+highlight(l.NationalID||'',q)+'</div></div></div></td>'
+      +'<td style="font-size:11.5px">'+highlight(l.Groups||'�',q)+'</td>'
       +'<td>'+statusTag(l.Status)+'</td>'
       +'<td class="'+moneyCls+'">'+fmtMoney(l.Money)+'</td>'
       +'<td style="text-align:center"><button class="rt-paid-btn '+paidCls+'" data-key="'+esc(l.DateTime)+'" title="'+(l.Paid?'Mark as Unpaid':'Mark as Paid')+'" onclick="event.stopPropagation();confirmTogglePaid(this)">'+(l.Paid?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>')+'</button></td>'
@@ -1044,7 +1044,7 @@ function renderTable() {
 
 function render() { renderKPIs(); renderTable(); }
 
-/* ── Tab ── */
+/* -- Tab -- */
 function switchTab(tab,btn) {
   _tab = tab;
   document.querySelectorAll('.rt-tab').forEach(function(t){ t.classList.remove('active'); });
@@ -1052,13 +1052,13 @@ function switchTab(tab,btn) {
   render();
 }
 
-/* ── Group filter ── */
+/* -- Group filter -- */
 function applyFilter() {
   _group = document.getElementById('rtGroupSel').value;
   render();
 }
 
-/* ── Date filter ── */
+/* -- Date filter -- */
 function applyDateFilter() {
   _datePreset = document.getElementById('rtDatePreset').value;
   var customRow = document.getElementById('rtCustomRow');
@@ -1084,13 +1084,13 @@ function clearDateFilter() {
   render();
 }
 
-/* ── Sort ── */
+/* -- Sort -- */
 function sortBy(key) {
   if (_sortKey===key) _sortDir*=-1; else { _sortKey=key; _sortDir=-1; }
   renderTable();
 }
 
-/* ── Toggle paid (table) ── */
+/* -- Toggle paid (table) -- */
 var _pendingPaidKey = null;
 
 function confirmTogglePaid(btn) {
@@ -1110,7 +1110,7 @@ function confirmTogglePaid(btn) {
   icon.innerHTML = goingPaid ? svgCheck : svgClock;
   document.getElementById('rtPaidConfTitle').textContent = goingPaid ? 'Mark as Paid?' : 'Mark as Unpaid?';
   document.getElementById('rtPaidConfMsg').innerHTML =
-    '<strong>'+esc(loan.FullName||'—')+'</strong> will be marked as <strong>'+(goingPaid?'Paid':'Unpaid')+'</strong>.';
+    '<strong>'+esc(loan.FullName||'�')+'</strong> will be marked as <strong>'+(goingPaid?'Paid':'Unpaid')+'</strong>.';
   ok.className   = 'rt-paid-conf-ok ' + (goingPaid ? 'go-paid' : 'go-unpaid');
   ok.innerHTML   = goingPaid
     ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Mark Paid'
@@ -1126,7 +1126,7 @@ async function doPaidToggle() {
   var key = _pendingPaidKey;
   if (!key) return;
   var ok = document.getElementById('rtPaidConfOkBtn');
-  ok.disabled = true; ok.textContent = '…';
+  ok.disabled = true; ok.textContent = '�';
   var loan = _loans.find(function(l){ return l.DateTime === key; });
   var wasPaid = loan ? !!loan.Paid : false;
   if (loan) loan.Paid = wasPaid ? 0 : 1;
@@ -1153,7 +1153,7 @@ async function doPaidToggle() {
   }
 }
 
-/* ── Detail panel ── */
+/* -- Detail panel -- */
 function selectLoan(key) {
   _selectedKey = key;
   var loan = _loans.find(function(l){ return l.DateTime===key; });
@@ -1174,8 +1174,8 @@ function populateDetail(loan) {
     ? '<img src="'+esc(photo)+'" onerror="this.parentNode.innerHTML=\''+init+'\'">'
     : init;
 
-  document.getElementById('dpName').textContent   = loan.FullName   || '—';
-  document.getElementById('dpNid').textContent    = loan.NationalID || '—';
+  document.getElementById('dpName').textContent   = loan.FullName   || '�';
+  document.getElementById('dpNid').textContent    = loan.NationalID || '�';
   document.getElementById('dpPhone').innerHTML  = loan.Phone  ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'+esc(loan.Phone) : '';
   document.getElementById('dpGender').innerHTML = loan.Gender ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+esc(loan.Gender) : '';
   document.getElementById('dpDob').innerHTML    = loan.DOB    ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+esc(loan.DOB) : '';
@@ -1207,7 +1207,7 @@ function populateDetail(loan) {
 
   var grSel = document.getElementById('dpInGroup');
   var groups = _groups.length ? _groups : (loan.Groups ? [loan.Groups] : []);
-  grSel.innerHTML = '<option value="">—</option>' + groups.map(function(g){ return '<option value="'+esc(g)+'"'+(g===loan.Groups?' selected':'')+'>'+esc(g)+'</option>'; }).join('');
+  grSel.innerHTML = '<option value="">�</option>' + groups.map(function(g){ return '<option value="'+esc(g)+'"'+(g===loan.Groups?' selected':'')+'>'+esc(g)+'</option>'; }).join('');
 
   var paidChk = document.getElementById('dpInPaid');
   paidChk.checked = !!loan.Paid;
@@ -1222,7 +1222,7 @@ function onDetailPaidChange() {
   document.getElementById('dpPaidSub').textContent = chk.checked ? 'Paid' : 'Unpaid';
 }
 
-/* ── Build loan obj from form ── */
+/* -- Build loan obj from form -- */
 function buildLoanObj(loan) {
   var rawDate = document.getElementById('dpInDate').value;
   var newDateTime = rawDate ? rawDate.replace('T',' ')+':00' : loan.DateTime;
@@ -1248,7 +1248,7 @@ function buildLoanObj(loan) {
   };
 }
 
-/* ── Auto-save (silent) ── */
+/* -- Auto-save (silent) -- */
 async function autoSaveLoan(showToast) {
   if (!_selectedKey) return;
   var loan = _loans.find(function(l){ return l.DateTime===_selectedKey; });
@@ -1261,14 +1261,14 @@ async function autoSaveLoan(showToast) {
   } catch(e) { if (showToast) toast('Error: '+e.message); }
 }
 
-/* ── Save loan (button) ── */
+/* -- Save loan (button) -- */
 async function saveLoan() {
   if (!_selectedKey) return;
   var loan = _loans.find(function(l){ return l.DateTime===_selectedKey; });
   if (!loan) return;
   var btn = document.getElementById('dpSaveBtn');
   btn.disabled = true;
-  btn.innerHTML = '<div class="rt-spin" style="width:14px;height:14px;border-width:2px"></div> Saving…';
+  btn.innerHTML = '<div class="rt-spin" style="width:14px;height:14px;border-width:2px"></div> Saving�';
   try {
     var updatedLoan = buildLoanObj(loan);
     var res = await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:updatedLoan });
@@ -1286,12 +1286,12 @@ async function saveLoan() {
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes';
 }
 
-/* ── Delete loan ── */
+/* -- Delete loan -- */
 function confirmDelete() {
   if (!_selectedKey) return;
   var loan = _loans.find(function(l){ return l.DateTime === _selectedKey; });
   if (!loan) return;
-  document.getElementById('rtDelName').textContent = loan.FullName || '—';
+  document.getElementById('rtDelName').textContent = loan.FullName || '�';
   document.getElementById('rtDelOverlay').style.display = 'flex';
 }
 function closeDeleteConfirm() {
@@ -1303,7 +1303,7 @@ async function doDelete() {
   if (!_selectedKey) return;
   var btn = document.getElementById('rtDelOkBtn');
   btn.disabled = true;
-  btn.innerHTML = '<div class="rt-spin" style="width:12px;height:12px;border-width:2px"></div> Deleting…';
+  btn.innerHTML = '<div class="rt-spin" style="width:12px;height:12px;border-width:2px"></div> Deleting�';
   try {
     var res = await CamboAPI.post({ action: 'helen_loan_delete', key: _selectedKey });
     if (res && res.ok) {
@@ -1323,9 +1323,9 @@ async function doDelete() {
   }
 }
 
-/* ── Load ── */
+/* -- Load -- */
 async function loadData() {
-  document.getElementById('rtState').innerHTML = '<div class="rt-spin"></div><span>Loading…</span>';
+  document.getElementById('rtState').innerHTML = '<div class="rt-spin"></div><span>Loading�</span>';
   document.getElementById('rtState').style.display = 'flex';
   document.getElementById('rtTbl').style.display   = 'none';
   try {

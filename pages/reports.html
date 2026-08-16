@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -28,7 +28,7 @@
     .main-content{padding:0!important;height:100vh!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
     @media(max-width:980px){.main-content{padding-top:64px!important;height:auto!important;overflow:visible!important}}
 
-    /* ── Page shell ── */
+    /* -- Page shell -- */
     .rp-wrap{display:flex;flex-direction:column;gap:10px;padding:12px 14px 16px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(148,163,200,.15) transparent}
 
     /* Header */
@@ -123,7 +123,7 @@
       <div class="rp-filter">
         <span class="rp-f-label">Date</span>
         <input type="date" class="rp-f-input" id="rpFrom" title="From">
-        <span style="color:var(--muted);font-size:12px">–</span>
+        <span style="color:var(--muted);font-size:12px">�</span>
         <input type="date" class="rp-f-input" id="rpTo" title="To">
         <div class="rp-f-sep"></div>
         <span class="rp-f-label">Group</span>
@@ -146,37 +146,37 @@
       <div class="rp-kpi-row">
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">Total Borrowers</div>
-          <div class="rp-kpi-val" id="kTotal">—</div>
+          <div class="rp-kpi-val" id="kTotal">�</div>
           <div class="rp-kpi-sub" id="kTotalSub"></div>
           <div class="rp-kpi-blob" style="background:#7c3aed"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">Total Amount</div>
-          <div class="rp-kpi-val" id="kAmount" style="color:#10b981">—</div>
+          <div class="rp-kpi-val" id="kAmount" style="color:#10b981">�</div>
           <div class="rp-kpi-sub" id="kAmountSub"></div>
           <div class="rp-kpi-blob" style="background:#10b981"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">BlackListed</div>
-          <div class="rp-kpi-val" id="kBl" style="color:#f87171">—</div>
+          <div class="rp-kpi-val" id="kBl" style="color:#f87171">�</div>
           <div class="rp-kpi-sub" id="kBlSub"></div>
           <div class="rp-kpi-blob" style="background:#ef4444"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">Good</div>
-          <div class="rp-kpi-val" id="kGood" style="color:#10b981">—</div>
+          <div class="rp-kpi-val" id="kGood" style="color:#10b981">�</div>
           <div class="rp-kpi-sub" id="kGoodSub"></div>
           <div class="rp-kpi-blob" style="background:#10b981"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">High Risk</div>
-          <div class="rp-kpi-val" id="kHr" style="color:#f59e0b">—</div>
+          <div class="rp-kpi-val" id="kHr" style="color:#f59e0b">�</div>
           <div class="rp-kpi-sub" id="kHrSub"></div>
           <div class="rp-kpi-blob" style="background:#f59e0b"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">Paid / Done</div>
-          <div class="rp-kpi-val" id="kPaid" style="color:#a78bfa">—</div>
+          <div class="rp-kpi-val" id="kPaid" style="color:#a78bfa">�</div>
           <div class="rp-kpi-sub" id="kPaidSub"></div>
           <div class="rp-kpi-blob" style="background:#7c3aed"></div>
         </div>
@@ -207,11 +207,11 @@
         <!-- Row 3: Staff table + Gender donut -->
         <div class="rp-row3">
           <div class="rp-card" style="min-height:200px">
-            <div class="rp-card-title">Staff Activity — Added By</div>
+            <div class="rp-card-title">Staff Activity � Added By</div>
             <div class="rp-staff-scroll">
               <table class="rp-staff-tbl">
                 <thead><tr><th>#</th><th>Staff</th><th>Loans</th><th>Amount</th><th></th></tr></thead>
-                <tbody id="staffTbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr></tbody>
+                <tbody id="staffTbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading�</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -227,15 +227,15 @@
   </main>
 </div><!-- /.dashboard -->
 
-<script src="../assets/js/layout.js?v=17"></script>
-<script src="../assets/js/dashboard-layout.js?v=17"></script>
+<script src="../assets/js/layout.js?v=18"></script>
+<script src="../assets/js/dashboard-layout.js?v=18"></script>
 <script src="../assets/js/auth.js?v=1"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
 if (!HelenAuth.check()) throw new Error('auth');
 if (!helenCan('reports')) { location.replace('../index.html'); }
 
-/* ── roundRect polyfill ── */
+/* -- roundRect polyfill -- */
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
     r = Math.min(r, w/2, h/2);
@@ -248,10 +248,10 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
   };
 }
 
-/* ── Data state ── */
+/* -- Data state -- */
 var _all = [], _data = [];
 
-/* ── Theme helpers ── */
+/* -- Theme helpers -- */
 function dark() { return document.documentElement.getAttribute('data-theme') !== 'light'; }
 function tc() {
   var d = dark();
@@ -266,7 +266,7 @@ function tc() {
   };
 }
 
-/* ── Canvas setup (HiDPI) ── */
+/* -- Canvas setup (HiDPI) -- */
 function setupCanvas(id, wrapId) {
   var canvas = document.getElementById(id);
   var wrap   = document.getElementById(wrapId);
@@ -284,7 +284,7 @@ function setupCanvas(id, wrapId) {
   return { ctx: ctx, W: W, H: H };
 }
 
-/* ── Donut chart ── */
+/* -- Donut chart -- */
 function drawDonut(canvasId, wrapId, segments, centerLabel) {
   var c = setupCanvas(canvasId, wrapId);
   if (!c) return;
@@ -331,7 +331,7 @@ function drawDonut(canvasId, wrapId, segments, centerLabel) {
   ctx.fillText('total', cx, cy + 10);
 }
 
-/* ── Bar chart (vertical) ── */
+/* -- Bar chart (vertical) -- */
 function drawBars(canvasId, wrapId, labels, values, barColor) {
   var c = setupCanvas(canvasId, wrapId);
   if (!c) return;
@@ -387,7 +387,7 @@ function drawBars(canvasId, wrapId, labels, values, barColor) {
   });
 }
 
-/* ── Horizontal bar chart ── */
+/* -- Horizontal bar chart -- */
 function drawHBars(canvasId, wrapId, entries) {
   var wrap = document.getElementById(wrapId);
   var rowH = 30, padV = 10, labelW = 110, rightW = 90;
@@ -412,7 +412,7 @@ function drawHBars(canvasId, wrapId, entries) {
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    var lbl = e.label.length > 14 ? e.label.slice(0,13) + '…' : e.label;
+    var lbl = e.label.length > 14 ? e.label.slice(0,13) + '�' : e.label;
     ctx.fillText(lbl, 0, mid);
 
     /* bar bg */
@@ -438,7 +438,7 @@ function drawHBars(canvasId, wrapId, entries) {
   });
 }
 
-/* ── Render KPIs ── */
+/* -- Render KPIs -- */
 function renderKPIs() {
   var d = _data, n = d.length;
   var amt  = d.reduce(function(s,l){ return s+(Number(l.Money)||0); }, 0);
@@ -462,7 +462,7 @@ function renderKPIs() {
   document.getElementById('kPaidSub').textContent  = pct(paid);
 }
 
-/* ── Render status donut ── */
+/* -- Render status donut -- */
 function renderStatus() {
   var counts = {};
   _data.forEach(function(l){ var s=l.Status||'Normal'; counts[s]=(counts[s]||0)+1; });
@@ -477,7 +477,7 @@ function renderStatus() {
   }).join('');
 }
 
-/* ── Render monthly trend ── */
+/* -- Render monthly trend -- */
 function renderMonthly() {
   var now = new Date(), months = [], labels = [];
   for (var i = 11; i >= 0; i--) {
@@ -495,7 +495,7 @@ function renderMonthly() {
   drawBars('cMonth','wMonth', labels, months.map(function(m){ return m.count; }), '#8b5cf6');
 }
 
-/* ── Render group horizontal bars ── */
+/* -- Render group horizontal bars -- */
 function renderGroups() {
   var grps = {};
   _data.forEach(function(l){
@@ -510,11 +510,11 @@ function renderGroups() {
   drawHBars('cGroup','wGroup', entries);
 }
 
-/* ── Render staff table ── */
+/* -- Render staff table -- */
 function renderStaff() {
   var staff = {};
   _data.forEach(function(l){
-    var by = (l.created_by||'—').trim() || '—';
+    var by = (l.created_by||'�').trim() || '�';
     if (!staff[by]) staff[by] = { count:0, amount:0 };
     staff[by].count++;
     staff[by].amount += Number(l.Money)||0;
@@ -537,7 +537,7 @@ function renderStaff() {
     : '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">No data</td></tr>';
 }
 
-/* ── Render gender donut ── */
+/* -- Render gender donut -- */
 function renderGender() {
   var g = { Male:0, Female:0, Other:0 };
   _data.forEach(function(l){ var v=l.Gender||'Other'; g[v in g?v:'Other']++; });
@@ -553,7 +553,7 @@ function renderGender() {
   }).join('');
 }
 
-/* ── Render all ── */
+/* -- Render all -- */
 function renderAll() {
   renderKPIs();
   renderStatus();
@@ -563,7 +563,7 @@ function renderAll() {
   renderGender();
 }
 
-/* ── Filter ── */
+/* -- Filter -- */
 function applyFilter() {
   var from = document.getElementById('rpFrom').value;
   var to   = document.getElementById('rpTo').value;
@@ -585,7 +585,7 @@ function clearFilter() {
   renderAll();
 }
 
-/* ── Populate group dropdown ── */
+/* -- Populate group dropdown -- */
 function populateGroups() {
   var grps = [...new Set(_all.map(function(l){ return (l.Groups||'').trim(); }).filter(Boolean))].sort();
   var sel = document.getElementById('rpGroup');
@@ -593,7 +593,7 @@ function populateGroups() {
     + grps.map(function(g){ return '<option value="'+g+'">'+g+'</option>'; }).join('');
 }
 
-/* ── Load data ── */
+/* -- Load data -- */
 async function loadData() {
   var btn = document.getElementById('rpRefreshBtn');
   btn.classList.add('spinning');
@@ -614,7 +614,7 @@ async function loadData() {
   btn.classList.remove('spinning');
 }
 
-/* ── Wiring ── */
+/* -- Wiring -- */
 document.getElementById('rpRefreshBtn').addEventListener('click', loadData);
 
 /* Redraw on theme change */

@@ -34,7 +34,7 @@
     .al-wrap { padding:16px 20px 40px; overflow-y:auto; height:calc(100vh - 64px); box-sizing:border-box }
     @media(max-width:980px){ .al-wrap{ height:auto; padding:12px 10px 100px } }
 
-    /* ── KPI strip ── */
+    /* -- KPI strip -- */
     .al-kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px }
     @media(max-width:700px){ .al-kpi-row{ grid-template-columns:repeat(3,1fr) } }
     @media(max-width:420px){ .al-kpi-row{ grid-template-columns:repeat(2,1fr) } }
@@ -45,7 +45,7 @@
     .al-kpi-val { font-size:20px; font-weight:800; color:var(--al-text); line-height:1 }
     .al-kpi-sub  { font-size:10px; color:var(--al-muted); margin-top:2px }
 
-    /* ── Top bar ── */
+    /* -- Top bar -- */
     .al-topbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px }
     .al-filter-sel { padding:7px 11px; border-radius:9px; border:1.5px solid var(--al-border); background:var(--al-card); color:var(--al-text); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; outline:none; transition:.15s }
     .al-filter-sel:focus { border-color:#7c5cff }
@@ -54,7 +54,7 @@
     .al-count-txt { font-size:11.5px; color:var(--al-muted); margin-left:auto }
     .al-my-badge { font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; background:rgba(124,92,255,.1); color:#7c5cff; white-space:nowrap }
 
-    /* ── Tab bar ── */
+    /* -- Tab bar -- */
     .al-tabs { display:flex; gap:4px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; -ms-overflow-style:none; scrollbar-width:none }
     .al-tabs::-webkit-scrollbar { display:none }
     .al-tab { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:1.5px solid transparent; background:transparent; color:var(--al-muted); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; transition:.15s }
@@ -63,7 +63,7 @@
     .al-tab-badge { font-size:10px; font-weight:800; padding:1px 6px; border-radius:20px; background:rgba(148,163,184,.15); color:var(--al-muted); min-width:18px; text-align:center }
     .al-tab-active .al-tab-badge { background:rgba(124,92,255,.15); color:#7c5cff }
 
-    /* ── Table panel ── */
+    /* -- Table panel -- */
     .al-panel { display:none }
     .al-panel.al-panel-active { display:block }
     .al-table-wrap { background:var(--al-card); border-radius:16px; border:1px solid var(--al-border); box-shadow:var(--al-shadow); overflow:hidden }
@@ -89,12 +89,12 @@
     .b-logout { background:rgba(148,163,184,.12);color:#64748b }
     .b-user   { background:rgba(245,158,11,.12); color:#d97706 }
 
-    /* ── Empty / Loading ── */
+    /* -- Empty / Loading -- */
     .al-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px; gap:10px; color:var(--al-muted); font-size:13px }
     .al-spin { width:28px; height:28px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:alSpin .7s linear infinite }
     @keyframes alSpin{ to{ transform:rotate(360deg) } }
 
-    /* ── Avatar ── */
+    /* -- Avatar -- */
     .al-av { width:36px; height:36px; border-radius:50%; flex-shrink:0; background:rgba(124,92,255,.12); display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#7c5cff; vertical-align:middle; overflow:hidden; border:2px solid rgba(124,92,255,.2) }
     .al-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
     .al-av-sm { width:30px; height:30px; font-size:11px; border-width:1.5px }
@@ -102,14 +102,14 @@
     .al-actor-name { font-weight:700; font-size:12.5px }
     .al-borrow-cell { display:flex; align-items:center; gap:8px }
 
-    /* ── Date filter ── */
+    /* -- Date filter -- */
     .al-date-filter { display:flex; gap:2px; flex-shrink:0; background:rgba(148,163,184,.13); border-radius:50px; padding:3px }
     [data-theme="dark"] .al-date-filter { background:rgba(148,163,184,.08) }
     .al-df-btn { padding:5px 14px; border-radius:50px; border:none; background:transparent; color:var(--al-muted); font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s; white-space:nowrap }
     .al-df-btn:hover { color:var(--al-text) }
     .al-df-btn.al-df-active { background:var(--al-card); color:#7c5cff; box-shadow:0 1px 4px rgba(0,0,0,.1) }
 
-    /* ── Load more ── */
+    /* -- Load more -- */
     .al-load-more { text-align:center; padding:14px }
     .al-load-more-btn { padding:9px 26px; border-radius:10px; border:1.5px solid var(--al-border); background:transparent; color:#7c5cff; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
     .al-load-more-btn:hover { background:rgba(124,92,255,.08); border-color:#7c5cff }
@@ -127,27 +127,27 @@
       <div class="al-kpi-row" id="alKpi" style="display:none">
         <div class="al-kpi" onclick="switchTab('all')" id="kpiAll">
           <div class="al-kpi-label">Total Events</div>
-          <div class="al-kpi-val" id="kpiTotal">—</div>
+          <div class="al-kpi-val" id="kpiTotal">�</div>
           <div class="al-kpi-sub">All recorded</div>
         </div>
         <div class="al-kpi" onclick="switchTab('auth')" id="kpiAuth">
           <div class="al-kpi-label">Login / Logout</div>
-          <div class="al-kpi-val" id="kpiLogins" style="color:#7c5cff">—</div>
+          <div class="al-kpi-val" id="kpiLogins" style="color:#7c5cff">�</div>
           <div class="al-kpi-sub">auth events</div>
         </div>
         <div class="al-kpi" onclick="switchTab('add')" id="kpiAddCard">
           <div class="al-kpi-label">Loans Added</div>
-          <div class="al-kpi-val" id="kpiAdded" style="color:#22c55e">—</div>
+          <div class="al-kpi-val" id="kpiAdded" style="color:#22c55e">�</div>
           <div class="al-kpi-sub">loan_add events</div>
         </div>
         <div class="al-kpi" onclick="switchTab('edit')" id="kpiEditCard">
           <div class="al-kpi-label">Loans Edited</div>
-          <div class="al-kpi-val" id="kpiEdited" style="color:#3b82f6">—</div>
+          <div class="al-kpi-val" id="kpiEdited" style="color:#3b82f6">�</div>
           <div class="al-kpi-sub">edit + paid + recover</div>
         </div>
         <div class="al-kpi" onclick="switchTab('delete')" id="kpiDelCard">
           <div class="al-kpi-label">Loans Deleted</div>
-          <div class="al-kpi-val" id="kpiDeleted" style="color:#ef4444">—</div>
+          <div class="al-kpi-val" id="kpiDeleted" style="color:#ef4444">�</div>
           <div class="al-kpi-sub">loan_delete events</div>
         </div>
       </div>
@@ -181,7 +181,7 @@
         <button class="al-tab" id="tabUsers" data-tab="users"  onclick="switchTab('users')" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Users <span class="al-tab-badge" id="tbUsers">0</span></button>
       </div>
 
-      <!-- ── Panel: All Activity ── -->
+      <!-- -- Panel: All Activity -- -->
       <div class="al-panel al-panel-active" id="panelAll">
         <div class="al-table-wrap">
           <div class="al-tbl-scroll">
@@ -195,11 +195,11 @@
               <tbody id="tbodyAll"></tbody>
             </table>
           </div>
-          <div id="stateAll" class="al-state"><div class="al-spin"></div><span>Loading…</span></div>
+          <div id="stateAll" class="al-state"><div class="al-spin"></div><span>Loading�</span></div>
         </div>
       </div>
 
-      <!-- ── Panel: Login / Logout ── -->
+      <!-- -- Panel: Login / Logout -- -->
       <div class="al-panel" id="panelAuth">
         <div class="al-table-wrap">
           <div class="al-tbl-scroll">
@@ -213,11 +213,11 @@
               <tbody id="tbodyAuth"></tbody>
             </table>
           </div>
-          <div id="stateAuth" class="al-state" style="display:none">📭 No login / logout events</div>
+          <div id="stateAuth" class="al-state" style="display:none">?? No login / logout events</div>
         </div>
       </div>
 
-      <!-- ── Panel: Loans Added ── -->
+      <!-- -- Panel: Loans Added -- -->
       <div class="al-panel" id="panelAdd">
         <div class="al-table-wrap">
           <div class="al-tbl-scroll">
@@ -232,11 +232,11 @@
               <tbody id="tbodyAdd"></tbody>
             </table>
           </div>
-          <div id="stateAdd" class="al-state" style="display:none">📭 No loans added yet</div>
+          <div id="stateAdd" class="al-state" style="display:none">?? No loans added yet</div>
         </div>
       </div>
 
-      <!-- ── Panel: Loans Edited ── -->
+      <!-- -- Panel: Loans Edited -- -->
       <div class="al-panel" id="panelEdit">
         <div class="al-table-wrap">
           <div class="al-tbl-scroll">
@@ -250,11 +250,11 @@
               <tbody id="tbodyEdit"></tbody>
             </table>
           </div>
-          <div id="stateEdit" class="al-state" style="display:none">📭 No loan edits yet</div>
+          <div id="stateEdit" class="al-state" style="display:none">?? No loan edits yet</div>
         </div>
       </div>
 
-      <!-- ── Panel: Loans Deleted ── -->
+      <!-- -- Panel: Loans Deleted -- -->
       <div class="al-panel" id="panelDelete">
         <div class="al-table-wrap">
           <div class="al-tbl-scroll">
@@ -267,11 +267,11 @@
               <tbody id="tbodyDelete"></tbody>
             </table>
           </div>
-          <div id="stateDelete" class="al-state" style="display:none">📭 No loans deleted</div>
+          <div id="stateDelete" class="al-state" style="display:none">?? No loans deleted</div>
         </div>
       </div>
 
-      <!-- ── Panel: Users (Admin only) ── -->
+      <!-- -- Panel: Users (Admin only) -- -->
       <div class="al-panel" id="panelUsers">
         <div class="al-table-wrap">
           <div class="al-tbl-scroll">
@@ -286,7 +286,7 @@
               <tbody id="tbodyUsers"></tbody>
             </table>
           </div>
-          <div id="stateUsers" class="al-state" style="display:none">📭 No user changes</div>
+          <div id="stateUsers" class="al-state" style="display:none">?? No user changes</div>
         </div>
       </div>
 
@@ -298,8 +298,8 @@
   </main>
 </div>
 
-<script src="../assets/js/layout.js?v=16"></script>
-<script src="../assets/js/dashboard-layout.js?v=16"></script>
+<script src="../assets/js/layout.js?v=18"></script>
+<script src="../assets/js/dashboard-layout.js?v=18"></script>
 <script src="../assets/js/auth.js?v=2"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
@@ -313,7 +313,7 @@ var _actors     = new Set();
 var _curTab     = 'all';
 var _dateFilter = 'all';
 
-/* ── Date filter ── */
+/* -- Date filter -- */
 function _ppDateStr(d) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Phnom_Penh' }).format(d);
 }
@@ -362,7 +362,7 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ── Photo cache: actor_user → photo URL ── */
+/* -- Photo cache: actor_user ? photo URL -- */
 var _photoCache = {};
 function _myUser() {
   try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a ? (a.u||'') : ''; } catch(e) { return ''; }
@@ -401,7 +401,7 @@ function avatar(log) {
 }
 
 function actorCell(log) {
-  return '<div class="al-actor-cell">'+avatar(log)+'<span class="al-actor-name">'+esc(log.actor||'—')+'</span></div>';
+  return '<div class="al-actor-cell">'+avatar(log)+'<span class="al-actor-name">'+esc(log.actor||'�')+'</span></div>';
 }
 
 function borrowerAvatar(log) {
@@ -422,7 +422,7 @@ function borrowerAvatar(log) {
 
 function fmtDateTime(dt) {
   try {
-    // MySQL dateStrings:true returns UTC as "YYYY-MM-DD HH:MM:SS" — force UTC parse
+    // MySQL dateStrings:true returns UTC as "YYYY-MM-DD HH:MM:SS" � force UTC parse
     var s = String(dt||'').trim().replace(' ', 'T');
     if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
     var d = new Date(s);
@@ -473,7 +473,7 @@ var _ic = {
   user:    '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
 };
 
-/* ── Render helpers per panel ── */
+/* -- Render helpers per panel -- */
 function rowAll(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
   var actionSvgMap = {
@@ -493,7 +493,7 @@ function rowAll(log) {
   if (log.action==='loan_add' && detail.money) detailStr = '$'+esc(String(detail.money));
   if (log.action==='loan_paid') detailStr = detail.paid ? 'Marked Paid' : 'Unpaid';
   if (log.action==='user_edit' && detail.old_name && detail.new_name && detail.old_name!==detail.new_name)
-    detailStr = esc(detail.old_name)+' → '+esc(detail.new_name);
+    detailStr = esc(detail.old_name)+' ? '+esc(detail.new_name);
   if (log.action==='user_login' && detail.role) detailStr = esc(detail.role);
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
@@ -511,7 +511,7 @@ function rowAuth(log) {
   var isLogin = log.action === 'user_login';
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-muted">'+esc(detail.role||'—')+'</td>'
+    +'<td class="al-tbl-muted">'+esc(detail.role||'�')+'</td>'
     +'<td>'+(isLogin?badgeSvg(_ic.login,'Login','login'):badgeSvg(_ic.logout,'Logout','logout'))+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
@@ -521,9 +521,9 @@ function rowAdd(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
-    +'<td style="font-weight:700;color:#16a34a">'+(detail.money?'$'+esc(String(detail.money)):'—')+'</td>'
-    +'<td>'+(detail.status?badge(detail.status,'paid'):'—')+'</td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'�')+'</span></div></td>'
+    +'<td style="font-weight:700;color:#16a34a">'+(detail.money?'$'+esc(String(detail.money)):'�')+'</td>'
+    +'<td>'+(detail.status?badge(detail.status,'paid'):'�')+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -539,7 +539,7 @@ function rowEdit(log) {
   if (log.action==='loan_paid') extra = detail.paid ? ' <span class="al-tbl-chip b-paid">Paid</span>' : ' <span class="al-tbl-chip b-logout">Unpaid</span>';
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'�')+'</span></div></td>'
     +(function(){ var t=editSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+extra+'</td>':'<td>'+badge(esc(log.action),'edit')+extra+'</td>'; })()
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
@@ -548,7 +548,7 @@ function rowEdit(log) {
 function rowDelete(log) {
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'�')+'</span></div></td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -563,17 +563,17 @@ function rowUser(log) {
   var detailStr = '';
   if (log.action==='user_add' && detail.role) detailStr = esc(detail.role);
   if (log.action==='user_edit' && detail.old_name && detail.new_name && detail.old_name!==detail.new_name)
-    detailStr = esc(detail.old_name)+' → '+esc(detail.new_name);
+    detailStr = esc(detail.old_name)+' ? '+esc(detail.new_name);
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
     +(function(){ var t=actSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+'</td>':'<td>'+badge(esc(log.action),'user')+'</td>'; })()
-    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
-    +'<td class="al-tbl-muted">'+(detailStr?'<span class="al-tbl-chip">'+detailStr+'</span>':'—')+'</td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'�')+'</span></div></td>'
+    +'<td class="al-tbl-muted">'+(detailStr?'<span class="al-tbl-chip">'+detailStr+'</span>':'�')+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
 
-/* ── Render all panels from _allLogs ── */
+/* -- Render all panels from _allLogs -- */
 function renderAll() {
   var admin = _isAdmin();
   var filtered = applyDateFilter(_allLogs);
@@ -643,7 +643,7 @@ function fill(tbodyId, stateId, rows, rowFn) {
   }
 }
 
-/* ── Tab switching ── */
+/* -- Tab switching -- */
 function switchTab(tab) {
   _curTab = tab;
   document.querySelectorAll('.al-tab').forEach(function(t){
@@ -662,7 +662,7 @@ function switchTab(tab) {
 
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-/* ── Actor filter (Admin only) ── */
+/* -- Actor filter (Admin only) -- */
 function updateActorFilter(logs) {
   if (!_isAdmin()) return;
   logs.forEach(function(l){ if (l.actor_user) _actors.add(l.actor_user+'|'+(l.actor||l.actor_user)); });
@@ -679,10 +679,10 @@ function updateActorFilter(logs) {
   });
 }
 
-/* ── Load ── */
+/* -- Load -- */
 async function loadData() {
   _offset = 0; _allLogs = []; window._lastDay = '';
-  document.getElementById('stateAll').innerHTML = '<div class="al-spin"></div><span>Loading…</span>';
+  document.getElementById('stateAll').innerHTML = '<div class="al-spin"></div><span>Loading�</span>';
   document.getElementById('stateAll').style.display = '';
   document.getElementById('tblAll') && (document.getElementById('tblAll').style.display = 'none');
   document.getElementById('alLoadMore').style.display = 'none';
@@ -719,7 +719,7 @@ async function loadData() {
 async function loadMore() {
   var fUser = document.getElementById('alFilterActor').value;
   var btn   = document.querySelector('.al-load-more-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading�'; }
   try {
     var data = await window.CamboAPI.post({
       action: 'helen_activity_list',

@@ -35,7 +35,7 @@
     .tm-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px }
     @media(max-width:480px){ .tm-grid{ grid-template-columns:repeat(2,1fr); gap:10px } }
 
-    /* ── Card ── */
+    /* -- Card -- */
     .tm-card {
       background:var(--tm-card); border-radius:18px; border:1px solid var(--tm-border);
       box-shadow:var(--tm-shadow); padding:22px 16px 18px; position:relative;
@@ -45,7 +45,7 @@
     .tm-card:hover { border-color:rgba(124,92,255,.35); box-shadow:0 6px 24px rgba(124,92,255,.13); transform:translateY(-2px) }
     .tm-card:active { transform:translateY(0) }
 
-    /* ── Avatar wrapper ── */
+    /* -- Avatar wrapper -- */
     .tm-av-wrap { position:relative; margin-bottom:12px; flex-shrink:0 }
     .tm-av {
       width:72px; height:72px; border-radius:50%; overflow:hidden;
@@ -56,13 +56,13 @@
     .tm-card:hover .tm-av { border-color:rgba(124,92,255,.5) }
     .tm-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
 
-    /* ── Status dot ── */
+    /* -- Status dot -- */
     .tm-status-dot { position:absolute; bottom:1px; right:1px; width:18px; height:18px; border-radius:50%; border:3px solid var(--tm-card) }
     .tm-status-dot.online  { background:#22c55e; animation:tmPulse 1.8s ease-in-out infinite }
     .tm-status-dot.offline { background:#94a3b8 }
     @keyframes tmPulse { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.6)} 50%{box-shadow:0 0 0 6px rgba(34,197,94,0)} }
 
-    /* ── Name & role ── */
+    /* -- Name & role -- */
     .tm-name { font-size:13.5px; font-weight:800; color:var(--tm-text); margin-bottom:5px; line-height:1.3; text-align:center; word-break:break-word }
     .tm-role { display:inline-block; font-size:10px; font-weight:700; padding:2px 10px; border-radius:20px; margin-bottom:6px }
     .tm-role-admin { background:rgba(124,92,255,.12); color:#7c5cff }
@@ -87,7 +87,7 @@
 
     .tm-last { font-size:10.5px; color:var(--tm-muted); text-align:center }
 
-    /* ── Unread badge ── */
+    /* -- Unread badge -- */
     .tm-unread {
       position:absolute; top:10px; right:10px;
       min-width:20px; height:20px; border-radius:10px; padding:0 5px;
@@ -99,9 +99,9 @@
     .tm-spin  { width:26px; height:26px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:tmSpin .7s linear infinite; margin-right:10px; flex-shrink:0 }
     @keyframes tmSpin{ to{ transform:rotate(360deg) } }
 
-    /* ══════════════════════════════
+    /* ------------------------------
        PROFILE MODAL
-    ══════════════════════════════ */
+    ------------------------------ */
     .pm-backdrop { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; pointer-events:none; transition:opacity .2s }
     .pm-backdrop.pm-open { opacity:1; pointer-events:auto }
     .pm-box { background:var(--tm-card); border-radius:24px; border:1px solid var(--tm-border); box-shadow:0 24px 60px rgba(0,0,0,.25); width:100%; max-width:360px; position:relative; overflow:hidden; transform:translateY(20px) scale(.97); transition:transform .22s, opacity .22s; opacity:0 }
@@ -143,7 +143,7 @@
   <main class="main-content" id="mainContent">
     <div class="shared-topbar" id="sharedHeader"></div>
     <div class="tm-wrap">
-      <div id="tmState" class="tm-state"><div class="tm-spin"></div><span>Loading…</span></div>
+      <div id="tmState" class="tm-state"><div class="tm-spin"></div><span>Loading�</span></div>
       <div class="tm-grid" id="tmGrid" style="display:none"></div>
     </div>
   </main>
@@ -191,7 +191,7 @@
 </div>
 
 
-<script src="../assets/js/layout.js?v=16"></script>
+<script src="../assets/js/layout.js?v=18"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
 <script src="../assets/js/auth.js?v=2"></script>
 <script src="../assets/js/api.js?v=8"></script>
@@ -220,7 +220,7 @@ function fmtLastActive(dtStr) {
   try {
     var s = String(dtStr).trim().replace(' ','T');
     if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
-    var d = new Date(s); if (isNaN(d.getTime())) return '—';
+    var d = new Date(s); if (isNaN(d.getTime())) return '�';
     var TZ='Asia/Phnom_Penh';
     var parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(d);
     var p={}; parts.forEach(function(x){p[x.type]=x.value;});
@@ -229,11 +229,11 @@ function fmtLastActive(dtStr) {
     var nowDate=new Intl.DateTimeFormat('en-CA',{timeZone:TZ}).format(new Date());
     var dp=(ppDate===nowDate)?'Today':p.day+'/'+p.month+'/'+p.year.slice(2);
     return dp+' '+String(h12).padStart(2,'0')+':'+p.minute+' '+ampm;
-  } catch(e){ return '—'; }
+  } catch(e){ return '�'; }
 }
 
 function fmtExpiry(expDate) {
-  if (!expDate) return '—';
+  if (!expDate) return '�';
   var ms=new Date(String(expDate)+'T23:59:59').getTime();
   var d=Math.ceil((ms-Date.now())/86400000);
   var parts=String(expDate).split('-');
@@ -288,13 +288,13 @@ function openCard(idx) {
   var u = _users[idx];
   if (!u) return;
   if (u.username === getMyUsername()) {
-    openProfile(idx); // own card → profile
+    openProfile(idx); // own card ? profile
   } else {
     openProfile(idx); // show profile first, user clicks Message to chat
   }
 }
 
-/* ── Profile Modal ── */
+/* -- Profile Modal -- */
 function openProfile(idx) {
   var u = _users[idx]; if (!u) return;
   _pmCurIdx = idx;
@@ -354,7 +354,7 @@ document.addEventListener('helen-unread-update', function(e) {
 
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeProfile(); });
 
-/* ── Load ── */
+/* -- Load -- */
 document.addEventListener('DOMContentLoaded', async function() {
   if (window.HelenAuth&&!window.HelenAuth.check()) return;
   try {

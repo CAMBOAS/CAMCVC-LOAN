@@ -55,12 +55,12 @@
       .bp-wrap { height:auto; padding:14px 12px 100px }
     }
 
-    /* ── Loading / Error ── */
+    /* -- Loading / Error -- */
     .bp-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; gap:12px; color:var(--bp-muted); font-size:14px }
     .bp-spin { width:32px; height:32px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:bpSpin .7s linear infinite }
     @keyframes bpSpin { to { transform:rotate(360deg) } }
 
-    /* ── Top bar (back + actions) ── */
+    /* -- Top bar (back + actions) -- */
     .bp-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px }
     .bp-back-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:1.5px solid var(--bp-border); background:var(--bp-card); color:var(--bp-muted); font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; transition:.15s; font-family:inherit }
     .bp-back-btn:hover { color:var(--bp-text); border-color:#7c5cff; background:rgba(124,92,255,.06) }
@@ -71,7 +71,7 @@
     .bp-btn-del  { background:rgba(239,68,68,.1); color:#ef4444 }
     .bp-btn-del:hover  { background:rgba(239,68,68,.2) }
 
-    /* ── Hero Card ── */
+    /* -- Hero Card -- */
     .bp-hero { background:var(--bp-card); border-radius:22px; padding:28px 24px 22px; margin-bottom:16px; box-shadow:var(--bp-shadow); border:1px solid var(--bp-border); display:flex; align-items:flex-start; gap:22px; flex-wrap:wrap }
     .bp-avatar-wrap { position:relative; flex-shrink:0 }
     .bp-avatar { width:82px; height:82px; border-radius:50%; background:rgba(124,92,255,.12); border:3px solid rgba(124,92,255,.3); display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:zoom-in }
@@ -86,25 +86,25 @@
     .bp-hero-stat-label { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--bp-muted) }
     .bp-hero-stat-val { font-size:13px; font-weight:700; color:var(--bp-text) }
 
-    /* ── Grid ── */
+    /* -- Grid -- */
     .bp-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px }
     @media (max-width:600px) { .bp-grid { grid-template-columns:1fr } }
     .bp-card { background:var(--bp-card); border-radius:18px; padding:18px 20px; box-shadow:var(--bp-shadow); border:1px solid var(--bp-border) }
     .bp-card-full { grid-column:1/-1 }
     .bp-card-title { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--bp-muted); margin:0 0 14px }
 
-    /* ── Info rows ── */
+    /* -- Info rows -- */
     .bp-info-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--bp-border) }
     .bp-info-row:last-child { border-bottom:none; padding-bottom:0 }
     .bp-info-row:first-child { padding-top:0 }
     .bp-info-lbl { font-size:12px; color:var(--bp-muted); font-weight:500 }
     .bp-info-val { font-size:13px; color:var(--bp-text); font-weight:600; text-align:right; word-break:break-word; max-width:60% }
 
-    /* ── Amount display ── */
+    /* -- Amount display -- */
     .bp-amount { font-size:28px; font-weight:800; color:#22c55e; line-height:1; margin-bottom:4px }
     .bp-amount-sub { font-size:11px; color:var(--bp-muted); font-weight:500 }
 
-    /* ── Status tags ── */
+    /* -- Status tags -- */
     .bp-tag { display:inline-flex; align-items:center; padding:3px 10px; border-radius:8px; font-size:11.5px; font-weight:700 }
     .bp-tag-black { background:rgba(239,68,68,.12); color:#ef4444 }
     .bp-tag-good  { background:rgba(34,197,94,.12); color:#22c55e }
@@ -113,11 +113,11 @@
     .bp-tag-poor  { background:rgba(249,115,22,.12); color:#f97316 }
     .bp-tag-done  { background:rgba(99,102,241,.12); color:#6366f1 }
 
-    /* ── Paid pill ── */
+    /* -- Paid pill -- */
     .bp-paid-yes { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:8px; font-size:11.5px; font-weight:700; background:rgba(34,197,94,.12); color:#22c55e }
     .bp-paid-no  { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:8px; font-size:11.5px; font-weight:700; background:rgba(148,163,184,.1); color:var(--bp-muted) }
 
-    /* ── Social links ── */
+    /* -- Social links -- */
     .bp-social-list { display:flex; flex-direction:column; gap:10px }
     .bp-social-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:12px; background:var(--bp-card2); border:1px solid var(--bp-border) }
     .bp-social-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0 }
@@ -127,20 +127,20 @@
     .bp-social-link { color:#60a5fa; font-size:18px; text-decoration:none; flex-shrink:0 }
     .bp-social-link:hover { color:#93c5fd }
 
-    /* ── Note ── */
+    /* -- Note -- */
     .bp-note-text { font-size:13.5px; color:var(--bp-text); line-height:1.7; white-space:pre-wrap; word-break:break-word }
 
-    /* ── Photos ── */
+    /* -- Photos -- */
     .bp-photos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px }
     .bp-photo-thumb { width:100%; aspect-ratio:1; border-radius:10px; object-fit:cover; cursor:zoom-in; transition:.15s; border:2px solid transparent }
     .bp-photo-thumb:hover { border-color:#7c5cff; transform:scale(1.04) }
 
-    /* ── Lightbox ── */
+    /* -- Lightbox -- */
     .bp-lightbox { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.88); cursor:zoom-out; animation:bpFade .15s ease }
     .bp-lightbox img { max-width:90vw; max-height:88vh; border-radius:14px; object-fit:contain; box-shadow:0 24px 64px rgba(0,0,0,.8) }
     @keyframes bpFade { from { opacity:0 } to { opacity:1 } }
 
-    /* ── History table ── */
+    /* -- History table -- */
     .bp-hist-wrap { overflow-x:auto }
     .bp-hist-tbl { width:100%; border-collapse:collapse; font-size:12.5px }
     .bp-hist-tbl th { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--bp-muted); padding:0 10px 10px; text-align:left; white-space:nowrap }
@@ -150,7 +150,7 @@
     .bp-hist-link { color:#60a5fa; text-decoration:none; font-weight:600; font-size:12px; background:rgba(96,165,250,.1); padding:2px 8px; border-radius:6px; display:inline-block }
     .bp-hist-link:hover { background:rgba(96,165,250,.2) }
 
-    /* ── Gender ── */
+    /* -- Gender -- */
     .bp-gender-f { color:#f472b6; font-weight:700 }
     .bp-gender-m { color:#60a5fa; font-weight:700 }
   </style>
@@ -164,15 +164,15 @@
     <div class="bp-wrap" id="bpWrap">
       <div class="bp-state" id="bpLoading">
         <div class="bp-spin"></div>
-        <span>Loading profile…</span>
+        <span>Loading profile�</span>
       </div>
       <div id="bpContent" style="display:none"></div>
     </div>
   </main>
 </div>
 
-<script src="../assets/js/layout.js?v=16"></script>
-<script src="../assets/js/dashboard-layout.js?v=16"></script>
+<script src="../assets/js/layout.js?v=18"></script>
+<script src="../assets/js/dashboard-layout.js?v=18"></script>
 <script src="../assets/js/auth.js?v=2"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
@@ -183,7 +183,7 @@ function esc(s) {
 }
 
 function fmtDate(dt) {
-  if (!dt) return '—';
+  if (!dt) return '�';
   try {
     var d = new Date(dt);
     var dd = String(d.getDate()).padStart(2,'0');
@@ -194,7 +194,7 @@ function fmtDate(dt) {
 
 function statusTag(s) {
   var v = (s||'').trim().toLowerCase();
-  if (!v) return '<span class="bp-tag bp-tag-normal">—</span>';
+  if (!v) return '<span class="bp-tag bp-tag-normal">�</span>';
   if (v==='good')        return '<span class="bp-tag bp-tag-good">Good</span>';
   if (v==='normal')      return '<span class="bp-tag bp-tag-normal">Normal</span>';
   if (v==='blacklisted') return '<span class="bp-tag bp-tag-black">BlackListed</span>';
@@ -262,7 +262,7 @@ window.showLightbox = showLightbox;
 function renderProfile(loan, history, key) {
   var html = '';
 
-  /* ── Top bar ── */
+  /* -- Top bar -- */
   html += '<div class="bp-topbar">'
     + '<a href="loan-list.html" class="bp-back-btn">'
     + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>'
@@ -274,17 +274,17 @@ function renderProfile(loan, history, key) {
     + '</div>'
     + '</div>';
 
-  /* ── Hero ── */
+  /* -- Hero -- */
   var genderHtml = '';
   var g = (loan.Gender||'').toLowerCase();
-  if (g.includes('ស្ត្រី')||g.includes('female')||g==='f') genderHtml = '<span class="bp-gender-f">♀ '+esc(loan.Gender)+'</span>';
-  else if (g.includes('ប្រុស')||g.includes('male')||g==='m') genderHtml = '<span class="bp-gender-m">♂ '+esc(loan.Gender)+'</span>';
-  else genderHtml = esc(loan.Gender||'—');
+  if (g.includes('??????')||g.includes('female')||g==='f') genderHtml = '<span class="bp-gender-f">? '+esc(loan.Gender)+'</span>';
+  else if (g.includes('?????')||g.includes('male')||g==='m') genderHtml = '<span class="bp-gender-m">? '+esc(loan.Gender)+'</span>';
+  else genderHtml = esc(loan.Gender||'�');
 
   html += '<div class="bp-hero">'
     + '<div class="bp-avatar-wrap">'+avatarHtml(loan, 82)+'</div>'
     + '<div class="bp-hero-info">'
-    + '<div class="bp-hero-name">'+esc(loan.FullName||'—')+'</div>'
+    + '<div class="bp-hero-name">'+esc(loan.FullName||'�')+'</div>'
     + '<div class="bp-hero-meta">'
     + (loan.NationalID ? '<span class="bp-nid-badge">'+esc(loan.NationalID)+'</span>' : '')
     + statusTag(loan.Status)
@@ -298,7 +298,7 @@ function renderProfile(loan, history, key) {
     + '</div>'
     + '</div>';
 
-  /* ── Main grid ── */
+  /* -- Main grid -- */
   html += '<div class="bp-grid">';
 
   /* Loan Details card */
@@ -306,19 +306,19 @@ function renderProfile(loan, history, key) {
     + '<div class="bp-card-title">Loan Details</div>'
     + (loan.Money ? '<div class="bp-amount">$'+esc(String(loan.Money))+'</div><div class="bp-amount-sub">Loan Amount</div><div style="height:14px"></div>' : '')
     + '<div class="bp-info-row"><span class="bp-info-lbl">Status</span><span class="bp-info-val">'+statusTag(loan.Status)+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Paid</span><span class="bp-info-val">'+(loan.Paid ? '<span class="bp-paid-yes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>Paid</span>' : '<span class="bp-paid-no">— Not Paid</span>')+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Group</span><span class="bp-info-val">'+esc(loan.Groups||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Paid</span><span class="bp-info-val">'+(loan.Paid ? '<span class="bp-paid-yes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>Paid</span>' : '<span class="bp-paid-no">� Not Paid</span>')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Group</span><span class="bp-info-val">'+esc(loan.Groups||'�')+'</span></div>'
     + '<div class="bp-info-row"><span class="bp-info-lbl">Date Added</span><span class="bp-info-val">'+fmtDate(loan.DateTime)+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Created By</span><span class="bp-info-val" style="color:#a78bfa">'+esc(loan.created_by||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Created By</span><span class="bp-info-val" style="color:#a78bfa">'+esc(loan.created_by||'�')+'</span></div>'
     + '</div>';
 
   /* Personal Info card */
   html += '<div class="bp-card">'
     + '<div class="bp-card-title">Personal Info</div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Full Name</span><span class="bp-info-val">'+esc(loan.FullName||'—')+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">National ID</span><span class="bp-info-val" style="font-family:monospace;color:#60a5fa">'+esc(loan.NationalID||'—')+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Date of Birth</span><span class="bp-info-val">'+esc(loan.DOB||'—')+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Phone</span><span class="bp-info-val"><a href="tel:'+esc(loan.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(loan.Phone||'—')+'</a></span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Full Name</span><span class="bp-info-val">'+esc(loan.FullName||'�')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">National ID</span><span class="bp-info-val" style="font-family:monospace;color:#60a5fa">'+esc(loan.NationalID||'�')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Date of Birth</span><span class="bp-info-val">'+esc(loan.DOB||'�')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Phone</span><span class="bp-info-val"><a href="tel:'+esc(loan.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(loan.Phone||'�')+'</a></span></div>'
     + '<div class="bp-info-row"><span class="bp-info-lbl">Gender</span><span class="bp-info-val">'+genderHtml+'</span></div>'
     + '</div>';
 
@@ -334,7 +334,7 @@ function renderProfile(loan, history, key) {
       html += '<div class="bp-social-item">'
         + platformIcon(sl.platform)
         + '<div class="bp-social-detail">'
-        + '<div class="bp-social-name">'+esc(sl.name||sl.platform||'—')+'</div>'
+        + '<div class="bp-social-name">'+esc(sl.name||sl.platform||'�')+'</div>'
         + (sl.id||sl.fbid ? '<div class="bp-social-sub">ID: '+esc(sl.id||sl.fbid||'')+'</div>' : '')
         + '</div>'
         + linkBtn
@@ -368,7 +368,7 @@ function renderProfile(loan, history, key) {
   /* Loan History */
   if (history && history.length > 1) {
     html += '<div class="bp-card bp-card-full">'
-      + '<div class="bp-card-title">Loan History — '+esc(loan.NationalID)+' ('+history.length+' records)</div>'
+      + '<div class="bp-card-title">Loan History � '+esc(loan.NationalID)+' ('+history.length+' records)</div>'
       + '<div class="bp-hist-wrap"><table class="bp-hist-tbl">'
       + '<thead><tr>'
       + '<th>#</th><th>Date</th><th>Amount</th><th>Status</th><th>Paid</th><th>Group</th><th>Created By</th><th></th>'
@@ -378,11 +378,11 @@ function renderProfile(loan, history, key) {
       html += '<tr'+(isCurrent?' class="bp-hist-current"':'')+'>'
         + '<td style="color:var(--bp-muted);font-size:11px">'+(i+1)+'</td>'
         + '<td style="white-space:nowrap">'+fmtDate(h.DateTime)+'</td>'
-        + '<td style="color:#22c55e;font-weight:700">'+(h.Money?'$'+h.Money:'—')+'</td>'
+        + '<td style="color:#22c55e;font-weight:700">'+(h.Money?'$'+h.Money:'�')+'</td>'
         + '<td>'+statusTag(h.Status)+'</td>'
-        + '<td>'+(h.Paid?'<span class="bp-paid-yes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>':'<span style="color:var(--bp-muted)">—</span>')+'</td>'
-        + '<td style="font-size:12px">'+esc(h.Groups||'—')+'</td>'
-        + '<td style="font-size:12px;color:#a78bfa">'+esc(h.created_by||'—')+'</td>'
+        + '<td>'+(h.Paid?'<span class="bp-paid-yes"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>':'<span style="color:var(--bp-muted)">�</span>')+'</td>'
+        + '<td style="font-size:12px">'+esc(h.Groups||'�')+'</td>'
+        + '<td style="font-size:12px;color:#a78bfa">'+esc(h.created_by||'�')+'</td>'
         + '<td>'+(isCurrent?'<span style="font-size:11px;color:#7c5cff;font-weight:700">Current</span>':'<a href="borrower-profile.html?key='+encodeURIComponent(h.DateTime||'')+'" class="bp-hist-link">View</a>')+'</td>'
         + '</tr>';
     });
