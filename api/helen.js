@@ -808,8 +808,13 @@ export default async function handler(req, res) {
 
     /* ── Get role permissions ── */
     if (action === 'helen_perms_get') {
-      const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="permissions" LIMIT 1');
-      const perms = rows.length ? JSON.parse(rows[0].value) : defaultPerms();
+      const [rows] = await db().query('SELECT type, value FROM helen_infor WHERE type LIKE "perm_%"');
+      if (!rows.length) return res.json({ ok:true, perms: defaultPerms() });
+      const perms = {};
+      rows.forEach(r => {
+        const key = r.type.slice(5); /* strip "perm_" prefix */
+        try { perms[key] = JSON.parse(r.value); } catch(e) {}
+      });
       return res.json({ ok:true, perms });
     }
 
@@ -820,9 +825,11 @@ export default async function handler(req, res) {
       if (!perms || typeof perms !== 'object') return res.json({ ok:false, message:'perms required' });
       if (!Array.isArray(perms.settings)) perms.settings = ['Admin'];
       if (!perms.settings.includes('Admin')) perms.settings = ['Admin', ...perms.settings];
-      await db().query('DELETE FROM helen_infor WHERE type="permissions"');
-      await db().query('INSERT INTO helen_infor (type, value) VALUES ("permissions", ?)', [JSON.stringify(perms)]);
-      logActivity('perms_update', actor, _bu, null, perms).catch(()=>{});
+      await db().query('DELETE FROM helen_infor WHERE type LIKE "perm_%"');
+      for (const [key, val] of Object.entries(perms)) {
+        await db().query('INSERT INTO helen_infor (type, value) VALUES (?, ?)', ['perm_'+key, JSON.stringify(val)]);
+      }
+      logActivity('perms_update', actor, _bu, null, {}).catch(()=>{});
       return res.json({ ok:true });
     }
 
