@@ -26,7 +26,7 @@
     .sb-user-avatar { box-shadow:none !important }
     .sidebar.sb-collapsed .sb-user-avatar { box-shadow:none !important }
 
-    /* -- Dashboard wrap -- */
+    /* ── Dashboard wrap ── */
     .main-content { padding:0 !important }
     @media (max-width:980px) {
       .main-content { padding-top: 64px !important }
@@ -40,15 +40,15 @@
     .db-refresh-btn svg { transition:.4s }
     .db-refresh-btn.spinning svg { animation:spin .7s linear infinite }
 
-    /* -- Content wrapper � flex column so gap applies between all top-level blocks -- */
+    /* ── Content wrapper — flex column so gap applies between all top-level blocks ── */
     #dbContent { display:flex; flex-direction:column; gap:8px }
 
-    /* -- Section label � negative margin pulls label closer to its cards below -- */
+    /* ── Section label — negative margin pulls label closer to its cards below ── */
     .db-section { display:flex; align-items:center; gap:10px; margin-bottom:-14px }
     .db-section-label { font-size:9.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted) }
     .db-section-line { flex:1; height:1px; background:rgba(148,163,184,.12) }
 
-    /* -- KPI cards � 8 in 1 row, compact horizontal -- */
+    /* ── KPI cards — 8 in 1 row, compact horizontal ── */
     .db-kpi-row { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:10px }
     .db-kpi {
       padding:14px 16px; border-radius:14px; position:relative; overflow:hidden;
@@ -65,7 +65,7 @@
     .db-kpi-sub { font-size:9.5px; color:var(--muted); margin-top:1px }
     .db-kpi-accent { position:absolute; right:-10px; top:-10px; width:56px; height:56px; border-radius:50%; opacity:.1; pointer-events:none }
 
-    /* -- Chart grids -- */
+    /* ── Chart grids ── */
     .db-charts-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:stretch }
     .db-charts-3 .db-card { display:flex; flex-direction:column }
     #dbGroupBars { flex:1; overflow-y:auto; max-height:220px; padding-right:2px }
@@ -77,7 +77,7 @@
     #dbMonthBars { flex:1 }
     .db-charts-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:stretch }
 
-    /* -- Card -- */
+    /* ── Card ── */
     .db-card {
       padding:14px 16px; display:flex; flex-direction:column; gap:8px; border-radius:18px;
       border:1px solid rgba(148,163,184,.08);
@@ -89,7 +89,7 @@
     .db-card-badge { font-size:9px; font-weight:700; padding:3px 8px; border-radius:20px; border:1px solid rgba(148,163,184,.15); color:var(--muted) }
     .db-divider { height:1px; background:rgba(148,163,184,.1); margin:0 -2px }
 
-    /* -- Donut -- */
+    /* ── Donut ── */
     .db-donut-wrap { display:flex; align-items:center; gap:12px }
     .db-donut-wrap svg { flex-shrink:0; overflow:visible }
     .db-legend { display:flex; flex-direction:column; gap:3px; flex:1; min-width:0 }
@@ -101,7 +101,7 @@
     .db-legend-pct { font-size:10px; font-weight:800; color:var(--text); text-align:right }
     .db-legend-n { font-size:10px; color:var(--muted); text-align:right }
 
-    /* -- Horizontal bars -- */
+    /* ── Horizontal bars ── */
     .db-bars { display:flex; flex-direction:column; gap:7px; flex:1 }
     .db-bar-item { display:flex; flex-direction:column; gap:5px; animation:db-fade-up .3s ease both }
     .db-bar-meta { display:flex; justify-content:space-between; align-items:center; gap:8px }
@@ -110,7 +110,7 @@
     .db-bar-track { height:9px; border-radius:5px; background:rgba(148,163,184,.1); overflow:hidden }
     .db-bar-fill { height:100%; border-radius:5px; transition:width .65s cubic-bezier(.34,1.2,.64,1) }
 
-    /* -- Monthly chart -- */
+    /* ── Monthly chart ── */
     .db-month-bars { display:flex; align-items:flex-end; gap:4px; height:120px }
     .db-month-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; border-radius:6px; padding:0 1px 4px; transition:.12s }
     .db-month-col:hover { background:rgba(148,163,184,.07) }
@@ -121,7 +121,7 @@
     .db-month-label { font-size:8px; color:var(--muted); text-align:center; letter-spacing:.02em }
     .db-month-label.current { color:#7c5cff; font-weight:800 }
 
-    /* -- Tables -- */
+    /* ── Tables ── */
     .db-tbl-wrap { overflow-x:auto; flex:1 }
     .db-tbl { width:100%; border-collapse:collapse; font-size:12px }
     .db-tbl th { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:8px 10px; border-bottom:1px solid rgba(148,163,184,.1); white-space:nowrap }
@@ -130,7 +130,7 @@
     .db-tbl tr:hover td { background:rgba(148,163,184,.05) }
     .db-rank { width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:800 }
 
-    /* -- Recent list -- */
+    /* ── Recent list ── */
     .db-recent-list { display:flex; flex-direction:column; flex:1; overflow-y:auto; max-height:340px }
     .db-recent-item { display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid rgba(148,163,184,.07); transition:.12s }
     .db-recent-item:last-child { border-bottom:none }
@@ -144,7 +144,7 @@
     .db-recent-amt { font-size:12px; font-weight:800; color:#22c55e }
     .db-recent-status { font-size:9.5px; font-weight:700; margin-top:2px }
 
-    /* -- Recent 10 Full Table -- */
+    /* ── Recent 10 Full Table ── */
     .db-loan-tbl-wrap { overflow-x:auto; scrollbar-width:thin; scrollbar-color:rgba(148,163,200,.15) transparent }
     .db-loan-tbl { width:100%; border-collapse:collapse; font-size:12px; min-width:700px }
     .db-loan-tbl thead th { font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); padding:8px 10px; border-bottom:2px solid rgba(148,163,184,.1); white-space:nowrap; text-align:left }
@@ -159,18 +159,18 @@
     .db-loan-view { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; background:rgba(124,92,255,.1); border:1px solid rgba(124,92,255,.2); color:#a78bfa; cursor:pointer; transition:.15s; text-decoration:none }
     .db-loan-view:hover { background:rgba(124,92,255,.22); color:#c4b5fd }
 
-    /* -- Loading -- */
+    /* ── Loading ── */
     .db-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:100px 20px; color:var(--muted); font-size:13px }
     .db-loading-spin { width:36px; height:36px; border:3px solid rgba(124,92,255,.15); border-top-color:#7c5cff; border-radius:50%; animation:spin .8s linear infinite }
 
-    /* -- Status tag -- */
+    /* ── Status tag ── */
     .db-tag { padding:3px 9px; border-radius:20px; font-size:9px; font-weight:700 }
 
-    /* -- Animations -- */
+    /* ── Animations ── */
     @keyframes spin { to { transform:rotate(360deg) } }
     @keyframes db-fade-up { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
 
-    /* -- Responsive -- */
+    /* ── Responsive ── */
     @media(max-width:1400px) { .db-kpi-row { grid-template-columns:repeat(4,1fr) } }
     @media(max-width:1100px) { .db-charts-3 { grid-template-columns:1fr 1fr } }
     @media(max-width:980px)  { .db-kpi-row { grid-template-columns:repeat(4,1fr) } .db-charts-2 { grid-template-columns:1fr } }
@@ -190,7 +190,7 @@
       <!-- Loading -->
       <div id="dbLoading" class="db-loading">
         <div class="db-loading-spin"></div>
-        <div>?????????? Dashboard...</div>
+        <div>កំពុងផ្ទុក Dashboard...</div>
       </div>
 
       <!-- Content -->
@@ -204,7 +204,7 @@
           <div class="glass-card db-card">
             <div class="db-card-hd">
               <div class="db-card-hd-text">
-                <div class="db-card-title">????????? Status</div>
+                <div class="db-card-title">ការបែងចែក Status</div>
                 <div class="db-card-sub">Status Distribution by count</div>
               </div>
             </div>
@@ -217,7 +217,7 @@
           <div class="glass-card db-card">
             <div class="db-card-hd">
               <div class="db-card-hd-text">
-                <div class="db-card-title">????????????????????</div>
+                <div class="db-card-title">អ្នកខ្ចីថ្មីប្រចាំខែ</div>
                 <div class="db-card-sub">Monthly new borrowers (current year)</div>
               </div>
             </div>
@@ -227,7 +227,7 @@
           <div class="glass-card db-card">
             <div class="db-card-hd">
               <div class="db-card-hd-text">
-                <div class="db-card-title">????????????????</div>
+                <div class="db-card-title">អ្នកខ្ចីតាមក្រុម</div>
                 <div class="db-card-sub">Borrower count per group</div>
               </div>
             </div>
@@ -241,7 +241,7 @@
           <div class="glass-card db-card">
             <div class="db-card-hd">
               <div class="db-card-hd-text">
-                <div class="db-card-title">Top 10 ????????</div>
+                <div class="db-card-title">Top 10 អ្នកខ្ចី</div>
                 <div class="db-card-sub">Ranked by loan amount (highest first)</div>
               </div>
               <span class="db-card-badge" id="dbTopCount"></span>
@@ -250,7 +250,7 @@
             <div class="db-tbl-wrap">
               <table class="db-tbl">
                 <thead><tr>
-                  <th style="width:36px">#</th><th>?????</th><th>?????</th><th>Status</th><th style="text-align:right">Amount</th>
+                  <th style="width:36px">#</th><th>ឈ្មោះ</th><th>ក្រុម</th><th>Status</th><th style="text-align:right">Amount</th>
                 </tr></thead>
                 <tbody id="dbTopTbody"></tbody>
               </table>
@@ -259,8 +259,8 @@
           <div class="glass-card db-card">
             <div class="db-card-hd">
               <div class="db-card-hd-text">
-                <div class="db-card-title">?????????????</div>
-                <div class="db-card-sub">Recent activity � last 14 days</div>
+                <div class="db-card-title">សកម្មភាពថ្មីៗ</div>
+                <div class="db-card-sub">Recent activity — last 14 days</div>
               </div>
               <span class="db-card-badge" id="dbRecentCount"></span>
             </div>
@@ -273,10 +273,10 @@
         <div class="glass-card db-card">
           <div class="db-card-hd">
             <div class="db-card-hd-text">
-              <div class="db-card-title">?????????????</div>
+              <div class="db-card-title">អ្នកខ្ចីថ្មីៗ</div>
               <div class="db-card-sub">10 borrowers most recently added</div>
             </div>
-            <a href="pages/loan-list.html" class="db-card-badge" style="text-decoration:none;cursor:pointer;color:#a78bfa;background:rgba(124,92,255,.12);border-color:rgba(124,92,255,.3);padding:4px 12px">?????????? ?</a>
+            <a href="pages/loan-list.html" class="db-card-badge" style="text-decoration:none;cursor:pointer;color:#a78bfa;background:rgba(124,92,255,.12);border-color:rgba(124,92,255,.3);padding:4px 12px">មើលទាំងអស់ →</a>
           </div>
           <div class="db-divider"></div>
           <div class="db-loan-tbl-wrap">
@@ -284,20 +284,20 @@
               <thead>
                 <tr>
                   <th style="width:36px">#</th>
-                  <th>?????</th>
+                  <th>ឈ្មោះ</th>
                   <th>NID</th>
-                  <th>????????</th>
-                  <th>???</th>
-                  <th>?????</th>
-                  <th style="text-align:right">????? ($)</th>
-                  <th>????????</th>
-                  <th>???????????</th>
+                  <th>ទូរស័ព្ទ</th>
+                  <th>ភេទ</th>
+                  <th>ក្រុម</th>
+                  <th style="text-align:right">ចំនួន ($)</th>
+                  <th>ស្ថានភាព</th>
+                  <th>កាលបរិច្ឆេទ</th>
                   <th>Note</th>
                   <th style="text-align:center">Action</th>
                 </tr>
               </thead>
               <tbody id="dbLoanTbody">
-                <tr><td colspan="10" style="text-align:center;padding:28px;color:var(--muted)">??????????...</td></tr>
+                <tr><td colspan="10" style="text-align:center;padding:28px;color:var(--muted)">កំពុងផ្ទុក...</td></tr>
               </tbody>
             </table>
           </div>
@@ -312,23 +312,23 @@
 <script src="assets/js/dashboard-layout.js?v=19"></script>
 <script src="assets/js/api.js?v=7"></script>
 <script>
-/* -- Dashboard Data -- */
+/* ── Dashboard Data ── */
 var _loans = [];
 
-/* -- Helpers -- */
+/* ── Helpers ── */
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtMoney(v){ var n=Number(v||0); return isNaN(n)?'$0':'$'+n.toFixed(2).replace(/\.00$/,''); }
 function today_ymd(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function daysAgo(n){ var d=new Date(); d.setDate(d.getDate()-n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
-/* -- Colors -- */
+/* ── Colors ── */
 var STATUS_COLORS = { 'Good':'#22c55e','Normal':'#06b6d4','BlackListed':'#ef4444','High Risk':'#f59e0b','Done':'#a855f7','Unknown':'#94a3b8' };
 var GROUP_COLORS  = ['#7c5cff','#06b6d4','#22c55e','#f59e0b','#ef4444','#ec4899','#8b5cf6','#10b981','#f97316','#0ea5e9'];
 var GENDER_COLORS = { 'Male':'#3b82f6','Female':'#ec4899','Other':'#a855f7','Unknown':'#94a3b8' };
 function statusColor(s){ var v=(s||'').trim(); if(v.toLowerCase()==='blacklisted') return STATUS_COLORS['BlackListed']; if(v.toLowerCase().includes('high')) return STATUS_COLORS['High Risk']; return STATUS_COLORS[v]||'#94a3b8'; }
 function normalizeStatus(s){ var v=(s||'').trim(); if(v.toLowerCase()==='blacklisted') return 'BlackListed'; if(v.toLowerCase().includes('high')) return 'High Risk'; return v||'Unknown'; }
 
-/* -- Load -- */
+/* ── Load ── */
 async function loadDashboard(){
   document.getElementById('dbLoading').style.display='';
   document.getElementById('dbContent').style.display='none';
@@ -342,7 +342,7 @@ async function loadDashboard(){
     document.getElementById('dbContent').style.display='';
     renderAll();
   } catch(e){
-    document.getElementById('dbLoading').innerHTML='<div style="color:#ef4444;font-size:13px">? ??????????????????? � <a href="" style="color:#60a5fa" onclick="event.preventDefault();reloadDashboard()">Refresh</a></div>';
+    document.getElementById('dbLoading').innerHTML='<div style="color:#ef4444;font-size:13px">❌ មិនអាចផ្ទុកទិន្នន័យ — <a href="" style="color:#60a5fa" onclick="event.preventDefault();reloadDashboard()">Refresh</a></div>';
   }
 }
 function reloadDashboard(){
@@ -361,7 +361,7 @@ function renderAll(){
   renderRecentTable();
 }
 
-/* -- KPI Cards -- */
+/* ── KPI Cards ── */
 function renderKPIs(){
   var total     = _loans.length;
   var totalAmt  = _loans.reduce(function(s,l){ return s+l._money; },0);
@@ -388,14 +388,14 @@ function renderKPIs(){
     calendar: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
   };
   document.getElementById('dbKpiRow').innerHTML = [
-    kpi('????????????','Total Borrowers', total,             '',                   '#7c5cff','124,92,255',  IC.users),
-    kpi('???????????????','Total Amount',  fmtMoney(totalAmt), '',                '#22c55e','34,197,94',   IC.dollar),
-    kpi('???????','Avg per Borrower',       fmtMoney(avgAmt),  '',                '#06b6d4','6,182,212',   IC.avg),
+    kpi('អ្នកខ្ចីសរុប','Total Borrowers', total,             '',                   '#7c5cff','124,92,255',  IC.users),
+    kpi('ប្រាក់កម្ចីសរុប','Total Amount',  fmtMoney(totalAmt), '',                '#22c55e','34,197,94',   IC.dollar),
+    kpi('ជាមធ្យម','Avg per Borrower',       fmtMoney(avgAmt),  '',                '#06b6d4','6,182,212',   IC.avg),
     kpi('Blacklisted','',                   blacklist,          blPct+'% of total', '#ef4444','239,68,68',  IC.shield),
     kpi('Good','',                          good,               gdPct+'% of total', '#22c55e','34,197,94',  IC.check),
     kpi('High Risk','',                     highRisk,           '',                '#f59e0b','245,158,11',  IC.alert),
     kpi('Done','Completed',                 done,               '',                '#a855f7','168,85,247',  IC.done),
-    kpi('???? 30 ????','New (30 days)',     newMonth,           '',                '#06b6d4','6,182,212',   IC.calendar),
+    kpi('ថ្មី 30 ថ្ងៃ','New (30 days)',     newMonth,           '',                '#06b6d4','6,182,212',   IC.calendar),
   ].join('');
 }
 function kpi(label, sub, val, note, color, rgb, icon){
@@ -403,14 +403,14 @@ function kpi(label, sub, val, note, color, rgb, icon){
     +'<div class="db-kpi-accent" style="background:'+color+'"></div>'
     +'<div class="db-kpi-icon-box" style="background:rgba('+rgb+',.15);color:'+color+'">'+icon+'</div>'
     +'<div class="db-kpi-body">'
-    +'<div class="db-kpi-label">'+esc(label)+(sub?' � <span style="opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">'+esc(sub)+'</span>':'')+'</div>'
+    +'<div class="db-kpi-label">'+esc(label)+(sub?' · <span style="opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">'+esc(sub)+'</span>':'')+'</div>'
     +'<div class="db-kpi-val" style="color:'+color+'">'+esc(String(val))+'</div>'
     +(note?'<div class="db-kpi-sub">'+esc(note)+'</div>':'')
     +'</div>'
     +'</div>';
 }
 
-/* -- Donut helper -- */
+/* ── Donut helper ── */
 function buildDonut(svgId, lgndId, entries, total, getColor){
   var svg  = document.getElementById(svgId);
   var lgnd = document.getElementById(lgndId);
@@ -467,7 +467,7 @@ function buildDonut(svgId, lgndId, entries, total, getColor){
   lgnd.innerHTML=rows;
 }
 
-/* -- Status Donut -- */
+/* ── Status Donut ── */
 function renderStatusDonut(){
   var counts={};
   _loans.forEach(function(l){ var s=normalizeStatus(l.Status); counts[s]=(counts[s]||0)+1; });
@@ -475,19 +475,19 @@ function renderStatusDonut(){
   buildDonut('dbStatusSvg','dbStatusLegend',entries,_loans.length,statusColor);
 }
 
-/* -- Gender Donut -- */
+/* ── Gender Donut ── */
 function renderGenderDonut(){
   var counts={};
   _loans.forEach(function(l){
     var g=(l.Gender||'').trim();
-    var norm=({'male':'Male','female':'Female','?????':'Male','????':'Female','??????':'Other','other':'Other'})[g.toLowerCase()]||g||'Unknown';
+    var norm=({'male':'Male','female':'Female','ប្រុស':'Male','ស្រី':'Female','ផ្សេងៗ':'Other','other':'Other'})[g.toLowerCase()]||g||'Unknown';
     counts[norm]=(counts[norm]||0)+1;
   });
   var entries=Object.keys(counts).map(function(k){ return {name:k,count:counts[k]}; }).sort(function(a,b){ return b.count-a.count; });
   buildDonut('dbGenderSvg','dbGenderLegend',entries,_loans.length,function(n){ return GENDER_COLORS[n]||'#94a3b8'; });
 }
 
-/* -- Horizontal bar helper -- */
+/* ── Horizontal bar helper ── */
 function buildBars(containerId, items, getColor, fmt){
   var el=document.getElementById(containerId);
   if(!el) return;
@@ -509,15 +509,15 @@ function buildBars(containerId, items, getColor, fmt){
   }); });
 }
 
-/* -- Group Count Bars -- */
+/* ── Group Count Bars ── */
 function renderGroupBars(){
   var counts={};
   _loans.forEach(function(l){ var g=(l.Groups||'').trim()||'Unknown'; counts[g]=(counts[g]||0)+1; });
   var items=Object.keys(counts).map(function(k){ return {name:k,val:counts[k]}; }).sort(function(a,b){ return b.val-a.val; }).slice(0,8);
-  buildBars('dbGroupBars',items,function(_,i){ return GROUP_COLORS[i%GROUP_COLORS.length]; },function(v){ return v+' ????'; });
+  buildBars('dbGroupBars',items,function(_,i){ return GROUP_COLORS[i%GROUP_COLORS.length]; },function(v){ return v+' នាក់'; });
 }
 
-/* -- Amount by Group Bars -- */
+/* ── Amount by Group Bars ── */
 function renderAmtBars(){
   var amts={};
   _loans.forEach(function(l){ var g=(l.Groups||'').trim()||'Unknown'; amts[g]=(amts[g]||0)+l._money; });
@@ -525,13 +525,13 @@ function renderAmtBars(){
     .filter(function(x){ return x.val>0; })
     .sort(function(a,b){ return b.val-a.val; }).slice(0,8);
   if(!items.length){
-    document.getElementById('dbAmtBars').innerHTML='<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:12px">????????????????????????</div>';
+    document.getElementById('dbAmtBars').innerHTML='<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:12px">គ្មានទិន្នន័យប្រាក់កម្ចី</div>';
     return;
   }
   buildBars('dbAmtBars',items,function(_,i){ return GROUP_COLORS[i%GROUP_COLORS.length]; },fmtMoney);
 }
 
-/* -- Monthly Chart -- */
+/* ── Monthly Chart ── */
 function renderMonthChart(){
   var now=new Date(), cy=now.getFullYear(), cm=now.getMonth();
   var months=[];
@@ -541,7 +541,7 @@ function renderMonthChart(){
   var BAR_MAX=80;
   document.getElementById('dbMonthBars').innerHTML=months.map(function(m){
     var h=m.count>0?Math.max(Math.round(m.count/max*BAR_MAX),4):2;
-    return '<div class="db-month-col" title="'+m.label+' � '+m.count+' borrowers">'
+    return '<div class="db-month-col" title="'+m.label+' — '+m.count+' borrowers">'
       +'<div class="db-month-val" style="color:'+(m.cur?'#7c5cff':'')+'">'+( m.count||'' )+'</div>'
       +'<div class="db-month-bar-wrap"><div class="db-month-bar'+(m.cur?' current':'')+'" style="height:'+h+'px"></div></div>'
       +'<div class="db-month-label'+(m.cur?' current':'')+'">'+m.label+'</div>'
@@ -549,7 +549,7 @@ function renderMonthChart(){
   }).join('');
 }
 
-/* -- Top 10 Table -- */
+/* ── Top 10 Table ── */
 function renderTopTable(){
   var sorted=_loans.slice().filter(function(l){ return l._money>0; }).sort(function(a,b){ return b._money-a._money; }).slice(0,10);
   var RANK_COLORS=['#f59e0b','#94a3b8','#cd7f32','#7c5cff','#7c5cff','#7c5cff','#7c5cff','#7c5cff','#7c5cff','#7c5cff'];
@@ -560,15 +560,15 @@ function renderTopTable(){
     var rc=RANK_COLORS[i]||'#7c5cff';
     return '<tr>'
       +'<td><div class="db-rank" style="background:'+rc+'20;color:'+rc+'">'+( i+1 )+'</div></td>'
-      +'<td style="font-weight:700;max-width:140px;overflow:hidden;text-overflow:ellipsis">'+esc(l.FullName||'�')+'</td>'
-      +'<td style="color:var(--muted);font-size:11px">'+esc(l.Groups||'�')+'</td>'
+      +'<td style="font-weight:700;max-width:140px;overflow:hidden;text-overflow:ellipsis">'+esc(l.FullName||'—')+'</td>'
+      +'<td style="color:var(--muted);font-size:11px">'+esc(l.Groups||'—')+'</td>'
       +'<td><span class="db-tag" style="background:'+color+'1a;color:'+color+'">'+esc(normalizeStatus(l.Status))+'</span></td>'
       +'<td style="text-align:right;font-weight:800;color:#22c55e;font-size:12px">'+fmtMoney(l._money)+'</td>'
       +'</tr>';
-  }).join(''):'<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted);font-size:12px">?????????????</td></tr>';
+  }).join(''):'<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted);font-size:12px">គ្មានទិន្នន័យ</td></tr>';
 }
 
-/* -- Recent Activity -- */
+/* ── Recent Activity ── */
 function renderRecent(){
   var cutoff=daysAgo(14);
   var recent=_loans.filter(function(l){ return l._date>=cutoff; }).sort(function(a,b){ return (b._date||'')>(a._date||'')?1:-1; }).slice(0,20);
@@ -582,23 +582,23 @@ function renderRecent(){
     return '<div class="db-recent-item">'
       +'<div class="db-recent-avatar" style="background:'+ac+'">'+esc(initials)+'</div>'
       +'<div class="db-recent-info">'
-      +'<div class="db-recent-name">'+esc(l.FullName||'�')+'</div>'
+      +'<div class="db-recent-name">'+esc(l.FullName||'—')+'</div>'
       +'<div class="db-recent-meta">'
       +'<span>'+esc(l._date||'')+'</span>'
-      +(l.Groups?'<span class="db-recent-sep">�</span><span>'+esc(l.Groups)+'</span>':'')
+      +(l.Groups?'<span class="db-recent-sep">·</span><span>'+esc(l.Groups)+'</span>':'')
       +'</div>'
       +'</div>'
       +'<div class="db-recent-right">'
-      +'<div class="db-recent-amt">'+(l._money?fmtMoney(l._money):'<span style="color:var(--muted)">�</span>')+'</div>'
+      +'<div class="db-recent-amt">'+(l._money?fmtMoney(l._money):'<span style="color:var(--muted)">—</span>')+'</div>'
       +'<div class="db-recent-status" style="color:'+color+'">'+esc(normalizeStatus(l.Status))+'</div>'
       +'</div>'
       +'</div>';
-  }).join(''):'<div style="padding:32px;text-align:center;color:var(--muted);font-size:12px">?????????????????? 14 ????????????</div>';
+  }).join(''):'<div style="padding:32px;text-align:center;color:var(--muted);font-size:12px">គ្មានសកម្មភាពក្នុង 14 ថ្ងៃចុងក្រោយ</div>';
 }
 
-/* -- Recent 10 Full Table -- */
+/* ── Recent 10 Full Table ── */
 function fmtDate(dt){
-  if(!dt) return '�';
+  if(!dt) return '—';
   var m=String(dt).match(/(\d{4})-(\d{2})-(\d{2})/);
   return m ? m[3]+'/'+m[2]+'/'+m[1] : dt;
 }
@@ -609,36 +609,36 @@ function renderRecentTable(){
   var tbody=document.getElementById('dbLoanTbody');
   if(!tbody) return;
   if(!recent.length){
-    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:28px;color:var(--muted);font-size:12px">?????????????</td></tr>';
+    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:28px;color:var(--muted);font-size:12px">គ្មានទិន្នន័យ</td></tr>';
     return;
   }
   tbody.innerHTML=recent.map(function(l,i){
     var sc=statusColor(l.Status);
     var gTag=l.Gender==='Female'
-      ?'<span class="db-loan-tag db-loan-tag-f">????</span>'
+      ?'<span class="db-loan-tag db-loan-tag-f">ស្រី</span>'
       :l.Gender==='Male'
-        ?'<span class="db-loan-tag db-loan-tag-m">?????</span>'
-        :'<span style="color:var(--muted);font-size:11px">�</span>';
-    var money=l._money?'<span style="color:#34d399;font-weight:800">'+fmtMoney(l._money)+'</span>':'<span style="color:var(--muted)">�</span>';
-    var phone=l.Phone?'<a href="tel:'+esc(l.Phone)+'" style="color:#60a5fa;text-decoration:none">'+esc(l.Phone)+'</a>':'<span style="color:var(--muted)">�</span>';
+        ?'<span class="db-loan-tag db-loan-tag-m">ប្រុស</span>'
+        :'<span style="color:var(--muted);font-size:11px">—</span>';
+    var money=l._money?'<span style="color:#34d399;font-weight:800">'+fmtMoney(l._money)+'</span>':'<span style="color:var(--muted)">—</span>';
+    var phone=l.Phone?'<a href="tel:'+esc(l.Phone)+'" style="color:#60a5fa;text-decoration:none">'+esc(l.Phone)+'</a>':'<span style="color:var(--muted)">—</span>';
     return '<tr>'
       +'<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'
-      +'<td style="font-weight:700">'+esc(l.FullName||'�')+'</td>'
-      +'<td style="font-family:monospace;font-size:11px;color:#60a5fa">'+esc(l.NationalID||'�')+'</td>'
+      +'<td style="font-weight:700">'+esc(l.FullName||'—')+'</td>'
+      +'<td style="font-family:monospace;font-size:11px;color:#60a5fa">'+esc(l.NationalID||'—')+'</td>'
       +'<td>'+phone+'</td>'
       +'<td>'+gTag+'</td>'
-      +'<td style="font-size:11px;color:var(--muted)">'+esc(l.Groups||'�')+'</td>'
+      +'<td style="font-size:11px;color:var(--muted)">'+esc(l.Groups||'—')+'</td>'
       +'<td style="text-align:right">'+money+'</td>'
       +'<td><span class="db-loan-tag" style="background:'+sc+'1a;color:'+sc+';border-color:'+sc+'33">'+esc(normalizeStatus(l.Status))+'</span></td>'
       +'<td style="font-size:11px;color:var(--muted)">'+fmtDate(l._date)+'</td>'
-      +'<td style="font-size:11px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis">'+esc(l.Note||'�')+'</td>'
+      +'<td style="font-size:11px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis">'+esc(l.Note||'—')+'</td>'
       +'<td style="text-align:center"><a href="pages/loan-list.html?q='+encodeURIComponent(l.NationalID||l.FullName||'')
-        +'" class="db-loan-view" title="??? / ??">&#9999;&#xFE0E;</a></td>'
+        +'" class="db-loan-view" title="មើល / កែ">&#9999;&#xFE0E;</a></td>'
       +'</tr>';
   }).join('');
 }
 
-/* -- Init -- */
+/* ── Init ── */
 loadDashboard();
 </script>
 </body>
