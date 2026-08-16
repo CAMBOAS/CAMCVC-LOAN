@@ -556,8 +556,8 @@
                   ការសង
                 </button>
                 <button class="rph-tab-btn" id="rphTabBtn_discount" onclick="switchRphTab('discount')">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="2"/><circle cx="15" cy="15" r="2"/><path d="M4 4l16 16"/></svg>
-                  ការបញ្ចុះ
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  បង់ការប្រាក់
                 </button>
               </div>
 
@@ -1505,11 +1505,11 @@ function renderRphList() {
         '<div class="rph-sum-row"><span>នៅខ្វះ (Remaining)</span><span class="rph-sum-val'+(remaining>0?' red':'green')+'">'+fmtRphMoney(remaining)+'</span></div>';
     } else {
       summEl.innerHTML =
-        '<div class="rph-sum-row"><span>បញ្ចុះសរុប (Discount)</span><span class="rph-sum-val green">'+fmtRphMoney(total)+'</span></div>';
+        '<div class="rph-sum-row"><span>ការប្រាក់សរុប (Interest)</span><span class="rph-sum-val green">'+fmtRphMoney(total)+'</span></div>';
     }
 
     if (entries.length === 0) {
-      listEl.innerHTML = '<div class="rph-empty-msg">មិនទាន់មានការ'+(type==='payment'?'សង':'បញ្ចុះ')+'</div>';
+      listEl.innerHTML = '<div class="rph-empty-msg">មិនទាន់មានការ'+(type==='payment'?'សង':'បង់ការប្រាក់')+'</div>';
     } else {
       listEl.innerHTML = entries.map(function(e) {
         var delBtn = canWrite
