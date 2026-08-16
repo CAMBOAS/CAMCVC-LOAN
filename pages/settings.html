@@ -27,8 +27,8 @@
     @media (max-width:980px) { .main-content { padding-top:64px !important; height:auto !important; overflow:visible !important } }
 
     /* ── Page wrapper ── */
-    .st-wrap { display:flex; flex-direction:column; gap:10px; padding:12px 14px 0; flex:1; min-height:0; overflow:hidden }
-    @media (max-width:768px) { .st-wrap { overflow:visible; flex:unset; padding-bottom:calc(90px + env(safe-area-inset-bottom,0px)) } }
+    .st-wrap { display:flex; flex-direction:column; gap:10px; padding:12px 14px 14px; overflow-y:auto; overflow-x:hidden; flex:1; min-height:0 }
+    @media (max-width:768px) { .st-wrap { flex:unset; overflow:visible; padding-bottom:calc(90px + env(safe-area-inset-bottom,0px)) } }
 
     /* ── Page header ── */
     .st-page-hdr { display:flex; align-items:center; gap:10px; flex-shrink:0 }
@@ -55,11 +55,11 @@
     @media (max-width:600px) { .um-kpi-val { font-size:20px } .um-kpi { padding:11px 13px } }
 
     /* ── Table card ── */
-    .um-table-card { flex:1; display:flex; flex-direction:column; min-height:0; border-radius:16px; overflow:hidden }
-    .um-tbl-wrap { flex:1; min-height:0; overflow-y:auto; overflow-x:auto }
+    .um-table-card { display:flex; flex-direction:column; border-radius:16px; overflow:hidden }
+    .um-tbl-wrap { overflow-x:auto; overflow-y:visible }
     .um-tbl-wrap::-webkit-scrollbar { width:4px; height:4px }
     .um-tbl-wrap::-webkit-scrollbar-thumb { background:rgba(148,163,184,.2); border-radius:4px }
-    @media (max-width:768px) { .um-table-card { flex:unset; border-radius:13px } .um-tbl-wrap { max-height:none; overflow-x:auto } }
+    @media (max-width:768px) { .um-table-card { border-radius:13px } }
 
     table.um-tbl { width:100%; border-collapse:collapse; font-size:13px }
     table.um-tbl th { padding:10px 12px; text-align:left; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid rgba(148,163,184,.12); white-space:nowrap; position:sticky; top:0; background:var(--card); z-index:2 }
@@ -190,9 +190,10 @@
     .st-tab.st-tab-active svg { opacity:1 }
 
     /* ── Tab panels ── */
-    .st-panel { display:none; flex-direction:column; gap:8px; flex:1; min-height:0 }
+    .st-panel { display:none; flex-direction:column; gap:8px }
     .st-panel.st-panel-active { display:flex }
-    @media (max-width:768px) { .st-panel.st-panel-active { flex:unset } }
+    /* panels that need to fill height (e.g. scrollable lists in other tabs) */
+    .st-panel-stretch { flex:1; min-height:0 }
 
     /* ── Panel toolbar ── */
     .st-panel-toolbar { display:flex; align-items:center; gap:10px; flex-shrink:0 }
