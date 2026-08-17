@@ -175,28 +175,32 @@
     .rt-dp-chip { font-size:10.5px; color:var(--rt-muted); display:flex; align-items:center; gap:3px }
 
     /* -- Gallery -- */
-    .rt-gallery { padding:12px 18px 14px; border-bottom:1px solid var(--rt-border) }
-    .rt-gallery-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px }
+    .rt-gallery { padding:14px 18px 16px; border-top:1px solid var(--rt-border) }
+    .rt-gallery-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px }
     .rt-gallery-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--rt-accent) }
-    .rt-gallery-count { font-size:10px; color:var(--rt-muted) }
-    .rt-gallery-strip { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width:thin; scrollbar-color:rgba(167,139,250,.25) transparent }
-    .rt-gallery-strip::-webkit-scrollbar { height:4px }
-    .rt-gallery-strip::-webkit-scrollbar-thumb { background:rgba(167,139,250,.3); border-radius:2px }
+    .rt-gallery-count { font-size:10.5px; font-weight:700; color:var(--rt-muted) }
+    .rt-gallery-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px }
 
     /* gallery item */
-    .rt-gi { position:relative; width:64px; height:64px; flex-shrink:0; border-radius:9px; overflow:hidden; border:1.5px solid var(--rt-border); cursor:pointer; background:rgba(167,139,250,.06); transition:border-color .15s, transform .15s }
-    .rt-gi:hover { border-color:rgba(167,139,250,.45); transform:scale(1.03) }
-    .rt-gi img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none }
-    .rt-gi-vid { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none }
+    .rt-gi { position:relative; aspect-ratio:1; border-radius:9px; overflow:hidden; border:1.5px solid var(--rt-border); cursor:pointer; background:rgba(167,139,250,.06); transition:border-color .15s,transform .15s }
+    .rt-gi:hover { border-color:rgba(167,139,250,.45); transform:scale(1.02) }
+    .rt-gi img,.rt-gi-vid { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none }
     .rt-gi-vid-ov { position:absolute; inset:0; background:rgba(0,0,0,.32); display:flex; align-items:center; justify-content:center; pointer-events:none }
-    .rt-gi-rm { position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%; background:rgba(0,0,0,.72); color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:900; cursor:pointer; opacity:0; transition:.15s; border:none; padding:0; z-index:2 }
+    .rt-gi-rm { position:absolute; top:4px; right:4px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,.72); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; opacity:0; transition:.15s; border:none; padding:0; z-index:2; line-height:1 }
     .rt-gi:hover .rt-gi-rm { opacity:1 }
     .rt-gi-rm:hover { background:#ef4444 }
 
-    /* add button */
-    .rt-gadd { width:64px; height:64px; flex-shrink:0; border-radius:9px; border:1.5px dashed rgba(167,139,250,.3); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; transition:.15s; color:var(--rt-muted); background:transparent }
+    /* add tile */
+    .rt-gadd { aspect-ratio:1; border-radius:9px; border:1.5px dashed rgba(167,139,250,.32); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; transition:.15s; color:var(--rt-muted); background:transparent }
     .rt-gadd:hover { background:rgba(167,139,250,.08); border-color:rgba(167,139,250,.55); color:var(--rt-accent) }
     .rt-gadd-lbl { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em }
+
+    /* gallery empty state */
+    .rt-gallery-empty { display:flex; flex-direction:column; align-items:center; gap:9px; padding:22px 10px 24px; text-align:center }
+    .rt-gallery-empty-icon { color:rgba(167,139,250,.22); display:flex }
+    .rt-gallery-empty-txt { font-size:11px; color:var(--rt-muted); line-height:1.55 }
+    .rt-gallery-empty-add { display:inline-flex; align-items:center; gap:7px; padding:9px 20px; border-radius:9px; border:1.5px dashed rgba(167,139,250,.38); background:transparent; color:var(--rt-muted); font-size:11.5px; font-weight:700; cursor:pointer; transition:.15s; font-family:inherit; margin-top:2px }
+    .rt-gallery-empty-add:hover { background:rgba(167,139,250,.09); border-color:rgba(167,139,250,.6); color:var(--rt-accent) }
 
     /* -- Upload overlay -- */
     .rt-upload-ov { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.7); backdrop-filter:blur(5px); animation:rtFadeIn .15s }
@@ -508,12 +512,12 @@
               </div>
 
               <!-- -- Media Gallery -- -->
-              <div class="rt-gallery" style="margin:8px -18px 0;border-top:1px solid var(--rt-border);border-bottom:none">
+              <div class="rt-gallery" style="margin:8px -18px 0">
                 <div class="rt-gallery-hdr">
                   <span class="rt-gallery-title">Media Gallery</span>
                   <span class="rt-gallery-count" id="dpGalleryCount"></span>
                 </div>
-                <div class="rt-gallery-strip" id="dpGalleryStrip">
+                <div class="rt-gallery-grid" id="dpGalleryGrid">
                   <!-- populated by renderGallery() -->
                 </div>
               </div>
@@ -944,13 +948,24 @@ async function removeMedia(idx) {
   toast('Removed');
 }
 
-/* -- Render gallery strip -- */
+/* -- Render gallery grid -- */
 function renderGallery(loan) {
-  var strip = document.getElementById('dpGalleryStrip');
+  var grid = document.getElementById('dpGalleryGrid');
   var countEl = document.getElementById('dpGalleryCount');
-  if (!strip) return;
+  if (!grid) return;
   var photos = Array.isArray(loan.photos) ? loan.photos : [];
   countEl.textContent = photos.length ? photos.length+' item'+(photos.length>1?'s':'') : '';
+  if (photos.length === 0) {
+    grid.innerHTML = '<div class="rt-gallery-empty">'
+      +'<div class="rt-gallery-empty-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'
+      +'<div class="rt-gallery-empty-txt">No media added yet</div>'
+      +'<button class="rt-gallery-empty-add" onclick="document.getElementById(\'dpMediaFile\').click()">'
+      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+      +'Add Photo / Video'
+      +'</button>'
+      +'</div>';
+    return;
+  }
   var html = photos.map(function(url, i) {
     var isVid = isVideoUrl(url);
     var thumb = isVid ? videoThumbUrl(url) : url;
@@ -960,15 +975,14 @@ function renderGallery(loan) {
       : '';
     return '<div class="rt-gi" onclick="openMediaLightbox('+i+')" title="View">'
       + mediaEl + vidIcon
-      + '<button class="rt-gi-rm" onclick="event.stopPropagation();removeMedia('+i+')" title="Remove">?</button>'
+      + '<button class="rt-gi-rm" onclick="event.stopPropagation();removeMedia('+i+')" title="Remove">×</button>'
       + '</div>';
   }).join('');
-  /* Add button */
   html += '<div class="rt-gadd" onclick="document.getElementById(\'dpMediaFile\').click()" title="Add photo or video">'
     +'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
     +'<span class="rt-gadd-lbl">Add</span>'
     +'</div>';
-  strip.innerHTML = html;
+  grid.innerHTML = html;
 }
 
 /* -- Lightbox: main photo or gallery item -- */
