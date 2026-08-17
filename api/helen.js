@@ -298,22 +298,23 @@ export default async function handler(req, res) {
     /* ── Public: Borrower self-service portal login ── */
     if (action === 'helen_portal_login') {
       const method = String(body.method || 'name').trim();
-      const phone  = String(body.phone  || '').trim();
+      /* Normalize phone/NID: strip spaces and dashes so "089 993 814" = "089993814" */
+      const phone  = String(body.phone  || '').trim().replace(/[\s\-]/g, '');
       const name   = String(body.name   || '').trim();
-      const nid    = String(body.nid    || '').trim();
+      const nid    = String(body.nid    || '').trim().replace(/[\s\-]/g, '');
       if (!phone) return res.json({ ok: false, message: 'phone_required' });
       let loanRows = [];
       try {
         if (method === 'nid') {
           if (!nid) return res.json({ ok: false, message: 'nid_required' });
           [loanRows] = await db().query(
-            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url FROM helen_loans WHERE phone=? AND national_id=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url FROM helen_loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND REPLACE(REPLACE(national_id,\' \',\'\'),\'-\',\'\')=? AND deleted_at IS NULL ORDER BY loan_key DESC',
             [phone, nid]
           );
         } else {
           if (!name) return res.json({ ok: false, message: 'name_required' });
           [loanRows] = await db().query(
-            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url FROM helen_loans WHERE phone=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url FROM helen_loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
             [phone, name]
           );
         }
