@@ -92,13 +92,20 @@
     .rt-tab-badge { font-size:10px; font-weight:800; padding:1px 6px; border-radius:5px; background:rgba(167,139,250,.18); color:var(--rt-accent); min-width:16px; text-align:center }
 
     /* -- Split body -- */
-    .rt-body { display:grid; grid-template-columns:1fr; gap:14px; align-items:start; transition:grid-template-columns .2s ease }
-    .rt-body.detail-open { grid-template-columns:2fr 1.5fr 1.5fr }
-    @media(max-width:1200px){ .rt-body.detail-open{ grid-template-columns:2fr 1.3fr 1.3fr } }
+    .rt-body { display:grid; grid-template-columns:1fr; gap:10px; align-items:start; transition:grid-template-columns .2s ease }
+    .rt-body.detail-open { grid-template-columns:2fr 3fr }
+    @media(max-width:1200px){ .rt-body.detail-open{ grid-template-columns:2fr 2.6fr } }
     @media(max-width:960px){ .rt-body.detail-open{ grid-template-columns:1fr } }
 
     /* -- Table panel -- */
     .rt-tbl-wrap { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; overflow:hidden }
+
+    /* -- Merged detail panel (2-column inside) -- */
+    .rt-detail.rt-detail-split { overflow:hidden }
+    .rt-dp-merged { display:flex; min-height:0 }
+    .rt-dp-col-left { flex:0 0 258px; border-right:1px solid var(--rt-border); overflow-y:auto; max-height:calc(100vh - 100px) }
+    .rt-dp-col-right { flex:1; overflow-y:auto; max-height:calc(100vh - 100px) }
+    @media(max-width:720px){ .rt-dp-merged{ flex-direction:column } .rt-dp-col-left{ flex:none; border-right:none; border-bottom:1px solid var(--rt-border); max-height:none } .rt-dp-col-right{ flex:1; max-height:none } }
     .rt-tbl { width:100%; border-collapse:collapse; font-size:12px }
     .rt-tbl thead th { padding:9px 10px; text-align:left; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--rt-muted); border-bottom:1px solid var(--rt-border); white-space:nowrap; cursor:pointer; user-select:none }
     .rt-tbl thead th:hover { color:var(--rt-text) }
@@ -419,8 +426,8 @@
           </table>
         </div>
 
-        <!-- MIDDLE: Personal Info panel -->
-        <div class="rt-detail" id="rtPersonalPanel" style="display:none">
+        <!-- Combined Detail panel -->
+        <div class="rt-detail rt-detail-split" id="rtPersonalPanel" style="display:none">
 
           <!-- Empty state -->
           <div class="rt-detail-empty" id="rtPersonalEmpty">
@@ -429,7 +436,10 @@
             <div class="rt-detail-empty-sub">Click any row to view<br>customer details</div>
           </div>
 
-          <div id="rtPersonalContent" style="display:none">
+          <div id="rtPersonalContent" style="display:none" class="rt-dp-merged">
+
+          <!-- LEFT column: Personal Info + Media -->
+          <div class="rt-dp-col-left">
 
             <!-- -- Header -- -->
             <div class="rt-dp-hdr">
@@ -508,16 +518,10 @@
               </div>
 
             </div><!-- rt-dp-body personal -->
-          </div><!-- rtPersonalContent -->
-        </div><!-- rtPersonalPanel -->
+          </div><!-- rt-dp-col-left -->
 
-        <!-- RIGHT: Loan Info panel -->
-        <div class="rt-detail" id="rtLoanPanel" style="display:none">
-          <div class="rt-detail-empty" id="rtLoanEmpty">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            <div class="rt-detail-empty-sub" style="margin-top:8px">Loan details<br>will appear here</div>
-          </div>
-          <div id="rtLoanContent" style="display:none">
+          <!-- RIGHT column: Loan Info + Repayment -->
+          <div class="rt-dp-col-right">
             <div class="rt-dp-body" style="padding-top:16px">
 
               <!-- Loan Info -->
@@ -636,8 +640,10 @@
               </div>
 
             </div><!-- rt-dp-body loan -->
-          </div><!-- rtLoanContent -->
-        </div><!-- rtLoanPanel -->
+          </div><!-- rt-dp-col-right -->
+
+          </div><!-- rtPersonalContent merged -->
+        </div><!-- rtPersonalPanel combined -->
 
       </div><!-- rt-body -->
     </div><!-- rt-wrap -->
@@ -1281,7 +1287,6 @@ function selectLoan(key) {
   if (_selectedKey === key) {
     _selectedKey = null;
     document.getElementById('rtPersonalPanel').style.display = 'none';
-    document.getElementById('rtLoanPanel').style.display     = 'none';
     document.querySelector('.rt-body').classList.remove('detail-open');
     renderTable();
     return;
@@ -1293,12 +1298,9 @@ function selectLoan(key) {
   populateDetail(loan);
   loadRphEntries(key);
   document.getElementById('rtPersonalPanel').style.display   = '';
-  document.getElementById('rtLoanPanel').style.display       = '';
   document.querySelector('.rt-body').classList.add('detail-open');
   document.getElementById('rtPersonalEmpty').style.display   = 'none';
   document.getElementById('rtPersonalContent').style.display = '';
-  document.getElementById('rtLoanEmpty').style.display       = 'none';
-  document.getElementById('rtLoanContent').style.display     = '';
 }
 
 function populateDetail(loan) {
@@ -1490,7 +1492,6 @@ async function doDelete() {
       _selectedKey = null;
       closeDeleteConfirm();
       document.getElementById('rtPersonalPanel').style.display = 'none';
-      document.getElementById('rtLoanPanel').style.display     = 'none';
       document.querySelector('.rt-body').classList.remove('detail-open');
       render();
       toast('Borrower moved to Trash');
