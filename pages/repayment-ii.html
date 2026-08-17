@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ប្រវត្តិអតិថិជន - HELEN LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=21">
+  <style>
+    .orb{display:none!important}.background{background:#0c0e1a!important}.background::before{display:none!important}
+    body{background:#0c0e1a!important}
+    [data-theme="light"] .background{background:#f8fafc!important}
+    [data-theme="light"] body{background:#f8fafc!important}
+
+    :root {
+      --r2-card:      rgba(255,255,255,.045);
+      --r2-card2:     rgba(255,255,255,.025);
+      --r2-border:    rgba(255,255,255,.08);
+      --r2-text:      #e2e8f0;
+      --r2-muted:     #64748b;
+      --r2-accent:    #10b981;
+      --r2-accent2:   #34d399;
+      --r2-green:     #4ade80;
+      --r2-red:       #f87171;
+      --r2-orange:    #fb923c;
+      --r2-yellow:    #fbbf24;
+      --r2-blue:      #60a5fa;
+      --r2-inp:       rgba(255,255,255,.06);
+      --r2-inp-bdr:   rgba(255,255,255,.12);
+    }
+    [data-theme="light"] {
+      --r2-card:      rgba(255,255,255,.92);
+      --r2-card2:     rgba(248,250,252,.8);
+      --r2-border:    rgba(203,213,225,.7);
+      --r2-text:      #1e293b;
+      --r2-muted:     #64748b;
+      --r2-accent:    #059669;
+      --r2-accent2:   #10b981;
+      --r2-green:     #16a34a;
+      --r2-red:       #dc2626;
+      --r2-orange:    #ea580c;
+      --r2-yellow:    #d97706;
+      --r2-blue:      #2563eb;
+      --r2-inp:       #f8fafc;
+      --r2-inp-bdr:   #cbd5e1;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+    .r2-wrap { padding: 14px 18px 48px; }
+
+    /* ── KPI ── */
+    .r2-kpi-row { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+    .r2-kpi { flex:1; min-width:130px; background:var(--r2-card); border:1px solid var(--r2-border); border-radius:12px; padding:12px 14px 9px; position:relative; overflow:hidden; }
+    .r2-kpi-lbl { font-size:10.5px; color:var(--r2-muted); font-weight:600; letter-spacing:.5px; text-transform:uppercase; margin-bottom:3px; }
+    .r2-kpi-val { font-size:20px; font-weight:800; color:var(--r2-text); font-variant-numeric:tabular-nums; }
+    .r2-kpi-sub { font-size:10.5px; color:var(--r2-muted); margin-top:2px; }
+    .r2-kpi-bar { position:absolute; bottom:0; left:0; height:3px; border-radius:0 0 12px 12px; }
+
+    /* ── Toolbar ── */
+    .r2-toolbar { display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+    .r2-srch-wrap { position:relative; flex:1; min-width:180px; max-width:300px; }
+    .r2-srch-icon { position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--r2-muted); display:flex; pointer-events:none; }
+    .r2-srch { width:100%; background:var(--r2-card); border:1px solid var(--r2-border); color:var(--r2-text); border-radius:8px; padding:7px 10px 7px 30px; font-size:12px; font-family:inherit; outline:none; transition:border-color .15s; }
+    .r2-srch:focus { border-color:rgba(16,185,129,.4); }
+    .r2-srch::placeholder { color:var(--r2-muted); }
+    .r2-tbtn { display:inline-flex; align-items:center; gap:5px; padding:7px 13px; border-radius:8px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--r2-border); background:var(--r2-card); color:var(--r2-text); transition:opacity .15s; white-space:nowrap; }
+    .r2-tbtn:hover { opacity:.8; }
+
+    /* ── Split ── */
+    .r2-split { display:flex; gap:12px; align-items:flex-start; }
+
+    /* ── Customer list ── */
+    .r2-list-panel { flex:0 0 340px; min-width:0; }
+    .r2-list-box { background:var(--r2-card); border:1px solid var(--r2-border); border-radius:12px; overflow:hidden; }
+    .r2-list-hd { padding:9px 14px; border-bottom:1px solid var(--r2-border); display:flex; align-items:center; justify-content:space-between; }
+    .r2-list-hd-ttl { font-size:11px; font-weight:700; color:var(--r2-muted); letter-spacing:.6px; text-transform:uppercase; }
+    .r2-list-count { font-size:10.5px; font-weight:700; padding:2px 8px; background:rgba(16,185,129,.14); color:var(--r2-accent); border-radius:999px; }
+    .r2-list-scroll { max-height:calc(100vh - 250px); overflow-y:auto; }
+    .r2-list-scroll::-webkit-scrollbar { width:3px; }
+    .r2-list-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:4px; }
+
+    .r2-cust-row { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--r2-border); transition:background .12s; animation:fadeUp .2s ease; }
+    .r2-cust-row:last-child { border-bottom:none; }
+    .r2-cust-row:hover { background:rgba(255,255,255,.03); }
+    .r2-cust-row.active { background:rgba(16,185,129,.07); border-left:3px solid var(--r2-accent); padding-left:11px; }
+    .r2-cust-av { width:36px; height:36px; border-radius:50%; flex-shrink:0; background:rgba(16,185,129,.12); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--r2-accent); overflow:hidden; }
+    .r2-cust-av img { width:36px; height:36px; border-radius:50%; object-fit:cover; }
+    .r2-cust-info { flex:1; min-width:0; }
+    .r2-cust-name { font-size:12.5px; font-weight:700; color:var(--r2-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .r2-cust-sub { font-size:10.5px; color:var(--r2-muted); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .r2-cust-right { text-align:right; flex-shrink:0; }
+    .r2-cust-amt { font-size:12.5px; font-weight:700; color:var(--r2-text); font-variant-numeric:tabular-nums; }
+    .r2-cust-badge { display:inline-flex; align-items:center; gap:3px; font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:999px; margin-top:3px; background:rgba(16,185,129,.12); color:var(--r2-accent); }
+    .r2-cust-badge.multi { background:rgba(96,165,250,.12); color:var(--r2-blue); }
+
+    /* ── Detail panel ── */
+    .r2-detail-panel { flex:1; min-width:0; }
+    .r2-detail-box { background:var(--r2-card); border:1px solid var(--r2-border); border-radius:12px; overflow:hidden; animation:fadeUp .22s ease; }
+    .r2-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:12px; color:var(--r2-muted); }
+    .r2-empty svg { opacity:.25; }
+    .r2-empty p { font-size:13px; }
+
+    /* Profile bar */
+    .r2-prof-bar { display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--r2-border); background:linear-gradient(135deg,rgba(16,185,129,.06) 0%,transparent 60%); position:relative; }
+    .r2-prof-av { width:50px; height:50px; border-radius:50%; flex-shrink:0; background:rgba(16,185,129,.12); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:var(--r2-accent); overflow:hidden; border:2px solid rgba(16,185,129,.3); }
+    .r2-prof-av img { width:50px; height:50px; border-radius:50%; object-fit:cover; }
+    .r2-prof-name { font-size:15px; font-weight:800; color:var(--r2-text); margin-bottom:4px; }
+    .r2-prof-meta { display:flex; flex-wrap:wrap; gap:3px 10px; font-size:11px; color:var(--r2-muted); }
+    .r2-prof-meta span { display:flex; align-items:center; gap:3px; }
+    .r2-close-btn { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--r2-muted); cursor:pointer; padding:4px; border-radius:6px; display:flex; }
+    .r2-close-btn:hover { color:var(--r2-text); background:rgba(255,255,255,.06); }
+
+    /* Loan tabs */
+    .r2-tabs-row { display:flex; align-items:center; padding:0 12px; border-bottom:1px solid var(--r2-border); background:var(--r2-card2); overflow-x:auto; gap:0; }
+    .r2-tabs-row::-webkit-scrollbar { height:3px; }
+    .r2-tabs-row::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); }
+    .r2-tab-btn { display:flex; align-items:center; gap:5px; padding:10px 13px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--r2-muted); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:color .15s, border-color .15s; }
+    .r2-tab-btn:hover { color:var(--r2-text); }
+    .r2-tab-btn.active { color:var(--r2-accent); border-bottom-color:var(--r2-accent); }
+    .r2-tab-amt { font-size:10px; opacity:.7; font-variant-numeric:tabular-nums; }
+    .r2-tab-paid-dot { width:6px; height:6px; border-radius:50%; background:var(--r2-green); flex-shrink:0; }
+    .r2-tab-add { display:flex; align-items:center; gap:4px; padding:7px 11px; font-family:inherit; font-size:11px; font-weight:700; color:var(--r2-accent); background:rgba(16,185,129,.08); border:1px dashed rgba(16,185,129,.3); border-radius:7px; cursor:pointer; margin:5px 0 5px 4px; white-space:nowrap; flex-shrink:0; transition:background .15s; }
+    .r2-tab-add:hover { background:rgba(16,185,129,.16); }
+
+    /* Loan body */
+    .r2-loan-scroll { max-height:calc(100vh - 290px); overflow-y:auto; padding:14px 16px 20px; }
+    .r2-loan-scroll::-webkit-scrollbar { width:3px; }
+    .r2-loan-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:4px; }
+
+    .r2-sec-title { font-size:10px; font-weight:700; color:var(--r2-muted); letter-spacing:.7px; text-transform:uppercase; margin-bottom:9px; }
+
+    /* Info grid */
+    .r2-info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:7px; margin-bottom:12px; }
+    .r2-info-cell { background:var(--r2-card2); border:1px solid var(--r2-border); border-radius:8px; padding:9px 11px; }
+    .r2-info-key { font-size:9.5px; color:var(--r2-muted); font-weight:600; letter-spacing:.4px; text-transform:uppercase; margin-bottom:3px; }
+    .r2-info-val { font-size:13px; font-weight:700; color:var(--r2-text); font-variant-numeric:tabular-nums; }
+    .r2-val-green { color:var(--r2-green); }
+    .r2-val-orange { color:var(--r2-orange); }
+    .r2-val-red { color:var(--r2-red); }
+    .r2-val-blue { color:var(--r2-blue); }
+
+    /* Progress */
+    .r2-prog-hd { display:flex; justify-content:space-between; font-size:10.5px; color:var(--r2-muted); margin-bottom:5px; }
+    .r2-prog-track { height:8px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; margin-bottom:12px; }
+    [data-theme="light"] .r2-prog-track { background:rgba(0,0,0,.07); }
+    .r2-prog-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--r2-accent),var(--r2-accent2)); transition:width .5s; }
+
+    /* Summary row */
+    .r2-sum-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:12px; }
+    .r2-sum-cell { background:var(--r2-card2); border:1px solid var(--r2-border); border-radius:8px; padding:9px; text-align:center; }
+    .r2-sum-lbl { font-size:9.5px; color:var(--r2-muted); font-weight:600; margin-bottom:3px; }
+    .r2-sum-val { font-size:14px; font-weight:800; font-variant-numeric:tabular-nums; }
+
+    /* Status toggle */
+    .r2-status-row { display:flex; align-items:center; justify-content:space-between; background:var(--r2-card2); border:1px solid var(--r2-border); border-radius:8px; padding:10px 12px; margin-bottom:12px; }
+    .r2-status-lbl { font-size:12px; font-weight:700; color:var(--r2-text); }
+    .r2-status-sub { font-size:10.5px; color:var(--r2-muted); margin-top:1px; }
+    .r2-toggle { width:42px; height:22px; border-radius:11px; background:rgba(255,255,255,.1); border:none; cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; }
+    [data-theme="light"] .r2-toggle { background:rgba(0,0,0,.12); }
+    .r2-toggle.on { background:var(--r2-accent); }
+    .r2-toggle::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; box-shadow:0 1px 4px rgba(0,0,0,.3); }
+    .r2-toggle.on::after { transform:translateX(20px); }
+
+    /* Divider */
+    .r2-div { height:1px; background:var(--r2-border); margin:12px 0; }
+
+    /* Repayment items */
+    .r2-rep { display:flex; align-items:center; gap:7px; padding:8px 10px; background:var(--r2-card2); border:1px solid var(--r2-border); border-radius:8px; margin-bottom:5px; font-size:11.5px; }
+    .r2-rep-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .r2-rep-date { color:var(--r2-muted); flex:1; line-height:1.4; }
+    .r2-rep-note { display:block; font-size:10px; font-style:italic; }
+    .r2-rep-chip { font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:999px; white-space:nowrap; }
+    .r2-rep-chip.pay  { background:rgba(74,222,128,.12); color:var(--r2-green); }
+    .r2-rep-chip.disc { background:rgba(251,191,36,.12);  color:var(--r2-yellow); }
+    .r2-rep-amt { font-weight:700; color:var(--r2-text); font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .r2-rep-del { background:none; border:none; color:var(--r2-muted); cursor:pointer; padding:2px; border-radius:4px; display:flex; flex-shrink:0; }
+    .r2-rep-del:hover { color:var(--r2-red); }
+    .r2-no-rep { text-align:center; color:var(--r2-muted); font-size:12px; padding:14px 0; }
+
+    /* Add form */
+    .r2-add-box { background:var(--r2-card2); border:1px solid var(--r2-border); border-radius:9px; padding:11px; }
+    .r2-add-row { display:flex; gap:6px; flex-wrap:wrap; align-items:flex-end; }
+    .r2-add-fld { flex:1; min-width:80px; }
+    .r2-add-lbl { font-size:9.5px; color:var(--r2-muted); font-weight:700; letter-spacing:.3px; text-transform:uppercase; margin-bottom:4px; }
+    .r2-add-inp { width:100%; background:var(--r2-inp); border:1px solid var(--r2-inp-bdr); color:var(--r2-text); border-radius:7px; padding:7px 9px; font-size:12px; font-family:inherit; outline:none; }
+    .r2-add-inp:focus { border-color:rgba(16,185,129,.5); }
+    .r2-add-sel { width:100%; background:var(--r2-inp); border:1px solid var(--r2-inp-bdr); color:var(--r2-text); border-radius:7px; padding:7px 9px; font-size:12px; font-family:inherit; outline:none; cursor:pointer; }
+    .r2-add-sbtn { padding:7px 14px; background:var(--r2-accent); color:#fff; border:none; border-radius:7px; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:opacity .15s; flex-shrink:0; }
+    .r2-add-sbtn:hover { opacity:.85; }
+
+    /* Spinner */
+    .r2-spin { display:inline-block; width:18px; height:18px; border:2.5px solid rgba(255,255,255,.1); border-top-color:var(--r2-accent); border-radius:50%; animation:spin .7s linear infinite; }
+
+    /* ── New Loan Modal ── */
+    .r2-modal-bd { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); opacity:0; pointer-events:none; transition:opacity .2s; }
+    .r2-modal-bd.open { opacity:1; pointer-events:auto; }
+    .r2-modal { background:#0f1221; border:1px solid var(--r2-border); border-radius:16px; width:100%; max-width:340px; padding:22px; box-shadow:0 20px 60px rgba(0,0,0,.5); transform:translateY(14px); transition:transform .22s; }
+    .r2-modal-bd.open .r2-modal { transform:none; }
+    [data-theme="light"] .r2-modal { background:#fff; }
+    .r2-modal-ttl { font-size:14px; font-weight:800; color:var(--r2-text); margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+    .r2-modal-fld { margin-bottom:11px; }
+    .r2-modal-lbl { font-size:10px; color:var(--r2-muted); font-weight:700; letter-spacing:.3px; text-transform:uppercase; margin-bottom:4px; }
+    .r2-modal-inp { width:100%; background:var(--r2-inp); border:1px solid var(--r2-inp-bdr); color:var(--r2-text); border-radius:8px; padding:9px 11px; font-size:13px; font-family:inherit; outline:none; }
+    .r2-modal-inp:focus { border-color:rgba(16,185,129,.5); }
+    .r2-modal-inp[readonly] { opacity:.55; cursor:default; }
+    .r2-modal-acts { display:flex; gap:8px; margin-top:14px; }
+    .r2-modal-cancel { flex:1; padding:10px; background:rgba(255,255,255,.05); color:var(--r2-muted); border:1px solid var(--r2-border); border-radius:8px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+    .r2-modal-submit { flex:1; padding:10px; background:var(--r2-accent); color:#fff; border:none; border-radius:8px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+    .r2-modal-submit:hover { opacity:.9; }
+
+    /* Toast */
+    .r2-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1e1e28; border:1px solid rgba(16,185,129,.3); color:#e2e8f0; padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:9999; transition:transform .25s, opacity .25s; opacity:0; pointer-events:none; white-space:nowrap; box-shadow:0 8px 24px rgba(0,0,0,.4); }
+    .r2-toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+    [data-theme="light"] .r2-toast { background:#1e293b; }
+  </style>
+</head>
+<body>
+<div class="background"></div>
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
+
+    <div class="r2-wrap">
+
+      <!-- KPI -->
+      <div class="r2-kpi-row">
+        <div class="r2-kpi">
+          <div class="r2-kpi-lbl">អតិថិជន</div>
+          <div class="r2-kpi-val" id="kpiCust">—</div>
+          <div class="r2-kpi-sub">នាក់</div>
+          <div class="r2-kpi-bar" style="background:#10b981;width:100%"></div>
+        </div>
+        <div class="r2-kpi">
+          <div class="r2-kpi-lbl">ចំនួនខ្ចី</div>
+          <div class="r2-kpi-val" id="kpiLoans">—</div>
+          <div class="r2-kpi-sub">ការខ្ចី</div>
+          <div class="r2-kpi-bar" style="background:#6366f1;width:100%"></div>
+        </div>
+        <div class="r2-kpi">
+          <div class="r2-kpi-lbl">សរុបប្រាក់</div>
+          <div class="r2-kpi-val" id="kpiTotal">—</div>
+          <div class="r2-kpi-sub">ទាំងអស់</div>
+          <div class="r2-kpi-bar" style="background:#60a5fa;width:100%"></div>
+        </div>
+        <div class="r2-kpi">
+          <div class="r2-kpi-lbl">បានទូទាត់</div>
+          <div class="r2-kpi-val" id="kpiPaid" style="color:var(--r2-green)">—</div>
+          <div class="r2-kpi-sub" id="kpiPaidSub">—</div>
+          <div class="r2-kpi-bar" id="kpiPaidBar" style="background:#4ade80;width:0%"></div>
+        </div>
+        <div class="r2-kpi">
+          <div class="r2-kpi-lbl">នៅជំពាក់</div>
+          <div class="r2-kpi-val" id="kpiOut" style="color:var(--r2-orange)">—</div>
+          <div class="r2-kpi-sub" id="kpiOutSub">—</div>
+          <div class="r2-kpi-bar" id="kpiOutBar" style="background:#fb923c;width:100%"></div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="r2-toolbar">
+        <div class="r2-srch-wrap">
+          <span class="r2-srch-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input style="display:none" type="text" name="_fu"><input style="display:none" type="password" name="_fp">
+          <input class="r2-srch" id="r2Srch" type="text" placeholder="ស្វែងរកឈ្មោះ / NID / ទូរស័ព្ទ..." oninput="applySearch()" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
+        </div>
+        <button class="r2-tbtn" onclick="loadAll()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <!-- Split -->
+      <div class="r2-split">
+        <!-- Left: Customer list -->
+        <div class="r2-list-panel">
+          <div class="r2-list-box">
+            <div class="r2-list-hd">
+              <span class="r2-list-hd-ttl">អតិថិជន</span>
+              <span class="r2-list-count" id="listCount">0</span>
+            </div>
+            <div class="r2-list-scroll" id="custList">
+              <div style="padding:40px;text-align:center;color:var(--r2-muted)">
+                <div class="r2-spin" style="margin:0 auto 10px"></div>
+                <div style="font-size:12px">កំពុងទាញទិន្នន័យ...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Detail panel -->
+        <div class="r2-detail-panel" id="detailWrap">
+          <div class="r2-empty">
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <p>ជ្រើសអតិថិជនម្នាក់ ដើម្បីមើលប្រវត្តិខ្ចីប្រាក់</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- New Loan Modal -->
+<div class="r2-modal-bd" id="newLoanModal" onclick="if(event.target===this)closeNewLoan()">
+  <div class="r2-modal">
+    <div class="r2-modal-ttl">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--r2-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      ខ្ចីប្រាក់ជាលើកថ្មី
+    </div>
+    <div class="r2-modal-fld">
+      <div class="r2-modal-lbl">អតិថិជន</div>
+      <input class="r2-modal-inp" id="nlName" type="text" readonly>
+    </div>
+    <div class="r2-modal-fld">
+      <div class="r2-modal-lbl">ចំនួនប្រាក់ ($)</div>
+      <input class="r2-modal-inp" id="nlMoney" type="number" min="1" step="0.01" placeholder="0.00" autocomplete="new-password">
+    </div>
+    <div class="r2-modal-fld">
+      <div class="r2-modal-lbl">ស្ថានភាព</div>
+      <select class="r2-modal-inp" id="nlStatus">
+        <option value="Normal">Normal</option>
+        <option value="BlackListed">BlackListed</option>
+      </select>
+    </div>
+    <div class="r2-modal-fld">
+      <div class="r2-modal-lbl">ក្រុម (Group)</div>
+      <input class="r2-modal-inp" id="nlGroup" type="text" placeholder="ឧ. Group A" autocomplete="new-password">
+    </div>
+    <div class="r2-modal-fld">
+      <div class="r2-modal-lbl">កំណត់ចំណាំ</div>
+      <input class="r2-modal-inp" id="nlNote" type="text" placeholder="Optional" autocomplete="new-password">
+    </div>
+    <div class="r2-modal-acts">
+      <button class="r2-modal-cancel" onclick="closeNewLoan()">បោះបង់</button>
+      <button class="r2-modal-submit" onclick="submitNewLoan()">+ បន្ថែម</button>
+    </div>
+  </div>
+</div>
+
+<div class="r2-toast" id="r2Toast"></div>
+
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script>
+/* ── State ── */
+var _loans    = [];
+var _custs    = {};   // custKey → { name, nid, phone, dob, gender, photo_url, loans[] }
+var _custKeys = [];
+var _repCache = {};   // loanKey → repayments[]
+var _selCust  = null;
+var _selTab   = 0;
+var _search   = '';
+
+/* ── Helpers ── */
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmt$(n) {
+  n = Number(n||0);
+  return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  var d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+}
+function initials(name) {
+  if (!name) return '?';
+  var p = String(name).trim().split(/\s+/);
+  return p.length >= 2 ? (p[0][0]||'') + (p[p.length-1][0]||'') : (name[0]||'?');
+}
+function custKey(loan) {
+  var nid = (loan.national_id||'').trim().replace(/[\s\-]/g,'');
+  var ph  = (loan.phone||'').trim().replace(/[\s\-]/g,'');
+  return nid ? 'nid:'+nid : 'ph:'+ph;
+}
+
+/* ── Load ── */
+async function loadAll() {
+  document.getElementById('custList').innerHTML =
+    '<div style="padding:40px;text-align:center;color:var(--r2-muted)"><div class="r2-spin" style="margin:0 auto 10px"></div><div style="font-size:12px">កំពុងទាញ...</div></div>';
+  var r = await CamboAPI.post({ action:'helen_all' });
+  if (!r||!r.ok) {
+    var msg = (r&&r.code===401) ? 'សូម Login ជាអ្នកគ្រប់គ្រងជាមុន' : 'Error — សូមសាកម្ដងទៀត';
+    document.getElementById('custList').innerHTML =
+      '<div style="padding:40px;text-align:center;color:var(--r2-muted);font-size:12px">'
+      + '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 8px;display:block;opacity:.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+      + msg + '</div>';
+    return;
+  }
+  _loans = (r.loans||[]).filter(function(l){ return !l.deleted_at; });
+  _repCache = {};
+  groupCustomers();
+  renderKpi();
+  renderList();
+  if (_selCust && _custs[_selCust]) renderDetail();
+}
+
+/* ── Group ── */
+function groupCustomers() {
+  _custs = {};
+  _loans.forEach(function(l) {
+    var k = custKey(l);
+    if (!_custs[k]) {
+      _custs[k] = { key:k, name:l.full_name||'—', nid:l.national_id||'', phone:l.phone||'',
+                    dob:l.dob||'', gender:l.gender||'', photo_url:l.photo_url||'', loans:[] };
+    }
+    _custs[k].loans.push(l);
+    if (l.photo_url) _custs[k].photo_url = l.photo_url;
+  });
+  Object.values(_custs).forEach(function(c) {
+    c.loans.sort(function(a,b){ return a.loan_key < b.loan_key ? -1 : 1; });
+  });
+  _custKeys = Object.keys(_custs).sort(function(a,b){
+    var la = _custs[a].loans.length, lb = _custs[b].loans.length;
+    if (la !== lb) return lb - la;
+    return String(_custs[a].name).localeCompare(String(_custs[b].name));
+  });
+}
+
+/* ── KPI ── */
+function renderKpi() {
+  var total  = _loans.reduce(function(s,l){ return s+Number(l.money||0); },0);
+  var paidL  = _loans.filter(function(l){ return l.paid; });
+  var paidAmt= paidL.reduce(function(s,l){ return s+Number(l.money||0); },0);
+  var out    = total - paidAmt;
+  var pct    = total>0 ? paidAmt/total*100 : 0;
+  document.getElementById('kpiCust').textContent  = _custKeys.length;
+  document.getElementById('kpiLoans').textContent = _loans.length;
+  document.getElementById('kpiTotal').textContent = fmt$(total);
+  document.getElementById('kpiPaid').textContent  = fmt$(paidAmt);
+  document.getElementById('kpiPaidSub').textContent = paidL.length+' ការខ្ចី';
+  document.getElementById('kpiOut').textContent   = fmt$(out);
+  document.getElementById('kpiOutSub').textContent = (_loans.length-paidL.length)+' នៅជំពាក់';
+  var pb = document.getElementById('kpiPaidBar');
+  if (pb) pb.style.width = pct.toFixed(0)+'%';
+}
+
+/* ── Search ── */
+function applySearch() {
+  _search = (document.getElementById('r2Srch').value||'').trim();
+  renderList();
+}
+function filteredKeys() {
+  if (!_search) return _custKeys;
+  var q = _search.toLowerCase();
+  return _custKeys.filter(function(k){
+    var c = _custs[k];
+    return String(c.name).toLowerCase().indexOf(q) !== -1
+        || String(c.nid).toLowerCase().indexOf(q) !== -1
+        || String(c.phone).toLowerCase().indexOf(q) !== -1;
+  });
+}
+
+/* ── Render list ── */
+function renderList() {
+  var keys = filteredKeys();
+  document.getElementById('listCount').textContent = keys.length;
+  if (!keys.length) {
+    document.getElementById('custList').innerHTML =
+      '<div style="padding:40px;text-align:center;color:var(--r2-muted);font-size:12px">រកមិនឃើញ</div>';
+    return;
+  }
+  document.getElementById('custList').innerHTML = keys.map(function(k){
+    var c = _custs[k];
+    var total = c.loans.reduce(function(s,l){ return s+Number(l.money||0); },0);
+    var paidCnt = c.loans.filter(function(l){ return l.paid; }).length;
+    var isMulti = c.loans.length > 1;
+    var av = c.photo_url
+      ? '<div class="r2-cust-av"><img src="'+esc(c.photo_url)+'" onerror="this.parentNode.innerHTML=\''+esc(initials(c.name))+'\'"></div>'
+      : '<div class="r2-cust-av">'+esc(initials(c.name))+'</div>';
+    var active = k === _selCust ? ' active' : '';
+    return '<div class="r2-cust-row'+active+'" onclick="selectCust(\''+esc(k)+'\')">'
+      + av
+      + '<div class="r2-cust-info">'
+        + '<div class="r2-cust-name">'+esc(c.name)+'</div>'
+        + '<div class="r2-cust-sub">'+(c.phone||c.nid||'—')+'</div>'
+      + '</div>'
+      + '<div class="r2-cust-right">'
+        + '<div class="r2-cust-amt">'+fmt$(total)+'</div>'
+        + '<div class="r2-cust-badge'+(isMulti?' multi':'')+'"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+          + c.loans.length + ' ខ្ចី'+(paidCnt?' · '+paidCnt+' ✓':'')
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+/* ── Select customer ── */
+function selectCust(k) {
+  _selCust = k;
+  _selTab  = 0;
+  renderList();
+  renderDetail();
+}
+
+/* ── Render detail ── */
+function renderDetail() {
+  var c = _custs[_selCust];
+  if (!c) return;
+
+  var av = c.photo_url
+    ? '<div class="r2-prof-av"><img src="'+esc(c.photo_url)+'" onerror="this.parentNode.innerHTML=\''+esc(initials(c.name))+'\'"></div>'
+    : '<div class="r2-prof-av">'+esc(initials(c.name))+'</div>';
+
+  var meta = [];
+  if (c.phone)  meta.push('<span>'+svgPhone()+esc(c.phone)+'</span>');
+  if (c.nid)    meta.push('<span>'+svgId()+esc(c.nid)+'</span>');
+  if (c.dob)    meta.push('<span>'+svgCal()+fmtDate(c.dob)+'</span>');
+  if (c.gender) meta.push('<span>'+esc(c.gender)+'</span>');
+
+  // Loan tabs
+  var tabsHtml = c.loans.map(function(l,i){
+    var paid = l.paid ? '<span class="r2-tab-paid-dot"></span>' : '';
+    return '<button class="r2-tab-btn'+(i===_selTab?' active':'')+'" onclick="selectTab('+i+')">'
+      + paid + 'ការខ្ចី '+(i+1)
+      + '<span class="r2-tab-amt">'+fmt$(l.money)+'</span>'
+    + '</button>';
+  }).join('');
+
+  var html = '<div class="r2-detail-box">'
+    + '<div class="r2-prof-bar">'
+      + av
+      + '<div style="flex:1;min-width:0">'
+        + '<div class="r2-prof-name">'+esc(c.name)+'</div>'
+        + '<div class="r2-prof-meta">'+meta.join('')+'</div>'
+      + '</div>'
+      + '<button class="r2-close-btn" onclick="closeDetail()" title="បិទ">'
+        + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      + '</button>'
+    + '</div>'
+    + '<div class="r2-tabs-row">'
+      + tabsHtml
+      + '<button class="r2-tab-add" onclick="openNewLoan()">'
+        + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+        + 'ខ្ចីថ្មី'
+      + '</button>'
+    + '</div>'
+    + '<div id="loanBody"></div>'
+  + '</div>';
+
+  document.getElementById('detailWrap').innerHTML = html;
+  loadLoanBody();
+}
+
+/* ── Select tab ── */
+function selectTab(i) {
+  _selTab = i;
+  document.querySelectorAll('.r2-tab-btn').forEach(function(b,j){ b.classList.toggle('active', j===i); });
+  loadLoanBody();
+}
+
+/* ── Load repayments + render ── */
+async function loadLoanBody() {
+  var c = _custs[_selCust];
+  if (!c) return;
+  var loan = c.loans[_selTab];
+  if (!loan) return;
+  document.getElementById('loanBody').innerHTML =
+    '<div style="padding:40px;text-align:center;color:var(--r2-muted)"><div class="r2-spin" style="margin:0 auto 8px"></div><div style="font-size:12px">កំពុងទាញ...</div></div>';
+
+  if (!_repCache[loan.loan_key]) {
+    var r = await CamboAPI.post({ action:'helen_repayment_list', key:loan.loan_key });
+    _repCache[loan.loan_key] = (r&&r.ok) ? (r.repayments||[]) : [];
+  }
+  renderLoanBody(loan, _repCache[loan.loan_key]);
+}
+
+/* ── Render loan body ── */
+function renderLoanBody(loan, reps) {
+  var totalPay  = 0, totalDisc = 0;
+  reps.forEach(function(r){
+    if (r.type==='discount') totalDisc += Number(r.amount||0);
+    else totalPay += Number(r.amount||0);
+  });
+  var deducted  = totalPay + totalDisc;
+  var remaining = Math.max(0, Number(loan.money||0) - deducted);
+  var pct       = loan.money > 0 ? Math.min(100, deducted/loan.money*100) : 0;
+  var isPaid    = !!loan.paid;
+  var loanDate  = fmtDate(loan.loan_key ? String(loan.loan_key).substring(0,10) : '');
+
+  // Repayment rows
+  var repHtml = reps.length ? reps.map(function(r){
+    var isDis = r.type === 'discount';
+    return '<div class="r2-rep">'
+      + '<div class="r2-rep-dot" style="background:'+(isDis?'var(--r2-yellow)':'var(--r2-green)')+'"></div>'
+      + '<div class="r2-rep-date">'+fmtDate(r.paid_at)+(r.note?'<span class="r2-rep-note">'+esc(r.note)+'</span>':'')+'</div>'
+      + '<span class="r2-rep-chip '+(isDis?'disc':'pay')+'">'+(isDis?'បង់ការប្រាក់':'ទូទាត់')+'</span>'
+      + '<div class="r2-rep-amt">'+fmt$(r.amount)+'</div>'
+      + '<button class="r2-rep-del" onclick="delRep(\''+esc(loan.loan_key)+'\','+r.id+')" title="លុប">'
+        + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>'
+      + '</button>'
+    + '</div>';
+  }).join('') : '<div class="r2-no-rep">មិនទាន់មានការទូទាត់</div>';
+
+  var today = new Date().toISOString().slice(0,16);
+
+  document.getElementById('loanBody').innerHTML = '<div class="r2-loan-scroll">'
+
+    /* Loan info */
+    + '<div class="r2-sec-title">ព័ត៌មានការខ្ចី</div>'
+    + '<div class="r2-info-grid">'
+      + '<div class="r2-info-cell"><div class="r2-info-key">ចំនួន</div><div class="r2-info-val">'+fmt$(loan.money)+'</div></div>'
+      + '<div class="r2-info-cell"><div class="r2-info-key">ថ្ងៃខ្ចី</div><div class="r2-info-val" style="font-size:12px">'+loanDate+'</div></div>'
+      + '<div class="r2-info-cell"><div class="r2-info-key">ស្ថានភាព</div><div class="r2-info-val '+(isPaid?'r2-val-green':(loan.loan_status==='BlackListed'?'r2-val-red':'r2-val-blue'))+'" style="font-size:12px">'+esc(isPaid?'បានទូទាត់':loan.loan_status||'Normal')+'</div></div>'
+      + '<div class="r2-info-cell"><div class="r2-info-key">ក្រុម</div><div class="r2-info-val" style="font-size:12px">'+esc(loan.loan_group||'—')+'</div></div>'
+    + '</div>'
+
+    /* Progress */
+    + '<div class="r2-prog-hd"><span>ការទូទាត់</span><span style="color:var(--r2-accent);font-weight:700">'+pct.toFixed(0)+'%</span></div>'
+    + '<div class="r2-prog-track"><div class="r2-prog-fill" style="width:'+pct.toFixed(1)+'%"></div></div>'
+
+    /* Summary */
+    + '<div class="r2-sum-row">'
+      + '<div class="r2-sum-cell"><div class="r2-sum-lbl">ខ្ចី</div><div class="r2-sum-val">'+fmt$(loan.money)+'</div></div>'
+      + '<div class="r2-sum-cell"><div class="r2-sum-lbl">បានបង់</div><div class="r2-sum-val r2-val-green">'+fmt$(deducted)+'</div></div>'
+      + '<div class="r2-sum-cell"><div class="r2-sum-lbl">នៅជំពាក់</div><div class="r2-sum-val '+(remaining<=0?'r2-val-green':'r2-val-orange')+'">'+fmt$(remaining)+'</div></div>'
+    + '</div>'
+
+    /* Status toggle */
+    + '<div class="r2-status-row">'
+      + '<div><div class="r2-status-lbl">ស្ថានភាព</div><div class="r2-status-sub">'+(isPaid?'បានទូទាត់':'មិនទាន់ទូទាត់')+'</div></div>'
+      + '<button class="r2-toggle'+(isPaid?' on':'')+'" onclick="togglePaid(\''+esc(loan.loan_key)+'\')"></button>'
+    + '</div>'
+
+    + '<div class="r2-div"></div>'
+
+    /* Repayments */
+    + '<div class="r2-sec-title">ប្រវត្តិទូទាត់ ('+reps.length+')</div>'
+    + repHtml
+    + '<div class="r2-div"></div>'
+
+    /* Add form */
+    + '<div class="r2-sec-title">បន្ថែមការទូទាត់</div>'
+    + '<div class="r2-add-box"><div class="r2-add-row">'
+      + '<div class="r2-add-fld"><div class="r2-add-lbl">ប្រភេទ</div>'
+        + '<select class="r2-add-sel" id="repType"><option value="payment">ទូទាត់</option><option value="discount">បង់ការប្រាក់</option></select>'
+      + '</div>'
+      + '<div class="r2-add-fld"><div class="r2-add-lbl">ចំនួន ($)</div>'
+        + '<input class="r2-add-inp" id="repAmt" type="number" min="0.01" step="0.01" placeholder="0.00" autocomplete="new-password">'
+      + '</div>'
+      + '<div class="r2-add-fld"><div class="r2-add-lbl">ថ្ងៃ</div>'
+        + '<input class="r2-add-inp" id="repDate" type="datetime-local" value="'+today+'">'
+      + '</div>'
+      + '<div class="r2-add-fld"><div class="r2-add-lbl">Note</div>'
+        + '<input class="r2-add-inp" id="repNote" type="text" placeholder="Optional" autocomplete="new-password">'
+      + '</div>'
+      + '<button class="r2-add-sbtn" onclick="addRep(\''+esc(loan.loan_key)+'\')">+ Add</button>'
+    + '</div></div>'
+
+  + '</div>';
+}
+
+/* ── Toggle paid ── */
+async function togglePaid(key) {
+  var r = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:key });
+  if (!r||!r.ok) { showToast('Error'); return; }
+  var loan = _custs[_selCust].loans[_selTab];
+  loan.paid = loan.paid ? 0 : 1;
+  renderKpi(); renderList();
+  // Re-render tabs to update dot
+  var tabs = document.querySelectorAll('.r2-tab-btn');
+  var c = _custs[_selCust];
+  c.loans.forEach(function(l,i){
+    if (tabs[i]) {
+      var paid = l.paid ? '<span class="r2-tab-paid-dot"></span>' : '';
+      tabs[i].innerHTML = paid + 'ការខ្ចី '+(i+1)+'<span class="r2-tab-amt">'+fmt$(l.money)+'</span>';
+    }
+  });
+  renderLoanBody(loan, _repCache[key]||[]);
+  showToast(loan.paid ? 'បានកំណត់ជា "ទូទាត់រួច" ✓' : 'កំណត់ជា "មិនទាន់ទូទាត់"');
+}
+
+/* ── Add repayment ── */
+async function addRep(key) {
+  var type   = document.getElementById('repType').value;
+  var amount = parseFloat(document.getElementById('repAmt').value);
+  var date   = document.getElementById('repDate').value;
+  var note   = (document.getElementById('repNote').value||'').trim();
+  if (!amount||amount<=0) { showToast('សូមបញ្ចូលចំនួន'); return; }
+  if (!date) { showToast('សូមជ្រើសកាលបរិច្ឆេទ'); return; }
+  var r = await CamboAPI.post({ action:'helen_repayment_add', key:key, type:type, amount:amount, paid_at:date, note:note });
+  if (!r||!r.ok) { showToast('Error — សូមព្យាយាមម្ដងទៀត'); return; }
+  delete _repCache[key];
+  showToast('បានបន្ថែម ✓');
+  loadLoanBody();
+}
+
+/* ── Delete repayment ── */
+async function delRep(key, id) {
+  if (!confirm('លុបការទូទាត់នេះ?')) return;
+  var r = await CamboAPI.post({ action:'helen_repayment_delete', id:id });
+  if (!r||!r.ok) { showToast('Error'); return; }
+  delete _repCache[key];
+  showToast('បានលុប');
+  loadLoanBody();
+}
+
+/* ── New Loan modal ── */
+function openNewLoan() {
+  var c = _custs[_selCust];
+  if (!c) return;
+  document.getElementById('nlName').value  = c.name;
+  document.getElementById('nlMoney').value = '';
+  document.getElementById('nlStatus').value = 'Normal';
+  var last = c.loans[c.loans.length-1];
+  document.getElementById('nlGroup').value = last ? (last.loan_group||'') : '';
+  document.getElementById('nlNote').value  = '';
+  document.getElementById('newLoanModal').classList.add('open');
+}
+function closeNewLoan() { document.getElementById('newLoanModal').classList.remove('open'); }
+async function submitNewLoan() {
+  var c = _custs[_selCust];
+  if (!c) return;
+  var money = parseFloat(document.getElementById('nlMoney').value);
+  if (!money||money<=0) { showToast('សូមបញ្ចូលចំនួន'); return; }
+  var base = c.loans[c.loans.length-1] || {};
+  var loan = {
+    FullName:    c.name,
+    NationalID:  c.nid,
+    DOB:         c.dob,
+    Phone:       c.phone,
+    Gender:      c.gender,
+    photo_url:   c.photo_url||'',
+    Groups:      document.getElementById('nlGroup').value.trim() || base.loan_group||'',
+    Money:       money,
+    Status:      document.getElementById('nlStatus').value,
+    Note:        document.getElementById('nlNote').value.trim(),
+    LinkedTo:    base.loan_key||'',
+  };
+  var r = await CamboAPI.post({ action:'helen_loan_add', loan:loan });
+  if (!r||!r.ok) { showToast('Error — '+JSON.stringify(r)); return; }
+  closeNewLoan();
+  showToast('បានបន្ថែមការខ្ចីថ្មី ✓');
+  var prevKey = _selCust;
+  await loadAll();
+  if (_custs[prevKey]) { _selCust = prevKey; _selTab = _custs[prevKey].loans.length - 1; renderList(); renderDetail(); }
+}
+
+/* ── Close detail ── */
+function closeDetail() {
+  _selCust = null;
+  renderList();
+  document.getElementById('detailWrap').innerHTML =
+    '<div class="r2-empty"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><p>ជ្រើសអតិថិជនម្នាក់ ដើម្បីមើលប្រវត្តិខ្ចីប្រាក់</p></div>';
+}
+
+/* ── SVG icons ── */
+function svgPhone() { return '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 5.9 5.9l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16a2 2 0 0 1 .27.92z"/></svg>'; }
+function svgId()    { return '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>'; }
+function svgCal()   { return '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'; }
+
+/* ── Toast ── */
+var _toastT = null;
+function showToast(msg) {
+  var t = document.getElementById('r2Toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_toastT);
+  _toastT = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+/* ── Init ── */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadAll);
+} else {
+  loadAll();
+}
+</script>
+</body>
+</html>

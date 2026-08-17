@@ -16,6 +16,7 @@
       'customers.html':     { title: t('អតិថិជន','Customers'),         subtitle: t('គ្រប់គ្រងព័ត៌មានអតិថិជន','Customer information and records') },
       'add-customer.html':  { title: t('បន្ថែមអតិថិជន','Add Customer'),  subtitle: t('បំពេញព័ត៌មានអតិថិជនខាងក្រោម','Fill in the customer information below') },
       'repayment-tracker.html': { title: t('Repayment Tracker','Repayment Tracker'), subtitle: t('តាមដានការសងប្រាក់','Track loan repayments and paid status') },
+      'repayment-ii.html': { title: t('ប្រវត្តិអតិថិជន','Repayment II'), subtitle: t('ការខ្ចីច្រើនដង ក្នុងម្នាក់','Multi-loan customer history') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
       'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },
@@ -92,7 +93,7 @@
   /* ── Page access ── */
   var _PA_ALL = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
   var _PAGE_ACCESS = (function(){
-    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), borrowerprofile:_PA_ALL.slice(), settings:['Admin'] };
+    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), repaymentii:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), borrowerprofile:_PA_ALL.slice(), settings:['Admin'] };
     try { var s = JSON.parse(localStorage.getItem('helenPageAccess')||'null'); if (s && typeof s==='object') Object.keys(s).forEach(function(k){ def[k]=s[k]; }); } catch(e){}
     return def;
   })();
@@ -154,6 +155,7 @@
           ${helenCanPage('loanlist') ? link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List')) : ''}
           ${(helenCan('reports') && helenCanPage('reports')) ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
           ${helenCanPage('repayment') ? link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment')) : ''}
+          ${helenCanPage('repaymentii') ? link('pages/repayment-ii.html', ic.repayment, t('Repayment II','Repayment II')) : ''}
           ${helenCanPage('fbid') ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder')) : ''}
           ${helenCanPage('activitylog') ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
           ${helenCanPage('team') ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
