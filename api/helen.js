@@ -862,7 +862,7 @@ export default async function handler(req, res) {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
       const access = body.access;
       if (!access || typeof access !== 'object') return res.json({ ok:false, message:'access required' });
-      const ALL_PAGES = ['dashboard','customers','loanlist','reports','repayment','fbid','activitylog','team','settings'];
+      const ALL_PAGES = ['dashboard','customers','loanlist','reports','repayment','fbid','activitylog','team','borrowerprofile','settings'];
       for (const p of ALL_PAGES) {
         if (!Array.isArray(access[p])) access[p] = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
         if (!access[p].includes('Admin')) access[p].unshift('Admin');

@@ -91,7 +91,7 @@
   /* ── Page access ── */
   var _PA_ALL = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
   var _PAGE_ACCESS = (function(){
-    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), settings:['Admin'] };
+    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), borrowerprofile:_PA_ALL.slice(), settings:['Admin'] };
     try { var s = JSON.parse(localStorage.getItem('helenPageAccess')||'null'); if (s && typeof s==='object') Object.keys(s).forEach(function(k){ def[k]=s[k]; }); } catch(e){}
     return def;
   })();
