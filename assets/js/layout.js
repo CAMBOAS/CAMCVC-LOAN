@@ -159,7 +159,7 @@
           ${helenCanPage('team') ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
           ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
           <li class="sb-divider sb-divider-sm"></li>
-          <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('Customer Portal','Customer Portal')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('Customer Portal','Customer Portal')}</span><span class="sb-active-dot"></span></a></li>
+          <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('User','User')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('User','User')}</span><span class="sb-active-dot"></span></a></li>
         </ul>
       </nav>
 
