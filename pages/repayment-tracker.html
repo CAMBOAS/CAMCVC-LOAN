@@ -359,7 +359,8 @@
           <span class="rt-search-icon">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </span>
-          <input class="rt-search" id="rtSearch" type="text" placeholder="Search name, NID, phone..." oninput="applySearch()" autocomplete="new-password">
+          <input style="display:none" type="text" name="_fakeu"><input style="display:none" type="password" name="_fakep">
+          <input class="rt-search" id="rtSearch" type="text" placeholder="Search name, NID, phone..." oninput="applySearch()" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
           <button class="rt-search-clear" id="rtSearchClear" onclick="clearSearch()" title="Clear">?</button>
         </div>
         <select class="rt-group-sel" id="rtGroupSel" onchange="applyFilter()">
