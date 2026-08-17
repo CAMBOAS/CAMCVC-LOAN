@@ -75,6 +75,20 @@
     .ac-datepick input[type="date"]{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;margin:0;font-size:16px}
     [data-theme="light"] .ac-datepick{border-color:rgba(124,92,255,.2);background:rgba(124,92,255,.04)}
 
+    /* ── Custom Date-Time inputs ── */
+    .ac-dt-row{display:flex;align-items:flex-start;gap:4px;flex-wrap:nowrap}
+    .ac-dt-box{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+    .ac-dt-inp{width:46px;height:40px;border-radius:10px;border:1.5px solid rgba(148,163,184,.2);background:rgba(148,163,184,.06);color:var(--text);font-size:15px;font-weight:700;text-align:center;padding:0 4px;font-family:inherit;outline:none;transition:.18s;-moz-appearance:textfield;box-sizing:border-box}
+    .ac-dt-inp::-webkit-inner-spin-button,.ac-dt-inp::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+    .ac-dt-inp:focus{border-color:rgba(124,92,255,.5);background:rgba(124,92,255,.05);box-shadow:0 0 0 3px rgba(124,92,255,.08)}
+    .ac-dt-inp-yr{width:62px;font-size:14px}
+    .ac-dt-inp-time{width:80px;font-size:13px;padding:0 6px;letter-spacing:.03em}
+    .ac-dt-lbl{font-size:9px;font-weight:800;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;opacity:.6;white-space:nowrap}
+    .ac-dt-sep{font-size:18px;font-weight:300;color:var(--muted);align-self:flex-start;margin-top:11px;opacity:.4;padding:0 1px;flex-shrink:0}
+    .ac-dt-divider{width:10px;border-top:1.5px solid rgba(148,163,184,.22);align-self:flex-start;margin-top:20px;flex-shrink:0}
+    [data-theme="light"] .ac-dt-inp{background:#f8fafc;border-color:rgba(203,213,225,.8);color:#0f172a}
+    [data-theme="light"] .ac-dt-inp:focus{background:#fff;border-color:rgba(124,92,255,.45)}
+
     /* ── Gender radios ── */
     .ac-radio-row{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;padding:4px 0 2px}
     .ac-radio-opt{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;padding:6px 10px;border-radius:9px;border:1.5px solid rgba(148,163,184,.18);background:rgba(148,163,184,.05);transition:.15s;font-size:12px;font-weight:600;color:var(--muted);flex:1;justify-content:center}
@@ -318,17 +332,16 @@
               <input class="ac-input" id="af_Money" type="number" min="0" placeholder="0.00" inputmode="decimal">
             </div>
             <div class="ac-field">
-              <div class="ac-label">Entry Date <span style="font-size:9px;opacity:.55;font-weight:500;text-transform:none;letter-spacing:0">(empty = today)</span></div>
-              <label class="ac-datepick" for="af_DateTime">
-                <span class="ac-datepick-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                <span class="ac-datepick-txt" id="af_DateDisplay" style="font-size:13px;font-weight:700;color:var(--text)"></span>
-                <span class="ac-datepick-chev"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
-                <input type="date" id="af_DateTime" onchange="onDatePick(this,'af_DateDisplay')">
-              </label>
+              <div class="ac-label">ជាប់ជំពាក់ជាមួយ <span style="font-size:9px;opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(Linked To)</span></div>
+              <select class="ac-input" id="af_LinkedTo"><option value="">— None —</option></select>
             </div>
-            <div class="ac-field" style="grid-column:1/-1">
+            <div class="ac-field">
               <div class="ac-label">Note</div>
               <textarea class="ac-input" id="af_Note" placeholder="Add a note..." style="min-height:78px;height:78px;resize:none"></textarea>
+            </div>
+            <div class="ac-field">
+              <div class="ac-label">Entry Date <span style="font-size:9px;opacity:.55;font-weight:500;text-transform:none;letter-spacing:0">(empty = today)</span></div>
+              <input class="ac-input" id="af_DateTime" type="datetime-local">
             </div>
           </div>
         </div>
@@ -409,6 +422,7 @@
     <div class="mgs-tabs">
       <button type="button" class="mgs-tab active" id="mgs_tab_group" onclick="switchMGSTab('group')">ក្រុម (Groups)</button>
       <button type="button" class="mgs-tab" id="mgs_tab_status" onclick="switchMGSTab('status')">ស្ថានភាព (Status)</button>
+      <button type="button" class="mgs-tab" id="mgs_tab_linkedTo" onclick="switchMGSTab('linkedTo')">ជាប់ជំពាក់ (Linked To)</button>
     </div>
     <div class="mgs-list" id="mgs_list"></div>
     <div class="mgs-add-row">
@@ -442,12 +456,24 @@ function onDatePick(inputEl,displayId){
   var p=v.split('-'); el.textContent=p.length===3?p[2]+'/'+p[1]+'/'+p[0]:v;
 }
 
+function _toLocalDT(dtStr){
+  if(!dtStr)return '';
+  try{var d=new Date(String(dtStr).replace(' ','T'));if(isNaN(d))return '';var p=function(n){return String(n).padStart(2,'0');};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}catch(e){return '';}
+}
+
+function _setDefaultDT(){
+  var el=document.getElementById('af_DateTime');if(!el)return;
+  var d=new Date(),p=function(n){return String(n).padStart(2,'0');};
+  el.value=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());
+}
+
 function goBack(){history.length>1?history.back():location.href='../index.html';}
 
-/* ── Load groups, statuses & recent customers ── */
+/* ── Load groups, statuses, linkedTo & recent customers ── */
 var _helenGroups=[];
 var _helenStatuses=[];
 var _helenSocialMedia=[];
+var _helenLinkedTo=[];
 var _allLoans=[];
 var _editingLoanId=null;
 
@@ -455,9 +481,10 @@ async function loadMeta(){
   try{
     var data=await Promise.race([CamboAPI.post({action:'helen_all'}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},20000);})]);
     if(data&&data.ok){
-      _helenGroups  =Array.isArray(data.groups)     ?data.groups.filter(function(g){return g&&g.toLowerCase()!=='groups';})     :[];
-      _helenStatuses=Array.isArray(data.statuses)   ?data.statuses.filter(function(s){return s&&s.toLowerCase()!=='status';})   :[];
+      _helenGroups    =Array.isArray(data.groups)     ?data.groups.filter(function(g){return g&&g.toLowerCase()!=='groups';})         :[];
+      _helenStatuses  =Array.isArray(data.statuses)   ?data.statuses.filter(function(s){return s&&s.toLowerCase()!=='status';})       :[];
       _helenSocialMedia=Array.isArray(data.socialMedia)?data.socialMedia.filter(function(v){return v&&v.toLowerCase()!=='social media';}):[];
+      _helenLinkedTo  =Array.isArray(data.linkedTo)   ?data.linkedTo.filter(function(v){return v&&v.toLowerCase()!=='linked to';})    :[];
       _allLoans=Array.isArray(data.loans)?data.loans:[];
     }
   }catch(e){}
@@ -472,6 +499,15 @@ function populateSelects(){
   var statuses=_helenStatuses.length?_helenStatuses:['Good','Normal','BlackListed','High Risk'];
   groups.forEach(function(g){var o=document.createElement('option');o.value=g;o.textContent=g;gSel.appendChild(o);});
   statuses.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(s==='Normal')o.selected=true;sSel.appendChild(o);});
+  updateLinkedToSelect();
+}
+
+function updateLinkedToSelect(){
+  var sel=document.getElementById('af_LinkedTo');if(!sel)return;
+  var cur=sel.value;
+  sel.innerHTML='<option value="">— None —</option>';
+  _helenLinkedTo.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  if(cur)sel.value=cur;
 }
 
 /* ── Manage Groups & Statuses Modal ── */
@@ -498,11 +534,12 @@ function switchMGSTab(type){
 function _updateMGSTabs(){
   document.getElementById('mgs_tab_group').classList.toggle('active',_mgsActiveTab==='group');
   document.getElementById('mgs_tab_status').classList.toggle('active',_mgsActiveTab==='status');
-  document.getElementById('mgs_addinput').placeholder=_mgsActiveTab==='group'?'ឈ្មោះក្រុមថ្មី...':'ឈ្មោះស្ថានភាពថ្មី...';
+  document.getElementById('mgs_tab_linkedTo').classList.toggle('active',_mgsActiveTab==='linkedTo');
+  document.getElementById('mgs_addinput').placeholder=_mgsActiveTab==='group'?'ឈ្មោះក្រុមថ្មី...':_mgsActiveTab==='status'?'ឈ្មោះស្ថានភាពថ្មី...':'ឈ្មោះថ្មី (ចាប់ ឬ ធនាគារ)...';
 }
 function _renderMGSList(){
   var list=document.getElementById('mgs_list');if(!list)return;
-  var arr=_mgsActiveTab==='group'?_helenGroups:_helenStatuses;
+  var arr=_mgsActiveTab==='group'?_helenGroups:_mgsActiveTab==='status'?_helenStatuses:_helenLinkedTo;
   if(!arr.length){list.innerHTML='<div class="mgs-empty">មិនមានទិន្នន័យ</div>';return;}
   list.innerHTML=arr.map(function(v){
     return '<div class="mgs-item"><span class="mgs-item-name">'+esc(v)+'</span>'
@@ -510,7 +547,7 @@ function _renderMGSList(){
   }).join('');
 }
 async function mgsDelItem(val){
-  var dbType=_mgsActiveTab==='group'?'groups':'statuses';
+  var dbType=_mgsActiveTab==='group'?'groups':_mgsActiveTab==='status'?'statuses':'linkedTo';
   var btn=event.target;
   btn.disabled=true;btn.textContent='...';
   try{
@@ -520,10 +557,13 @@ async function mgsDelItem(val){
         _helenGroups=_helenGroups.filter(function(g){return g!==val;});
         var sel=document.getElementById('af_Groups');
         for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===val){sel.remove(i);break;}}
-      }else{
+      }else if(_mgsActiveTab==='status'){
         _helenStatuses=_helenStatuses.filter(function(s){return s!==val;});
         var sel2=document.getElementById('af_Status');
         for(var j=0;j<sel2.options.length;j++){if(sel2.options[j].value===val){sel2.remove(j);break;}}
+      }else{
+        _helenLinkedTo=_helenLinkedTo.filter(function(l){return l!==val;});
+        updateLinkedToSelect();
       }
       _renderMGSList();toast(val+' removed');
     }else{toast((res&&res.message)||'Failed to delete',true);btn.disabled=false;btn.textContent='លុប';}
@@ -533,17 +573,26 @@ async function mgsConfirmAdd(){
   var inp=document.getElementById('mgs_addinput');
   var val=(inp?inp.value:'').trim();
   if(!val)return;
-  var arr=_mgsActiveTab==='group'?_helenGroups:_helenStatuses;
+  var arr=_mgsActiveTab==='group'?_helenGroups:_mgsActiveTab==='status'?_helenStatuses:_helenLinkedTo;
   for(var i=0;i<arr.length;i++){if(arr[i].toLowerCase()===val.toLowerCase()){toast(val+' already exists',true);inp.focus();return;}}
-  var dbType=_mgsActiveTab==='group'?'groups':'statuses';
+  var dbType=_mgsActiveTab==='group'?'groups':_mgsActiveTab==='status'?'statuses':'linkedTo';
   var btn=document.getElementById('mgs_addbtn');
   btn.disabled=true;
   try{
     var res=await CamboAPI.post({action:'helen_infor_add',type:dbType,value:val});
     if(res&&res.ok){
-      var sel=document.getElementById(_mgsActiveTab==='group'?'af_Groups':'af_Status');
-      var o=document.createElement('option');o.value=val;o.textContent=val;sel.appendChild(o);
-      if(_mgsActiveTab==='group')_helenGroups.push(val);else _helenStatuses.push(val);
+      if(_mgsActiveTab==='group'){
+        var sel=document.getElementById('af_Groups');
+        var o=document.createElement('option');o.value=val;o.textContent=val;sel.appendChild(o);
+        _helenGroups.push(val);
+      }else if(_mgsActiveTab==='status'){
+        var sel2=document.getElementById('af_Status');
+        var o2=document.createElement('option');o2.value=val;o2.textContent=val;sel2.appendChild(o2);
+        _helenStatuses.push(val);
+      }else{
+        _helenLinkedTo.push(val);
+        updateLinkedToSelect();
+      }
       inp.value='';_renderMGSList();toast(val+' added');
     }else{toast((res&&res.message)||'Failed to add',true);}
   }catch(e){toast('Error: '+(e.message||'failed'),true);}
@@ -608,23 +657,17 @@ function loadCustomerIntoForm(loanKey){
   var gels=document.querySelectorAll('input[name="gender"]');
   for(var g=0;g<gels.length;g++){gels[g].checked=(gels[g].value===(loan.Gender||''));}
 
-  /* Group + Status */
+  /* Group + Status + LinkedTo */
   var gSel=document.getElementById('af_Groups');
   var sSel=document.getElementById('af_Status');
+  var ltSel=document.getElementById('af_LinkedTo');
   if(gSel)gSel.value=loan.Groups||'';
   if(sSel)sSel.value=loan.Status||'Normal';
+  if(ltSel)ltSel.value=loan.LinkedTo||'';
 
   /* Entry date */
   var dtInput=document.getElementById('af_DateTime');
-  var dtDisplay=document.getElementById('af_DateDisplay');
-  if(loan.DateTime){
-    var d=new Date(loan.DateTime);
-    if(!isNaN(d)){
-      var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-      if(dtInput)dtInput.value=iso;
-      if(dtDisplay)dtDisplay.textContent=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
-    }
-  }else{if(dtInput)dtInput.value='';if(dtDisplay)dtDisplay.textContent='';}
+  if(dtInput)dtInput.value=_toLocalDT(loan.DateTime||'');
 
   /* Profile photo */
   if(loan.photo_url){_profilePhoto={b64:null,preview:loan.photo_url,existing:true};renderProfilePhoto();}
@@ -655,10 +698,9 @@ function cancelEdit(){
   /* Reset all fields */
   ['af_FullName','af_NationalID','af_DOB','af_Phone','af_Money','af_Note'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   document.querySelectorAll('input[name="gender"]').forEach(function(el){el.checked=false;});
-  var gSel=document.getElementById('af_Groups');var sSel=document.getElementById('af_Status');
-  if(gSel)gSel.value='';if(sSel)sSel.selectedIndex=0;
-  var dtInput=document.getElementById('af_DateTime');var dtDisplay=document.getElementById('af_DateDisplay');
-  if(dtInput)dtInput.value='';if(dtDisplay)dtDisplay.textContent='';
+  var gSel=document.getElementById('af_Groups');var sSel=document.getElementById('af_Status');var ltSel=document.getElementById('af_LinkedTo');
+  if(gSel)gSel.value='';if(sSel)sSel.selectedIndex=0;if(ltSel)ltSel.value='';
+  _setDefaultDT();
   renderProfilePhoto();renderSocialLinks();renderAddPhotos();
   /* Restore Save button, hide New button */
   var btn=document.getElementById('acSaveBtn');
@@ -753,14 +795,15 @@ async function saveCustomer(){
   if(!status){toast('Please select a Status',true);document.getElementById('af_Status').focus();return;}
   var btn=document.getElementById('acSaveBtn');
   btn.disabled=true;btn.innerHTML='<span class="ac-btn-spinner"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg></span> Save';
-  var dateVal=(document.getElementById('af_DateTime').value||'').trim();
-  var customDT=dateVal?dateVal+'T00:00:00':'';
+  var _dtv=(document.getElementById('af_DateTime').value||'').trim();
+  var customDT=_dtv?_dtv.replace('T',' ')+':00':'';
   var genderEl=document.querySelector('input[name="gender"]:checked');
   var loan={FullName:fullName,NationalID:(document.getElementById('af_NationalID').value||'').trim(),
     DOB:(document.getElementById('af_DOB').value||'').trim(),Phone:(document.getElementById('af_Phone').value||'').trim(),
     Gender:genderEl?genderEl.value:'',Groups:(document.getElementById('af_Groups').value||''),
     Money:(document.getElementById('af_Money').value||''),Status:status,
     Note:(document.getElementById('af_Note').value||'').trim(),DateTime:customDT,
+    LinkedTo:(document.getElementById('af_LinkedTo').value||''),
     social_links:getSocialLinksData()};
   if(_profilePhoto&&_profilePhoto.b64){try{var pur=await CamboAPI.post({action:'helen_upload_photo',data:_profilePhoto.b64});if(pur.ok&&pur.url)loan.photo_url=pur.url;}catch(e){}}
   else if(_profilePhoto&&_profilePhoto.existing&&_profilePhoto.preview){loan.photo_url=_profilePhoto.preview;}
@@ -793,6 +836,7 @@ if(!helenCan('write')){var _savebtn=document.getElementById('acSaveBtn');if(_sav
 
 loadMeta();
 renderSocialLinks();
+_setDefaultDT();
 </script>
 </body>
 </html>
