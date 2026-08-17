@@ -634,9 +634,41 @@
 var _method = 'name';
 var _portalData = null;
 
-/* ── Hide loading overlay on load ── */
-window.addEventListener('load', function() {
-  var ol = document.getElementById('loadingOverlay');
+/* ── Session helpers ── */
+function saveSession(method, phone, nameOrNid) {
+  try {
+    sessionStorage.setItem('p_method', method);
+    sessionStorage.setItem('p_phone',  phone);
+    sessionStorage.setItem('p_cred',   nameOrNid);
+  } catch(e) {}
+}
+function clearSession() {
+  try { sessionStorage.removeItem('p_method'); sessionStorage.removeItem('p_phone'); sessionStorage.removeItem('p_cred'); } catch(e) {}
+}
+
+/* ── Auto-restore session on page load ── */
+window.addEventListener('load', async function() {
+  var ol  = document.getElementById('loadingOverlay');
+  var sm  = '', sp = '', sc = '';
+  try { sm = sessionStorage.getItem('p_method') || ''; sp = sessionStorage.getItem('p_phone') || ''; sc = sessionStorage.getItem('p_cred') || ''; } catch(e) {}
+
+  if (sm && sp && sc) {
+    /* silently re-fetch to restore session */
+    var body = { action: 'helen_portal_login', method: sm, phone: sp };
+    if (sm === 'name') body.name = sc; else body.nid = sc;
+    var r = await portalAPI(body);
+    if (r && r.ok) {
+      _method = sm;
+      _portalData = r.loans;
+      renderDashboard();
+      ol.classList.add('hide');
+      setTimeout(function(){ ol.style.display='none'; }, 350);
+      return;
+    } else {
+      clearSession();
+    }
+  }
+
   ol.classList.add('hide');
   setTimeout(function(){ ol.style.display='none'; }, 350);
   document.getElementById('inpName').focus();
@@ -724,11 +756,13 @@ async function doLogin() {
   }
 
   _portalData = r.loans;
+  saveSession(_method, phone, _method === 'name' ? name : nid);
   renderDashboard();
 }
 
 /* ── Logout ── */
 function doLogout() {
+  clearSession();
   _portalData = null;
   document.getElementById('dashScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
