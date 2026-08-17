@@ -117,13 +117,14 @@
     .r2-close-btn { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--r2-muted); cursor:pointer; padding:4px; border-radius:6px; display:flex; }
     .r2-close-btn:hover { color:var(--r2-text); background:rgba(255,255,255,.06); }
 
-    /* Loan pills */
-    .r2-tabs-row { display:flex; align-items:center; flex-wrap:wrap; gap:5px; padding:10px 14px; border-bottom:1px solid var(--r2-border); background:var(--r2-card2); }
-    .r2-tab-btn { position:relative; width:32px; height:32px; border-radius:8px; font-family:inherit; font-size:11px; font-weight:800; color:var(--r2-muted); background:var(--r2-card); border:1px solid var(--r2-border); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .13s; }
-    .r2-tab-btn:hover { border-color:var(--r2-accent); color:var(--r2-accent); }
-    .r2-tab-btn.active { background:var(--r2-accent); border-color:var(--r2-accent); color:#fff; }
-    .r2-tab-paid-dot { position:absolute; top:3px; right:3px; width:5px; height:5px; border-radius:50%; background:var(--r2-green); border:1.5px solid var(--r2-card2); }
-    .r2-tab-btn.active .r2-tab-paid-dot { border-color:var(--r2-accent); }
+    /* Loan navigator */
+    .r2-loan-nav { display:flex; align-items:center; gap:7px; padding:10px 14px; border-bottom:1px solid var(--r2-border); background:var(--r2-card2); }
+    .r2-nav-arrow { width:32px; height:32px; border-radius:8px; background:var(--r2-card); border:1px solid var(--r2-border); color:var(--r2-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .13s; font-family:inherit; }
+    .r2-nav-arrow:hover:not(:disabled) { border-color:var(--r2-accent); color:var(--r2-accent); }
+    .r2-nav-arrow:disabled { opacity:.3; cursor:default; }
+    .r2-nav-sel { flex:1; min-width:0; background:var(--r2-card); border:1px solid var(--r2-border); color:var(--r2-text); border-radius:8px; padding:0 10px; height:32px; font-family:inherit; font-size:12px; font-weight:600; outline:none; cursor:pointer; }
+    .r2-nav-sel:focus { border-color:rgba(16,185,129,.4); }
+    .r2-nav-count { font-size:10.5px; color:var(--r2-muted); white-space:nowrap; flex-shrink:0; font-variant-numeric:tabular-nums; }
     .r2-tab-add { display:flex; align-items:center; gap:4px; padding:0 10px; height:32px; font-family:inherit; font-size:11px; font-weight:700; color:var(--r2-accent); background:rgba(16,185,129,.08); border:1px dashed rgba(16,185,129,.3); border-radius:8px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:background .15s; }
     .r2-tab-add:hover { background:rgba(16,185,129,.16); }
     .r2-loan-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -520,13 +521,13 @@ function renderDetail() {
   if (c.dob)    meta.push('<span>'+svgCal()+fmtDate(c.dob)+'</span>');
   if (c.gender) meta.push('<span>'+esc(c.gender)+'</span>');
 
-  // Loan pills (compact number grid)
-  var tabsHtml = c.loans.map(function(l,i){
-    var paid = l.paid ? '<span class="r2-tab-paid-dot"></span>' : '';
-    return '<button class="r2-tab-btn'+(i===_selTab?' active':'')+'" onclick="selectTab('+i+')" title="ការខ្ចី '+(i+1)+' · '+fmt$(l.money)+'">'
-      + (i+1) + paid
-    + '</button>';
+  // Loan select options
+  var opts = c.loans.map(function(l,i){
+    var paidMark = l.paid ? ' ✓' : '';
+    var date = l.loan_key ? String(l.loan_key).substring(0,10) : '';
+    return '<option value="'+i+'"'+(i===_selTab?' selected':'')+'>ការខ្ចី '+(i+1)+paidMark+' · '+fmt$(l.money)+(date?' · '+date:'')+'</option>';
   }).join('');
+  var total = c.loans.length;
 
   var html = '<div class="r2-detail-box">'
     + '<div class="r2-prof-bar">'
@@ -539,8 +540,15 @@ function renderDetail() {
         + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
       + '</button>'
     + '</div>'
-    + '<div class="r2-tabs-row">'
-      + tabsHtml
+    + '<div class="r2-loan-nav">'
+      + '<button class="r2-nav-arrow" id="navPrev" onclick="prevLoan()"'+((_selTab===0)?' disabled':'')+' title="មុន">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>'
+      + '</button>'
+      + '<select class="r2-nav-sel" id="loanSel" onchange="selectTab(parseInt(this.value))">'+opts+'</select>'
+      + '<span class="r2-nav-count">'+(_selTab+1)+' / '+total+'</span>'
+      + '<button class="r2-nav-arrow" id="navNext" onclick="nextLoan()"'+((_selTab>=total-1)?' disabled':'')+' title="បន្ទាប់">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>'
+      + '</button>'
       + '<button class="r2-tab-add" onclick="openNewLoan()">'
         + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
         + 'ខ្ចីថ្មី'
@@ -553,12 +561,23 @@ function renderDetail() {
   loadLoanBody();
 }
 
-/* ── Select tab ── */
+/* ── Select loan ── */
 function selectTab(i) {
-  _selTab = i;
-  document.querySelectorAll('.r2-tab-btn').forEach(function(b,j){ b.classList.toggle('active', j===i); });
+  var c = _custs[_selCust];
+  if (!c) return;
+  _selTab = Math.max(0, Math.min(i, c.loans.length - 1));
+  var sel = document.getElementById('loanSel');
+  if (sel) sel.value = _selTab;
+  var cnt = document.querySelector('.r2-nav-count');
+  if (cnt) cnt.textContent = (_selTab+1) + ' / ' + c.loans.length;
+  var prev = document.getElementById('navPrev');
+  var next = document.getElementById('navNext');
+  if (prev) prev.disabled = (_selTab === 0);
+  if (next) next.disabled = (_selTab >= c.loans.length - 1);
   loadLoanBody();
 }
+function prevLoan() { selectTab(_selTab - 1); }
+function nextLoan() { selectTab(_selTab + 1); }
 
 /* ── Load repayments + render ── */
 async function loadLoanBody() {
@@ -676,16 +695,17 @@ async function togglePaid(key) {
   var loan = _custs[_selCust].loans[_selTab];
   loan.paid = loan.paid ? 0 : 1;
   renderKpi(); renderList();
-  // Update pill dot for this tab
-  var tabs = document.querySelectorAll('.r2-tab-btn');
-  var c = _custs[_selCust];
-  c.loans.forEach(function(l,i){
-    if (tabs[i]) {
-      var dot = l.paid ? '<span class="r2-tab-paid-dot"></span>' : '';
-      tabs[i].innerHTML = (i+1) + dot;
-      tabs[i].title = 'ការខ្ចី '+(i+1)+' · '+fmt$(l.money);
-    }
-  });
+  // Refresh select option text for this loan
+  var sel = document.getElementById('loanSel');
+  if (sel) {
+    var c2 = _custs[_selCust];
+    c2.loans.forEach(function(l,i){
+      if (sel.options[i]) {
+        var date = l.loan_key ? String(l.loan_key).substring(0,10) : '';
+        sel.options[i].text = 'ការខ្ចី '+(i+1)+(l.paid?' ✓':'')+' · '+fmt$(l.money)+(date?' · '+date:'');
+      }
+    });
+  }
   renderLoanBody(loan, _repCache[key]||[]);
   showToast(loan.paid ? 'បានកំណត់ជា "ទូទាត់រួច" ✓' : 'កំណត់ជា "មិនទាន់ទូទាត់"');
 }
