@@ -854,7 +854,7 @@ function renderLoanCard(loan, idx) {
         '<div class="rep-dot ' + (r.type === 'discount' ? 'rep-dot-dis' : 'rep-dot-pay') + '"></div>' +
         '<div class="rep-date">' + fmtDate(r.paid_at) + (r.note ? '<br><span class="rep-note">' + esc(r.note) + '</span>' : '') + '</div>' +
         '<span class="rep-type-chip ' + (r.type === 'discount' ? 'rep-type-discount' : 'rep-type-payment') + '">' +
-          (r.type === 'discount' ? 'បញ្ចុះ' : 'ទូទាត់') + '</span>' +
+          (r.type === 'discount' ? 'បង់ការប្រាក់' : 'ទូទាត់') + '</span>' +
         '<div class="rep-amount">$' + num2(r.amount) + '</div>' +
       '</div>';
     }).join('');
