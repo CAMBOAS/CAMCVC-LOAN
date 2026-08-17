@@ -1260,7 +1260,7 @@ function renderPAChips() {
     + '<div class="pa-chip-role">Roles</div>'
     + '</div>';
   var chips = _PA_USERS.map(function(u, i) {
-    var photo = u.photo || '';
+    var photo = u.photo_url || u.photo || '';
     var initials = (u.display_name || u.username || '?').slice(0,2).toUpperCase();
     var avatarInner = photo ? '<img src="'+_esc(photo)+'" alt="">' : initials;
     var roleCls = u.role === 'Admin' ? 'pa-chip-role pa-chip-role-admin' : 'pa-chip-role';
@@ -1286,7 +1286,7 @@ function selectPAUser(idx) {
   if (!banner) return;
   if (!_PA_SEL) { banner.classList.remove('pa-banner-on'); return; }
   var u = _PA_SEL;
-  var photo = u.photo || '';
+  var photo = u.photo_url || u.photo || '';
   var initials = (u.display_name || u.username || '?').slice(0,2).toUpperCase();
   document.getElementById('paBannerAvatar').innerHTML = photo ? '<img src="'+_esc(photo)+'" alt="">' : initials;
   document.getElementById('paBannerName').textContent = u.display_name || u.username || '';
