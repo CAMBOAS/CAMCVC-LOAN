@@ -845,6 +845,39 @@ export default async function handler(req, res) {
       return res.json({ ok:true });
     }
 
+    /* ── Get page access settings ── */
+    if (action === 'helen_page_access_get') {
+      const [rows] = await db().query('SELECT type, value FROM helen_infor WHERE type LIKE "pageaccess_%"');
+      if (!rows.length) return res.json({ ok:true, access: null });
+      const access = {};
+      rows.forEach(r => {
+        const key = r.type.slice(11); /* strip "pageaccess_" prefix */
+        try { access[key] = JSON.parse(r.value); } catch(e) {}
+      });
+      return res.json({ ok:true, access });
+    }
+
+    /* ── Save page access settings (Admin only) ── */
+    if (action === 'helen_page_access_set') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const access = body.access;
+      if (!access || typeof access !== 'object') return res.json({ ok:false, message:'access required' });
+      const ALL_PAGES = ['dashboard','customers','loanlist','reports','repayment','fbid','activitylog','team','settings'];
+      for (const p of ALL_PAGES) {
+        if (!Array.isArray(access[p])) access[p] = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
+        if (!access[p].includes('Admin')) access[p].unshift('Admin');
+      }
+      access.settings = ['Admin'];
+      await db().query('DELETE FROM helen_infor WHERE type LIKE "pageaccess_%"');
+      for (const [key, val] of Object.entries(access)) {
+        if (ALL_PAGES.includes(key)) {
+          await db().query('INSERT INTO helen_infor (type, value) VALUES (?, ?)', ['pageaccess_'+key, JSON.stringify(val)]);
+        }
+      }
+      logActivity('page_access_update', actor, _bu, null, {}).catch(()=>{});
+      return res.json({ ok:true });
+    }
+
     /* ── Notif settings get ── */
     if (action === 'helen_notif_get') {
       const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="notif"');

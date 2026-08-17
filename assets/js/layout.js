@@ -88,6 +88,30 @@
     } catch(e){}
   };
 
+  /* ── Page access ── */
+  var _PA_ALL = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
+  var _PAGE_ACCESS = (function(){
+    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), settings:['Admin'] };
+    try { var s = JSON.parse(localStorage.getItem('helenPageAccess')||'null'); if (s && typeof s==='object') Object.keys(s).forEach(function(k){ def[k]=s[k]; }); } catch(e){}
+    return def;
+  })();
+  window.helenCanPage = function(page) {
+    var role = getAuthRole();
+    if (role === 'Admin') return true;
+    return (_PAGE_ACCESS[page]||[]).indexOf(role) !== -1;
+  };
+  window.helenUpdatePageAccess = function(acc) {
+    Object.keys(acc).forEach(function(k){ _PAGE_ACCESS[k]=acc[k]; });
+    try { localStorage.setItem('helenPageAccess', JSON.stringify(_PAGE_ACCESS)); } catch(e){}
+  };
+  window.helenSyncPageAccess = async function() {
+    try {
+      if (typeof CamboAPI==='undefined') return;
+      var r = await CamboAPI.post({ action:'helen_page_access_get' });
+      if (r && r.ok && r.access) window.helenUpdatePageAccess(r.access);
+    } catch(e){}
+  };
+
   function buildSidebar() {
     const cur  = getCurrentPage();
     const base = getBase();
@@ -124,14 +148,14 @@
       <nav class="sb-nav">
         <div class="sb-section-label">${t('ម៉ឺនុយចំបង','Main Menu')}</div>
         <ul class="sb-list">
-          ${link('index.html', ic.dashboard, t('Dashboard','Dashboard'))}
-          ${link('pages/customers.html', ic.customers, t('អតិថិជន','Customers'))}
-          ${link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List'))}
-          ${helenCan('reports') ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
-          ${link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment'))}
-          ${link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder'))}
-          ${link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log'))}
-          ${link('pages/team.html', ic.users, t('ក្រុម','Team'))}
+          ${helenCanPage('dashboard') ? link('index.html', ic.dashboard, t('Dashboard','Dashboard')) : ''}
+          ${helenCanPage('customers') ? link('pages/customers.html', ic.customers, t('អតិថិជន','Customers')) : ''}
+          ${helenCanPage('loanlist') ? link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List')) : ''}
+          ${(helenCan('reports') && helenCanPage('reports')) ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
+          ${helenCanPage('repayment') ? link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment')) : ''}
+          ${helenCanPage('fbid') ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder')) : ''}
+          ${helenCanPage('activitylog') ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
+          ${helenCanPage('team') ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
           ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
         </ul>
       </nav>
@@ -784,7 +808,7 @@
       _s.src = getBase() + 'assets/js/chat-global.js?v=8';
       document.head.appendChild(_s);
     }
-    /* Sync role permissions from DB (non-blocking) */
-    if (_pg !== 'login.html') setTimeout(function(){ window.helenSyncPerms && window.helenSyncPerms(); }, 500);
+    /* Sync role permissions and page access from DB (non-blocking) */
+    if (_pg !== 'login.html') setTimeout(function(){ window.helenSyncPerms && window.helenSyncPerms(); window.helenSyncPageAccess && window.helenSyncPageAccess(); }, 500);
   });
 })();
