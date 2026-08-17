@@ -878,6 +878,17 @@ export default async function handler(req, res) {
       return res.json({ ok:true });
     }
 
+    /* ── Verify current user's PIN ── */
+    if (action === 'helen_verify_pin') {
+      const pin = String(body.pin || '').trim();
+      if (!pin) return res.json({ ok:false });
+      const [rows] = await db().query(
+        'SELECT 1 FROM helen_users WHERE username=? AND pin=? AND status="active" LIMIT 1',
+        [_bu, pin]
+      );
+      return res.json({ ok: rows.length > 0 });
+    }
+
     /* ── Notif settings get ── */
     if (action === 'helen_notif_get') {
       const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="notif"');

@@ -289,6 +289,17 @@
     .rt-del-ok { flex:1; padding:10px; border-radius:10px; border:none; background:linear-gradient(135deg,#dc2626,#ef4444); color:#fff; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:.15s; display:flex; align-items:center; justify-content:center; gap:6px }
     .rt-del-ok:hover { opacity:.9 }
     .rt-del-ok:disabled { opacity:.5; cursor:not-allowed }
+    /* PIN verify inside delete modal */
+    .rt-del-pin-wrap { margin:0 0 14px; text-align:left }
+    .rt-del-pin-label { display:block; font-size:11px; font-weight:700; color:var(--rt-muted); margin-bottom:5px }
+    .rt-del-pin-row { position:relative }
+    .rt-del-pin-inp { width:100%; padding:9px 38px 9px 12px; border-radius:10px; border:1.5px solid var(--rt-input-border); background:var(--rt-input); color:var(--rt-text); font-size:13px; font-family:inherit; box-sizing:border-box; outline:none; transition:.15s }
+    .rt-del-pin-inp:focus { border-color:rgba(239,68,68,.5); box-shadow:0 0 0 3px rgba(239,68,68,.08) }
+    .rt-del-pin-inp.rt-pin-shake { animation:rt-shake .35s ease }
+    @keyframes rt-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+    .rt-del-pin-eye { position:absolute; right:9px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--rt-muted); cursor:pointer; padding:2px; line-height:0 }
+    .rt-del-pin-eye:hover { color:var(--rt-text) }
+    .rt-del-pin-err { font-size:11px; color:#f87171; margin-top:4px; min-height:15px }
 
     /* toast */
     .rt-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1e1e28; border:1px solid rgba(167,139,250,.3); color:#e2e8f0; padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:9999; transition:transform .25s ease, opacity .25s ease; opacity:0; pointer-events:none; white-space:nowrap; box-shadow:0 8px 24px rgba(0,0,0,.4) }
@@ -660,6 +671,16 @@
     </div>
     <div class="rt-del-title">Delete Borrower?</div>
     <div class="rt-del-msg">You are about to delete <span class="rt-del-name" id="rtDelName">�</span>.<br>This will move them to Trash and can be recovered later.</div>
+    <div class="rt-del-pin-wrap">
+      <label class="rt-del-pin-label">Enter your PIN to confirm</label>
+      <div class="rt-del-pin-row">
+        <input class="rt-del-pin-inp" id="rtDelPin" type="password" placeholder="••••" autocomplete="off" onkeydown="if(event.key==='Enter')doDelete()">
+        <button class="rt-del-pin-eye" type="button" onclick="toggleDelPin(this)" tabindex="-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="rt-del-pin-err" id="rtDelPinErr"></div>
+    </div>
     <div class="rt-del-btns">
       <button class="rt-del-cancel" onclick="closeDeleteConfirm()">Cancel</button>
       <button class="rt-del-ok" id="rtDelOkBtn" onclick="doDelete()">
@@ -1416,8 +1437,70 @@ function confirmDelete() {
   if (!_selectedKey) return;
   var loan = _loans.find(function(l){ return l.DateTime === _selectedKey; });
   if (!loan) return;
-  document.getElementById('rtDelName').textContent = loan.FullName || '�';
+  document.getElementById('rtDelName').textContent = loan.FullName || '?';
+  var pin = document.getElementById('rtDelPin');
+  var err = document.getElementById('rtDelPinErr');
+  if (pin) pin.value = '';
+  if (err) err.textContent = '';
   document.getElementById('rtDelOverlay').style.display = 'flex';
+  setTimeout(function(){ if (pin) pin.focus(); }, 120);
+}
+function closeDeleteConfirm() {
+  document.getElementById('rtDelOverlay').style.display = 'none';
+  var pin = document.getElementById('rtDelPin');
+  var err = document.getElementById('rtDelPinErr');
+  if (pin) pin.value = '';
+  if (err) err.textContent = '';
+  var btn = document.getElementById('rtDelOkBtn');
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Delete'; }
+}
+function toggleDelPin(eyeBtn) {
+  var inp = document.getElementById('rtDelPin');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  eyeBtn.innerHTML = inp.type === 'text' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+}
+async function doDelete() {
+  if (!_selectedKey) return;
+  var pinInp = document.getElementById('rtDelPin');
+  var pinErr = document.getElementById('rtDelPinErr');
+  var pin  = pinInp ? pinInp.value.trim() : '';
+  var btn  = document.getElementById('rtDelOkBtn');
+  if (!pin) {
+    if (pinErr) pinErr.textContent = 'Please enter your PIN';
+    if (pinInp) { pinInp.classList.add('rt-pin-shake'); setTimeout(function(){ pinInp.classList.remove('rt-pin-shake'); }, 400); pinInp.focus(); }
+    return;
+  }
+  btn.disabled = true;
+  btn.innerHTML = '<div class="rt-spin" style="width:12px;height:12px;border-width:2px"></div> Verifying…';
+  try {
+    var vr = await CamboAPI.post({ action:'helen_verify_pin', pin:pin });
+    if (!vr || !vr.ok) {
+      if (pinErr) pinErr.textContent = 'Wrong PIN — try again';
+      if (pinInp) { pinInp.classList.add('rt-pin-shake'); setTimeout(function(){ pinInp.classList.remove('rt-pin-shake'); }, 400); pinInp.select(); }
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Delete';
+      return;
+    }
+    btn.innerHTML = '<div class="rt-spin" style="width:12px;height:12px;border-width:2px"></div> Deleting…';
+    var res = await CamboAPI.post({ action: 'helen_loan_delete', key: _selectedKey });
+    if (res && res.ok) {
+      _loans = _loans.filter(function(l){ return l.DateTime !== _selectedKey; });
+      _selectedKey = null;
+      closeDeleteConfirm();
+      document.getElementById('rtPersonalPanel').style.display = 'none';
+      document.getElementById('rtLoanPanel').style.display     = 'none';
+      document.querySelector('.rt-body').classList.remove('detail-open');
+      render();
+      toast('Borrower moved to Trash');
+    } else {
+      toast((res && res.message) || 'Delete failed');
+      closeDeleteConfirm();
+    }
+  } catch(e) {
+    toast('Error: '+e.message);
+    closeDeleteConfirm();
+  }
 }
 function closeDeleteConfirm() {
   document.getElementById('rtDelOverlay').style.display = 'none';
