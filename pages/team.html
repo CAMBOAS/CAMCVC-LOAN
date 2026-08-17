@@ -142,7 +142,7 @@
   <main class="main-content" id="mainContent">
     <div class="shared-topbar" id="sharedHeader"></div>
     <div class="tm-wrap">
-      <div id="tmState" class="tm-state"><div class="tm-spin"></div><span>Loading…</span></div>
+      <div id="tmState" class="tm-state"><div class="tm-spin"></div><span>Loadingâ€¦</span></div>
       <div class="tm-grid" id="tmGrid" style="display:none"></div>
     </div>
   </main>
@@ -219,7 +219,7 @@ function fmtLastActive(dtStr) {
   try {
     var s = String(dtStr).trim().replace(' ','T');
     if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
-    var d = new Date(s); if (isNaN(d.getTime())) return '—';
+    var d = new Date(s); if (isNaN(d.getTime())) return 'â€”';
     var TZ='Asia/Phnom_Penh';
     var parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(d);
     var p={}; parts.forEach(function(x){p[x.type]=x.value;});
@@ -228,11 +228,11 @@ function fmtLastActive(dtStr) {
     var nowDate=new Intl.DateTimeFormat('en-CA',{timeZone:TZ}).format(new Date());
     var dp=(ppDate===nowDate)?'Today':p.day+'/'+p.month+'/'+p.year.slice(2);
     return dp+' '+String(h12).padStart(2,'0')+':'+p.minute+' '+ampm;
-  } catch(e){ return '—'; }
+  } catch(e){ return 'â€”'; }
 }
 
 function fmtExpiry(expDate) {
-  if (!expDate) return '—';
+  if (!expDate) return 'â€”';
   var ms=new Date(String(expDate)+'T23:59:59').getTime();
   var d=Math.ceil((ms-Date.now())/86400000);
   var parts=String(expDate).split('-');
