@@ -122,7 +122,7 @@
       <div class="rp-filter">
         <span class="rp-f-label">Date</span>
         <input type="date" class="rp-f-input" id="rpFrom" title="From">
-        <span style="color:var(--muted);font-size:12px">–</span>
+        <span style="color:var(--muted);font-size:12px">â€”</span>
         <input type="date" class="rp-f-input" id="rpTo" title="To">
         <div class="rp-f-sep"></div>
         <span class="rp-f-label">Group</span>
@@ -145,37 +145,37 @@
       <div class="rp-kpi-row">
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">Total Borrowers</div>
-          <div class="rp-kpi-val" id="kTotal">—</div>
+          <div class="rp-kpi-val" id="kTotal">â€”</div>
           <div class="rp-kpi-sub" id="kTotalSub"></div>
           <div class="rp-kpi-blob" style="background:#7c3aed"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">Total Amount</div>
-          <div class="rp-kpi-val" id="kAmount" style="color:#10b981">—</div>
+          <div class="rp-kpi-val" id="kAmount" style="color:#10b981">â€”</div>
           <div class="rp-kpi-sub" id="kAmountSub"></div>
           <div class="rp-kpi-blob" style="background:#10b981"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">BlackListed</div>
-          <div class="rp-kpi-val" id="kBl" style="color:#f87171">—</div>
+          <div class="rp-kpi-val" id="kBl" style="color:#f87171">â€”</div>
           <div class="rp-kpi-sub" id="kBlSub"></div>
           <div class="rp-kpi-blob" style="background:#ef4444"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">Good</div>
-          <div class="rp-kpi-val" id="kGood" style="color:#10b981">—</div>
+          <div class="rp-kpi-val" id="kGood" style="color:#10b981">â€”</div>
           <div class="rp-kpi-sub" id="kGoodSub"></div>
           <div class="rp-kpi-blob" style="background:#10b981"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">High Risk</div>
-          <div class="rp-kpi-val" id="kHr" style="color:#f59e0b">—</div>
+          <div class="rp-kpi-val" id="kHr" style="color:#f59e0b">â€”</div>
           <div class="rp-kpi-sub" id="kHrSub"></div>
           <div class="rp-kpi-blob" style="background:#f59e0b"></div>
         </div>
         <div class="rp-kpi">
           <div class="rp-kpi-lbl">Paid / Done</div>
-          <div class="rp-kpi-val" id="kPaid" style="color:#a78bfa">—</div>
+          <div class="rp-kpi-val" id="kPaid" style="color:#a78bfa">â€”</div>
           <div class="rp-kpi-sub" id="kPaidSub"></div>
           <div class="rp-kpi-blob" style="background:#7c3aed"></div>
         </div>
@@ -206,11 +206,11 @@
         <!-- Row 3: Staff table + Gender donut -->
         <div class="rp-row3">
           <div class="rp-card" style="min-height:200px">
-            <div class="rp-card-title">Staff Activity — Added By</div>
+            <div class="rp-card-title">Staff Activity & Added By</div>
             <div class="rp-staff-scroll">
               <table class="rp-staff-tbl">
                 <thead><tr><th>#</th><th>Staff</th><th>Loans</th><th>Amount</th><th></th></tr></thead>
-                <tbody id="staffTbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr></tbody>
+                <tbody id="staffTbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading...</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -411,7 +411,7 @@ function drawHBars(canvasId, wrapId, entries) {
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    var lbl = e.label.length > 14 ? e.label.slice(0,13) + '…' : e.label;
+    var lbl = e.label.length > 14 ? e.label.slice(0,13) + '...' : e.label;
     ctx.fillText(lbl, 0, mid);
 
     /* bar bg */
@@ -513,7 +513,7 @@ function renderGroups() {
 function renderStaff() {
   var staff = {};
   _data.forEach(function(l){
-    var by = (l.created_by||'—').trim() || '—';
+    var by = (l.created_by||'â€”').trim() || 'â€”';
     if (!staff[by]) staff[by] = { count:0, amount:0 };
     staff[by].count++;
     staff[by].amount += Number(l.Money)||0;
