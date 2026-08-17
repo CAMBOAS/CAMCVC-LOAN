@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ច្រករបស់អតិថិជន — HELEN LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Token palette ── */
+    :root {
+      --bg:          #eef2f9;
+      --bg2:         #dde4f0;
+      --card:        #ffffff;
+      --card2:       #f4f7fd;
+      --border:      #d1dae8;
+      --text:        #1a2340;
+      --text2:       #5a6a88;
+      --text3:       #8a9ab8;
+      --accent:      #0d7a6e;
+      --accent2:     #0a9e8e;
+      --accent-dim:  #cdf0ec;
+      --success:     #16a34a;
+      --success-bg:  #dcfce7;
+      --danger:      #dc2626;
+      --danger-bg:   #fee2e2;
+      --warning:     #b45309;
+      --warning-bg:  #fef3c7;
+      --inp:         #f8fafd;
+      --inp-bdr:     #bfcce0;
+      --shadow:      0 2px 16px rgba(13,26,60,.10);
+      --shadow-lg:   0 8px 40px rgba(13,26,60,.16);
+      --radius:      14px;
+      --radius-sm:   8px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg:         #070c18;
+        --bg2:        #0e1628;
+        --card:       rgba(255,255,255,.055);
+        --card2:      rgba(255,255,255,.03);
+        --border:     rgba(255,255,255,.10);
+        --text:       #dde8f8;
+        --text2:      #8da0c0;
+        --text3:      #566880;
+        --accent:     #2dd4bf;
+        --accent2:    #14b8a6;
+        --accent-dim: rgba(45,212,191,.14);
+        --success:    #4ade80;
+        --success-bg: rgba(74,222,128,.14);
+        --danger:     #f87171;
+        --danger-bg:  rgba(248,113,113,.14);
+        --warning:    #fbbf24;
+        --warning-bg: rgba(251,191,36,.14);
+        --inp:        rgba(255,255,255,.05);
+        --inp-bdr:    rgba(255,255,255,.13);
+        --shadow:     0 2px 16px rgba(0,0,0,.4);
+        --shadow-lg:  0 8px 40px rgba(0,0,0,.5);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg:         #070c18;
+      --bg2:        #0e1628;
+      --card:       rgba(255,255,255,.055);
+      --card2:      rgba(255,255,255,.03);
+      --border:     rgba(255,255,255,.10);
+      --text:       #dde8f8;
+      --text2:      #8da0c0;
+      --text3:      #566880;
+      --accent:     #2dd4bf;
+      --accent2:    #14b8a6;
+      --accent-dim: rgba(45,212,191,.14);
+      --success:    #4ade80;
+      --success-bg: rgba(74,222,128,.14);
+      --danger:     #f87171;
+      --danger-bg:  rgba(248,113,113,.14);
+      --warning:    #fbbf24;
+      --warning-bg: rgba(251,191,36,.14);
+      --inp:        rgba(255,255,255,.05);
+      --inp-bdr:    rgba(255,255,255,.13);
+      --shadow:     0 2px 16px rgba(0,0,0,.4);
+      --shadow-lg:  0 8px 40px rgba(0,0,0,.5);
+    }
+    :root[data-theme="light"] {
+      --bg:          #eef2f9;
+      --bg2:         #dde4f0;
+      --card:        #ffffff;
+      --card2:       #f4f7fd;
+      --border:      #d1dae8;
+      --text:        #1a2340;
+      --text2:       #5a6a88;
+      --text3:       #8a9ab8;
+      --accent:      #0d7a6e;
+      --accent2:     #0a9e8e;
+      --accent-dim:  #cdf0ec;
+      --success:     #16a34a;
+      --success-bg:  #dcfce7;
+      --danger:      #dc2626;
+      --danger-bg:   #fee2e2;
+      --warning:     #b45309;
+      --warning-bg:  #fef3c7;
+      --inp:         #f8fafd;
+      --inp-bdr:     #bfcce0;
+      --shadow:      0 2px 16px rgba(13,26,60,.10);
+      --shadow-lg:   0 8px 40px rgba(13,26,60,.16);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Noto Sans Khmer', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══════════════════════════════════
+       LOGIN SCREEN
+    ══════════════════════════════════ */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px 40px;
+      background: linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 16px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 4px 12px rgba(13,122,110,.25));
+    }
+
+    .login-brand {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: .5px;
+      margin-bottom: 2px;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 28px;
+      font-weight: 400;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px 24px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Method toggle */
+    .method-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: var(--bg2);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 22px;
+    }
+    .method-tab {
+      padding: 8px 6px;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      background: transparent;
+      cursor: pointer;
+      transition: background .18s, color .18s, box-shadow .18s;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .method-tab.active {
+      background: var(--card);
+      color: var(--accent);
+      box-shadow: var(--shadow);
+    }
+
+    /* Inputs */
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text2);
+      margin-bottom: 6px;
+      letter-spacing: .3px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--inp);
+      border: 1.5px solid var(--inp-bdr);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .form-input::placeholder { color: var(--text3); }
+
+    /* Login button */
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent2);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .18s, transform .12s;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-login:hover { opacity: .9; }
+    .btn-login:active { transform: scale(.98); }
+    .btn-login:disabled { opacity: .55; cursor: default; }
+
+    .login-error {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      color: var(--danger);
+      display: none;
+    }
+    .login-error.show { display: block; }
+
+    /* Spin */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2.5px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    /* ══════════════════════════════════
+       DASHBOARD SCREEN
+    ══════════════════════════════════ */
+    #dashScreen { display: none; min-height: 100vh; }
+
+    /* Top nav */
+    .dash-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      width: 34px; height: 34px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    .nav-brand {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent);
+      flex: 1;
+    }
+    .nav-user {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 12px;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .18s;
+    }
+    .btn-logout:hover { opacity: .8; }
+
+    /* Dash body */
+    .dash-body {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+    }
+
+    /* Profile card */
+    .profile-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .profile-avatar {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--accent-dim);
+      flex-shrink: 0;
+    }
+    .profile-avatar-init {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .profile-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .profile-meta span { display: flex; align-items: center; gap: 4px; }
+
+    /* Section header */
+    .section-hd {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text3);
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      margin: 0 0 12px;
+    }
+
+    /* Loan card */
+    .loan-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .loan-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .loan-amount {
+      flex: 1;
+      min-width: 0;
+    }
+    .loan-amount-label {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 600;
+      letter-spacing: .3px;
+      margin-bottom: 2px;
+    }
+    .loan-amount-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .loan-date {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    /* Status badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-paid   { background: var(--success-bg); color: var(--success); }
+    .badge-unpaid { background: var(--danger-bg);  color: var(--danger);  }
+    .badge-other  { background: var(--warning-bg); color: var(--warning); }
+
+    /* Progress bar */
+    .progress-wrap { margin-bottom: 14px; }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .progress-track {
+      height: 8px;
+      background: var(--bg2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width .5s ease;
+    }
+
+    /* Meta row */
+    .loan-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-bottom: 14px;
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .meta-key {
+      font-size: 10.5px;
+      color: var(--text3);
+      font-weight: 600;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+    .meta-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Repayment toggle */
+    .rep-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      cursor: pointer;
+      border-top: 1px solid var(--border);
+      width: 100%;
+      text-align: left;
+      margin-top: 4px;
+    }
+    .rep-toggle svg { transition: transform .2s; }
+    .rep-toggle.open svg { transform: rotate(180deg); }
+
+    /* Repayment list */
+    .rep-list { display: none; margin-top: 10px; }
+    .rep-list.open { display: block; }
+    .rep-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      background: var(--card2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 5px;
+      font-size: 12.5px;
+    }
+    .rep-item:last-child { margin-bottom: 0; }
+    .rep-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .rep-dot-pay { background: var(--success); }
+    .rep-dot-dis { background: var(--warning); }
+    .rep-date { color: var(--text2); flex: 1; }
+    .rep-note { color: var(--text3); font-size: 11px; }
+    .rep-amount {
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .rep-type-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+    .rep-type-payment  { background: var(--success-bg); color: var(--success); }
+    .rep-type-discount { background: var(--warning-bg); color: var(--warning); }
+
+    .no-rep {
+      text-align: center;
+      color: var(--text3);
+      font-size: 12px;
+      padding: 14px 0;
+    }
+
+    /* Empty state */
+    .empty-loans {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--text3);
+    }
+    .empty-loans svg { opacity: .35; margin-bottom: 12px; }
+    .empty-loans p { font-size: 14px; }
+
+    /* Loading overlay */
+    #loadingOverlay {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200;
+      flex-direction: column;
+      gap: 14px;
+      transition: opacity .3s;
+    }
+    #loadingOverlay.hide { opacity: 0; pointer-events: none; }
+    .load-spin {
+      width: 40px; height: 40px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent2);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    #loadingOverlay p {
+      font-size: 14px;
+      color: var(--text2);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay (initial) -->
+<div id="loadingOverlay">
+  <div class="load-spin"></div>
+  <p>កំពុងភ្ជាប់...</p>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <img src="../images/logo/LOGO.png" class="login-logo" alt="HELEN LOAN" onerror="this.style.display='none'">
+  <div class="login-brand">HELEN LOAN</div>
+  <div class="login-sub">ច្រករបស់អតិថិជន · Customer Portal</div>
+
+  <div class="login-card">
+    <!-- Method tabs -->
+    <div class="method-tabs" role="tablist">
+      <button class="method-tab active" id="tabName" onclick="setMethod('name')" role="tab" aria-selected="true">
+        ឈ្មោះ + ទូរស័ព្ទ
+      </button>
+      <button class="method-tab" id="tabNid" onclick="setMethod('nid')" role="tab" aria-selected="false">
+        អត្តសញ្ញាណប័ណ្ណ + ទូរស័ព្ទ
+      </button>
+    </div>
+
+    <!-- Name method -->
+    <div id="fieldName" class="form-group">
+      <label class="form-label" for="inpName">ឈ្មោះពេញ</label>
+      <input id="inpName" class="form-input" type="text" placeholder="ឈ្មោះ និង នាមត្រកូល" autocomplete="name" inputmode="text" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+
+    <!-- NID method -->
+    <div id="fieldNid" class="form-group" style="display:none">
+      <label class="form-label" for="inpNid">លេខអត្តសញ្ញាណប័ណ្ណ</label>
+      <input id="inpNid" class="form-input" type="text" placeholder="លេខអត្តសញ្ញាណប័ណ្ណ" autocomplete="off" inputmode="numeric" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="inpPhone">លេខទូរស័ព្ទ</label>
+      <input id="inpPhone" class="form-input" type="tel" placeholder="ឧទា. 012 345 678" autocomplete="tel" inputmode="tel" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      ចូល
+    </button>
+
+    <div class="login-error" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD SCREEN -->
+<div id="dashScreen">
+  <!-- Nav bar -->
+  <nav class="dash-nav">
+    <img src="../images/logo/LOGO.png" class="nav-logo" alt="" onerror="this.style.display='none'">
+    <span class="nav-brand">HELEN LOAN</span>
+    <span class="nav-user" id="navUserName"></span>
+    <button class="btn-logout" onclick="doLogout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      ចេញ
+    </button>
+  </nav>
+
+  <!-- Body -->
+  <div class="dash-body">
+    <!-- Profile -->
+    <div class="profile-card" id="profileCard"></div>
+
+    <!-- Loans -->
+    <p class="section-hd">ប្រវត្តិខ្ចីប្រាក់</p>
+    <div id="loanList"></div>
+  </div>
+</div>
+
+<script>
+/* ── State ── */
+var _method = 'name';
+var _portalData = null;
+
+/* ── Hide loading overlay on load ── */
+window.addEventListener('load', function() {
+  var ol = document.getElementById('loadingOverlay');
+  ol.classList.add('hide');
+  setTimeout(function(){ ol.style.display='none'; }, 350);
+  document.getElementById('inpName').focus();
+});
+
+/* ── Method toggle ── */
+function setMethod(m) {
+  _method = m;
+  document.getElementById('tabName').classList.toggle('active', m === 'name');
+  document.getElementById('tabNid').classList.toggle('active',  m === 'nid');
+  document.getElementById('fieldName').style.display = m === 'name' ? '' : 'none';
+  document.getElementById('fieldNid').style.display  = m === 'nid'  ? '' : 'none';
+  setTimeout(function(){
+    document.getElementById(m === 'name' ? 'inpName' : 'inpNid').focus();
+  }, 50);
+}
+
+/* ── Error display ── */
+function showErr(msg) {
+  var el = document.getElementById('loginErr');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearErr() {
+  var el = document.getElementById('loginErr');
+  el.classList.remove('show');
+}
+
+/* ── API ── */
+async function portalAPI(body) {
+  try {
+    var res = await fetch('/api/helen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var text = await res.text();
+    try { return JSON.parse(text); } catch(e) { return { ok: false, message: 'parse_error' }; }
+  } catch(e) {
+    return { ok: false, message: 'network_error' };
+  }
+}
+
+/* ── Login ── */
+async function doLogin() {
+  clearErr();
+  var phone = document.getElementById('inpPhone').value.trim();
+  var name  = document.getElementById('inpName').value.trim();
+  var nid   = document.getElementById('inpNid').value.trim();
+
+  if (_method === 'name' && !name) { showErr('សូមបញ្ចូលឈ្មោះពេញ'); return; }
+  if (_method === 'nid'  && !nid)  { showErr('សូមបញ្ចូលលេខអត្តសញ្ញាណប័ណ្ណ'); return; }
+  if (!phone) { showErr('សូមបញ្ចូលលេខទូរស័ព្ទ'); return; }
+
+  var btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> កំពុងស្វែងរក...';
+
+  var body = { action: 'helen_portal_login', method: _method, phone: phone };
+  if (_method === 'name') body.name = name;
+  else                    body.nid  = nid;
+
+  var r = await portalAPI(body);
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> ចូល';
+
+  if (!r || !r.ok) {
+    var msgs = {
+      not_found:      'រកមិនឃើញ — ព័ត៌មានមិនត្រូវ · សូមពិនិត្យម្ដងទៀត',
+      phone_required: 'សូមបញ្ចូលលេខទូរស័ព្ទ',
+      name_required:  'សូមបញ្ចូលឈ្មោះពេញ',
+      nid_required:   'សូមបញ្ចូលលេខអត្តសញ្ញាណប័ណ្ណ',
+      server_error:   'Server error — សូមព្យាយាមម្ដងទៀត',
+      network_error:  'គ្មានការតភ្ជាប់ — សូមពិនិត្យ Wifi/Data',
+    };
+    showErr(msgs[r && r.message] || 'មានបញ្ហា — សូមព្យាយាមម្ដងទៀត');
+    return;
+  }
+
+  _portalData = r.loans;
+  renderDashboard();
+}
+
+/* ── Logout ── */
+function doLogout() {
+  _portalData = null;
+  document.getElementById('dashScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('inpPhone').value = '';
+  document.getElementById('inpName').value = '';
+  document.getElementById('inpNid').value = '';
+  clearErr();
+  document.getElementById('inpName').focus();
+}
+
+/* ── Render dashboard ── */
+function renderDashboard() {
+  if (!_portalData || !_portalData.length) return;
+  var borrower = _portalData[0];
+
+  /* Nav name */
+  document.getElementById('navUserName').textContent = borrower.name;
+
+  /* Profile card */
+  var avatar = '';
+  if (borrower.photo_url) {
+    avatar = '<img class="profile-avatar" src="' + esc(borrower.photo_url) + '" onerror="this.replaceWith(initAvatar(\'' + esc(borrower.name) + '\'))">';
+  } else {
+    avatar = '<div class="profile-avatar-init">' + nameInitials(borrower.name) + '</div>';
+  }
+
+  var meta = [];
+  if (borrower.phone)  meta.push('<span>' + svgPhone() + esc(borrower.phone) + '</span>');
+  if (borrower.nid)    meta.push('<span>' + svgId()    + esc(borrower.nid)   + '</span>');
+  if (borrower.dob)    meta.push('<span>' + svgCal()   + fmtDate(borrower.dob) + '</span>');
+  if (borrower.gender) meta.push('<span>' + svgGender() + esc(borrower.gender) + '</span>');
+
+  document.getElementById('profileCard').innerHTML =
+    avatar +
+    '<div class="profile-info">' +
+      '<div class="profile-name">' + esc(borrower.name) + '</div>' +
+      '<div class="profile-meta">' + meta.join('') + '</div>' +
+    '</div>';
+
+  /* Loan list */
+  var loanListEl = document.getElementById('loanList');
+  if (!_portalData.length) {
+    loanListEl.innerHTML = '<div class="empty-loans">' +
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+      '<p>រកមិនឃើញព័ត៌មានខ្ចីប្រាក់</p></div>';
+  } else {
+    loanListEl.innerHTML = _portalData.map(function(loan, idx) {
+      return renderLoanCard(loan, idx);
+    }).join('');
+  }
+
+  /* Switch screens */
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashScreen').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function renderLoanCard(loan, idx) {
+  var totalPaid = 0;
+  var totalDiscount = 0;
+  (loan.repayments || []).forEach(function(r) {
+    if (r.type === 'discount') totalDiscount += r.amount;
+    else totalPaid += r.amount;
+  });
+  var totalDeducted = totalPaid + totalDiscount;
+  var remaining = Math.max(0, loan.money - totalDeducted);
+  var pct = loan.money > 0 ? Math.min(100, totalDeducted / loan.money * 100) : 0;
+
+  /* Status badge */
+  var isPaid = loan.paid === 1 || (loan.status && loan.status.toLowerCase().indexOf('paid') !== -1 && loan.status.toLowerCase().indexOf('unpaid') === -1);
+  var badgeHtml;
+  if (isPaid) {
+    badgeHtml = '<span class="badge badge-paid">' + svgCheck() + 'បានទូទាត់</span>';
+  } else if (remaining <= 0 && totalDeducted > 0) {
+    badgeHtml = '<span class="badge badge-paid">' + svgCheck() + 'បានទូទាត់</span>';
+  } else {
+    badgeHtml = '<span class="badge badge-unpaid">' + svgClock() + 'មិនទាន់ទូទាត់</span>';
+  }
+
+  /* Repayments HTML */
+  var repId = 'rep_' + idx;
+  var repHtml = '';
+  if (!loan.repayments || !loan.repayments.length) {
+    repHtml = '<div class="no-rep">មិនទាន់មានការទូទាត់</div>';
+  } else {
+    repHtml = loan.repayments.map(function(r) {
+      return '<div class="rep-item">' +
+        '<div class="rep-dot ' + (r.type === 'discount' ? 'rep-dot-dis' : 'rep-dot-pay') + '"></div>' +
+        '<div class="rep-date">' + fmtDate(r.paid_at) + (r.note ? '<br><span class="rep-note">' + esc(r.note) + '</span>' : '') + '</div>' +
+        '<span class="rep-type-chip ' + (r.type === 'discount' ? 'rep-type-discount' : 'rep-type-payment') + '">' +
+          (r.type === 'discount' ? 'បញ្ចុះ' : 'ទូទាត់') + '</span>' +
+        '<div class="rep-amount">$' + num2(r.amount) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* Loan date */
+  var loanDate = loan.key ? fmtDate(loan.key) : '';
+
+  /* Meta items */
+  var metas = [];
+  if (loan.group) metas.push({ key: 'ក្រុម', val: loan.group });
+  if (loanDate)   metas.push({ key: 'ថ្ងៃខ្ចី', val: loanDate });
+  if (loan.status) metas.push({ key: 'ស្ថានភាព', val: loan.status });
+
+  var metaHtml = metas.map(function(m) {
+    return '<div class="meta-item"><span class="meta-key">' + m.key + '</span><span class="meta-val">' + esc(m.val) + '</span></div>';
+  }).join('');
+
+  var repCount = loan.repayments ? loan.repayments.length : 0;
+
+  return '<div class="loan-card">' +
+    '<div class="loan-header">' +
+      '<div class="loan-amount">' +
+        '<div class="loan-amount-label">ចំនួនប្រាក់ខ្ចី</div>' +
+        '<div class="loan-amount-val">$' + num2(loan.money) + '</div>' +
+        (loanDate ? '<div class="loan-date">' + loanDate + '</div>' : '') +
+      '</div>' +
+      badgeHtml +
+    '</div>' +
+
+    '<div class="progress-wrap">' +
+      '<div class="progress-labels">' +
+        '<span>បានទូទាត់: <strong>$' + num2(totalDeducted) + '</strong></span>' +
+        '<span>នៅខ្វះ: <strong>$' + num2(remaining) + '</strong></span>' +
+      '</div>' +
+      '<div class="progress-track"><div class="progress-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+    '</div>' +
+
+    (metaHtml ? '<div class="loan-meta">' + metaHtml + '</div>' : '') +
+
+    '<button class="rep-toggle" id="repBtn_' + idx + '" onclick="toggleRep(' + idx + ')">' +
+      svgChevron() +
+      'ប្រវត្តិទូទាត់ (' + repCount + ')' +
+    '</button>' +
+    '<div class="rep-list" id="repList_' + idx + '">' + repHtml + '</div>' +
+
+  '</div>';
+}
+
+/* ── Toggle repayment list ── */
+function toggleRep(idx) {
+  var btn  = document.getElementById('repBtn_' + idx);
+  var list = document.getElementById('repList_' + idx);
+  var open = list.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+/* ── Helpers ── */
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function num2(n) {
+  n = parseFloat(n) || 0;
+  return n % 1 === 0 ? n.toFixed(0) : n.toFixed(2);
+}
+function fmtDate(d) {
+  if (!d) return '';
+  var s = String(d).substring(0, 10);
+  if (!s) return '';
+  var parts = s.split('-');
+  if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+  return s;
+}
+function nameInitials(n) {
+  var p = String(n || '').trim().split(/\s+/);
+  if (p.length >= 2) return (p[0][0] + p[p.length-1][0]).toUpperCase();
+  if (p[0] && p[0].length) return p[0][0].toUpperCase();
+  return '?';
+}
+function initAvatar(name) {
+  var el = document.createElement('div');
+  el.className = 'profile-avatar-init';
+  el.textContent = nameInitials(name);
+  return el;
+}
+
+/* Inline SVGs */
+function svgPhone() { return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.09a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 17.5z"/></svg>'; }
+function svgId()    { return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>'; }
+function svgCal()   { return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'; }
+function svgGender(){ return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M12 12v8"/></svg>'; }
+function svgCheck() { return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; }
+function svgClock() { return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'; }
+function svgChevron(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'; }
+</script>
+</body>
+</html>

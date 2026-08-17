@@ -295,6 +295,63 @@ export default async function handler(req, res) {
       return res.json({ ok:true });
     }
 
+    /* ── Public: Borrower self-service portal login ── */
+    if (action === 'helen_portal_login') {
+      const method = String(body.method || 'name').trim();
+      const phone  = String(body.phone  || '').trim();
+      const name   = String(body.name   || '').trim();
+      const nid    = String(body.nid    || '').trim();
+      if (!phone) return res.json({ ok: false, message: 'phone_required' });
+      let loanRows = [];
+      try {
+        if (method === 'nid') {
+          if (!nid) return res.json({ ok: false, message: 'nid_required' });
+          [loanRows] = await db().query(
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url FROM helen_loans WHERE phone=? AND national_id=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            [phone, nid]
+          );
+        } else {
+          if (!name) return res.json({ ok: false, message: 'name_required' });
+          [loanRows] = await db().query(
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url FROM helen_loans WHERE phone=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            [phone, name]
+          );
+        }
+      } catch(e) {
+        return res.json({ ok: false, message: 'server_error' });
+      }
+      if (!loanRows.length) return res.json({ ok: false, message: 'not_found' });
+      const loanKeys = loanRows.map(l => l.loan_key);
+      let repaymentMap = {};
+      try {
+        const ph2 = loanKeys.map(() => '?').join(',');
+        const [reps] = await db().query(
+          'SELECT loan_key,type,amount,paid_at,note FROM helen_repayments WHERE loan_key IN (' + ph2 + ') ORDER BY paid_at ASC',
+          loanKeys
+        );
+        reps.forEach(r => {
+          if (!repaymentMap[r.loan_key]) repaymentMap[r.loan_key] = [];
+          repaymentMap[r.loan_key].push({ type: r.type, amount: Number(r.amount), paid_at: r.paid_at, note: r.note || '' });
+        });
+      } catch(e) {}
+      const loans = loanRows.map(r => ({
+        key:        r.loan_key    || '',
+        name:       r.full_name   || '',
+        nid:        r.national_id || '',
+        dob:        r.dob         || '',
+        phone:      r.phone       || '',
+        gender:     r.gender      || '',
+        group:      r.loan_group  || '',
+        money:      r.money != null ? Number(r.money) : 0,
+        status:     r.loan_status || '',
+        note:       r.note        || '',
+        paid:       r.paid ? 1 : 0,
+        photo_url:  r.photo_url   || '',
+        repayments: repaymentMap[r.loan_key] || [],
+      }));
+      return res.json({ ok: true, loans });
+    }
+
     /* ── Auth check for all write/read actions ── */
     const _bu = String((body.auth&&body.auth.u)||body.u||'').trim();
     const _bp = String((body.auth&&body.auth.p)||body.p||'').trim();
