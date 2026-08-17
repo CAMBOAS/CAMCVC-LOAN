@@ -588,16 +588,27 @@ async function saveCustomer(){
     social_links:getSocialLinksData()};
   if(_profilePhoto){try{var pur=await CamboAPI.post({action:'helen_upload_photo',data:_profilePhoto.b64});if(pur.ok&&pur.url)loan.photo_url=pur.url;}catch(e){}}
   var photoUrls=[];
-  var totalPh=_addPhotos.length;
-  for(var pi=0;pi<totalPh;pi++){
-    var pItem=_addPhotos[pi];
-    btn.innerHTML='<span class="ac-btn-spinner"></span> Uploading photo '+(pi+1)+'/'+totalPh+'...';
-    try{
-      if(pItem.isVideo){var vUrl=await uploadDirectToCloudinary(pItem.file);if(vUrl)photoUrls.push(vUrl);}
-      else{var ur=await CamboAPI.post({action:'helen_upload_photo',data:pItem.b64});if(ur.ok&&ur.url)photoUrls.push(ur.url);}
-    }catch(e){}
+  if(_addPhotos.length>0){
+    btn.innerHTML='<span class="ac-btn-spinner"></span> Uploading '+_addPhotos.length+' photo(s)...';
+    var uploadResults=await Promise.allSettled(_addPhotos.map(async function(pItem){
+      if(pItem.isVideo){
+        var vUrl=await uploadDirectToCloudinary(pItem.file);
+        if(!vUrl)throw new Error('Video upload failed');
+        return vUrl;
+      }else{
+        var ur=await CamboAPI.post({action:'helen_upload_photo',data:pItem.b64});
+        if(ur.ok&&ur.url)return ur.url;
+        throw new Error(ur.message||'Photo upload failed');
+      }
+    }));
+    var failedCount=0;
+    uploadResults.forEach(function(r){
+      if(r.status==='fulfilled'&&r.value)photoUrls.push(r.value);
+      else failedCount++;
+    });
+    if(failedCount>0)toast(failedCount+' photo(s) failed to upload — saving with '+photoUrls.length+' photo(s)',true);
   }
-  if(totalPh>0)btn.innerHTML='<span class="ac-btn-spinner"></span> Saving...';
+  btn.innerHTML='<span class="ac-btn-spinner"></span> Saving...';
   loan.photos=photoUrls;
   try{
     var res=await Promise.race([CamboAPI.post({action:'helen_loan_add',loan:loan}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},30000);})]);
