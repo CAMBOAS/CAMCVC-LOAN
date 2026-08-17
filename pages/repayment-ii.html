@@ -117,17 +117,18 @@
     .r2-close-btn { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--r2-muted); cursor:pointer; padding:4px; border-radius:6px; display:flex; }
     .r2-close-btn:hover { color:var(--r2-text); background:rgba(255,255,255,.06); }
 
-    /* Loan tabs */
-    .r2-tabs-row { display:flex; align-items:center; padding:0 12px; border-bottom:1px solid var(--r2-border); background:var(--r2-card2); overflow-x:auto; gap:0; }
-    .r2-tabs-row::-webkit-scrollbar { height:3px; }
-    .r2-tabs-row::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); }
-    .r2-tab-btn { display:flex; align-items:center; gap:5px; padding:10px 13px; font-family:inherit; font-size:11.5px; font-weight:600; color:var(--r2-muted); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:color .15s, border-color .15s; }
-    .r2-tab-btn:hover { color:var(--r2-text); }
-    .r2-tab-btn.active { color:var(--r2-accent); border-bottom-color:var(--r2-accent); }
-    .r2-tab-amt { font-size:10px; opacity:.7; font-variant-numeric:tabular-nums; }
-    .r2-tab-paid-dot { width:6px; height:6px; border-radius:50%; background:var(--r2-green); flex-shrink:0; }
-    .r2-tab-add { display:flex; align-items:center; gap:4px; padding:7px 11px; font-family:inherit; font-size:11px; font-weight:700; color:var(--r2-accent); background:rgba(16,185,129,.08); border:1px dashed rgba(16,185,129,.3); border-radius:7px; cursor:pointer; margin:5px 0 5px 4px; white-space:nowrap; flex-shrink:0; transition:background .15s; }
+    /* Loan pills */
+    .r2-tabs-row { display:flex; align-items:center; flex-wrap:wrap; gap:5px; padding:10px 14px; border-bottom:1px solid var(--r2-border); background:var(--r2-card2); }
+    .r2-tab-btn { position:relative; width:32px; height:32px; border-radius:8px; font-family:inherit; font-size:11px; font-weight:800; color:var(--r2-muted); background:var(--r2-card); border:1px solid var(--r2-border); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .13s; }
+    .r2-tab-btn:hover { border-color:var(--r2-accent); color:var(--r2-accent); }
+    .r2-tab-btn.active { background:var(--r2-accent); border-color:var(--r2-accent); color:#fff; }
+    .r2-tab-paid-dot { position:absolute; top:3px; right:3px; width:5px; height:5px; border-radius:50%; background:var(--r2-green); border:1.5px solid var(--r2-card2); }
+    .r2-tab-btn.active .r2-tab-paid-dot { border-color:var(--r2-accent); }
+    .r2-tab-add { display:flex; align-items:center; gap:4px; padding:0 10px; height:32px; font-family:inherit; font-size:11px; font-weight:700; color:var(--r2-accent); background:rgba(16,185,129,.08); border:1px dashed rgba(16,185,129,.3); border-radius:8px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:background .15s; }
     .r2-tab-add:hover { background:rgba(16,185,129,.16); }
+    .r2-loan-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .r2-loan-hd-num { font-size:13px; font-weight:800; color:var(--r2-text); }
+    .r2-loan-hd-amt { font-size:13px; font-weight:800; color:var(--r2-accent); font-variant-numeric:tabular-nums; }
 
     /* Loan body */
     .r2-loan-scroll { max-height:calc(100vh - 290px); overflow-y:auto; padding:14px 16px 20px; }
@@ -519,12 +520,11 @@ function renderDetail() {
   if (c.dob)    meta.push('<span>'+svgCal()+fmtDate(c.dob)+'</span>');
   if (c.gender) meta.push('<span>'+esc(c.gender)+'</span>');
 
-  // Loan tabs
+  // Loan pills (compact number grid)
   var tabsHtml = c.loans.map(function(l,i){
     var paid = l.paid ? '<span class="r2-tab-paid-dot"></span>' : '';
-    return '<button class="r2-tab-btn'+(i===_selTab?' active':'')+'" onclick="selectTab('+i+')">'
-      + paid + 'ការខ្ចី '+(i+1)
-      + '<span class="r2-tab-amt">'+fmt$(l.money)+'</span>'
+    return '<button class="r2-tab-btn'+(i===_selTab?' active':'')+'" onclick="selectTab('+i+')" title="ការខ្ចី '+(i+1)+' · '+fmt$(l.money)+'">'
+      + (i+1) + paid
     + '</button>';
   }).join('');
 
@@ -605,7 +605,15 @@ function renderLoanBody(loan, reps) {
 
   var today = new Date().toISOString().slice(0,16);
 
+  var loanIdx = _custs[_selCust] ? _custs[_selCust].loans.indexOf(loan) : _selTab;
+
   document.getElementById('loanBody').innerHTML = '<div class="r2-loan-scroll">'
+
+    /* Loan header */
+    + '<div class="r2-loan-hd">'
+      + '<div class="r2-loan-hd-num">ការខ្ចី '+(loanIdx+1)+'</div>'
+      + '<div class="r2-loan-hd-amt">'+fmt$(loan.money)+'</div>'
+    + '</div>'
 
     /* Loan info */
     + '<div class="r2-sec-title">ព័ត៌មានការខ្ចី</div>'
@@ -668,13 +676,14 @@ async function togglePaid(key) {
   var loan = _custs[_selCust].loans[_selTab];
   loan.paid = loan.paid ? 0 : 1;
   renderKpi(); renderList();
-  // Re-render tabs to update dot
+  // Update pill dot for this tab
   var tabs = document.querySelectorAll('.r2-tab-btn');
   var c = _custs[_selCust];
   c.loans.forEach(function(l,i){
     if (tabs[i]) {
-      var paid = l.paid ? '<span class="r2-tab-paid-dot"></span>' : '';
-      tabs[i].innerHTML = paid + 'ការខ្ចី '+(i+1)+'<span class="r2-tab-amt">'+fmt$(l.money)+'</span>';
+      var dot = l.paid ? '<span class="r2-tab-paid-dot"></span>' : '';
+      tabs[i].innerHTML = (i+1) + dot;
+      tabs[i].title = 'ការខ្ចី '+(i+1)+' · '+fmt$(l.money);
     }
   });
   renderLoanBody(loan, _repCache[key]||[]);
