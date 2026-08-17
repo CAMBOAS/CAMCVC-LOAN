@@ -126,27 +126,27 @@
       <div class="al-kpi-row" id="alKpi" style="display:none">
         <div class="al-kpi" onclick="switchTab('all')" id="kpiAll">
           <div class="al-kpi-label">Total Events</div>
-          <div class="al-kpi-val" id="kpiTotal">—</div>
+          <div class="al-kpi-val" id="kpiTotal">â€”</div>
           <div class="al-kpi-sub">All recorded</div>
         </div>
         <div class="al-kpi" onclick="switchTab('auth')" id="kpiAuth">
           <div class="al-kpi-label">Login / Logout</div>
-          <div class="al-kpi-val" id="kpiLogins" style="color:#7c5cff">—</div>
+          <div class="al-kpi-val" id="kpiLogins" style="color:#7c5cff">â€”</div>
           <div class="al-kpi-sub">auth events</div>
         </div>
         <div class="al-kpi" onclick="switchTab('add')" id="kpiAddCard">
           <div class="al-kpi-label">Loans Added</div>
-          <div class="al-kpi-val" id="kpiAdded" style="color:#22c55e">—</div>
+          <div class="al-kpi-val" id="kpiAdded" style="color:#22c55e">â€”</div>
           <div class="al-kpi-sub">loan_add events</div>
         </div>
         <div class="al-kpi" onclick="switchTab('edit')" id="kpiEditCard">
           <div class="al-kpi-label">Loans Edited</div>
-          <div class="al-kpi-val" id="kpiEdited" style="color:#3b82f6">—</div>
+          <div class="al-kpi-val" id="kpiEdited" style="color:#3b82f6">â€”</div>
           <div class="al-kpi-sub">edit + paid + recover</div>
         </div>
         <div class="al-kpi" onclick="switchTab('delete')" id="kpiDelCard">
           <div class="al-kpi-label">Loans Deleted</div>
-          <div class="al-kpi-val" id="kpiDeleted" style="color:#ef4444">—</div>
+          <div class="al-kpi-val" id="kpiDeleted" style="color:#ef4444">â€”</div>
           <div class="al-kpi-sub">loan_delete events</div>
         </div>
       </div>
@@ -194,7 +194,7 @@
               <tbody id="tbodyAll"></tbody>
             </table>
           </div>
-          <div id="stateAll" class="al-state"><div class="al-spin"></div><span>Loading…</span></div>
+          <div id="stateAll" class="al-state"><div class="al-spin"></div><span>Loadingâ€¦</span></div>
         </div>
       </div>
 
@@ -400,7 +400,7 @@ function avatar(log) {
 }
 
 function actorCell(log) {
-  return '<div class="al-actor-cell">'+avatar(log)+'<span class="al-actor-name">'+esc(log.actor||'—')+'</span></div>';
+  return '<div class="al-actor-cell">'+avatar(log)+'<span class="al-actor-name">'+esc(log.actor||'â€”')+'</span></div>';
 }
 
 function borrowerAvatar(log) {
@@ -421,7 +421,7 @@ function borrowerAvatar(log) {
 
 function fmtDateTime(dt) {
   try {
-    // MySQL dateStrings:true returns UTC as "YYYY-MM-DD HH:MM:SS" — force UTC parse
+    // MySQL dateStrings:true returns UTC as "YYYY-MM-DD HH:MM:SS" â€” force UTC parse
     var s = String(dt||'').trim().replace(' ', 'T');
     if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
     var d = new Date(s);
@@ -510,7 +510,7 @@ function rowAuth(log) {
   var isLogin = log.action === 'user_login';
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-muted">'+esc(detail.role||'—')+'</td>'
+    +'<td class="al-tbl-muted">'+esc(detail.role||'â€”')+'</td>'
     +'<td>'+(isLogin?badgeSvg(_ic.login,'Login','login'):badgeSvg(_ic.logout,'Logout','logout'))+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
@@ -520,9 +520,9 @@ function rowAdd(log) {
   var detail = {}; try { if (log.detail) detail = JSON.parse(log.detail); } catch(e) {}
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
-    +'<td style="font-weight:700;color:#16a34a">'+(detail.money?'$'+esc(String(detail.money)):'—')+'</td>'
-    +'<td>'+(detail.status?badge(detail.status,'paid'):'—')+'</td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'â€”')+'</span></div></td>'
+    +'<td style="font-weight:700;color:#16a34a">'+(detail.money?'$'+esc(String(detail.money)):'â€”')+'</td>'
+    +'<td>'+(detail.status?badge(detail.status,'paid'):'â€”')+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -538,7 +538,7 @@ function rowEdit(log) {
   if (log.action==='loan_paid') extra = detail.paid ? ' <span class="al-tbl-chip b-paid">Paid</span>' : ' <span class="al-tbl-chip b-logout">Unpaid</span>';
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'â€”')+'</span></div></td>'
     +(function(){ var t=editSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+extra+'</td>':'<td>'+badge(esc(log.action),'edit')+extra+'</td>'; })()
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
@@ -547,7 +547,7 @@ function rowEdit(log) {
 function rowDelete(log) {
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
-    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'â€”')+'</span></div></td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -566,8 +566,8 @@ function rowUser(log) {
   return '<tr>'
     +'<td>'+actorCell(log)+'</td>'
     +(function(){ var t=actSvgMap[log.action]; return t?'<td>'+badgeSvg(t[0],t[1],t[2])+'</td>':'<td>'+badge(esc(log.action),'user')+'</td>'; })()
-    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'—')+'</span></div></td>'
-    +'<td class="al-tbl-muted">'+(detailStr?'<span class="al-tbl-chip">'+detailStr+'</span>':'—')+'</td>'
+    +'<td class="al-tbl-name"><div class="al-borrow-cell">'+borrowerAvatar(log)+'<span>'+esc(log.target||'â€”')+'</span></div></td>'
+    +'<td class="al-tbl-muted">'+(detailStr?'<span class="al-tbl-chip">'+detailStr+'</span>':'â€”')+'</td>'
     +'<td class="al-tbl-time">'+fmtDateTime(log.created_at)+'</td>'
     +'</tr>';
 }
@@ -681,7 +681,7 @@ function updateActorFilter(logs) {
 /* -- Load -- */
 async function loadData() {
   _offset = 0; _allLogs = []; window._lastDay = '';
-  document.getElementById('stateAll').innerHTML = '<div class="al-spin"></div><span>Loading…</span>';
+  document.getElementById('stateAll').innerHTML = '<div class="al-spin"></div><span>Loadingâ€¦</span>';
   document.getElementById('stateAll').style.display = '';
   document.getElementById('tblAll') && (document.getElementById('tblAll').style.display = 'none');
   document.getElementById('alLoadMore').style.display = 'none';
@@ -718,7 +718,7 @@ async function loadData() {
 async function loadMore() {
   var fUser = document.getElementById('alFilterActor').value;
   var btn   = document.querySelector('.al-load-more-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Loadingâ€¦'; }
   try {
     var data = await window.CamboAPI.post({
       action: 'helen_activity_list',
