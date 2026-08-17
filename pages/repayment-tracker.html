@@ -202,6 +202,33 @@
     .rt-gallery-empty-add { display:inline-flex; align-items:center; gap:7px; padding:9px 20px; border-radius:9px; border:1.5px dashed rgba(167,139,250,.38); background:transparent; color:var(--rt-muted); font-size:11.5px; font-weight:700; cursor:pointer; transition:.15s; font-family:inherit; margin-top:2px }
     .rt-gallery-empty-add:hover { background:rgba(167,139,250,.09); border-color:rgba(167,139,250,.6); color:var(--rt-accent) }
 
+    /* -- Social Links -- */
+    .rt-sl { padding:14px 18px 16px; border-top:1px solid var(--rt-border) }
+    .rt-sl-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px }
+    .rt-sl-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--rt-accent) }
+    .rt-sl-tabs { display:flex; gap:4px; flex-wrap:wrap }
+    .rt-sl-tab { width:28px; height:28px; border-radius:7px; border:1.5px solid var(--rt-input-border); background:var(--rt-input); color:var(--rt-muted); font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.15s; font-family:inherit; flex-shrink:0; padding:0 }
+    .rt-sl-tab:hover { border-color:rgba(167,139,250,.45); color:var(--rt-text) }
+    .rt-sl-tab.active { background:rgba(167,139,250,.15); border-color:rgba(167,139,250,.55); color:var(--rt-accent) }
+    .rt-sl-tab.sl-add { color:var(--rt-accent); border-color:rgba(167,139,250,.4); background:rgba(167,139,250,.08) }
+    .rt-sl-tab.sl-add:hover { background:rgba(167,139,250,.18) }
+    .rt-sl-tab.sl-rem { color:var(--rt-red); border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.06) }
+    .rt-sl-tab.sl-rem:hover { background:rgba(248,113,113,.15) }
+    .rt-sl-form { background:var(--rt-input); border:1px solid var(--rt-input-border); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:8px }
+    .rt-sl-row { display:grid; grid-template-columns:1fr 1fr; gap:8px }
+    .rt-sl-field { display:flex; flex-direction:column; gap:3px }
+    .rt-sl-label { font-size:9.5px; font-weight:800; color:var(--rt-muted); letter-spacing:.05em; text-transform:uppercase }
+    .rt-sl-label span { font-weight:500; text-transform:none; font-size:9px; margin-left:2px; color:rgba(167,139,250,.7) }
+    .rt-sl-input-wrap { display:flex; align-items:center; gap:5px }
+    .rt-sl-input { flex:1; background:var(--rt-card); border:1px solid var(--rt-border); border-radius:7px; color:var(--rt-text); font-size:11.5px; font-family:inherit; padding:6px 9px; outline:none; width:100%; box-sizing:border-box; transition:border-color .15s; min-width:0 }
+    .rt-sl-input:focus { border-color:rgba(167,139,250,.6) }
+    .rt-sl-input::placeholder { color:rgba(100,116,139,.5) }
+    .rt-sl-input[readonly] { color:var(--rt-muted) }
+    select.rt-sl-input { cursor:pointer }
+    .rt-sl-icon-btn { width:28px; height:28px; flex-shrink:0; border-radius:7px; border:1px solid var(--rt-border); background:var(--rt-card); color:var(--rt-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; padding:0 }
+    .rt-sl-icon-btn:hover { color:var(--rt-accent); border-color:rgba(167,139,250,.45) }
+    .rt-sl-empty { text-align:center; padding:18px 10px; color:var(--rt-muted); font-size:11px }
+
     /* -- Upload overlay -- */
     .rt-upload-ov { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.7); backdrop-filter:blur(5px); animation:rtFadeIn .15s }
     @keyframes rtFadeIn { from{opacity:0} to{opacity:1} }
@@ -522,6 +549,15 @@
                 </div>
               </div>
 
+              <!-- -- Social Links -- -->
+              <div class="rt-sl" style="margin:0 -18px">
+                <div class="rt-sl-hdr">
+                  <span class="rt-sl-title">Social Links</span>
+                  <div class="rt-sl-tabs" id="slTabs"></div>
+                </div>
+                <div id="slForm"></div>
+              </div>
+
             </div><!-- rt-dp-body personal -->
           </div><!-- rt-dp-col-left -->
 
@@ -725,6 +761,7 @@ var _search     = '';
 var _sortKey    = '_date';
 var _sortDir    = -1;
 var _selectedKey = null;
+var _slIdx       = 0;
 var _datePreset = '';
 var _dateFrom   = '';
 var _dateTo     = '';
@@ -983,6 +1020,126 @@ function renderGallery(loan) {
     +'<span class="rt-gadd-lbl">Add</span>'
     +'</div>';
   grid.innerHTML = html;
+}
+
+/* ── Social Links ── */
+function renderSocialLinks(loan) {
+  var tabsEl = document.getElementById('slTabs');
+  var formEl = document.getElementById('slForm');
+  if (!tabsEl || !formEl) return;
+  var links = Array.isArray(loan.socialLinks) ? loan.socialLinks : [];
+  if (_slIdx >= links.length) _slIdx = Math.max(0, links.length - 1);
+
+  var th = '<button class="rt-sl-tab sl-add" onclick="slAdd()" title="Add">+</button>';
+  if (links.length > 0) th += '<button class="rt-sl-tab sl-rem" onclick="slRemove()" title="Remove">&#8722;</button>';
+  for (var i = 0; i < links.length; i++) {
+    th += '<button class="rt-sl-tab'+(i===_slIdx?' active':'')+'" onclick="slSwitch('+i+')">'+(i+1)+'</button>';
+  }
+  tabsEl.innerHTML = th;
+
+  if (links.length === 0) {
+    formEl.innerHTML = '<div class="rt-sl-empty">No social links &#8212; press + to add</div>';
+    return;
+  }
+  var lk = links[_slIdx];
+  var plats = ['Facebook','Instagram','TikTok','YouTube','Twitter/X','Telegram','Other'];
+  var popts = plats.map(function(p){ return '<option value="'+p+'"'+(lk.platform===p?' selected':'')+'>'+p+'</option>'; }).join('');
+  var openSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+  var copySvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+  formEl.innerHTML = '<div class="rt-sl-form">'
+    +'<div class="rt-sl-row">'
+      +'<div class="rt-sl-field"><span class="rt-sl-label">FB Name</span>'
+        +'<input class="rt-sl-input" id="slInName" type="text" placeholder="Facebook name..." value="'+esc(lk.name||'')+'" oninput="slField(\'name\',this.value)" onblur="slSave()">'
+      +'</div>'
+      +'<div class="rt-sl-field"><span class="rt-sl-label">URL</span>'
+        +'<div class="rt-sl-input-wrap">'
+          +'<input class="rt-sl-input" id="slInUrl" type="text" placeholder="https://..." value="'+esc(lk.url||'')+'" oninput="slField(\'url\',this.value);slAutoFbid()" onblur="slSave()">'
+          +'<button class="rt-sl-icon-btn" onclick="slOpenUrl()" title="Open">'+openSvg+'</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="rt-sl-row">'
+      +'<div class="rt-sl-field"><span class="rt-sl-label">Social Media</span>'
+        +'<select class="rt-sl-input" id="slInPlatform" onchange="slField(\'platform\',this.value);slSave()">'+popts+'</select>'
+      +'</div>'
+      +'<div class="rt-sl-field"><span class="rt-sl-label">ID</span>'
+        +'<input class="rt-sl-input" id="slInId" type="text" placeholder="Facebook ID..." value="'+esc(lk.id||'')+'" oninput="slField(\'id\',this.value)" onblur="slSave()">'
+      +'</div>'
+    +'</div>'
+    +'<div class="rt-sl-field"><span class="rt-sl-label">FBID <span>(AUTO)</span></span>'
+      +'<div class="rt-sl-input-wrap">'
+        +'<input class="rt-sl-input" id="slInFbid" type="text" placeholder="Auto-generated from Social Media + URL" value="'+esc(lk.fbid||'')+'" readonly>'
+        +'<button class="rt-sl-icon-btn" onclick="slCopyFbid()" title="Copy">'+copySvg+'</button>'
+        +'<button class="rt-sl-icon-btn" onclick="slOpenFbid()" title="Open profile">'+openSvg+'</button>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+}
+
+function slAdd() {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan) return;
+  if (!Array.isArray(loan.socialLinks)) loan.socialLinks = [];
+  loan.socialLinks.push({ platform:'Facebook', name:'', url:'', id:'', fbid:'' });
+  _slIdx = loan.socialLinks.length - 1;
+  renderSocialLinks(loan);
+  autoSaveLoan(false);
+}
+
+function slRemove() {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan || !Array.isArray(loan.socialLinks) || !loan.socialLinks.length) return;
+  loan.socialLinks.splice(_slIdx, 1);
+  if (_slIdx >= loan.socialLinks.length) _slIdx = Math.max(0, loan.socialLinks.length - 1);
+  renderSocialLinks(loan);
+  autoSaveLoan(false);
+}
+
+function slSwitch(i) {
+  _slIdx = i;
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (loan) renderSocialLinks(loan);
+}
+
+function slField(field, val) {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan || !Array.isArray(loan.socialLinks) || !loan.socialLinks[_slIdx]) return;
+  loan.socialLinks[_slIdx][field] = val;
+}
+
+function slSave() { autoSaveLoan(false); }
+
+function slAutoFbid() {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan || !Array.isArray(loan.socialLinks) || !loan.socialLinks[_slIdx]) return;
+  var lk = loan.socialLinks[_slIdx];
+  var url = (document.getElementById('slInUrl')||{}).value || lk.url || '';
+  var fbid = '';
+  var m = url.match(/facebook\.com\/(?:profile\.php\?id=)?(\d{5,})/);
+  if (m) fbid = m[1];
+  lk.fbid = fbid;
+  var el = document.getElementById('slInFbid');
+  if (el) el.value = fbid;
+}
+
+function slCopyFbid() {
+  var el = document.getElementById('slInFbid');
+  if (!el || !el.value) return;
+  navigator.clipboard.writeText(el.value).then(function(){ toast('FBID copied!'); }).catch(function(){ toast('Copy failed'); });
+}
+
+function slOpenUrl() {
+  var el = document.getElementById('slInUrl');
+  if (el && el.value) window.open(el.value, '_blank', 'noopener');
+}
+
+function slOpenFbid() {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan || !Array.isArray(loan.socialLinks) || !loan.socialLinks[_slIdx]) return;
+  var lk = loan.socialLinks[_slIdx];
+  var target = lk.fbid ? 'https://www.facebook.com/'+lk.fbid : lk.url;
+  if (target) window.open(target, '_blank', 'noopener');
 }
 
 /* -- Lightbox: main photo or gallery item -- */
@@ -1307,6 +1464,7 @@ function selectLoan(key) {
     return;
   }
   _selectedKey = key;
+  _slIdx = 0;
   var loan = _loans.find(function(l){ return l.DateTime===key; });
   if (!loan) return;
   renderTable();
@@ -1378,6 +1536,8 @@ function populateDetail(loan) {
 
   /* Gallery */
   renderGallery(loan);
+  /* Social Links */
+  renderSocialLinks(loan);
 }
 
 function onDetailPaidChange() {
@@ -1409,6 +1569,7 @@ function buildLoanObj(loan) {
     FBID:        loan.FBID        || '',
     photo_url:   loan.photo_url   || '',
     photos:      Array.isArray(loan.photos) ? loan.photos : [],
+    socialLinks: Array.isArray(loan.socialLinks) ? loan.socialLinks : [],
   };
 }
 
