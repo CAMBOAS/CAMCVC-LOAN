@@ -382,8 +382,8 @@ function initials(name) {
   return p.length >= 2 ? (p[0][0]||'') + (p[p.length-1][0]||'') : (name[0]||'?');
 }
 function custKey(loan) {
-  var nid = (loan.national_id||'').trim().replace(/[\s\-]/g,'');
-  var ph  = (loan.phone||'').trim().replace(/[\s\-]/g,'');
+  var nid = (loan.NationalID||'').trim().replace(/[\s\-]/g,'');
+  var ph  = (loan.Phone||'').trim().replace(/[\s\-]/g,'');
   return nid ? 'nid:'+nid : 'ph:'+ph;
 }
 
@@ -400,7 +400,7 @@ async function loadAll() {
       + msg + '</div>';
     return;
   }
-  _loans = (r.loans||[]).filter(function(l){ return !l.deleted_at; });
+  _loans = r.loans || [];
   _repCache = {};
   groupCustomers();
   renderKpi();
@@ -414,14 +414,14 @@ function groupCustomers() {
   _loans.forEach(function(l) {
     var k = custKey(l);
     if (!_custs[k]) {
-      _custs[k] = { key:k, name:l.full_name||'—', nid:l.national_id||'', phone:l.phone||'',
-                    dob:l.dob||'', gender:l.gender||'', photo_url:l.photo_url||'', loans:[] };
+      _custs[k] = { key:k, name:l.FullName||'—', nid:l.NationalID||'', phone:l.Phone||'',
+                    dob:l.DOB||'', gender:l.Gender||'', photo_url:l.photo_url||'', loans:[] };
     }
     _custs[k].loans.push(l);
     if (l.photo_url) _custs[k].photo_url = l.photo_url;
   });
   Object.values(_custs).forEach(function(c) {
-    c.loans.sort(function(a,b){ return a.loan_key < b.loan_key ? -1 : 1; });
+    c.loans.sort(function(a,b){ return a.DateTime < b.DateTime ? -1 : 1; });
   });
   _custKeys = Object.keys(_custs).sort(function(a,b){
     var la = _custs[a].loans.length, lb = _custs[b].loans.length;
@@ -432,9 +432,9 @@ function groupCustomers() {
 
 /* ── KPI ── */
 function renderKpi() {
-  var total  = _loans.reduce(function(s,l){ return s+Number(l.money||0); },0);
-  var paidL  = _loans.filter(function(l){ return l.paid; });
-  var paidAmt= paidL.reduce(function(s,l){ return s+Number(l.money||0); },0);
+  var total  = _loans.reduce(function(s,l){ return s+Number(l.Money||0); },0);
+  var paidL  = _loans.filter(function(l){ return l.Paid; });
+  var paidAmt= paidL.reduce(function(s,l){ return s+Number(l.Money||0); },0);
   var out    = total - paidAmt;
   var pct    = total>0 ? paidAmt/total*100 : 0;
   document.getElementById('kpiCust').textContent  = _custKeys.length;
@@ -475,8 +475,8 @@ function renderList() {
   }
   document.getElementById('custList').innerHTML = keys.map(function(k){
     var c = _custs[k];
-    var total = c.loans.reduce(function(s,l){ return s+Number(l.money||0); },0);
-    var paidCnt = c.loans.filter(function(l){ return l.paid; }).length;
+    var total = c.loans.reduce(function(s,l){ return s+Number(l.Money||0); },0);
+    var paidCnt = c.loans.filter(function(l){ return l.Paid; }).length;
     var isMulti = c.loans.length > 1;
     var av = c.photo_url
       ? '<div class="r2-cust-av"><img src="'+esc(c.photo_url)+'" onerror="this.parentNode.innerHTML=\''+esc(initials(c.name))+'\'"></div>'
@@ -523,9 +523,9 @@ function renderDetail() {
 
   // Loan select options
   var opts = c.loans.map(function(l,i){
-    var paidMark = l.paid ? ' ✓' : '';
-    var date = l.loan_key ? String(l.loan_key).substring(0,10) : '';
-    return '<option value="'+i+'"'+(i===_selTab?' selected':'')+'>ការខ្ចី '+(i+1)+paidMark+' · '+fmt$(l.money)+(date?' · '+date:'')+'</option>';
+    var paidMark = l.Paid ? ' ✓' : '';
+    var date = l.DateTime ? String(l.DateTime).substring(0,10) : '';
+    return '<option value="'+i+'"'+(i===_selTab?' selected':'')+'>ការខ្ចី '+(i+1)+paidMark+' · '+fmt$(l.Money)+(date?' · '+date:'')+'</option>';
   }).join('');
   var total = c.loans.length;
 
@@ -588,11 +588,11 @@ async function loadLoanBody() {
   document.getElementById('loanBody').innerHTML =
     '<div style="padding:40px;text-align:center;color:var(--r2-muted)"><div class="r2-spin" style="margin:0 auto 8px"></div><div style="font-size:12px">កំពុងទាញ...</div></div>';
 
-  if (!_repCache[loan.loan_key]) {
-    var r = await CamboAPI.post({ action:'helen_repayment_list', key:loan.loan_key });
-    _repCache[loan.loan_key] = (r&&r.ok) ? (r.repayments||[]) : [];
+  if (!_repCache[loan.DateTime]) {
+    var r = await CamboAPI.post({ action:'helen_repayment_list', key:loan.DateTime });
+    _repCache[loan.DateTime] = (r&&r.ok) ? (r.repayments||[]) : [];
   }
-  renderLoanBody(loan, _repCache[loan.loan_key]);
+  renderLoanBody(loan, _repCache[loan.DateTime]);
 }
 
 /* ── Render loan body ── */
@@ -603,10 +603,10 @@ function renderLoanBody(loan, reps) {
     else totalPay += Number(r.amount||0);
   });
   var deducted  = totalPay + totalDisc;
-  var remaining = Math.max(0, Number(loan.money||0) - deducted);
-  var pct       = loan.money > 0 ? Math.min(100, deducted/loan.money*100) : 0;
-  var isPaid    = !!loan.paid;
-  var loanDate  = fmtDate(loan.loan_key ? String(loan.loan_key).substring(0,10) : '');
+  var remaining = Math.max(0, Number(loan.Money||0) - deducted);
+  var pct       = loan.Money > 0 ? Math.min(100, deducted/loan.Money*100) : 0;
+  var isPaid    = !!loan.Paid;
+  var loanDate  = fmtDate(loan.DateTime ? String(loan.DateTime).substring(0,10) : '');
 
   // Repayment rows
   var repHtml = reps.length ? reps.map(function(r){
@@ -616,7 +616,7 @@ function renderLoanBody(loan, reps) {
       + '<div class="r2-rep-date">'+fmtDate(r.paid_at)+(r.note?'<span class="r2-rep-note">'+esc(r.note)+'</span>':'')+'</div>'
       + '<span class="r2-rep-chip '+(isDis?'disc':'pay')+'">'+(isDis?'បង់ការប្រាក់':'ទូទាត់')+'</span>'
       + '<div class="r2-rep-amt">'+fmt$(r.amount)+'</div>'
-      + '<button class="r2-rep-del" onclick="delRep(\''+esc(loan.loan_key)+'\','+r.id+')" title="លុប">'
+      + '<button class="r2-rep-del" onclick="delRep(\''+esc(loan.DateTime)+'\','+r.id+')" title="លុប">'
         + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>'
       + '</button>'
     + '</div>';
@@ -631,16 +631,16 @@ function renderLoanBody(loan, reps) {
     /* Loan header */
     + '<div class="r2-loan-hd">'
       + '<div class="r2-loan-hd-num">ការខ្ចី '+(loanIdx+1)+'</div>'
-      + '<div class="r2-loan-hd-amt">'+fmt$(loan.money)+'</div>'
+      + '<div class="r2-loan-hd-amt">'+fmt$(loan.Money)+'</div>'
     + '</div>'
 
     /* Loan info */
     + '<div class="r2-sec-title">ព័ត៌មានការខ្ចី</div>'
     + '<div class="r2-info-grid">'
-      + '<div class="r2-info-cell"><div class="r2-info-key">ចំនួន</div><div class="r2-info-val">'+fmt$(loan.money)+'</div></div>'
+      + '<div class="r2-info-cell"><div class="r2-info-key">ចំនួន</div><div class="r2-info-val">'+fmt$(loan.Money)+'</div></div>'
       + '<div class="r2-info-cell"><div class="r2-info-key">ថ្ងៃខ្ចី</div><div class="r2-info-val" style="font-size:12px">'+loanDate+'</div></div>'
-      + '<div class="r2-info-cell"><div class="r2-info-key">ស្ថានភាព</div><div class="r2-info-val '+(isPaid?'r2-val-green':(loan.loan_status==='BlackListed'?'r2-val-red':'r2-val-blue'))+'" style="font-size:12px">'+esc(isPaid?'បានទូទាត់':loan.loan_status||'Normal')+'</div></div>'
-      + '<div class="r2-info-cell"><div class="r2-info-key">ក្រុម</div><div class="r2-info-val" style="font-size:12px">'+esc(loan.loan_group||'—')+'</div></div>'
+      + '<div class="r2-info-cell"><div class="r2-info-key">ស្ថានភាព</div><div class="r2-info-val '+(isPaid?'r2-val-green':(loan.Status==='BlackListed'?'r2-val-red':'r2-val-blue'))+'" style="font-size:12px">'+esc(isPaid?'បានទូទាត់':loan.Status||'Normal')+'</div></div>'
+      + '<div class="r2-info-cell"><div class="r2-info-key">ក្រុម</div><div class="r2-info-val" style="font-size:12px">'+esc(loan.Groups||'—')+'</div></div>'
     + '</div>'
 
     /* Progress */
@@ -649,7 +649,7 @@ function renderLoanBody(loan, reps) {
 
     /* Summary */
     + '<div class="r2-sum-row">'
-      + '<div class="r2-sum-cell"><div class="r2-sum-lbl">ខ្ចី</div><div class="r2-sum-val">'+fmt$(loan.money)+'</div></div>'
+      + '<div class="r2-sum-cell"><div class="r2-sum-lbl">ខ្ចី</div><div class="r2-sum-val">'+fmt$(loan.Money)+'</div></div>'
       + '<div class="r2-sum-cell"><div class="r2-sum-lbl">បានបង់</div><div class="r2-sum-val r2-val-green">'+fmt$(deducted)+'</div></div>'
       + '<div class="r2-sum-cell"><div class="r2-sum-lbl">នៅជំពាក់</div><div class="r2-sum-val '+(remaining<=0?'r2-val-green':'r2-val-orange')+'">'+fmt$(remaining)+'</div></div>'
     + '</div>'
@@ -657,7 +657,7 @@ function renderLoanBody(loan, reps) {
     /* Status toggle */
     + '<div class="r2-status-row">'
       + '<div><div class="r2-status-lbl">ស្ថានភាព</div><div class="r2-status-sub">'+(isPaid?'បានទូទាត់':'មិនទាន់ទូទាត់')+'</div></div>'
-      + '<button class="r2-toggle'+(isPaid?' on':'')+'" onclick="togglePaid(\''+esc(loan.loan_key)+'\')"></button>'
+      + '<button class="r2-toggle'+(isPaid?' on':'')+'" onclick="togglePaid(\''+esc(loan.DateTime)+'\')"></button>'
     + '</div>'
 
     + '<div class="r2-div"></div>'
@@ -682,7 +682,7 @@ function renderLoanBody(loan, reps) {
       + '<div class="r2-add-fld"><div class="r2-add-lbl">Note</div>'
         + '<input class="r2-add-inp" id="repNote" type="text" placeholder="Optional" autocomplete="new-password">'
       + '</div>'
-      + '<button class="r2-add-sbtn" onclick="addRep(\''+esc(loan.loan_key)+'\')">+ Add</button>'
+      + '<button class="r2-add-sbtn" onclick="addRep(\''+esc(loan.DateTime)+'\')">+ Add</button>'
     + '</div></div>'
 
   + '</div>';
@@ -693,7 +693,7 @@ async function togglePaid(key) {
   var r = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:key });
   if (!r||!r.ok) { showToast('Error'); return; }
   var loan = _custs[_selCust].loans[_selTab];
-  loan.paid = loan.paid ? 0 : 1;
+  loan.Paid = loan.Paid ? 0 : 1;
   renderKpi(); renderList();
   // Refresh select option text for this loan
   var sel = document.getElementById('loanSel');
@@ -701,13 +701,13 @@ async function togglePaid(key) {
     var c2 = _custs[_selCust];
     c2.loans.forEach(function(l,i){
       if (sel.options[i]) {
-        var date = l.loan_key ? String(l.loan_key).substring(0,10) : '';
-        sel.options[i].text = 'ការខ្ចី '+(i+1)+(l.paid?' ✓':'')+' · '+fmt$(l.money)+(date?' · '+date:'');
+        var date = l.DateTime ? String(l.DateTime).substring(0,10) : '';
+        sel.options[i].text = 'ការខ្ចី '+(i+1)+(l.Paid?' ✓':'')+' · '+fmt$(l.Money)+(date?' · '+date:'');
       }
     });
   }
   renderLoanBody(loan, _repCache[key]||[]);
-  showToast(loan.paid ? 'បានកំណត់ជា "ទូទាត់រួច" ✓' : 'កំណត់ជា "មិនទាន់ទូទាត់"');
+  showToast(loan.Paid ? 'បានកំណត់ជា "ទូទាត់រួច" ✓' : 'កំណត់ជា "មិនទាន់ទូទាត់"');
 }
 
 /* ── Add repayment ── */
@@ -743,7 +743,7 @@ function openNewLoan() {
   document.getElementById('nlMoney').value = '';
   document.getElementById('nlStatus').value = 'Normal';
   var last = c.loans[c.loans.length-1];
-  document.getElementById('nlGroup').value = last ? (last.loan_group||'') : '';
+  document.getElementById('nlGroup').value = last ? (last.Groups||'') : '';
   document.getElementById('nlNote').value  = '';
   document.getElementById('newLoanModal').classList.add('open');
 }
@@ -761,11 +761,11 @@ async function submitNewLoan() {
     Phone:       c.phone,
     Gender:      c.gender,
     photo_url:   c.photo_url||'',
-    Groups:      document.getElementById('nlGroup').value.trim() || base.loan_group||'',
+    Groups:      document.getElementById('nlGroup').value.trim() || base.Groups||'',
     Money:       money,
     Status:      document.getElementById('nlStatus').value,
     Note:        document.getElementById('nlNote').value.trim(),
-    LinkedTo:    base.loan_key||'',
+    LinkedTo:    base.DateTime||'',
   };
   var r = await CamboAPI.post({ action:'helen_loan_add', loan:loan });
   if (!r||!r.ok) { showToast('Error — '+JSON.stringify(r)); return; }
