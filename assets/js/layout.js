@@ -1,4 +1,4 @@
-/* HELEN LOAN — Shared Layout (Sidebar + Topbar) v17 */
+/* HELEN LOAN — Shared Layout (Sidebar + Topbar) v19 */
 (function () {
   'use strict';
 
@@ -102,16 +102,16 @@
 
     return `
       <div class="sb-head">
-        <div class="sb-logo-wrap">
-          <img class="sb-logo-img" src="${base}images/logo/LOGO.png" alt="CAMBO" onerror="this.style.display='none'">
-        </div>
-        <div class="sb-brand-text">
-          <div class="sb-brand-name">CAMBO</div>
-          <div class="sb-brand-sub">Loan Management</div>
-        </div>
-        <button class="sb-collapse-btn" id="sbToggleBtn" title="Toggle sidebar">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <button class="sb-brand-btn" id="sbBrandBtn" onclick="var t=document.getElementById('sbToggleBtn');if(t)t.click();" title="Toggle sidebar">
+          <div class="sb-logo-wrap">
+            <img class="sb-logo-img" src="${base}images/logo/LOGO.png" alt="CAMBO" onerror="this.style.display='none'">
+          </div>
+          <div class="sb-brand-text">
+            <div class="sb-brand-name">CAMBO</div>
+            <div class="sb-brand-sub">Loan Management</div>
+          </div>
         </button>
+        <button class="sb-collapse-btn" id="sbToggleBtn" title="Toggle sidebar" style="display:none"></button>
       </div>
 
       <div class="sb-status-strip">
@@ -139,12 +139,6 @@
       <div class="sb-grow"></div>
 
       <div class="sb-footer">
-        <div class="sb-ctrl-row">
-          <button class="sb-ctrl-btn sb-theme-btn" id="sbThemeBtn" title="Toggle Theme">
-            <span class="sb-theme-icon">${ic.moon}</span>
-            <span class="sb-ctrl-label">${t('ម៉ូត','Theme')}</span>
-          </button>
-        </div>
         ${(function(){
           var _a = null;
           try { _a = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e){}
@@ -160,7 +154,7 @@
             else if (_d <= 3)_exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:4px">'+_d+' days</span>';
             else             _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(16,185,129,.13);color:#10b981;margin-left:4px">'+_d+' days</span>';
           }
-          var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowProfileModal&&window._hlShowProfileModal()" title="Account Info"' : '';
+          var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowUserMenu&&window._hlShowUserMenu()" title="Options"' : '';
           var _photo = localStorage.getItem('helen_user_photo') || '';
           var _avatarInner = _photo
             ? '<img src="'+_photo+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
@@ -501,6 +495,81 @@
   }
   window._hlShowProfileModal = showProfileModal;
 
+  function showUserMenu() {
+    var existing = document.getElementById('hlUserMenu');
+    if (existing) { existing.remove(); return; }
+
+    var card = document.getElementById('sbUserRow');
+    if (!card) return;
+    var sb = document.querySelector('.sidebar');
+    var sbRect = sb ? sb.getBoundingClientRect() : null;
+    var cardRect = card.getBoundingClientRect();
+    var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+
+    var menu = document.createElement('div');
+    menu.id = 'hlUserMenu';
+    menu.className = 'hl-umenu';
+    var isMobile = window.innerWidth < 768;
+    var sbW = sbRect ? sbRect.width : 240;
+    var menuBottom = window.innerHeight - cardRect.bottom;
+    var menuLeft, menuWidth;
+    if (isMobile) {
+      /* Mobile: float above user card, full sidebar width, inside sidebar */
+      menuLeft  = sbRect ? sbRect.left : 0;
+      menuWidth = sbW;
+    } else {
+      /* Desktop: popup to the right of sidebar */
+      menuLeft  = sbRect ? sbRect.right + 8 : 248;
+      menuWidth = 220;
+    }
+    menu.style.cssText = 'position:fixed'
+      + ';bottom:' + menuBottom + 'px'
+      + ';left:' + menuLeft + 'px'
+      + ';width:' + menuWidth + 'px;z-index:99999';
+
+    var userIc = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+
+    menu.innerHTML = ''
+      + '<button class="hl-umenu-item hl-umenu-theme" id="hlUmenuThemeBtn">'
+      +   '<span class="hl-umenu-ic" id="hlUmenuThemeIc">' + (isDark ? ic.sun : ic.moon) + '</span>'
+      +   '<span class="hl-umenu-label">' + (isDark ? t('ប្ដូរ Light Mode','Switch to Light') : t('ប្ដូរ Dark Mode','Switch to Dark')) + '</span>'
+      +   '<span class="hl-umenu-pill" id="hlUmenuPill">' + (isDark ? 'DARK' : 'LIGHT') + '</span>'
+      + '</button>'
+      + '<div class="hl-umenu-sep"></div>'
+      + '<button class="hl-umenu-item" id="hlUmenuProfileBtn">'
+      +   '<span class="hl-umenu-ic">' + userIc + '</span>'
+      +   '<span class="hl-umenu-label">' + t('ព័ត៌មានគណនី','Account Info') + '</span>'
+      + '</button>'
+      + '<button class="hl-umenu-item hl-umenu-danger" id="hlUmenuLogoutBtn">'
+      +   '<span class="hl-umenu-ic">' + ic.logout + '</span>'
+      +   '<span class="hl-umenu-label">' + t('ចេញ','Logout') + '</span>'
+      + '</button>';
+
+    document.body.appendChild(menu);
+
+    document.getElementById('hlUmenuThemeBtn').addEventListener('click', function() {
+      var cur = document.documentElement.getAttribute('data-theme');
+      window._hlApplyTheme && window._hlApplyTheme(cur === 'light' ? 'dark' : 'light');
+      menu.remove();
+    });
+    document.getElementById('hlUmenuProfileBtn').addEventListener('click', function() {
+      menu.remove(); showProfileModal();
+    });
+    document.getElementById('hlUmenuLogoutBtn').addEventListener('click', function() {
+      menu.remove(); showLogoutModal();
+    });
+
+    setTimeout(function() {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!menu.contains(e.target) && !card.contains(e.target)) {
+          menu.remove();
+          document.removeEventListener('click', closeMenu);
+        }
+      });
+    }, 50);
+  }
+  window._hlShowUserMenu = showUserMenu;
+
   function initSidebarToggle(sidebar) {
     var btn = document.getElementById('sbToggleBtn');
     var sb  = document.querySelector('.sidebar');
@@ -532,20 +601,14 @@
   }
 
   function initThemeBtn() {
-    function applyTheme(t) {
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t);
-      var icon = document.querySelector('#sbThemeBtn .sb-theme-icon');
+    function applyTheme(th) {
+      document.documentElement.setAttribute('data-theme', th);
+      localStorage.setItem('theme', th);
       var tBtn = document.getElementById('topbarThemeBtn');
-      if (icon) icon.innerHTML = t === 'light' ? ic.moon : ic.sun;
-      if (tBtn) tBtn.innerHTML = t === 'light' ? ic.moon : ic.sun;
+      if (tBtn) tBtn.innerHTML = th === 'light' ? ic.moon : ic.sun;
     }
-    var cur = localStorage.getItem('theme') || 'light';
-    applyTheme(cur);
-    var btn = document.getElementById('sbThemeBtn');
-    if (btn) btn.addEventListener('click', function() {
-      applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
-    });
+    window._hlApplyTheme = applyTheme;
+    applyTheme(localStorage.getItem('theme') || 'light');
   }
 
   function initLogoutBtn() {
