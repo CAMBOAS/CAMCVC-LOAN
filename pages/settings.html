@@ -179,6 +179,34 @@
     .perm-status.ok  { color:#4ade80 }
     .perm-status.err { color:#f87171 }
 
+    /* ── Page Access User chips ── */
+    .pa-users-bar { display:flex; gap:7px; padding:10px 12px; overflow-x:auto; flex-shrink:0; border-bottom:1px solid rgba(148,163,184,.08) }
+    .pa-users-bar::-webkit-scrollbar { display:none }
+    .pa-chip { display:flex; flex-direction:column; align-items:center; gap:4px; padding:7px 9px; border-radius:12px; border:1.5px solid transparent; background:rgba(148,163,184,.06); cursor:pointer; transition:.15s; flex-shrink:0; min-width:62px; max-width:80px }
+    .pa-chip:hover { background:rgba(148,163,184,.12); border-color:rgba(148,163,184,.18) }
+    .pa-chip.pa-chip-active { background:rgba(99,102,241,.1); border-color:rgba(99,102,241,.35) }
+    .pa-chip-avatar { width:36px; height:36px; border-radius:50%; background:rgba(124,92,255,.14); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#a78bfa; overflow:hidden; flex-shrink:0 }
+    .pa-chip-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50% }
+    .pa-chip-name { font-size:10px; font-weight:700; color:var(--text); text-align:center; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .pa-chip-role { font-size:8.5px; font-weight:700; padding:1px 5px; border-radius:4px; background:rgba(148,163,184,.1); color:var(--muted); white-space:nowrap }
+    .pa-chip-role-admin { background:rgba(245,158,11,.12); color:#f59e0b }
+    /* Banner shown when a user is selected */
+    .pa-banner { display:none; align-items:center; gap:9px; padding:7px 14px; background:rgba(99,102,241,.07); border-bottom:1px solid rgba(99,102,241,.12); font-size:11.5px }
+    .pa-banner.pa-banner-on { display:flex }
+    .pa-banner-avatar { width:26px; height:26px; border-radius:50%; background:rgba(124,92,255,.14); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#a78bfa; overflow:hidden; flex-shrink:0 }
+    .pa-banner-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50% }
+    .pa-banner-name { font-weight:700; color:var(--text) }
+    .pa-banner-meta { color:var(--muted); margin-left:4px; font-size:11px }
+    .pa-banner-close { margin-left:auto; background:none; border:none; color:var(--muted); font-size:15px; cursor:pointer; line-height:1; padding:0 2px; opacity:.6; transition:.15s }
+    .pa-banner-close:hover { opacity:1; color:var(--text) }
+    /* Table row access indicators */
+    .perm-tbl tr.pa-row-ok > td:first-child { border-left:3px solid #4ade80 }
+    .perm-tbl tr.pa-row-deny > td { opacity:.45 }
+    .perm-tbl tr.pa-row-deny > td:first-child { border-left:3px solid rgba(239,68,68,.4); opacity:.45 }
+    /* Highlighted role column */
+    .perm-tbl th.pa-col-hi { background:rgba(99,102,241,.13) !important; color:var(--text) !important }
+    .perm-tbl td.pa-col-hi { background:rgba(99,102,241,.06) !important }
+
     /* ── Tab bar ── */
     .st-tabs { display:flex; gap:3px; flex-shrink:0; background:rgba(148,163,184,.07); border-radius:13px; padding:4px; overflow-x:auto }
     .st-tabs::-webkit-scrollbar { display:none }
@@ -523,6 +551,25 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               Save
             </button>
+          </div>
+          <!-- User chips bar -->
+          <div class="pa-users-bar" id="paUsersBar">
+            <div class="pa-chip pa-chip-active" id="paChipAll" onclick="selectPAUser(null)">
+              <div class="pa-chip-avatar" style="background:rgba(99,102,241,.12)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div class="pa-chip-name">All</div>
+              <div class="pa-chip-role">Roles</div>
+            </div>
+          </div>
+          <!-- Selected user banner -->
+          <div class="pa-banner" id="paBanner">
+            <div class="pa-banner-avatar" id="paBannerAvatar"></div>
+            <div>
+              <span class="pa-banner-name" id="paBannerName"></span>
+              <span class="pa-banner-meta" id="paBannerMeta"></span>
+            </div>
+            <button class="pa-banner-close" onclick="selectPAUser(null)" title="Clear selection">✕</button>
           </div>
           <div class="perm-wrap">
             <table class="perm-tbl" id="paMatrix">
@@ -1066,6 +1113,12 @@ loadUsers();
 loadNotif();
 loadPermMatrix();
 loadPageMatrix();
+loadPAUsers();
+
+/* Re-apply highlight when checkboxes change while a user is selected */
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.dataset && e.target.dataset.page) applyPAHighlight();
+});
 
 /* ── Permission Matrix ── */
 var _PM_ROLES = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
@@ -1163,6 +1216,8 @@ function renderPageMatrix(access) {
     var noteHtml = p.note ? '<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:5px">'+_esc(p.note)+'</span>' : '';
     return '<tr><td class="perm-td-label">'+_esc(p.label)+noteHtml+'</td>'+cells+'</tr>';
   }).join('');
+  /* Re-apply user highlight if one is selected */
+  if (typeof applyPAHighlight === 'function') applyPAHighlight();
 }
 
 async function loadPageMatrix() {
@@ -1179,6 +1234,105 @@ async function loadPageMatrix() {
   } catch(e) {
     var body = document.getElementById('paBody');
     if (body) body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Failed to load</td></tr>';
+  }
+}
+
+/* ── Page Access User Chips ── */
+var _PA_USERS = [];
+var _PA_SEL   = null;
+
+async function loadPAUsers() {
+  try {
+    var r = await CamboAPI.post({ action:'helen_user_list' });
+    if (!r || !r.ok) return;
+    _PA_USERS = r.users || [];
+    renderPAChips();
+  } catch(e) {}
+}
+
+function renderPAChips() {
+  var bar = document.getElementById('paUsersBar');
+  if (!bar) return;
+  var allChip = '<div class="pa-chip pa-chip-active" id="paChipAll" onclick="selectPAUser(null)">'
+    + '<div class="pa-chip-avatar" style="background:rgba(99,102,241,.12)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>'
+    + '<div class="pa-chip-name">All</div>'
+    + '<div class="pa-chip-role">Roles</div>'
+    + '</div>';
+  var chips = _PA_USERS.map(function(u, i) {
+    var photo = u.photo || '';
+    var initials = (u.display_name || u.username || '?').slice(0,2).toUpperCase();
+    var avatarInner = photo ? '<img src="'+_esc(photo)+'" alt="">' : initials;
+    var roleCls = u.role === 'Admin' ? 'pa-chip-role pa-chip-role-admin' : 'pa-chip-role';
+    return '<div class="pa-chip" id="paChip_'+i+'" onclick="selectPAUser('+i+')" title="'+_esc(u.display_name||u.username)+' · '+_esc(u.role)+'">'
+      + '<div class="pa-chip-avatar">'+avatarInner+'</div>'
+      + '<div class="pa-chip-name">'+_esc(u.display_name||u.username)+'</div>'
+      + '<div class="'+roleCls+'">'+_esc(u.role)+'</div>'
+      + '</div>';
+  }).join('');
+  bar.innerHTML = allChip + chips;
+}
+
+function selectPAUser(idx) {
+  _PA_SEL = (idx === null) ? null : (_PA_USERS[idx] || null);
+  /* Update active chip */
+  document.querySelectorAll('.pa-chip').forEach(function(c){ c.classList.remove('pa-chip-active'); });
+  var activeEl = (idx === null) ? document.getElementById('paChipAll') : document.getElementById('paChip_'+idx);
+  if (activeEl) activeEl.classList.add('pa-chip-active');
+  /* Update table highlights */
+  applyPAHighlight();
+  /* Update banner */
+  var banner = document.getElementById('paBanner');
+  if (!banner) return;
+  if (!_PA_SEL) { banner.classList.remove('pa-banner-on'); return; }
+  var u = _PA_SEL;
+  var photo = u.photo || '';
+  var initials = (u.display_name || u.username || '?').slice(0,2).toUpperCase();
+  document.getElementById('paBannerAvatar').innerHTML = photo ? '<img src="'+_esc(photo)+'" alt="">' : initials;
+  document.getElementById('paBannerName').textContent = u.display_name || u.username || '';
+  /* Count accessible pages for this role */
+  var acc = _getCheckedAccess();
+  var count = _PA_PAGES.filter(function(p){ return p.locked || (Array.isArray(acc[p.key]) && acc[p.key].indexOf(u.role) !== -1); }).length;
+  document.getElementById('paBannerMeta').textContent = '· ' + _esc(u.role) + ' · ' + count + '/' + _PA_PAGES.length + ' pages';
+  banner.classList.add('pa-banner-on');
+}
+
+function _getCheckedAccess() {
+  var acc = {};
+  _PA_PAGES.forEach(function(p) {
+    acc[p.key] = [];
+    _PA_ROLES.forEach(function(role) {
+      var cb = document.querySelector('[data-page="'+p.key+'"][data-role="'+role+'"]');
+      if (cb && cb.checked) acc[p.key].push(role);
+    });
+  });
+  return acc;
+}
+
+function applyPAHighlight() {
+  /* Reset row classes and column highlights */
+  document.querySelectorAll('#paBody tr').forEach(function(tr){ tr.classList.remove('pa-row-ok','pa-row-deny'); });
+  document.querySelectorAll('#paMatrix th, #paMatrix td').forEach(function(el){ el.classList.remove('pa-col-hi'); });
+  if (!_PA_SEL) return;
+  var role = _PA_SEL.role;
+  var colIdx = _PA_ROLES.indexOf(role) + 1; /* +1 for PAGE label column */
+  /* Highlight header */
+  var ths = document.querySelectorAll('#paMatrix thead tr th');
+  if (ths[colIdx]) ths[colIdx].classList.add('pa-col-hi');
+  /* Highlight cells + set row ok/deny */
+  var acc = _getCheckedAccess();
+  document.querySelectorAll('#paMatrix tbody tr').forEach(function(tr, i) {
+    var p = _PA_PAGES[i];
+    if (!p) return;
+    var tds = tr.querySelectorAll('td');
+    if (tds[colIdx]) tds[colIdx].classList.add('pa-col-hi');
+    var hasAccess = p.locked || (Array.isArray(acc[p.key]) && acc[p.key].indexOf(role) !== -1);
+    tr.classList.add(hasAccess ? 'pa-row-ok' : 'pa-row-deny');
+  });
+  /* Update banner count */
+  var countEl = document.getElementById('paBannerMeta');
+  if (countEl) {
+    var count = _PA_PAGES.filter(function(p){ return p.locked || (Array.isArray(acc[p.key]) && acc[p.key].indexOf(role) !== -1); }).length;
+    countEl.textContent = '· ' + role + ' · ' + count + '/' + _PA_PAGES.length + ' pages';
   }
 }
 
