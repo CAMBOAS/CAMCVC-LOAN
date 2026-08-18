@@ -264,6 +264,20 @@
     .nt-cfg-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:rgba(148,163,184,.4) }
     .nt-cfg-dot.green { background:#4ade80 }
     .nt-cfg-dot.yellow { background:#facc15 }
+    /* PIN modal */
+    .tg-pin-ov { position:fixed; inset:0; z-index:9900; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.38); backdrop-filter:blur(4px) }
+    .tg-pin-ov.open { display:flex }
+    .tg-pin-box { background:var(--card,#1e1e2e); border:1px solid rgba(148,163,184,.15); border-radius:16px; padding:24px; width:270px; display:flex; flex-direction:column; gap:13px; box-shadow:0 20px 60px rgba(0,0,0,.35) }
+    .tg-pin-title { font-size:14px; font-weight:800; color:var(--text) }
+    .tg-pin-sub { font-size:11.5px; color:var(--muted); margin-top:-7px }
+    .tg-pin-inp { width:100%; box-sizing:border-box; padding:11px 12px; border-radius:9px; border:1.5px solid rgba(148,163,184,.18); background:rgba(148,163,184,.07); color:var(--text); font-size:18px; font-family:inherit; outline:none; letter-spacing:.2em; text-align:center }
+    .tg-pin-inp:focus { border-color:rgba(124,92,255,.5); background:rgba(124,92,255,.06) }
+    .tg-pin-err { font-size:11.5px; color:#f87171; min-height:15px; text-align:center }
+    .tg-pin-btns { display:flex; gap:8px }
+    .tg-pin-cancel { flex:1; padding:9px; border-radius:9px; border:1.5px solid rgba(148,163,184,.2); background:transparent; color:var(--muted); font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .tg-pin-ok { flex:1; padding:9px; border-radius:9px; border:none; background:rgba(124,92,255,.18); color:var(--accent,#a78bfa); font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .tg-pin-ok:hover:not(:disabled) { background:rgba(124,92,255,.3) }
+    .tg-pin-ok:disabled,.tg-pin-cancel:disabled { opacity:.5; cursor:not-allowed }
     .nt-card { border-radius:16px; overflow:hidden }
     .nt-card-hdr { padding:16px 18px 14px; border-bottom:1px solid rgba(148,163,184,.08) }
     .nt-card-hdr-row { display:flex; align-items:center; gap:10px }
@@ -569,7 +583,7 @@
                 <div>
                   <div class="nt-cfg-label">Bot Token</div>
                   <div class="nt-cfg-wrap">
-                    <input class="nt-cfg-input" type="password" id="tgBotToken" placeholder="123456:ABC-xyz…" autocomplete="off">
+                    <input class="nt-cfg-input" type="password" id="tgBotToken" placeholder="123456:ABC-xyz…" autocomplete="off" readonly>
                     <button class="nt-cfg-eye" onclick="tgToggleEye()" title="Show / Hide" tabindex="-1">
                       <svg id="tgEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
@@ -578,7 +592,7 @@
                 <div>
                   <div class="nt-cfg-label">Group / Channel ID</div>
                   <div class="nt-cfg-wrap">
-                    <input class="nt-cfg-input" type="text" id="tgChatId" placeholder="-100xxxxxxxxxx" autocomplete="off" style="padding-right:11px">
+                    <input class="nt-cfg-input" type="password" id="tgChatId" placeholder="-100xxxxxxxxxx" autocomplete="off" readonly>
                   </div>
                 </div>
                 <div class="nt-cfg-state">
@@ -601,6 +615,22 @@
 
         </div>
       </div><!-- /Panel 3 -->
+
+      <!-- Telegram PIN verification overlay -->
+      <div class="tg-pin-ov" id="tgPinOv" onclick="if(event.target===this)tgClosePinModal()">
+        <div class="tg-pin-box">
+          <div>
+            <div class="tg-pin-title" id="tgPinTitle">Confirm PIN</div>
+            <div class="tg-pin-sub" id="tgPinSub">Enter your account PIN to continue</div>
+          </div>
+          <input class="tg-pin-inp" type="password" id="tgPinInput" placeholder="••••" maxlength="12" autocomplete="current-password" onkeydown="if(event.key==='Enter')tgConfirmPin()">
+          <div class="tg-pin-err" id="tgPinErr"></div>
+          <div class="tg-pin-btns">
+            <button class="tg-pin-cancel" onclick="tgClosePinModal()">Cancel</button>
+            <button class="tg-pin-ok" id="tgPinOkBtn" onclick="tgConfirmPin()">Confirm</button>
+          </div>
+        </div>
+      </div>
 
       <!-- ══ Panel 4: Page Access ══ -->
       <div class="st-panel" id="stPanel4">
@@ -1334,15 +1364,11 @@ async function saveNotif() {
 }
 
 /* ── Telegram Config ── */
-function tgToggleEye() {
-  var inp = document.getElementById('tgBotToken');
-  var icon = document.getElementById('tgEyeIcon');
-  var show = inp.type === 'password';
-  inp.type = show ? 'text' : 'password';
-  icon.innerHTML = show
-    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
-    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-}
+var _tgRealBot  = '';
+var _tgRealChat = '';
+var _tgRevealed = false;
+var _tgPending  = null; /* 'reveal' | 'save' */
+var _TG_MASK    = '●●●●●●●●●●●●●●●●●●●●●●●●';
 
 function _tgSetState(dot, label) {
   var d = document.getElementById('tgDot');
@@ -1351,13 +1377,77 @@ function _tgSetState(dot, label) {
   if (l) l.textContent = label;
 }
 
+function _tgApplyMask() {
+  var bInp = document.getElementById('tgBotToken');
+  var cInp = document.getElementById('tgChatId');
+  bInp.type = 'password'; bInp.value = _tgRealBot  ? _TG_MASK : ''; bInp.readOnly = true;
+  cInp.type = 'password'; cInp.value = _tgRealChat ? _TG_MASK : ''; cInp.readOnly = true;
+  document.getElementById('tgEyeIcon').innerHTML =
+    '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  _tgRevealed = false;
+}
+
+function _tgApplyReveal() {
+  var bInp = document.getElementById('tgBotToken');
+  var cInp = document.getElementById('tgChatId');
+  bInp.type = 'text'; bInp.value = _tgRealBot;  bInp.readOnly = false;
+  cInp.type = 'text'; cInp.value = _tgRealChat; cInp.readOnly = false;
+  document.getElementById('tgEyeIcon').innerHTML =
+    '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  _tgRevealed = true;
+}
+
+function tgToggleEye() {
+  if (_tgRevealed) { _tgApplyMask(); return; }
+  _tgPending = 'reveal';
+  _tgOpenPin('Show Fields', 'Enter your PIN to reveal Bot Token and Chat ID');
+}
+
+function _tgOpenPin(title, sub) {
+  document.getElementById('tgPinTitle').textContent = title;
+  document.getElementById('tgPinSub').textContent   = sub;
+  document.getElementById('tgPinInput').value        = '';
+  document.getElementById('tgPinErr').textContent    = '';
+  document.getElementById('tgPinOv').classList.add('open');
+  setTimeout(function(){ document.getElementById('tgPinInput').focus(); }, 80);
+}
+
+function tgClosePinModal() {
+  document.getElementById('tgPinOv').classList.remove('open');
+  _tgPending = null;
+}
+
+async function tgConfirmPin() {
+  var pin   = document.getElementById('tgPinInput').value.trim();
+  if (!pin) return;
+  var errEl = document.getElementById('tgPinErr');
+  var okBtn = document.getElementById('tgPinOkBtn');
+  okBtn.disabled = true; errEl.textContent = '';
+  try {
+    var r = await CamboAPI.post({ action:'helen_verify_pin', pin: pin });
+    if (r.ok) {
+      var pending = _tgPending;
+      tgClosePinModal();
+      if (pending === 'reveal') {
+        _tgApplyReveal();
+      } else if (pending === 'save') {
+        await _tgDoSave();
+      }
+    } else {
+      errEl.textContent = 'PIN មិនត្រឹមត្រូវ';
+    }
+  } catch(e) { errEl.textContent = 'Error — try again'; }
+  okBtn.disabled = false;
+}
+
 async function loadTgConfig() {
   try {
     var r = await CamboAPI.post({ action:'helen_tg_config_get' });
     if (!r.ok) { _tgSetState('', 'Not configured'); return; }
-    document.getElementById('tgBotToken').value = r.bot_token || '';
-    document.getElementById('tgChatId').value   = r.chat_id   || '';
-    if (r.bot_token && r.chat_id) {
+    _tgRealBot  = r.bot_token || '';
+    _tgRealChat = r.chat_id   || '';
+    _tgApplyMask();
+    if (_tgRealBot && _tgRealChat) {
       _tgSetState('green', r.source === 'env' ? 'Using environment variables' : 'Custom config saved in DB');
     } else if (r.env_set) {
       _tgSetState('yellow', 'Using environment variables (no DB override)');
@@ -1367,29 +1457,35 @@ async function loadTgConfig() {
   } catch(e) { _tgSetState('', 'Error loading config'); }
 }
 
-async function saveTgConfig() {
-  var btn = document.getElementById('tgSaveBtn');
-  var bot = document.getElementById('tgBotToken').value.trim();
-  var chat = document.getElementById('tgChatId').value.trim();
-  btn.disabled = true; btn.textContent = 'Saving…';
+function saveTgConfig() {
+  _tgPending = 'save';
+  _tgOpenPin('Confirm Save', 'Enter your PIN to save Telegram configuration');
+}
+
+async function _tgDoSave() {
+  var btn  = document.getElementById('tgSaveBtn');
+  var bot  = _tgRevealed ? document.getElementById('tgBotToken').value.trim() : _tgRealBot;
+  var chat = _tgRevealed ? document.getElementById('tgChatId').value.trim()   : _tgRealChat;
+  btn.disabled = true;
   try {
     var r = await CamboAPI.post({ action:'helen_tg_config_save', bot_token:bot, chat_id:chat });
     if (r.ok) {
+      _tgRealBot = bot; _tgRealChat = chat;
+      _tgApplyMask();
       _tgSetState('green', 'Saved');
       setTimeout(function(){ _tgSetState('green', 'Custom config saved in DB'); }, 2000);
     } else {
       _tgSetState('', r.message || 'Save failed');
     }
-  } catch(e) { _tgSetState('', 'Error'); }
+  } catch(e) { _tgSetState('', 'Error saving config'); }
   btn.disabled = false;
-  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save';
 }
 
 async function testTgConfig() {
-  var btn = document.getElementById('tgTestBtn');
-  var bot = document.getElementById('tgBotToken').value.trim();
-  var chat = document.getElementById('tgChatId').value.trim();
-  if (!bot || !chat) { _tgSetState('', 'Enter Bot Token and Chat ID first'); return; }
+  var btn  = document.getElementById('tgTestBtn');
+  var bot  = _tgRevealed ? document.getElementById('tgBotToken').value.trim() : _tgRealBot;
+  var chat = _tgRevealed ? document.getElementById('tgChatId').value.trim()   : _tgRealChat;
+  if (!bot || !chat) { _tgSetState('', 'Bot Token and Chat ID not configured'); return; }
   btn.disabled = true; btn.textContent = 'Testing…';
   try {
     var r = await CamboAPI.post({ action:'helen_tg_test', bot_token:bot, chat_id:chat });
