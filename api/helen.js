@@ -49,6 +49,14 @@ async function ensureUserPhotoCol() {
   _userPhotoColReady = true;
 }
 
+/* ── One-time migration: add ui_prefs column to helen_users if absent ── */
+let _uiPrefsColReady = false;
+async function ensureUiPrefsCol() {
+  if (_uiPrefsColReady) return;
+  try { await db().query('ALTER TABLE helen_users ADD COLUMN ui_prefs TEXT DEFAULT NULL'); } catch(e) {}
+  _uiPrefsColReady = true;
+}
+
 /* ── One-time migration: add created_by column to helen_loans if absent ── */
 let _createdByColReady = false;
 async function ensureCreatedByCol() {
@@ -862,6 +870,30 @@ export default async function handler(req, res) {
       }
 
       return res.json({ ok: false, message: 'Invalid type' });
+    }
+
+    /* ── UI Preferences: get (any authenticated user, own prefs only) ── */
+    if (action === 'helen_ui_prefs_get') {
+      await ensureUiPrefsCol();
+      const [rows] = await db().query('SELECT ui_prefs FROM helen_users WHERE username=?', [_bu]);
+      if (!rows.length) return res.json({ ok: true, prefs: {} });
+      let prefs = {};
+      try { prefs = JSON.parse(rows[0].ui_prefs || '{}'); } catch(e) {}
+      return res.json({ ok: true, prefs });
+    }
+
+    /* ── UI Preferences: set (any authenticated user, own prefs only) ── */
+    if (action === 'helen_ui_prefs_set') {
+      await ensureUiPrefsCol();
+      const incoming = body.prefs;
+      if (!incoming || typeof incoming !== 'object') return res.json({ ok: false, message: 'Invalid prefs' });
+      /* Merge with existing prefs so other keys are preserved */
+      const [rows] = await db().query('SELECT ui_prefs FROM helen_users WHERE username=?', [_bu]);
+      let existing = {};
+      try { existing = JSON.parse((rows[0]||{}).ui_prefs || '{}'); } catch(e) {}
+      const merged = Object.assign({}, existing, incoming);
+      await db().query('UPDATE helen_users SET ui_prefs=? WHERE username=?', [JSON.stringify(merged), _bu]);
+      return res.json({ ok: true });
     }
 
     /* ── Permission matrix defaults ── */

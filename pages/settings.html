@@ -1054,9 +1054,32 @@ function loadTabOrder() {
   } catch(e) {}
 }
 
-function _saveTabOrder() {
+async function _saveTabOrder() {
   try { localStorage.setItem(_tabKey(), JSON.stringify(_TAB_ORDER)); } catch(e) {}
   toast('Tab order saved!');
+  /* Persist to DB (fire and forget — localStorage already updated) */
+  try {
+    await CamboAPI.post({ action: 'helen_ui_prefs_set', prefs: { tab_order: _TAB_ORDER } });
+  } catch(e) {}
+}
+
+/* Load tab order from DB and sync (called after localStorage + renderTabs) */
+async function syncTabOrderFromDB() {
+  try {
+    var r = await CamboAPI.post({ action: 'helen_ui_prefs_get' });
+    if (!r || !r.ok || !r.prefs) return;
+    var arr = r.prefs.tab_order;
+    if (!Array.isArray(arr) || arr.length !== _TAB_DEFS.length) return;
+    var sorted = arr.slice().sort(function(a,b){return a-b;});
+    if (!sorted.every(function(v,i){return v===i;})) return;
+    /* Check if DB order differs from current (localStorage) order */
+    var different = arr.some(function(v,i){ return v !== _TAB_ORDER[i]; });
+    if (different) {
+      _TAB_ORDER = arr;
+      try { localStorage.setItem(_tabKey(), JSON.stringify(_TAB_ORDER)); } catch(e) {}
+      renderTabs();
+    }
+  } catch(e) {}
 }
 
 function renderTabs() {
@@ -1243,6 +1266,7 @@ async function saveNotif() {
 
 loadTabOrder();
 renderTabs();
+syncTabOrderFromDB(); /* background: sync DB → localStorage if different */
 loadUsers();
 loadNotif();
 loadPermMatrix();
