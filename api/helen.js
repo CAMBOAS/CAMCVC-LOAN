@@ -81,6 +81,14 @@ async function ensureLinkedToCol() {
   _linkedToColReady = true;
 }
 
+/* ── One-time migration: add loan_tabs column to helen_loans if absent ── */
+let _loanTabsColReady = false;
+async function ensureLoanTabsCol() {
+  if (_loanTabsColReady) return;
+  try { await db().query('ALTER TABLE helen_loans ADD COLUMN loan_tabs TEXT DEFAULT NULL'); } catch(e) {}
+  _loanTabsColReady = true;
+}
+
 /* ── Activity log table ── */
 let _actLogReady = false;
 async function ensureActivityLogTable() {
@@ -134,6 +142,7 @@ function rowToLoan(r) {
     created_by:  r.creator_display_name || r.created_by || '',
     photo_url:   r.photo_url    || '',
     photos:      (() => { try { if (!r.photos) return []; if (Array.isArray(r.photos)) return r.photos; return JSON.parse(r.photos) || []; } catch(e) { return []; } })(),
+    loan_tabs:   (() => { try { if (!r.loan_tabs) return []; if (Array.isArray(r.loan_tabs)) return r.loan_tabs; return JSON.parse(r.loan_tabs) || []; } catch(e) { return []; } })(),
     social_links: (() => {
       try {
         if (r.social_links) {
@@ -521,24 +530,26 @@ export default async function handler(req, res) {
       await ensureSocialLinksCol();
       await ensurePaidCol();
       await ensureLinkedToCol();
+      await ensureLoanTabsCol();
       const key = String(body.key||'').trim();
       const l   = body.loan || {};
       const [old] = await db().query('SELECT * FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!old.length) return res.json({ ok:false, message:'Row not found' });
       const newKey = l.DateTime || key;
-      const photosJsonU = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
-      const slJsonU = Array.isArray(l.social_links) && l.social_links.length ? JSON.stringify(l.social_links) : null;
+      const photosJsonU   = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
+      const slJsonU       = Array.isArray(l.social_links) && l.social_links.length ? JSON.stringify(l.social_links) : null;
+      const loanTabsJsonU = Array.isArray(l.loan_tabs) ? JSON.stringify(l.loan_tabs) : null;
       const sl0u = (l.social_links||[])[0] || {};
       await db().query(
         `UPDATE helen_loans SET
            loan_key=?,full_name=?,national_id=?,dob=?,phone=?,gender=?,loan_group=?,
            money=?,loan_status=?,note=?,fb_name=?,fb_url=?,social_media=?,social_id=?,fbid=?,
-           photo_url=?,photos=?,social_links=?,paid=?,linked_to=?
+           photo_url=?,photos=?,social_links=?,paid=?,linked_to=?,loan_tabs=?
          WHERE loan_key=? AND deleted_at IS NULL`,
         [newKey, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
          l.Note||'', sl0u.name||l.FBName||'', sl0u.url||l.URL||'', sl0u.platform||l.FacebookCom||'', sl0u.id||l.ID||'', sl0u.fbid||l.FBID||'',
-         l.photo_url||null, photosJsonU, slJsonU, l.Paid ? 1 : 0, l.LinkedTo||null, key]
+         l.photo_url||null, photosJsonU, slJsonU, l.Paid ? 1 : 0, l.LinkedTo||null, loanTabsJsonU, key]
       );
       const [updated] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [newKey]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('edit'))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }

@@ -240,6 +240,18 @@
     .rt-upload-bar-wrap { height:4px; background:rgba(255,255,255,.1); border-radius:2px; overflow:hidden; margin-top:10px; width:140px }
     .rt-upload-bar { height:100%; background:linear-gradient(90deg,#7c5cff,#a78bfa); border-radius:2px; transition:width .3s }
 
+    /* -- Loan history instance tabs -- */
+    .rt-lh-bar { display:flex; align-items:center; gap:3px; flex-wrap:wrap }
+    .rt-lh-tab { min-width:24px; height:22px; padding:0 7px; border-radius:6px; border:1.5px solid rgba(167,139,250,.3); background:transparent; color:var(--rt-muted); font-size:11px; font-weight:800; cursor:pointer; font-family:inherit; transition:.15s; display:flex; align-items:center; justify-content:center }
+    .rt-lh-tab:hover { border-color:rgba(167,139,250,.55); color:var(--rt-accent) }
+    .rt-lh-tab.active { background:rgba(167,139,250,.18); border-color:rgba(167,139,250,.6); color:var(--rt-accent) }
+    .rt-lh-add-btn,.rt-lh-rem-btn { width:24px; height:22px; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.15s; flex-shrink:0 }
+    .rt-lh-add-btn { background:rgba(74,222,128,.12); color:var(--rt-green) }
+    .rt-lh-add-btn:hover { background:rgba(74,222,128,.22) }
+    .rt-lh-rem-btn { background:rgba(248,113,113,.1); color:var(--rt-red) }
+    .rt-lh-rem-btn:hover { background:rgba(248,113,113,.2) }
+    .rt-lh-rem-btn:disabled { opacity:.3; cursor:not-allowed }
+
     /* -- Body / Form -- */
     .rt-dp-body { padding:14px 18px }
     .rt-dp-section { margin-bottom:16px }
@@ -568,7 +580,18 @@
 
               <!-- Loan Info -->
               <div class="rt-dp-section">
-                <div class="rt-dp-section-title">Loan Info</div>
+                <div class="rt-dp-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                  <span>Loan Info</span>
+                  <div style="display:flex;align-items:center;gap:4px;">
+                    <div class="rt-lh-bar" id="rtLhBar"></div>
+                    <button class="rt-lh-rem-btn" id="rtLhRem" title="Remove current loan tab" onclick="removeLoanTab()" disabled>
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><line x1="2" y1="6.5" x2="11" y2="6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                    <button class="rt-lh-add-btn" id="rtLhAdd" title="Add new loan instance" onclick="addLoanTab()">
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><line x1="6.5" y1="2" x2="6.5" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="6.5" x2="11" y2="6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                  </div>
+                </div>
                 <div class="rt-dp-row full">
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">ជាប់ជំពាក់ (Linked To)</label>
@@ -763,6 +786,8 @@ var _sortKey    = '_date';
 var _sortDir    = -1;
 var _selectedKey = null;
 var _slIdx       = 0;
+var _loanTabIdx  = 0;
+var _repKey      = null;
 var _datePreset = '';
 var _dateFrom   = '';
 var _dateTo     = '';
@@ -1456,6 +1481,149 @@ async function doPaidToggle() {
 }
 
 /* -- Detail panel -- */
+/* -- Loan snapshot (no side-effects, reads from loan object directly) -- */
+function _loanPayload(loan) {
+  return {
+    DateTime:    loan.DateTime,
+    FullName:    loan.FullName    || '',
+    NationalID:  loan.NationalID  || '',
+    Phone:       loan.Phone       || '',
+    DOB:         loan.DOB         || '',
+    Gender:      loan.Gender      || '',
+    Groups:      loan.Groups      || '',
+    LinkedTo:    loan.LinkedTo    || '',
+    Money:       loan.Money       || 0,
+    Status:      loan.Status      || '',
+    Note:        loan.Note        || '',
+    Paid:        loan.Paid        || 0,
+    FBName:      loan.FBName      || '',
+    URL:         loan.URL         || '',
+    FacebookCom: loan.FacebookCom || '',
+    ID:          loan.ID          || '',
+    FBID:        loan.FBID        || '',
+    photo_url:   loan.photo_url   || '',
+    photos:      Array.isArray(loan.photos)      ? loan.photos      : [],
+    socialLinks: Array.isArray(loan.socialLinks) ? loan.socialLinks : [],
+    loan_tabs:   Array.isArray(loan.loan_tabs)   ? loan.loan_tabs   : [],
+  };
+}
+
+/* -- Loan instance tab helpers -- */
+function _genTabId() {
+  return 'lt_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+}
+
+function getTabData(loan, tabIdx) {
+  if (tabIdx === 0) {
+    return { Money: loan.Money, DateTime: loan.DateTime, Status: loan.Status, Note: loan.Note, Paid: loan.Paid, LinkedTo: loan.LinkedTo };
+  }
+  return ((loan.loan_tabs || [])[tabIdx - 1]) || {};
+}
+
+function populateTabFields(tabData) {
+  document.getElementById('dpInDate').value  = tabData.DateTime ? toDatetimeLocal(tabData.DateTime) : '';
+  document.getElementById('dpInMoney').value = tabData.Money != null ? tabData.Money : '';
+  document.getElementById('dpInNote').value  = tabData.Note || '';
+  var paidChk = document.getElementById('dpInPaid');
+  paidChk.checked = !!tabData.Paid;
+  document.getElementById('dpPaidSub').textContent = tabData.Paid ? 'Paid' : 'Unpaid';
+  var sSel = document.getElementById('dpInStatus');
+  var statuses = _statuses.length ? _statuses : Object.keys(STATUS_COLORS);
+  sSel.innerHTML = statuses.map(function(s){ return '<option value="'+esc(s)+'"'+(s===tabData.Status?' selected':'')+'>'+esc(s)+'</option>'; }).join('');
+  if (!sSel.value && tabData.Status) {
+    var sOpt = document.createElement('option');
+    sOpt.value = tabData.Status; sOpt.textContent = tabData.Status; sOpt.selected = true;
+    sSel.insertBefore(sOpt, sSel.firstChild);
+  }
+  var ltSel = document.getElementById('dpInLinkedTo');
+  var ltList = _linkedTo.length ? _linkedTo : (tabData.LinkedTo ? [tabData.LinkedTo] : []);
+  ltSel.innerHTML = '<option value="">—</option>' + ltList.map(function(t){ return '<option value="'+esc(t)+'"'+(t===tabData.LinkedTo?' selected':'')+'>'+esc(t)+'</option>'; }).join('');
+  if (tabData.LinkedTo && !ltSel.value) {
+    var ltOpt = document.createElement('option');
+    ltOpt.value = tabData.LinkedTo; ltOpt.textContent = tabData.LinkedTo; ltOpt.selected = true;
+    ltSel.insertBefore(ltOpt, ltSel.children[1] || null);
+  }
+}
+
+function saveTabDataToLoan(loan) {
+  var rawDate = document.getElementById('dpInDate').value;
+  var dt = rawDate ? rawDate.replace('T',' ')+':00' : (getTabData(loan, _loanTabIdx).DateTime || '');
+  var data = {
+    DateTime: dt,
+    Money:    parseFloat(document.getElementById('dpInMoney').value) || 0,
+    Status:   document.getElementById('dpInStatus').value,
+    Note:     document.getElementById('dpInNote').value,
+    Paid:     document.getElementById('dpInPaid').checked ? 1 : 0,
+    LinkedTo: document.getElementById('dpInLinkedTo').value,
+  };
+  if (_loanTabIdx === 0) {
+    Object.assign(loan, data);
+  } else {
+    if (!Array.isArray(loan.loan_tabs)) loan.loan_tabs = [];
+    var tab = loan.loan_tabs[_loanTabIdx - 1];
+    if (tab) Object.assign(tab, data);
+  }
+}
+
+function getCurrentRepKey(loan) {
+  if (_loanTabIdx === 0) return loan ? loan.DateTime : _selectedKey;
+  var t = (loan && loan.loan_tabs) ? loan.loan_tabs[_loanTabIdx - 1] : null;
+  return t ? t.tab_id : null;
+}
+
+function renderLoanTabs(loan) {
+  var bar    = document.getElementById('rtLhBar');
+  var remBtn = document.getElementById('rtLhRem');
+  var addBtn = document.getElementById('rtLhAdd');
+  if (!bar) return;
+  var tabs = [null].concat(Array.isArray(loan.loan_tabs) ? loan.loan_tabs : []);
+  bar.innerHTML = tabs.map(function(t, i) {
+    return '<button class="rt-lh-tab'+(i===_loanTabIdx?' active':'')+'" onclick="switchLoanTab('+i+')">'+(i+1)+'</button>';
+  }).join('');
+  if (remBtn) remBtn.disabled = (tabs.length <= 1 || _loanTabIdx === 0);
+  if (addBtn) addBtn.disabled = false;
+}
+
+function switchLoanTab(idx) {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan) return;
+  saveTabDataToLoan(loan);
+  _loanTabIdx = idx;
+  populateTabFields(getTabData(loan, idx));
+  renderLoanTabs(loan);
+  _repKey = getCurrentRepKey(loan);
+  loadRphEntries(_repKey);
+}
+
+async function addLoanTab() {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan) return;
+  saveTabDataToLoan(loan);  /* flush current tab form → loan before _loanTabIdx changes */
+  if (!Array.isArray(loan.loan_tabs)) loan.loan_tabs = [];
+  var newTab = { tab_id: _genTabId(), Money: 0, DateTime: new Date().toISOString().replace('T',' ').substring(0,19), Status: (_statuses[0]||'Normal'), Note: '', Paid: 0, LinkedTo: '' };
+  loan.loan_tabs.push(newTab);
+  _loanTabIdx = loan.loan_tabs.length;
+  renderLoanTabs(loan);
+  populateTabFields(newTab);
+  _repKey = newTab.tab_id;
+  loadRphEntries(_repKey);
+  try { await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:_loanPayload(loan) }); } catch(e) {}
+}
+
+async function removeLoanTab() {
+  var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
+  if (!loan || _loanTabIdx === 0) return;
+  if (!confirm('Remove loan tab '+(_loanTabIdx+1)+'?')) return;
+  saveTabDataToLoan(loan);  /* flush current tab form → loan before removal */
+  loan.loan_tabs.splice(_loanTabIdx - 1, 1);
+  _loanTabIdx = Math.min(_loanTabIdx - 1, loan.loan_tabs.length);
+  renderLoanTabs(loan);
+  populateTabFields(getTabData(loan, _loanTabIdx));
+  _repKey = getCurrentRepKey(loan);
+  loadRphEntries(_repKey);
+  try { await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:_loanPayload(loan) }); } catch(e) {}
+}
+
 function selectLoan(key) {
   if (_selectedKey === key) {
     _selectedKey = null;
@@ -1466,6 +1634,8 @@ function selectLoan(key) {
   }
   _selectedKey = key;
   _slIdx = 0;
+  _loanTabIdx = 0;
+  _repKey = key;
   var loan = _loans.find(function(l){ return l.DateTime===key; });
   if (!loan) return;
   renderTable();
@@ -1539,6 +1709,8 @@ function populateDetail(loan) {
   renderGallery(loan);
   /* Social Links */
   renderSocialLinks(loan);
+  /* Loan instance tabs */
+  renderLoanTabs(loan);
 }
 
 function onDetailPaidChange() {
@@ -1548,21 +1720,20 @@ function onDetailPaidChange() {
 
 /* -- Build loan obj from form -- */
 function buildLoanObj(loan) {
-  var rawDate = document.getElementById('dpInDate').value;
-  var newDateTime = rawDate ? rawDate.replace('T',' ')+':00' : loan.DateTime;
+  saveTabDataToLoan(loan);
   return {
-    DateTime:    newDateTime,
+    DateTime:    loan.DateTime,
     FullName:    document.getElementById('dpInName').value.trim()  || loan.FullName,
     NationalID:  document.getElementById('dpInNid').value.trim()   || loan.NationalID,
     Phone:       document.getElementById('dpInPhone').value.trim(),
     DOB:         document.getElementById('dpInDob').value.trim(),
     Gender:      document.getElementById('dpInGender').value,
     Groups:      document.getElementById('dpInGroup').value,
-    LinkedTo:    document.getElementById('dpInLinkedTo').value,
-    Money:       parseFloat(document.getElementById('dpInMoney').value) || 0,
-    Status:      document.getElementById('dpInStatus').value || loan.Status,
-    Note:        document.getElementById('dpInNote').value,
-    Paid:        document.getElementById('dpInPaid').checked ? 1 : 0,
+    LinkedTo:    loan.LinkedTo,
+    Money:       loan.Money,
+    Status:      loan.Status,
+    Note:        loan.Note,
+    Paid:        loan.Paid,
     FBName:      loan.FBName      || '',
     URL:         loan.URL         || '',
     FacebookCom: loan.FacebookCom || '',
@@ -1571,6 +1742,7 @@ function buildLoanObj(loan) {
     photo_url:   loan.photo_url   || '',
     photos:      Array.isArray(loan.photos) ? loan.photos : [],
     socialLinks: Array.isArray(loan.socialLinks) ? loan.socialLinks : [],
+    loan_tabs:   Array.isArray(loan.loan_tabs) ? loan.loan_tabs : [],
   };
 }
 
@@ -1603,6 +1775,8 @@ async function saveLoan() {
       Object.assign(loan, updatedLoan);
       render();
       populateDetail(loan);
+      /* populateDetail fills tab-1 fields; restore active tab's fields if on tab 2+ */
+      if (_loanTabIdx > 0) populateTabFields(getTabData(loan, _loanTabIdx));
       toast('Saved!');
     } else {
       toast((res&&res.message)||'Save failed');
@@ -1779,7 +1953,11 @@ function renderRphList() {
     var total = entries.reduce(function(s,e){ return s+parseFloat(e.amount||0); }, 0);
 
     if (type === 'payment') {
-      var principal = loan ? parseFloat(loan.Money||0) : 0;
+      var principal = 0;
+      if (loan) {
+        if (_loanTabIdx === 0) { principal = parseFloat(loan.Money||0); }
+        else { var _ct = (loan.loan_tabs||[])[_loanTabIdx-1]; principal = _ct ? parseFloat(_ct.Money||0) : 0; }
+      }
       var remaining = Math.max(0, principal - total);
       summEl.innerHTML =
         '<div class="rph-sum-row"><span>ប្រាក់ដើម (Loan)</span><span class="rph-sum-val">'+fmtRphMoney(principal)+'</span></div>'+
@@ -1822,11 +2000,11 @@ async function addRphEntry(type) {
   var note   = noteEl.value.trim();
   if (btn) btn.disabled = true;
   try {
-    var res = await CamboAPI.post({ action:'helen_repayment_add', key:_selectedKey, type:type, amount:amount, paid_at:paidAt, note:note });
+    var res = await CamboAPI.post({ action:'helen_repayment_add', key:(_repKey||_selectedKey), type:type, amount:amount, paid_at:paidAt, note:note });
     if (res && res.ok) {
       amtEl.value = '';
       noteEl.value = '';
-      await loadRphEntries(_selectedKey);
+      await loadRphEntries(_repKey||_selectedKey);
     }
   } catch(e) {}
   if (btn) btn.disabled = false;
@@ -1836,7 +2014,7 @@ async function deleteRphEntry(id) {
   if (!id) return;
   try {
     var res = await CamboAPI.post({ action:'helen_repayment_delete', id:id });
-    if (res && res.ok) await loadRphEntries(_selectedKey);
+    if (res && res.ok) await loadRphEntries(_repKey||_selectedKey);
   } catch(e) {}
 }
 
