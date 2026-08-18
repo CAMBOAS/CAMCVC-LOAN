@@ -159,6 +159,26 @@ function rowToLoan(r) {
   };
 }
 
+/* ── Telegram config (DB overrides env vars) ── */
+let _tgCache = null;
+let _tgCacheAt = 0;
+async function getTgConfig() {
+  if (_tgCache && Date.now() - _tgCacheAt < 60000) return _tgCache;
+  try {
+    const [rows] = await db().query("SELECT type, value FROM helen_infor WHERE type IN ('tg_bot_token','tg_chat_id')");
+    const m = {};
+    rows.forEach(r => { m[r.type] = r.value; });
+    _tgCache = {
+      bot:  m.tg_bot_token || TG_BOT_TOKEN,
+      chat: m.tg_chat_id   || TG_CHAT_ID,
+    };
+  } catch(e) {
+    _tgCache = { bot: TG_BOT_TOKEN, chat: TG_CHAT_ID };
+  }
+  _tgCacheAt = Date.now();
+  return _tgCache;
+}
+
 /* ── Telegram ── */
 function fmtDate(dt) {
   try {
@@ -181,7 +201,9 @@ function loanBlock(r) {
 }
 
 async function sendTelegram(loan, action, actorName, oldLoan) {
-  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
+  const { bot, chat } = await getTgConfig();
+  if (!bot || !chat) return;
+  const TG_BOT_TOKEN = bot, TG_CHAT_ID = chat;
   let msg;
   if (action === 'edit' && oldLoan) {
     const actor = actorName ? `─────────────────\nទិន្នន័យត្រូវបានកែសម្រួលដោយ: ${actorName}` : '';
@@ -203,7 +225,9 @@ async function sendTelegram(loan, action, actorName, oldLoan) {
 }
 
 async function sendTelegramEvent(evtType, data) {
-  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
+  const { bot, chat } = await getTgConfig();
+  if (!bot || !chat) return;
+  const TG_BOT_TOKEN = bot, TG_CHAT_ID = chat;
   const now = new Date().toLocaleString('km-KH', { timeZone:'Asia/Phnom_Penh', hour12:true });
   let msg = '';
   if (evtType === 'login') {
@@ -988,6 +1012,51 @@ export default async function handler(req, res) {
         [_bu, pin]
       );
       return res.json({ ok: rows.length > 0 });
+    }
+
+    /* ── Telegram config get ── */
+    if (action === 'helen_tg_config_get') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const [rows] = await db().query("SELECT type, value FROM helen_infor WHERE type IN ('tg_bot_token','tg_chat_id')");
+      const m = {};
+      rows.forEach(r => { m[r.type] = r.value; });
+      const dbBot  = m.tg_bot_token || '';
+      const dbChat = m.tg_chat_id   || '';
+      const envSet = !!(TG_BOT_TOKEN || TG_CHAT_ID);
+      return res.json({ ok:true, bot_token: dbBot || TG_BOT_TOKEN, chat_id: dbChat || TG_CHAT_ID, env_set: envSet, source: dbBot ? 'db' : 'env' });
+    }
+
+    /* ── Telegram config save ── */
+    if (action === 'helen_tg_config_save') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const bot  = String(body.bot_token || '').trim();
+      const chat = String(body.chat_id   || '').trim();
+      const upsert = async (type, val) => {
+        const [ex] = await db().query('SELECT id FROM helen_infor WHERE type=?', [type]);
+        if (ex.length) await db().query('UPDATE helen_infor SET value=? WHERE type=?', [val, type]);
+        else await db().query('INSERT INTO helen_infor (type, value) VALUES (?,?)', [type, val]);
+      };
+      await upsert('tg_bot_token', bot);
+      await upsert('tg_chat_id',   chat);
+      _tgCache = null; /* invalidate cache */
+      return res.json({ ok:true });
+    }
+
+    /* ── Telegram test ── */
+    if (action === 'helen_tg_test') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const bot  = String(body.bot_token || '').trim() || TG_BOT_TOKEN;
+      const chat = String(body.chat_id   || '').trim() || TG_CHAT_ID;
+      if (!bot || !chat) return res.json({ ok:false, message:'Missing Bot Token or Chat ID' });
+      try {
+        const tgRes = await fetch(`https://api.telegram.org/bot${bot}/sendMessage`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ chat_id: chat, text:'✅ *Helen Loan — Test Connection*\nTelegram is configured correctly!', parse_mode:'Markdown' }),
+        });
+        const tgData = await tgRes.json();
+        if (tgData.ok) return res.json({ ok:true });
+        return res.json({ ok:false, message: tgData.description || 'Telegram API error' });
+      } catch(e) { return res.json({ ok:false, message: e.message }); }
     }
 
     /* ── Notif settings get ── */

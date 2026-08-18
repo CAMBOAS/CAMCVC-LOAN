@@ -245,7 +245,25 @@
     .st-cs-badge { display:inline-block; margin-top:14px; padding:4px 12px; border-radius:20px; background:rgba(124,92,255,.12); color:#a78bfa; font-size:11.5px; font-weight:700 }
 
     /* ── Notification settings ── */
-    .nt-wrap { display:flex; flex-direction:column; gap:12px; max-width:600px }
+    .nt-wrap { display:flex; gap:14px; align-items:flex-start }
+    .nt-col-left { flex:1; display:flex; flex-direction:column; gap:12px; min-width:300px; max-width:600px }
+    .nt-col-right { width:290px; flex-shrink:0; display:flex; flex-direction:column; gap:12px }
+    .nt-cfg-body { padding:14px 18px; display:flex; flex-direction:column; gap:11px }
+    .nt-cfg-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:3px }
+    .nt-cfg-wrap { position:relative }
+    .nt-cfg-input { width:100%; box-sizing:border-box; padding:9px 38px 9px 11px; border-radius:8px; border:1.5px solid rgba(148,163,184,.15); background:rgba(148,163,184,.07); color:var(--text); font-size:12.5px; font-family:inherit; outline:none; transition:.15s }
+    .nt-cfg-input:focus { border-color:rgba(124,92,255,.45); background:rgba(124,92,255,.06) }
+    .nt-cfg-eye { position:absolute; right:9px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--muted); padding:2px; display:flex; align-items:center; line-height:0 }
+    .nt-cfg-row { display:flex; gap:7px; margin-top:2px }
+    .nt-cfg-test-btn { flex:1; padding:8px 6px; border-radius:8px; border:1.5px solid rgba(124,92,255,.35); background:transparent; color:var(--accent,#a78bfa); font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .nt-cfg-test-btn:hover:not(:disabled) { background:rgba(124,92,255,.1) }
+    .nt-cfg-save-btn { flex:1; padding:8px 6px; border-radius:8px; border:none; background:rgba(124,92,255,.18); color:var(--accent,#a78bfa); font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .nt-cfg-save-btn:hover:not(:disabled) { background:rgba(124,92,255,.28) }
+    .nt-cfg-test-btn:disabled,.nt-cfg-save-btn:disabled { opacity:.5; cursor:not-allowed }
+    .nt-cfg-state { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:5px; padding:6px 0 0 }
+    .nt-cfg-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:rgba(148,163,184,.4) }
+    .nt-cfg-dot.green { background:#4ade80 }
+    .nt-cfg-dot.yellow { background:#facc15 }
     .nt-card { border-radius:16px; overflow:hidden }
     .nt-card-hdr { padding:16px 18px 14px; border-bottom:1px solid rgba(148,163,184,.08) }
     .nt-card-hdr-row { display:flex; align-items:center; gap:10px }
@@ -421,6 +439,7 @@
       <!-- ══ Panel 3: Notifications ══ -->
       <div class="st-panel" id="stPanel3">
         <div class="nt-wrap">
+          <div class="nt-col-left">
 
           <!-- Telegram Alerts card -->
           <div class="glass-card nt-card">
@@ -529,6 +548,56 @@
             </button>
             <span class="nt-status" id="ntStatus"></span>
           </div>
+
+          </div><!-- /nt-col-left -->
+
+          <!-- ── Right column: Telegram Config ── -->
+          <div class="nt-col-right">
+            <div class="glass-card nt-card">
+              <div class="nt-card-hdr">
+                <div class="nt-card-hdr-row">
+                  <div class="nt-card-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2L2 9.3l7.3 3L19 5.5l-8.3 9 3 7.2L21.5 2z"/></svg>
+                  </div>
+                  <div>
+                    <div class="nt-card-title">Telegram Configuration</div>
+                    <div class="nt-card-sub">Set your Bot Token and Group Chat ID</div>
+                  </div>
+                </div>
+              </div>
+              <div class="nt-cfg-body">
+                <div>
+                  <div class="nt-cfg-label">Bot Token</div>
+                  <div class="nt-cfg-wrap">
+                    <input class="nt-cfg-input" type="password" id="tgBotToken" placeholder="123456:ABC-xyz…" autocomplete="off">
+                    <button class="nt-cfg-eye" onclick="tgToggleEye()" title="Show / Hide" tabindex="-1">
+                      <svg id="tgEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <div class="nt-cfg-label">Group / Channel ID</div>
+                  <div class="nt-cfg-wrap">
+                    <input class="nt-cfg-input" type="text" id="tgChatId" placeholder="-100xxxxxxxxxx" autocomplete="off" style="padding-right:11px">
+                  </div>
+                </div>
+                <div class="nt-cfg-state">
+                  <span class="nt-cfg-dot" id="tgDot"></span>
+                  <span id="tgStateLabel">Loading…</span>
+                </div>
+                <div class="nt-cfg-row">
+                  <button class="nt-cfg-test-btn" id="tgTestBtn" onclick="testTgConfig()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Test
+                  </button>
+                  <button class="nt-cfg-save-btn" id="tgSaveBtn" onclick="saveTgConfig()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div><!-- /nt-col-right -->
 
         </div>
       </div><!-- /Panel 3 -->
@@ -1264,11 +1333,83 @@ async function saveNotif() {
   setTimeout(function(){ st.textContent = ''; }, 3000);
 }
 
+/* ── Telegram Config ── */
+function tgToggleEye() {
+  var inp = document.getElementById('tgBotToken');
+  var icon = document.getElementById('tgEyeIcon');
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  icon.innerHTML = show
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+function _tgSetState(dot, label) {
+  var d = document.getElementById('tgDot');
+  var l = document.getElementById('tgStateLabel');
+  if (d) { d.className = 'nt-cfg-dot'+(dot?' '+dot:''); }
+  if (l) l.textContent = label;
+}
+
+async function loadTgConfig() {
+  try {
+    var r = await CamboAPI.post({ action:'helen_tg_config_get' });
+    if (!r.ok) { _tgSetState('', 'Not configured'); return; }
+    document.getElementById('tgBotToken').value = r.bot_token || '';
+    document.getElementById('tgChatId').value   = r.chat_id   || '';
+    if (r.bot_token && r.chat_id) {
+      _tgSetState('green', r.source === 'env' ? 'Using environment variables' : 'Custom config saved in DB');
+    } else if (r.env_set) {
+      _tgSetState('yellow', 'Using environment variables (no DB override)');
+    } else {
+      _tgSetState('', 'Not configured');
+    }
+  } catch(e) { _tgSetState('', 'Error loading config'); }
+}
+
+async function saveTgConfig() {
+  var btn = document.getElementById('tgSaveBtn');
+  var bot = document.getElementById('tgBotToken').value.trim();
+  var chat = document.getElementById('tgChatId').value.trim();
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    var r = await CamboAPI.post({ action:'helen_tg_config_save', bot_token:bot, chat_id:chat });
+    if (r.ok) {
+      _tgSetState('green', 'Saved');
+      setTimeout(function(){ _tgSetState('green', 'Custom config saved in DB'); }, 2000);
+    } else {
+      _tgSetState('', r.message || 'Save failed');
+    }
+  } catch(e) { _tgSetState('', 'Error'); }
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save';
+}
+
+async function testTgConfig() {
+  var btn = document.getElementById('tgTestBtn');
+  var bot = document.getElementById('tgBotToken').value.trim();
+  var chat = document.getElementById('tgChatId').value.trim();
+  if (!bot || !chat) { _tgSetState('', 'Enter Bot Token and Chat ID first'); return; }
+  btn.disabled = true; btn.textContent = 'Testing…';
+  try {
+    var r = await CamboAPI.post({ action:'helen_tg_test', bot_token:bot, chat_id:chat });
+    if (r.ok) {
+      _tgSetState('green', 'Test message sent!');
+      setTimeout(function(){ _tgSetState('green', 'Config looks good'); }, 3000);
+    } else {
+      _tgSetState('', 'Failed: '+(r.message||'Unknown error'));
+    }
+  } catch(e) { _tgSetState('', 'Connection error'); }
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>Test';
+}
+
 loadTabOrder();
 renderTabs();
 syncTabOrderFromDB(); /* background: sync DB → localStorage if different */
 loadUsers();
 loadNotif();
+loadTgConfig();
 loadPermMatrix();
 loadPageMatrix();
 loadPAUsers();
