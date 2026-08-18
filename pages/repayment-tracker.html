@@ -802,6 +802,15 @@ function fmtMoney(v) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:2 });
 }
 
+/* Sum Money across all loan tabs (base tab + extra tabs) */
+function totalLoanMoney(l) {
+  var sum = parseFloat(l.Money) || 0;
+  if (Array.isArray(l.loan_tabs)) {
+    l.loan_tabs.forEach(function(t){ sum += parseFloat(t.Money) || 0; });
+  }
+  return sum;
+}
+
 function fmtDate(key) {
   if (!key) return '—';
   try {
@@ -1297,9 +1306,8 @@ function filtered() {
   });
   var k = _sortKey, d = _sortDir;
   list.sort(function(a,b){
-    var av = k === '_date' ? dateTs(a.DateTime) : (a[k]||'');
-    var bv = k === '_date' ? dateTs(b.DateTime) : (b[k]||'');
-    if (k === 'Money') { av = Number(av)||0; bv = Number(bv)||0; }
+    var av = k === '_date' ? dateTs(a.DateTime) : k === 'Money' ? totalLoanMoney(a) : (a[k]||'');
+    var bv = k === '_date' ? dateTs(b.DateTime) : k === 'Money' ? totalLoanMoney(b) : (b[k]||'');
     if (av < bv) return -d; if (av > bv) return d; return 0;
   });
   return list;
@@ -1309,11 +1317,11 @@ function filtered() {
 function renderKPIs() {
   var all    = _group ? _loans.filter(function(l){ return l.Groups === _group; }) : _loans;
   var total  = all.length;
-  var totalA = all.reduce(function(s,l){ return s+(Number(l.Money)||0); },0);
+  var totalA = all.reduce(function(s,l){ return s+totalLoanMoney(l); },0);
   var paidL  = all.filter(function(l){ return l.Paid; });
-  var paidA  = paidL.reduce(function(s,l){ return s+(Number(l.Money)||0); },0);
+  var paidA  = paidL.reduce(function(s,l){ return s+totalLoanMoney(l); },0);
   var outL   = all.filter(function(l){ return !l.Paid; });
-  var outA   = outL.reduce(function(s,l){ return s+(Number(l.Money)||0); },0);
+  var outA   = outL.reduce(function(s,l){ return s+totalLoanMoney(l); },0);
   var pct    = total ? Math.round((paidL.length/total)*100) : 0;
   var pctA   = totalA ? Math.round((paidA/totalA)*100) : 0;
 
@@ -1368,7 +1376,7 @@ function renderTable() {
     return '<tr class="'+(isSel?'rt-row-selected':'')+'" onclick="selectLoan(\''+k+'\')">'
       +'<td style="color:var(--rt-muted);font-size:10.5px">'+(i+1)+'</td>'
       +'<td><div class="rt-name-cell">'+avatar(l)+'<div><div class="rt-name-text">'+highlight(l.FullName||'—',q)+'</div><div class="rt-nid">'+highlight(l.NationalID||'',q)+'</div></div></div></td>'
-      +'<td class="'+moneyCls+'">'+fmtMoney(l.Money)+'</td>'
+      +'<td class="'+moneyCls+'">'+fmtMoney(totalLoanMoney(l))+'</td>'
       +'<td style="'+countStyle+'">'+loanCount+'</td>'
       +'<td style="text-align:center"><button class="rt-paid-btn '+paidCls+'" data-key="'+esc(l.DateTime)+'" title="'+(l.Paid?'Mark as Unpaid':'Mark as Paid')+'" onclick="event.stopPropagation();confirmTogglePaid(this)">'+(l.Paid?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>')+'</button></td>'
       +'</tr>';
