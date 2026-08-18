@@ -458,6 +458,15 @@
 
     .loan-card-body { padding: 16px 20px; }
 
+    /* Multi-tab sub-sections */
+    .loan-tab-sep { border-top: 2px dashed var(--border); margin: 4px 0 0; }
+    .loan-tab-hd { display:flex; align-items:center; gap:9px; padding:13px 20px 4px; }
+    .loan-tab-num { width:22px; height:22px; border-radius:50%; background:var(--accent-dim); color:var(--accent); font-size:10.5px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .loan-tab-title { font-size:13px; font-weight:800; color:var(--text2); }
+    .loan-tab-amt { font-size:14px; font-weight:900; color:var(--accent); font-variant-numeric:tabular-nums; margin-left:auto; }
+    .loan-tab-body { padding:4px 20px 16px; }
+    .loan-card-top-total { font-size:11px; color:var(--text3); font-weight:600; margin-top:2px; }
+
     /* Progress */
     .progress-wrap { margin-bottom: 16px; }
     .progress-header {
@@ -871,7 +880,10 @@ function renderDashboard() {
       '<p>រកមិនឃើញព័ត៌មានខ្ចីប្រាក់</p></div>';
   } else {
     loanHdEl.style.display = 'flex';
-    loanBadge.textContent  = _portalData.length;
+    var totalTabCount = _portalData.reduce(function(s, l) {
+      return s + 1 + (l.loan_tabs ? l.loan_tabs.length : 0);
+    }, 0);
+    loanBadge.textContent = totalTabCount;
     loanListEl.innerHTML   = _portalData.map(function(loan, idx) {
       return renderLoanCard(loan, idx);
     }).join('');
@@ -883,100 +895,121 @@ function renderDashboard() {
   window.scrollTo(0, 0);
 }
 
-function renderLoanCard(loan, idx) {
-  var totalPaid = 0;
-  var totalDiscount = 0;
-  (loan.repayments || []).forEach(function(r) {
+/* ── Render repayment rows ── */
+function renderRepHtml(reps) {
+  if (!reps || !reps.length) return '<div class="no-rep">មិនទាន់មានការទូទាត់</div>';
+  return reps.map(function(r) {
+    return '<div class="rep-item">' +
+      '<div class="rep-dot ' + (r.type === 'discount' ? 'rep-dot-dis' : 'rep-dot-pay') + '"></div>' +
+      '<div class="rep-date">' + fmtDate(r.paid_at) + (r.note ? '<br><span class="rep-note">' + esc(r.note) + '</span>' : '') + '</div>' +
+      '<span class="rep-type-chip ' + (r.type === 'discount' ? 'rep-type-discount' : 'rep-type-payment') + '">' +
+        (r.type === 'discount' ? 'បង់ការប្រាក់' : 'ទូទាត់') + '</span>' +
+      '<div class="rep-amount">$' + num2(r.amount) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ── Render one tab's body: progress + meta + repayment accordion ── */
+function renderTabBody(money, dateKey, group, status, reps, toggleId) {
+  var totalPaid = 0, totalDiscount = 0;
+  (reps || []).forEach(function(r) {
     if (r.type === 'discount') totalDiscount += r.amount;
     else totalPaid += r.amount;
   });
-  var totalDeducted = totalPaid + totalDiscount;
-  var remaining = Math.max(0, loan.money - totalDeducted);
-  var pct = loan.money > 0 ? Math.min(100, totalDeducted / loan.money * 100) : 0;
-
-  /* Status badge */
-  var isPaid = loan.paid === 1 || (loan.status && loan.status.toLowerCase().indexOf('paid') !== -1 && loan.status.toLowerCase().indexOf('unpaid') === -1);
-  var badgeHtml;
-  if (isPaid) {
-    badgeHtml = '<span class="badge badge-paid">' + svgCheck() + 'បានទូទាត់</span>';
-  } else if (remaining <= 0 && totalDeducted > 0) {
-    badgeHtml = '<span class="badge badge-paid">' + svgCheck() + 'បានទូទាត់</span>';
-  } else {
-    badgeHtml = '<span class="badge badge-unpaid">' + svgClock() + 'មិនទាន់ទូទាត់</span>';
-  }
-
-  /* Repayments HTML */
-  var repId = 'rep_' + idx;
-  var repHtml = '';
-  if (!loan.repayments || !loan.repayments.length) {
-    repHtml = '<div class="no-rep">មិនទាន់មានការទូទាត់</div>';
-  } else {
-    repHtml = loan.repayments.map(function(r) {
-      return '<div class="rep-item">' +
-        '<div class="rep-dot ' + (r.type === 'discount' ? 'rep-dot-dis' : 'rep-dot-pay') + '"></div>' +
-        '<div class="rep-date">' + fmtDate(r.paid_at) + (r.note ? '<br><span class="rep-note">' + esc(r.note) + '</span>' : '') + '</div>' +
-        '<span class="rep-type-chip ' + (r.type === 'discount' ? 'rep-type-discount' : 'rep-type-payment') + '">' +
-          (r.type === 'discount' ? 'បង់ការប្រាក់' : 'ទូទាត់') + '</span>' +
-        '<div class="rep-amount">$' + num2(r.amount) + '</div>' +
-      '</div>';
-    }).join('');
-  }
-
-  /* Loan date */
-  var loanDate = loan.key ? fmtDate(loan.key) : '';
-
-  /* Meta items */
+  var deducted  = totalPaid + totalDiscount;
+  var remaining = Math.max(0, money - deducted);
+  var pct       = money > 0 ? Math.min(100, deducted / money * 100) : 0;
+  var loanDate  = dateKey ? fmtDate(dateKey) : '';
   var metas = [];
-  if (loan.group) metas.push({ key: 'ក្រុម', val: loan.group });
-  if (loanDate)   metas.push({ key: 'ថ្ងៃខ្ចី', val: loanDate });
-  if (loan.status) metas.push({ key: 'ស្ថានភាព', val: loan.status });
-
+  if (group)    metas.push({ key: 'ក្រុម',      val: group });
+  if (loanDate) metas.push({ key: 'ថ្ងៃខ្ចី',   val: loanDate });
+  if (status)   metas.push({ key: 'ស្ថានភាព', val: status });
   var metaHtml = metas.map(function(m) {
     return '<div class="meta-item"><span class="meta-key">' + m.key + '</span><span class="meta-val">' + esc(m.val) + '</span></div>';
   }).join('');
+  var repCount = reps ? reps.length : 0;
+  return (
+    '<div class="progress-wrap">' +
+      '<div class="progress-header">' +
+        '<span class="progress-title">ការទូទាត់</span>' +
+        '<span class="progress-pct">' + pct.toFixed(0) + '%</span>' +
+      '</div>' +
+      '<div class="progress-track"><div class="progress-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+      '<div class="progress-footer">' +
+        '<span>បានទូទាត់ <strong>$' + num2(deducted) + '</strong></span>' +
+        '<span>នៅខ្វះ <strong>$' + num2(remaining) + '</strong></span>' +
+      '</div>' +
+    '</div>' +
+    (metaHtml ? '<div class="loan-meta">' + metaHtml + '</div>' : '') +
+    '<button class="rep-toggle" id="repBtn_' + toggleId + '" onclick="toggleRep(\'' + toggleId + '\')">' +
+      svgChevron() + 'ប្រវត្តិទូទាត់' +
+      '<span class="rep-count-pill">' + repCount + '</span>' +
+    '</button>' +
+    '<div class="rep-list" id="repList_' + toggleId + '">' + renderRepHtml(reps) + '</div>'
+  );
+}
 
-  var repCount = loan.repayments ? loan.repayments.length : 0;
+function renderLoanCard(loan, idx) {
+  var tabs     = Array.isArray(loan.loan_tabs) ? loan.loan_tabs : [];
+  var hasMulti = tabs.length > 0;
 
-  return '<div class="loan-card">' +
+  /* Total amount across all tabs */
+  var totalMoney = parseFloat(loan.money) || 0;
+  tabs.forEach(function(t) { totalMoney += parseFloat(t.money) || 0; });
 
-    /* ── Card top band ── */
+  var loanDate0 = loan.key ? fmtDate(loan.key) : '';
+
+  /* Badge for the card header (based on Tab 0 status) */
+  var isPaid0   = loan.paid === 1;
+  var badgeHtml = isPaid0
+    ? '<span class="badge badge-paid">'   + svgCheck() + 'បានទូទាត់</span>'
+    : '<span class="badge badge-unpaid">' + svgClock() + 'មិនទាន់ទូទាត់</span>';
+
+  var html = '<div class="loan-card">' +
     '<div class="loan-card-top">' +
       '<div class="loan-num-badge">' + (idx + 1) + '</div>' +
       '<div class="loan-top-info">' +
-        '<div class="loan-amount-label">ចំនួនប្រាក់ខ្ចី</div>' +
-        '<div class="loan-amount-val">$' + num2(loan.money) + '</div>' +
-        (loanDate ? '<div class="loan-date">' + loanDate + '</div>' : '') +
+        '<div class="loan-amount-label">ចំនួនប្រាក់ខ្ចី' + (hasMulti ? ' (' + (tabs.length + 1) + ' ករណី)' : '') + '</div>' +
+        '<div class="loan-amount-val">$' + num2(totalMoney) + '</div>' +
+        (loanDate0 ? '<div class="loan-date">' + loanDate0 + '</div>' : '') +
       '</div>' +
       badgeHtml +
-    '</div>' +
+    '</div>';
 
-    /* ── Card body ── */
-    '<div class="loan-card-body">' +
-
-      '<div class="progress-wrap">' +
-        '<div class="progress-header">' +
-          '<span class="progress-title">ការទូទាត់</span>' +
-          '<span class="progress-pct">' + pct.toFixed(0) + '%</span>' +
-        '</div>' +
-        '<div class="progress-track"><div class="progress-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
-        '<div class="progress-footer">' +
-          '<span>បានទូទាត់ <strong>$' + num2(totalDeducted) + '</strong></span>' +
-          '<span>នៅខ្វះ <strong>$' + num2(remaining) + '</strong></span>' +
-        '</div>' +
+  if (!hasMulti) {
+    /* ── Single tab ── */
+    html += '<div class="loan-card-body">' +
+      renderTabBody(loan.money, loan.key, loan.group, loan.status, loan.repayments, idx) +
+    '</div>';
+  } else {
+    /* ── Multi-tab: Tab 0 ── */
+    html +=
+      '<div class="loan-tab-hd">' +
+        '<div class="loan-tab-num">1</div>' +
+        '<div class="loan-tab-title">ការខ្ចីទី 1</div>' +
+        '<div class="loan-tab-amt">$' + num2(loan.money) + '</div>' +
       '</div>' +
+      '<div class="loan-tab-body">' +
+        renderTabBody(loan.money, loan.key, loan.group, loan.status, loan.repayments, idx + '_0') +
+      '</div>';
 
-      (metaHtml ? '<div class="loan-meta">' + metaHtml + '</div>' : '') +
+    /* ── Tab 1+ ── */
+    tabs.forEach(function(t, ti) {
+      html +=
+        '<div class="loan-tab-sep"></div>' +
+        '<div class="loan-tab-hd">' +
+          '<div class="loan-tab-num">' + (ti + 2) + '</div>' +
+          '<div class="loan-tab-title">ការខ្ចីទី ' + (ti + 2) + '</div>' +
+          '<div class="loan-tab-amt">$' + num2(t.money) + '</div>' +
+        '</div>' +
+        '<div class="loan-tab-body">' +
+          renderTabBody(t.money, t.date_key, t.group, t.status, t.repayments, idx + '_' + (ti + 1)) +
+        '</div>';
+    });
+  }
 
-      '<button class="rep-toggle" id="repBtn_' + idx + '" onclick="toggleRep(' + idx + ')">' +
-        svgChevron() +
-        'ប្រវត្តិទូទាត់' +
-        '<span class="rep-count-pill">' + repCount + '</span>' +
-      '</button>' +
-      '<div class="rep-list" id="repList_' + idx + '">' + repHtml + '</div>' +
-
-    '</div>' +
-
-  '</div>';
+  html += '</div>'; /* end .loan-card */
+  return html;
 }
 
 /* ── Toggle repayment list ── */

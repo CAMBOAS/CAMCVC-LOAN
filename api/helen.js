@@ -344,18 +344,19 @@ export default async function handler(req, res) {
       const name   = String(body.name   || '').trim();
       const nid    = String(body.nid    || '').trim().replace(/[\s\-]/g, '');
       if (!phone) return res.json({ ok: false, message: 'phone_required' });
+      await ensureLoanTabsCol();
       let loanRows = [];
       try {
         if (method === 'nid') {
           if (!nid) return res.json({ ok: false, message: 'nid_required' });
           [loanRows] = await db().query(
-            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url FROM helen_loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND REPLACE(REPLACE(national_id,\' \',\'\'),\'-\',\'\')=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs FROM helen_loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND REPLACE(REPLACE(national_id,\' \',\'\'),\'-\',\'\')=? AND deleted_at IS NULL ORDER BY loan_key DESC',
             [phone, nid]
           );
         } else {
           if (!name) return res.json({ ok: false, message: 'name_required' });
           [loanRows] = await db().query(
-            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url FROM helen_loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs FROM helen_loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
             [phone, name]
           );
         }
@@ -363,19 +364,33 @@ export default async function handler(req, res) {
         return res.json({ ok: false, message: 'server_error' });
       }
       if (!loanRows.length) return res.json({ ok: false, message: 'not_found' });
-      const loanKeys = loanRows.map(l => l.loan_key);
+
+      /* parse loan_tabs JSON for each row */
+      loanRows.forEach(r => {
+        try { r._tabs = r.loan_tabs ? (JSON.parse(r.loan_tabs) || []) : []; }
+        catch(e) { r._tabs = []; }
+      });
+
+      /* collect all repayment keys: base loan keys + tab_ids */
+      const allRepKeys = [];
+      loanRows.forEach(r => {
+        allRepKeys.push(r.loan_key);
+        r._tabs.forEach(t => { if (t.tab_id) allRepKeys.push(t.tab_id); });
+      });
+
       let repaymentMap = {};
       try {
-        const ph2 = loanKeys.map(() => '?').join(',');
+        const ph2 = allRepKeys.map(() => '?').join(',');
         const [reps] = await db().query(
           'SELECT loan_key,type,amount,paid_at,note FROM helen_repayments WHERE loan_key IN (' + ph2 + ') ORDER BY paid_at ASC',
-          loanKeys
+          allRepKeys
         );
         reps.forEach(r => {
           if (!repaymentMap[r.loan_key]) repaymentMap[r.loan_key] = [];
           repaymentMap[r.loan_key].push({ type: r.type, amount: Number(r.amount), paid_at: r.paid_at, note: r.note || '' });
         });
       } catch(e) {}
+
       const loans = loanRows.map(r => ({
         key:        r.loan_key    || '',
         name:       r.full_name   || '',
@@ -390,6 +405,16 @@ export default async function handler(req, res) {
         paid:       r.paid ? 1 : 0,
         photo_url:  r.photo_url   || '',
         repayments: repaymentMap[r.loan_key] || [],
+        loan_tabs:  r._tabs.map(t => ({
+          tab_id:     t.tab_id    || '',
+          money:      Number(t.Money || 0),
+          date_key:   t.DateTime  || '',
+          status:     t.Status    || '',
+          note:       t.Note      || '',
+          paid:       t.Paid ? 1 : 0,
+          group:      t.Groups    || '',
+          repayments: repaymentMap[t.tab_id] || [],
+        })),
       }));
       return res.json({ ok: true, loans });
     }
