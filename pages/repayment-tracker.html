@@ -739,21 +739,21 @@
 </div>
 
 <!-- Unsaved Changes Modal -->
-<div class="rt-del-overlay" id="rtUnsavedOverlay" style="display:none">
+<div class="rt-del-overlay" id="rtUnsavedOverlay" style="display:none" onclick="if(event.target===this)_unsavedCancel()">
   <div class="rt-del-box">
     <div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:#f59e0b">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     </div>
-    <div class="rt-del-title" style="color:#f59e0b">មានការផ្លាស់ប្ដូរដែលមិនទាន់រក្សាទុក</div>
-    <div class="rt-del-msg">តើអ្នកចង់ធ្វើអ្វី?</div>
-    <div class="rt-del-btns" style="display:flex;gap:8px;margin-top:18px">
-      <button class="rt-del-cancel" style="flex:1" onclick="_unsavedDiscard()">ចាកចេញ</button>
-      <button class="rt-del-cancel" style="flex:1" onclick="_unsavedCancel()">បន្ត</button>
-      <button class="rt-del-ok" style="flex:1;background:linear-gradient(135deg,#7c5cff,#a78bfa);border-color:transparent" onclick="_unsavedSave()">
+    <div class="rt-del-title" style="color:#f59e0b">មិនទាន់រក្សាទុក</div>
+    <div class="rt-del-msg">មានការកែប្រែដែលមិនទាន់ Save — តើអ្នកចង់ធ្វើអ្វី?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:18px">
+      <button class="rt-del-ok" style="background:linear-gradient(135deg,#7c5cff,#a78bfa);border-color:transparent;width:100%;justify-content:center" onclick="_unsavedSave()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        រក្សាទុក
+        រក្សាទុក ហើយបន្ត
       </button>
+      <button class="rt-del-cancel" style="width:100%;justify-content:center" onclick="_unsavedDiscard()">ចាកចេញដោយមិនរក្សា</button>
     </div>
+    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--rt-muted);cursor:pointer" onclick="_unsavedCancel()">បន្ត — ត្រឡប់ទៅកែប្រែ</div>
   </div>
 </div>
 
