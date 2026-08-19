@@ -596,7 +596,7 @@
                 <div class="rt-dp-row full">
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">ជាប់ជំពាក់ (Linked To)</label>
-                    <select class="rt-dp-input" id="dpInLinkedTo">
+                    <select class="rt-dp-input" id="dpInLinkedTo" onchange="markDirty()">
                       <option value="">—</option>
                     </select>
                   </div>
@@ -604,29 +604,29 @@
                 <div class="rt-dp-row full">
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">Loan Date</label>
-                    <input class="rt-dp-input" id="dpInDate" type="datetime-local">
+                    <input class="rt-dp-input" id="dpInDate" type="datetime-local" onchange="markDirty()">
                   </div>
                 </div>
                 <div class="rt-dp-row">
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">Amount ($)</label>
-                    <input class="rt-dp-input" id="dpInMoney" type="number" min="0" step="0.01">
+                    <input class="rt-dp-input" id="dpInMoney" type="number" min="0" step="0.01" oninput="markDirty()">
                   </div>
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">Status</label>
-                    <select class="rt-dp-input" id="dpInStatus"></select>
+                    <select class="rt-dp-input" id="dpInStatus" onchange="markDirty()"></select>
                   </div>
                 </div>
                 <div class="rt-dp-row full">
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">Group</label>
-                    <select class="rt-dp-input" id="dpInGroup"></select>
+                    <select class="rt-dp-input" id="dpInGroup" onchange="markDirty()"></select>
                   </div>
                 </div>
                 <div class="rt-dp-row full">
                   <div class="rt-dp-field">
                     <label class="rt-dp-label">Note</label>
-                    <textarea class="rt-dp-input" id="dpInNote" rows="2"></textarea>
+                    <textarea class="rt-dp-input" id="dpInNote" rows="2" oninput="markDirty()"></textarea>
                   </div>
                 </div>
               </div>
@@ -638,7 +638,7 @@
                   <div class="rt-dp-paid-sub" id="dpPaidSub">Unpaid</div>
                 </div>
                 <label class="rt-dp-toggle">
-                  <input type="checkbox" id="dpInPaid" onchange="onDetailPaidChange()">
+                  <input type="checkbox" id="dpInPaid" onchange="markDirty();onDetailPaidChange()">
                   <span class="rt-dp-toggle-track"></span>
                 </label>
               </div>
@@ -738,6 +738,25 @@
   </div>
 </div>
 
+<!-- Unsaved Changes Modal -->
+<div class="rt-del-overlay" id="rtUnsavedOverlay" style="display:none">
+  <div class="rt-del-box">
+    <div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:#f59e0b">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="rt-del-title" style="color:#f59e0b">មានការផ្លាស់ប្ដូរដែលមិនទាន់រក្សាទុក</div>
+    <div class="rt-del-msg">តើអ្នកចង់ធ្វើអ្វី?</div>
+    <div class="rt-del-btns" style="display:flex;gap:8px;margin-top:18px">
+      <button class="rt-del-cancel" style="flex:1" onclick="_unsavedDiscard()">ចាកចេញ</button>
+      <button class="rt-del-cancel" style="flex:1" onclick="_unsavedCancel()">បន្ត</button>
+      <button class="rt-del-ok" style="flex:1;background:linear-gradient(135deg,#7c5cff,#a78bfa);border-color:transparent" onclick="_unsavedSave()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        រក្សាទុក
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Delete Confirm Modal -->
 <div class="rt-del-overlay" id="rtDelOverlay" style="display:none" onclick="if(event.target===this)closeDeleteConfirm()">
   <div class="rt-del-box">
@@ -789,6 +808,8 @@ var _selectedKey = null;
 var _slIdx       = 0;
 var _loanTabIdx  = 0;
 var _repKey      = null;
+var _dirty       = false;
+var _pendingKey  = undefined;
 var _datePreset = '';
 var _dateFrom   = '';
 var _dateTo     = '';
@@ -1638,7 +1659,19 @@ async function removeLoanTab() {
   try { await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:_loanPayload(loan) }); } catch(e) {}
 }
 
+function markDirty() { _dirty = true; }
+
 function selectLoan(key) {
+  if (_dirty && _selectedKey) {
+    _pendingKey = key;
+    document.getElementById('rtUnsavedOverlay').style.display = '';
+    return;
+  }
+  _execSelectLoan(key);
+}
+
+function _execSelectLoan(key) {
+  _dirty = false;
   if (_selectedKey === key) {
     _selectedKey = null;
     document.getElementById('rtPersonalPanel').style.display = 'none';
@@ -1659,6 +1692,27 @@ function selectLoan(key) {
   document.querySelector('.rt-body').classList.add('detail-open');
   document.getElementById('rtPersonalEmpty').style.display   = 'none';
   document.getElementById('rtPersonalContent').style.display = '';
+}
+
+function _unsavedDiscard() {
+  var k = _pendingKey;
+  _pendingKey = undefined;
+  _dirty = false;
+  document.getElementById('rtUnsavedOverlay').style.display = 'none';
+  _execSelectLoan(k);
+}
+
+async function _unsavedSave() {
+  document.getElementById('rtUnsavedOverlay').style.display = 'none';
+  var k = _pendingKey;
+  _pendingKey = undefined;
+  await saveLoan();
+  if (k !== _selectedKey) _execSelectLoan(k);
+}
+
+function _unsavedCancel() {
+  _pendingKey = undefined;
+  document.getElementById('rtUnsavedOverlay').style.display = 'none';
 }
 
 function populateDetail(loan) {
@@ -1785,6 +1839,7 @@ async function saveLoan() {
     var updatedLoan = buildLoanObj(loan);
     var res = await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:updatedLoan });
     if (res && res.ok) {
+      _dirty = false;
       if (updatedLoan.DateTime !== _selectedKey) _selectedKey = updatedLoan.DateTime;
       Object.assign(loan, updatedLoan);
       render();
