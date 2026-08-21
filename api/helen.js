@@ -511,7 +511,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Infor only ── */
-    if (action === 'settings') {
+    if (action === 'helen_infor') {
       const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
       return res.json({
         ok:          true,
