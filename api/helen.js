@@ -1,4 +1,4 @@
-/**
+﻿/**
  * HELEN LOAN — MySQL API Handler
  * Replaces Google Apps Script backend.
  */
@@ -29,7 +29,7 @@ function db() {
 let _slColReady = false;
 async function ensureSocialLinksCol() {
   if (_slColReady) return;
-  try { await db().query('ALTER TABLE helen_loans ADD COLUMN social_links TEXT'); } catch(e) {}
+  try { await db().query('ALTER TABLE loans ADD COLUMN social_links TEXT'); } catch(e) {}
   _slColReady = true;
 }
 
@@ -37,55 +37,55 @@ async function ensureSocialLinksCol() {
 let _paidColReady = false;
 async function ensurePaidCol() {
   if (_paidColReady) return;
-  try { await db().query('ALTER TABLE helen_loans ADD COLUMN paid TINYINT(1) NOT NULL DEFAULT 0'); } catch(e) {}
+  try { await db().query('ALTER TABLE loans ADD COLUMN paid TINYINT(1) NOT NULL DEFAULT 0'); } catch(e) {}
   _paidColReady = true;
 }
 
-/* ── One-time migration: add photo_url column to helen_users if absent ── */
+/* ── One-time migration: add photo_url column to users if absent ── */
 let _userPhotoColReady = false;
 async function ensureUserPhotoCol() {
   if (_userPhotoColReady) return;
-  try { await db().query('ALTER TABLE helen_users ADD COLUMN photo_url VARCHAR(500) DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE users ADD COLUMN photo_url VARCHAR(500) DEFAULT NULL'); } catch(e) {}
   _userPhotoColReady = true;
 }
 
-/* ── One-time migration: add ui_prefs column to helen_users if absent ── */
+/* ── One-time migration: add ui_prefs column to users if absent ── */
 let _uiPrefsColReady = false;
 async function ensureUiPrefsCol() {
   if (_uiPrefsColReady) return;
-  try { await db().query('ALTER TABLE helen_users ADD COLUMN ui_prefs TEXT DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE users ADD COLUMN ui_prefs TEXT DEFAULT NULL'); } catch(e) {}
   _uiPrefsColReady = true;
 }
 
-/* ── One-time migration: add created_by column to helen_loans if absent ── */
+/* ── One-time migration: add created_by column to loans if absent ── */
 let _createdByColReady = false;
 async function ensureCreatedByCol() {
   if (_createdByColReady) return;
-  try { await db().query('ALTER TABLE helen_loans ADD COLUMN created_by VARCHAR(100) DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE loans ADD COLUMN created_by VARCHAR(100) DEFAULT NULL'); } catch(e) {}
   _createdByColReady = true;
 }
 
-/* ── One-time migration: add created_by_user column (login username) to helen_loans if absent ── */
+/* ── One-time migration: add created_by_user column (login username) to loans if absent ── */
 let _createdByUserColReady = false;
 async function ensureCreatedByUserCol() {
   if (_createdByUserColReady) return;
-  try { await db().query('ALTER TABLE helen_loans ADD COLUMN created_by_user VARCHAR(100) DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE loans ADD COLUMN created_by_user VARCHAR(100) DEFAULT NULL'); } catch(e) {}
   _createdByUserColReady = true;
 }
 
-/* ── One-time migration: add linked_to column to helen_loans if absent ── */
+/* ── One-time migration: add linked_to column to loans if absent ── */
 let _linkedToColReady = false;
 async function ensureLinkedToCol() {
   if (_linkedToColReady) return;
-  try { await db().query('ALTER TABLE helen_loans ADD COLUMN linked_to VARCHAR(255) DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE loans ADD COLUMN linked_to VARCHAR(255) DEFAULT NULL'); } catch(e) {}
   _linkedToColReady = true;
 }
 
-/* ── One-time migration: add loan_tabs column to helen_loans if absent ── */
+/* ── One-time migration: add loan_tabs column to loans if absent ── */
 let _loanTabsColReady = false;
 async function ensureLoanTabsCol() {
   if (_loanTabsColReady) return;
-  try { await db().query('ALTER TABLE helen_loans ADD COLUMN loan_tabs TEXT DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE loans ADD COLUMN loan_tabs TEXT DEFAULT NULL'); } catch(e) {}
   _loanTabsColReady = true;
 }
 
@@ -94,7 +94,7 @@ let _actLogReady = false;
 async function ensureActivityLogTable() {
   if (_actLogReady) return;
   try {
-    await db().query(`CREATE TABLE IF NOT EXISTS helen_activity_log (
+    await db().query(`CREATE TABLE IF NOT EXISTS activity_log (
       id INT AUTO_INCREMENT PRIMARY KEY,
       action VARCHAR(50) NOT NULL,
       actor VARCHAR(100),
@@ -113,7 +113,7 @@ async function logActivity(act, actor, actorUser, target, detail) {
   try {
     await ensureActivityLogTable();
     await db().query(
-      'INSERT INTO helen_activity_log (action,actor,actor_user,target,detail) VALUES (?,?,?,?,?)',
+      'INSERT INTO activity_log (action,actor,actor_user,target,detail) VALUES (?,?,?,?,?)',
       [act, actor||null, actorUser||null, target||null, detail ? JSON.stringify(detail) : null]
     );
   } catch(e) {}
@@ -165,7 +165,7 @@ let _tgCacheAt = 0;
 async function getTgConfig() {
   if (_tgCache && Date.now() - _tgCacheAt < 60000) return _tgCache;
   try {
-    const [rows] = await db().query("SELECT type, value FROM helen_infor WHERE type IN ('tg_bot_token','tg_chat_id')");
+    const [rows] = await db().query("SELECT type, value FROM settings WHERE type IN ('tg_bot_token','tg_chat_id')");
     const m = {};
     rows.forEach(r => { m[r.type] = r.value; });
     _tgCache = {
@@ -258,7 +258,7 @@ async function sendTelegramEvent(evtType, data) {
 
 /* ── Notification check ── */
 async function isNotifEnabled(type) {
-  const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="notif"');
+  const [rows] = await db().query('SELECT value FROM settings WHERE type="notif"');
   const configured = rows.some(r => r.value === '__configured__');
   if (!configured) return true; // never saved = all enabled (default)
   return rows.some(r => r.value === type);
@@ -266,7 +266,7 @@ async function isNotifEnabled(type) {
 
 async function isWatched(username) {
   if (!username) return false;
-  const [rows] = await db().query('SELECT 1 FROM helen_infor WHERE type="watch_user" AND value=? LIMIT 1', [username]);
+  const [rows] = await db().query('SELECT 1 FROM settings WHERE type="watch_user" AND value=? LIMIT 1', [username]);
   return rows.length > 0;
 }
 
@@ -275,7 +275,7 @@ async function validateAuth(u, p) {
   if (!u || !p) return null;
   await ensureUserPhotoCol();
   const [rows] = await db().query(
-    'SELECT username, role, display_name, exp_date, photo_url FROM helen_users WHERE username=? AND pin=? AND status="active" LIMIT 1',
+    'SELECT username, role, display_name, exp_date, photo_url FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
     [u, p]
   );
   if (!rows.length) return null;
@@ -323,7 +323,7 @@ export default async function handler(req, res) {
       const v = await validateAuth(String(body.username||'').trim(), String(body.pin||'').trim());
       if (!v)          return res.json({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
       if (v.expired)   return res.json({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
-      db().query('UPDATE helen_users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
+      db().query('UPDATE users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
       if (await isNotifEnabled('login')) { try { await sendTelegramEvent('login', { name:v.name, role:v.role, username:v.username }); } catch(e) {} }
       logActivity('user_login', v.name, v.username, null, { role: v.role }).catch(()=>{});
       return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate, photo_url:v.photo_url||'' });
@@ -350,13 +350,13 @@ export default async function handler(req, res) {
         if (method === 'nid') {
           if (!nid) return res.json({ ok: false, message: 'nid_required' });
           [loanRows] = await db().query(
-            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs FROM helen_loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND REPLACE(REPLACE(national_id,\' \',\'\'),\'-\',\'\')=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs FROM loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND REPLACE(REPLACE(national_id,\' \',\'\'),\'-\',\'\')=? AND deleted_at IS NULL ORDER BY loan_key DESC',
             [phone, nid]
           );
         } else {
           if (!name) return res.json({ ok: false, message: 'name_required' });
           [loanRows] = await db().query(
-            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs FROM helen_loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs FROM loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
             [phone, name]
           );
         }
@@ -382,7 +382,7 @@ export default async function handler(req, res) {
       try {
         const ph2 = allRepKeys.map(() => '?').join(',');
         const [reps] = await db().query(
-          'SELECT loan_key,type,amount,paid_at,note FROM helen_repayments WHERE loan_key IN (' + ph2 + ') ORDER BY paid_at ASC',
+          'SELECT loan_key,type,amount,paid_at,note FROM repayments WHERE loan_key IN (' + ph2 + ') ORDER BY paid_at ASC',
           allRepKeys
         );
         reps.forEach(r => {
@@ -425,13 +425,13 @@ export default async function handler(req, res) {
     const _bv = await validateAuth(_bu, _bp);
     if (!_bv || _bv.expired) return res.json({ ok:false, message:'auth_required', code:401 });
     const actor = _bv.name || '';
-    db().query('UPDATE helen_users SET last_seen=NOW() WHERE username=?', [_bu]).catch(()=>{});
+    db().query('UPDATE users SET last_seen=NOW() WHERE username=?', [_bu]).catch(()=>{});
 
     /* ── All data (loans + infor) ── */
     if (action === 'helen_all') {
       await ensureCreatedByUserCol();
-      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL ORDER BY l.loan_key DESC`);
-      const [infor] = await db().query('SELECT type, value FROM helen_infor ORDER BY id');
+      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL ORDER BY l.loan_key DESC`);
+      const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
       return res.json({
         ok:          true,
         loans:       loans.map(rowToLoan),
@@ -448,7 +448,7 @@ export default async function handler(req, res) {
       if (!key) return res.json({ ok: false, message: 'key required' });
       await ensureCreatedByUserCol();
       const [rows] = await db().query(
-        `SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.loan_key=? AND l.deleted_at IS NULL`,
+        `SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.loan_key=? AND l.deleted_at IS NULL`,
         [key]
       );
       if (!rows.length) return res.json({ ok: false, message: 'Borrower not found' });
@@ -457,7 +457,7 @@ export default async function handler(req, res) {
       const nid = rows[0].national_id;
       if (nid) {
         const [hist] = await db().query(
-          `SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.national_id=? AND l.deleted_at IS NULL ORDER BY l.loan_key DESC`,
+          `SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.national_id=? AND l.deleted_at IS NULL ORDER BY l.loan_key DESC`,
           [nid]
         );
         history = hist.map(rowToLoan);
@@ -467,7 +467,7 @@ export default async function handler(req, res) {
 
     /* ── Logout log ── */
     if (action === 'helen_user_logout') {
-      db().query("UPDATE helen_users SET last_seen='2000-01-01 00:00:00' WHERE username=?", [_bu]).catch(()=>{});
+      db().query("UPDATE users SET last_seen='2000-01-01 00:00:00' WHERE username=?", [_bu]).catch(()=>{});
       logActivity('user_logout', actor, _bu, null, null).catch(()=>{});
       return res.json({ ok: true });
     }
@@ -490,17 +490,17 @@ export default async function handler(req, res) {
       const orderLimit  = ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
       let logs;
       try {
-        const sqlJoin = 'SELECT l.*, u.photo_url AS actor_photo, (SELECT b.photo_url FROM helen_loans b WHERE b.full_name = l.target AND b.photo_url IS NOT NULL AND b.photo_url != \'\' ORDER BY b.loan_key DESC LIMIT 1) AS borrower_photo FROM helen_activity_log l LEFT JOIN helen_users u ON l.actor_user = u.username' + whereClause + orderLimit;
+        const sqlJoin = 'SELECT l.*, u.photo_url AS actor_photo, (SELECT b.photo_url FROM loans b WHERE b.full_name = l.target AND b.photo_url IS NOT NULL AND b.photo_url != \'\' ORDER BY b.loan_key DESC LIMIT 1) AS borrower_photo FROM activity_log l LEFT JOIN users u ON l.actor_user = u.username' + whereClause + orderLimit;
         const [rows] = await db().query(sqlJoin, [...params, limit, offset]);
         logs = rows;
       } catch(e) {
         /* Fallback: fetch without photo if JOIN fails */
-        const sqlPlain = 'SELECT * FROM helen_activity_log l' + whereClause + orderLimit;
+        const sqlPlain = 'SELECT * FROM activity_log l' + whereClause + orderLimit;
         const [rows] = await db().query(sqlPlain, [...params, limit, offset]);
         logs = rows;
       }
       /* Total count respects same filter */
-      let countSql = 'SELECT COUNT(*) AS total FROM helen_activity_log l';
+      let countSql = 'SELECT COUNT(*) AS total FROM activity_log l';
       const countParams = [];
       const countWheres = [];
       if (fAct)  { countWheres.push('l.action=?');     countParams.push(fAct); }
@@ -511,8 +511,8 @@ export default async function handler(req, res) {
     }
 
     /* ── Infor only ── */
-    if (action === 'helen_infor') {
-      const [infor] = await db().query('SELECT type, value FROM helen_infor ORDER BY id');
+    if (action === 'settings') {
+      const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
       return res.json({
         ok:          true,
         groups:      infor.filter(r=>r.type==='groups').map(r=>r.value),
@@ -524,7 +524,7 @@ export default async function handler(req, res) {
     /* ── Trash list ── */
     if (action === 'helen_loan_list_trash') {
       await ensureCreatedByUserCol();
-      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM helen_loans l LEFT JOIN helen_users u ON l.created_by_user = u.username WHERE l.deleted_at IS NOT NULL ORDER BY l.deleted_at DESC`);
+      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NOT NULL ORDER BY l.deleted_at DESC`);
       return res.json({ ok:true, loans: loans.map(rowToLoan) });
     }
 
@@ -533,13 +533,13 @@ export default async function handler(req, res) {
       const type  = String(body.type ||'').trim();
       const value = String(body.value||'').trim();
       if (!type || !value) return res.json({ ok:false, message:'Missing type or value' });
-      await db().query('INSERT IGNORE INTO helen_infor (type, value) VALUES (?,?)', [type, value]);
+      await db().query('INSERT IGNORE INTO settings (type, value) VALUES (?,?)', [type, value]);
       return res.json({ ok:true });
     }
 
     /* ── Delete infor ── */
     if (action === 'helen_infor_delete') {
-      await db().query('DELETE FROM helen_infor WHERE type=? AND value=?',
+      await db().query('DELETE FROM settings WHERE type=? AND value=?',
         [String(body.type||'').trim(), String(body.value||'').trim()]);
       return res.json({ ok:true });
     }
@@ -559,7 +559,7 @@ export default async function handler(req, res) {
       const slJson = Array.isArray(l.social_links) && l.social_links.length ? JSON.stringify(l.social_links) : null;
       const sl0 = (l.social_links||[])[0] || {};
       await db().query(
-        `INSERT INTO helen_loans
+        `INSERT INTO loans
            (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photo_url,photos,social_links,paid,created_by,created_by_user,linked_to)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [key, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
@@ -567,7 +567,7 @@ export default async function handler(req, res) {
          l.Note||'', sl0.name||l.FBName||'', sl0.url||l.URL||'', sl0.platform||l.FacebookCom||'', sl0.id||l.ID||'', sl0.fbid||l.FBID||'',
          l.photo_url||null, photosJson, slJson, l.Paid ? 1 : 0, actor||null, _bu||null, l.LinkedTo||null]
       );
-      const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [key]);
+      const [rows] = await db().query('SELECT * FROM loans WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('add'))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
       logActivity('loan_add', actor, _bu, l.FullName||'', { money: l.Money||0, status: l.Status||'Normal' }).catch(()=>{});
       return res.json({ ok:true });
@@ -582,7 +582,7 @@ export default async function handler(req, res) {
       await ensureLoanTabsCol();
       const key = String(body.key||'').trim();
       const l   = body.loan || {};
-      const [old] = await db().query('SELECT * FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
+      const [old] = await db().query('SELECT * FROM loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!old.length) return res.json({ ok:false, message:'Row not found' });
       const newKey = l.DateTime || key;
       const photosJsonU   = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
@@ -590,7 +590,7 @@ export default async function handler(req, res) {
       const loanTabsJsonU = Array.isArray(l.loan_tabs) ? JSON.stringify(l.loan_tabs) : null;
       const sl0u = (l.social_links||[])[0] || {};
       await db().query(
-        `UPDATE helen_loans SET
+        `UPDATE loans SET
            loan_key=?,full_name=?,national_id=?,dob=?,phone=?,gender=?,loan_group=?,
            money=?,loan_status=?,note=?,fb_name=?,fb_url=?,social_media=?,social_id=?,fbid=?,
            photo_url=?,photos=?,social_links=?,paid=?,linked_to=?,loan_tabs=?
@@ -600,7 +600,7 @@ export default async function handler(req, res) {
          l.Note||'', sl0u.name||l.FBName||'', sl0u.url||l.URL||'', sl0u.platform||l.FacebookCom||'', sl0u.id||l.ID||'', sl0u.fbid||l.FBID||'',
          l.photo_url||null, photosJsonU, slJsonU, l.Paid ? 1 : 0, l.LinkedTo||null, loanTabsJsonU, key]
       );
-      const [updated] = await db().query('SELECT * FROM helen_loans WHERE loan_key=?', [newKey]);
+      const [updated] = await db().query('SELECT * FROM loans WHERE loan_key=?', [newKey]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('edit'))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }
       logActivity('loan_edit', actor, _bu, l.FullName||'', { key: newKey }).catch(()=>{});
       return res.json({ ok:true, message:'Updated' });
@@ -610,10 +610,10 @@ export default async function handler(req, res) {
     if (action === 'helen_loan_toggle_paid') {
       await ensurePaidCol();
       const key = String(body.key||'').trim();
-      const [rows] = await db().query('SELECT paid, full_name FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
+      const [rows] = await db().query('SELECT paid, full_name FROM loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!rows.length) return res.json({ ok:false, message:'Row not found' });
       const newPaid = rows[0].paid ? 0 : 1;
-      await db().query('UPDATE helen_loans SET paid=? WHERE loan_key=?', [newPaid, key]);
+      await db().query('UPDATE loans SET paid=? WHERE loan_key=?', [newPaid, key]);
       logActivity('loan_paid', actor, _bu, rows[0].full_name||'', { paid: newPaid }).catch(()=>{});
       return res.json({ ok:true, paid: newPaid });
     }
@@ -622,9 +622,9 @@ export default async function handler(req, res) {
     if (action === 'helen_loan_delete') {
       if (!['Admin','Owner','Moderator'].includes(_bv.role)) return res.json({ ok:false, message:'Permission denied', code:403 });
       const key = String(body.key||'').trim();
-      const [rows] = await db().query('SELECT * FROM helen_loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
+      const [rows] = await db().query('SELECT * FROM loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
       if (!rows.length) return res.json({ ok:false, message:'Row not found' });
-      await db().query('UPDATE helen_loans SET deleted_at=NOW() WHERE loan_key=?', [key]);
+      await db().query('UPDATE loans SET deleted_at=NOW() WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('delete'))) { try { await sendTelegram(rows[0], 'delete', actor); } catch(e) {} }
       logActivity('loan_delete', actor, _bu, rows[0].full_name||'', { key }).catch(()=>{});
       return res.json({ ok:true, message:'Deleted' });
@@ -633,9 +633,9 @@ export default async function handler(req, res) {
     /* ── Recover loan ── */
     if (action === 'helen_loan_recover') {
       const key = String(body.key||'').trim();
-      const [trashRow] = await db().query('SELECT full_name FROM helen_loans WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
+      const [trashRow] = await db().query('SELECT full_name FROM loans WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
       const [r] = await db().query(
-        'UPDATE helen_loans SET deleted_at=NULL WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
+        'UPDATE loans SET deleted_at=NULL WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
       if (r.affectedRows > 0) logActivity('loan_recover', actor, _bu, trashRow[0]&&trashRow[0].full_name||'', { key }).catch(()=>{});
       return res.json({ ok: r.affectedRows > 0, message: r.affectedRows > 0 ? 'Recovered' : 'Not found in trash' });
     }
@@ -645,13 +645,13 @@ export default async function handler(req, res) {
       if (!['Admin','Owner','Moderator'].includes(_bv.role)) return res.json({ ok:false, message:'Permission denied', code:403 });
       const key = String(body.key||'').trim();
       const [r] = await db().query(
-        'DELETE FROM helen_loans WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
+        'DELETE FROM loans WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
       return res.json({ ok: r.affectedRows > 0, message: r.affectedRows > 0 ? 'Deleted' : 'Not found' });
     }
 
     /* ── Repayment entries table ── */
     async function ensureRepaymentsTable() {
-      await db().query(`CREATE TABLE IF NOT EXISTS helen_repayments (
+      await db().query(`CREATE TABLE IF NOT EXISTS repayments (
         id       INT AUTO_INCREMENT PRIMARY KEY,
         loan_key VARCHAR(255) NOT NULL,
         type     ENUM('payment','discount') NOT NULL DEFAULT 'payment',
@@ -668,7 +668,7 @@ export default async function handler(req, res) {
       const key = String(body.key||'').trim();
       if (!key) return res.json({ ok:false, message:'key required' });
       await ensureRepaymentsTable();
-      const [rows] = await db().query('SELECT * FROM helen_repayments WHERE loan_key=? ORDER BY paid_at ASC', [key]);
+      const [rows] = await db().query('SELECT * FROM repayments WHERE loan_key=? ORDER BY paid_at ASC', [key]);
       return res.json({ ok:true, entries: rows });
     }
 
@@ -683,7 +683,7 @@ export default async function handler(req, res) {
       if (!key || amount <= 0) return res.json({ ok:false, message:'key and amount required' });
       await ensureRepaymentsTable();
       const [r] = await db().query(
-        'INSERT INTO helen_repayments (loan_key, type, amount, paid_at, note) VALUES (?,?,?,?,?)',
+        'INSERT INTO repayments (loan_key, type, amount, paid_at, note) VALUES (?,?,?,?,?)',
         [key, type, amount, paidAt, note||null]
       );
       logActivity('repayment_add', actor, _bu, key, { type, amount }).catch(()=>{});
@@ -696,13 +696,13 @@ export default async function handler(req, res) {
       const id = parseInt(body.id)||0;
       if (!id) return res.json({ ok:false, message:'id required' });
       await ensureRepaymentsTable();
-      await db().query('DELETE FROM helen_repayments WHERE id=?', [id]);
+      await db().query('DELETE FROM repayments WHERE id=?', [id]);
       return res.json({ ok:true });
     }
 
     /* ── Messages ── */
     async function ensureMessagesTable() {
-      await db().query(`CREATE TABLE IF NOT EXISTS helen_messages (
+      await db().query(`CREATE TABLE IF NOT EXISTS messages (
         id          INT AUTO_INCREMENT PRIMARY KEY,
         sender      VARCHAR(100) NOT NULL,
         recipient   VARCHAR(100) NOT NULL,
@@ -723,7 +723,7 @@ export default async function handler(req, res) {
       if (!to)          return res.json({ ok:false, message:'Missing recipient' });
       if (!txt && !img) return res.json({ ok:false, message:'Message is empty' });
       const [ins] = await db().query(
-        'INSERT INTO helen_messages (sender, recipient, body, image_url) VALUES (?,?,?,?)',
+        'INSERT INTO messages (sender, recipient, body, image_url) VALUES (?,?,?,?)',
         [_bu, to, txt||null, img||null]
       );
       return res.json({ ok:true, id: ins.insertId });
@@ -734,12 +734,12 @@ export default async function handler(req, res) {
       const w = String(body.with || '').trim();
       if (!w) return res.json({ ok:false, message:'Missing with' });
       await db().query(
-        'UPDATE helen_messages SET is_read=1 WHERE sender=? AND recipient=? AND is_read=0',
+        'UPDATE messages SET is_read=1 WHERE sender=? AND recipient=? AND is_read=0',
         [w, _bu]
       );
       const [msgs] = await db().query(
         `SELECT id, sender, recipient, body, image_url, is_read, created_at
-         FROM helen_messages
+         FROM messages
          WHERE (sender=? AND recipient=?) OR (sender=? AND recipient=?)
          ORDER BY created_at ASC LIMIT 150`,
         [_bu, w, w, _bu]
@@ -753,8 +753,8 @@ export default async function handler(req, res) {
         `SELECT hm.sender, COUNT(*) AS cnt,
                 COALESCE(hu.display_name, hm.sender) AS display_name,
                 COALESCE(hu.photo_url, '') AS photo_url
-         FROM helen_messages hm
-         LEFT JOIN helen_users hu
+         FROM messages hm
+         LEFT JOIN users hu
            ON hu.username COLLATE utf8mb4_unicode_ci = hm.sender COLLATE utf8mb4_unicode_ci
          WHERE hm.recipient=? AND hm.is_read=0
          GROUP BY hm.sender, hu.display_name, hu.photo_url`,
@@ -776,13 +776,13 @@ export default async function handler(req, res) {
           COALESCE(s.loans_added, 0)  AS loans_added,
           COALESCE(s.loans_edited, 0) AS loans_edited,
           s.last_login
-        FROM helen_users u
+        FROM users u
         LEFT JOIN (
           SELECT actor_user,
             SUM(CASE WHEN action='loan_add' THEN 1 ELSE 0 END)                              AS loans_added,
             SUM(CASE WHEN action IN ('loan_edit','loan_paid','loan_recover') THEN 1 ELSE 0 END) AS loans_edited,
             MAX(CASE WHEN action='user_login' THEN created_at ELSE NULL END)                 AS last_login
-          FROM helen_activity_log
+          FROM activity_log
           GROUP BY actor_user
         ) s ON s.actor_user COLLATE utf8mb4_unicode_ci = u.username COLLATE utf8mb4_unicode_ci
         ORDER BY u.display_name
@@ -795,7 +795,7 @@ export default async function handler(req, res) {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       await ensureUserPhotoCol();
       const [users] = await db().query(
-        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url FROM helen_users ORDER BY id'
+        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url FROM users ORDER BY id'
       );
       return res.json({ ok:true, users });
     }
@@ -808,7 +808,7 @@ export default async function handler(req, res) {
       if (!u || !p) return res.json({ ok:false, message:'Username និង PIN ត្រូវការ' });
       try {
         await db().query(
-          'INSERT INTO helen_users (username, pin, role, display_name, exp_date, status) VALUES (?,?,?,?,?,?)',
+          'INSERT INTO users (username, pin, role, display_name, exp_date, status) VALUES (?,?,?,?,?,?)',
           [u, p, String(body.role||'Staff Loan'), String(body.display_name||u).trim(),
            body.exp_date||null, body.status||'active']
         );
@@ -826,23 +826,23 @@ export default async function handler(req, res) {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
-      const [oldRows] = await db().query('SELECT display_name FROM helen_users WHERE username=?', [u]);
+      const [oldRows] = await db().query('SELECT display_name FROM users WHERE username=?', [u]);
       const oldDisplayName = oldRows.length ? (oldRows[0].display_name || '') : '';
       const newDisplayName = String(body.display_name||u).trim();
       const p = String(body.pin||'').trim();
       if (p) {
         await db().query(
-          'UPDATE helen_users SET pin=?,role=?,display_name=?,exp_date=?,status=? WHERE username=?',
+          'UPDATE users SET pin=?,role=?,display_name=?,exp_date=?,status=? WHERE username=?',
           [p, String(body.role||'Staff Loan'), newDisplayName, body.exp_date||null, body.status||'active', u]
         );
       } else {
         await db().query(
-          'UPDATE helen_users SET role=?,display_name=?,exp_date=?,status=? WHERE username=?',
+          'UPDATE users SET role=?,display_name=?,exp_date=?,status=? WHERE username=?',
           [String(body.role||'Staff Loan'), newDisplayName, body.exp_date||null, body.status||'active', u]
         );
       }
       if (oldDisplayName && newDisplayName && oldDisplayName !== newDisplayName) {
-        await db().query('UPDATE helen_loans SET created_by=? WHERE created_by=?', [newDisplayName, oldDisplayName]);
+        await db().query('UPDATE loans SET created_by=? WHERE created_by=?', [newDisplayName, oldDisplayName]);
       }
       if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'edit', username:u, display_name:newDisplayName, role:String(body.role||'Staff Loan'), status:body.status||'active', actor }); } catch(e) {} }
       logActivity('user_edit', actor, _bu, u, { old_name: oldDisplayName, new_name: newDisplayName }).catch(()=>{});
@@ -855,7 +855,7 @@ export default async function handler(req, res) {
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
       if (u === _bu) return res.json({ ok:false, message:'មិនអាចលុប Account ខ្លួនឯងបាន' });
-      await db().query('DELETE FROM helen_users WHERE username=?', [u]);
+      await db().query('DELETE FROM users WHERE username=?', [u]);
       if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'delete', username:u, actor }); } catch(e) {} }
       logActivity('user_delete', actor, _bu, u, null).catch(()=>{});
       return res.json({ ok:true });
@@ -868,7 +868,7 @@ export default async function handler(req, res) {
       if (!u) return res.json({ ok:false, message:'Username required' });
       await ensureUserPhotoCol();
       const photoUrl = String(body.photo_url||'').trim();
-      await db().query('UPDATE helen_users SET photo_url=? WHERE username=?', [photoUrl || null, u]);
+      await db().query('UPDATE users SET photo_url=? WHERE username=?', [photoUrl || null, u]);
       return res.json({ ok:true });
     }
 
@@ -879,7 +879,7 @@ export default async function handler(req, res) {
       if (type === 'photo') {
         await ensureUserPhotoCol();
         const photoUrl = String(body.photo_url || '').trim();
-        await db().query('UPDATE helen_users SET photo_url=? WHERE username=?', [photoUrl || null, _bu]);
+        await db().query('UPDATE users SET photo_url=? WHERE username=?', [photoUrl || null, _bu]);
         return res.json({ ok: true });
       }
 
@@ -887,14 +887,14 @@ export default async function handler(req, res) {
         const currentPin = String(body.current_pin || '').trim();
         if (!currentPin) return res.json({ ok: false, message: 'PIN បច្ចុប្បន្នត្រូវការ' });
         const [pinRow] = await db().query(
-          'SELECT pin FROM helen_users WHERE username=? AND status="active"', [_bu]
+          'SELECT pin FROM users WHERE username=? AND status="active"', [_bu]
         );
         if (!pinRow.length || pinRow[0].pin !== currentPin) return res.json({ ok: false, message: 'PIN មិនត្រូវ' });
 
         if (type === 'pin') {
           const newPin = String(body.new_pin || '').trim();
           if (!newPin) return res.json({ ok: false, message: 'PIN ថ្មីត្រូវការ' });
-          await db().query('UPDATE helen_users SET pin=? WHERE username=?', [newPin, _bu]);
+          await db().query('UPDATE users SET pin=? WHERE username=?', [newPin, _bu]);
           return res.json({ ok: true });
         }
 
@@ -904,26 +904,26 @@ export default async function handler(req, res) {
           if (!displayName && (!newUsername || newUsername === _bu))
             return res.json({ ok: false, message: 'គ្មានព័ត៌មានត្រូវធ្វើបច្ចុប្បន្ន' });
           if (newUsername && newUsername !== _bu) {
-            const [ex] = await db().query('SELECT 1 FROM helen_users WHERE username=?', [newUsername]);
+            const [ex] = await db().query('SELECT 1 FROM users WHERE username=?', [newUsername]);
             if (ex.length) return res.json({ ok: false, message: 'Username "'+newUsername+'" មានរួចហើយ' });
             const finalName = displayName || _bv.name || _bu;
             await db().query(
-              'UPDATE helen_users SET username=?, display_name=? WHERE username=?',
+              'UPDATE users SET username=?, display_name=? WHERE username=?',
               [newUsername, finalName, _bu]
             );
             // Keep loan references in sync
-            await db().query('UPDATE helen_loans SET created_by_user=? WHERE created_by_user=?', [newUsername, _bu]);
+            await db().query('UPDATE loans SET created_by_user=? WHERE created_by_user=?', [newUsername, _bu]);
             const oldName = _bv.name || '';
             if (oldName && finalName !== oldName) {
-              await db().query('UPDATE helen_loans SET created_by=? WHERE created_by=?', [finalName, oldName]);
+              await db().query('UPDATE loans SET created_by=? WHERE created_by=?', [finalName, oldName]);
             }
             return res.json({ ok: true, username: newUsername, display_name: finalName });
           }
-          await db().query('UPDATE helen_users SET display_name=? WHERE username=?', [displayName, _bu]);
+          await db().query('UPDATE users SET display_name=? WHERE username=?', [displayName, _bu]);
           // Backfill old loan records that stored the old display name
           const oldDisplayName = _bv.name || '';
           if (oldDisplayName && displayName !== oldDisplayName) {
-            await db().query('UPDATE helen_loans SET created_by=? WHERE created_by=?', [displayName, oldDisplayName]);
+            await db().query('UPDATE loans SET created_by=? WHERE created_by=?', [displayName, oldDisplayName]);
           }
           return res.json({ ok: true, username: _bu, display_name: displayName });
         }
@@ -935,7 +935,7 @@ export default async function handler(req, res) {
     /* ── UI Preferences: get (any authenticated user, own prefs only) ── */
     if (action === 'helen_ui_prefs_get') {
       await ensureUiPrefsCol();
-      const [rows] = await db().query('SELECT ui_prefs FROM helen_users WHERE username=?', [_bu]);
+      const [rows] = await db().query('SELECT ui_prefs FROM users WHERE username=?', [_bu]);
       if (!rows.length) return res.json({ ok: true, prefs: {} });
       let prefs = {};
       try { prefs = JSON.parse(rows[0].ui_prefs || '{}'); } catch(e) {}
@@ -948,11 +948,11 @@ export default async function handler(req, res) {
       const incoming = body.prefs;
       if (!incoming || typeof incoming !== 'object') return res.json({ ok: false, message: 'Invalid prefs' });
       /* Merge with existing prefs so other keys are preserved */
-      const [rows] = await db().query('SELECT ui_prefs FROM helen_users WHERE username=?', [_bu]);
+      const [rows] = await db().query('SELECT ui_prefs FROM users WHERE username=?', [_bu]);
       let existing = {};
       try { existing = JSON.parse((rows[0]||{}).ui_prefs || '{}'); } catch(e) {}
       const merged = Object.assign({}, existing, incoming);
-      await db().query('UPDATE helen_users SET ui_prefs=? WHERE username=?', [JSON.stringify(merged), _bu]);
+      await db().query('UPDATE users SET ui_prefs=? WHERE username=?', [JSON.stringify(merged), _bu]);
       return res.json({ ok: true });
     }
 
@@ -970,7 +970,7 @@ export default async function handler(req, res) {
 
     /* ── Get role permissions ── */
     if (action === 'helen_perms_get') {
-      const [rows] = await db().query('SELECT type, value FROM helen_infor WHERE type LIKE "perm_%"');
+      const [rows] = await db().query('SELECT type, value FROM settings WHERE type LIKE "perm_%"');
       if (!rows.length) return res.json({ ok:true, perms: defaultPerms() });
       const perms = {};
       rows.forEach(r => {
@@ -987,9 +987,9 @@ export default async function handler(req, res) {
       if (!perms || typeof perms !== 'object') return res.json({ ok:false, message:'perms required' });
       if (!Array.isArray(perms.settings)) perms.settings = ['Admin'];
       if (!perms.settings.includes('Admin')) perms.settings = ['Admin', ...perms.settings];
-      await db().query('DELETE FROM helen_infor WHERE type LIKE "perm_%"');
+      await db().query('DELETE FROM settings WHERE type LIKE "perm_%"');
       for (const [key, val] of Object.entries(perms)) {
-        await db().query('INSERT INTO helen_infor (type, value) VALUES (?, ?)', ['perm_'+key, JSON.stringify(val)]);
+        await db().query('INSERT INTO settings (type, value) VALUES (?, ?)', ['perm_'+key, JSON.stringify(val)]);
       }
       logActivity('perms_update', actor, _bu, null, {}).catch(()=>{});
       return res.json({ ok:true });
@@ -997,7 +997,7 @@ export default async function handler(req, res) {
 
     /* ── Get page access settings ── */
     if (action === 'helen_page_access_get') {
-      const [rows] = await db().query('SELECT type, value FROM helen_infor WHERE type LIKE "pageaccess_%"');
+      const [rows] = await db().query('SELECT type, value FROM settings WHERE type LIKE "pageaccess_%"');
       if (!rows.length) return res.json({ ok:true, access: null });
       const access = {};
       rows.forEach(r => {
@@ -1018,10 +1018,10 @@ export default async function handler(req, res) {
         if (!access[p].includes('Admin')) access[p].unshift('Admin');
       }
       access.settings = ['Admin'];
-      await db().query('DELETE FROM helen_infor WHERE type LIKE "pageaccess_%"');
+      await db().query('DELETE FROM settings WHERE type LIKE "pageaccess_%"');
       for (const [key, val] of Object.entries(access)) {
         if (ALL_PAGES.includes(key)) {
-          await db().query('INSERT INTO helen_infor (type, value) VALUES (?, ?)', ['pageaccess_'+key, JSON.stringify(val)]);
+          await db().query('INSERT INTO settings (type, value) VALUES (?, ?)', ['pageaccess_'+key, JSON.stringify(val)]);
         }
       }
       logActivity('page_access_update', actor, _bu, null, {}).catch(()=>{});
@@ -1033,7 +1033,7 @@ export default async function handler(req, res) {
       const pin = String(body.pin || '').trim();
       if (!pin) return res.json({ ok:false });
       const [rows] = await db().query(
-        'SELECT 1 FROM helen_users WHERE username=? AND pin=? AND status="active" LIMIT 1',
+        'SELECT 1 FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
         [_bu, pin]
       );
       return res.json({ ok: rows.length > 0 });
@@ -1042,7 +1042,7 @@ export default async function handler(req, res) {
     /* ── Telegram config get ── */
     if (action === 'helen_tg_config_get') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
-      const [rows] = await db().query("SELECT type, value FROM helen_infor WHERE type IN ('tg_bot_token','tg_chat_id')");
+      const [rows] = await db().query("SELECT type, value FROM settings WHERE type IN ('tg_bot_token','tg_chat_id')");
       const m = {};
       rows.forEach(r => { m[r.type] = r.value; });
       const dbBot  = m.tg_bot_token || '';
@@ -1057,9 +1057,9 @@ export default async function handler(req, res) {
       const bot  = String(body.bot_token || '').trim();
       const chat = String(body.chat_id   || '').trim();
       const upsert = async (type, val) => {
-        const [ex] = await db().query('SELECT id FROM helen_infor WHERE type=?', [type]);
-        if (ex.length) await db().query('UPDATE helen_infor SET value=? WHERE type=?', [val, type]);
-        else await db().query('INSERT INTO helen_infor (type, value) VALUES (?,?)', [type, val]);
+        const [ex] = await db().query('SELECT id FROM settings WHERE type=?', [type]);
+        if (ex.length) await db().query('UPDATE settings SET value=? WHERE type=?', [val, type]);
+        else await db().query('INSERT INTO settings (type, value) VALUES (?,?)', [type, val]);
       };
       await upsert('tg_bot_token', bot);
       await upsert('tg_chat_id',   chat);
@@ -1086,7 +1086,7 @@ export default async function handler(req, res) {
 
     /* ── Notif settings get ── */
     if (action === 'helen_notif_get') {
-      const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="notif"');
+      const [rows] = await db().query('SELECT value FROM settings WHERE type="notif"');
       const configured = rows.some(r => r.value === '__configured__');
       const enabled = rows.filter(r => r.value !== '__configured__').map(r => r.value);
       return res.json({ ok:true, configured, enabled: configured ? enabled : ['add','edit','delete','login','login_fail','user'] });
@@ -1096,17 +1096,17 @@ export default async function handler(req, res) {
     if (action === 'helen_notif_save') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
       const types = Array.isArray(body.enabled) ? body.enabled.filter(t => ['add','edit','delete','login','login_fail','user'].includes(t)) : [];
-      await db().query('DELETE FROM helen_infor WHERE type="notif"');
-      await db().query('INSERT INTO helen_infor (type, value) VALUES ("notif", "__configured__")');
+      await db().query('DELETE FROM settings WHERE type="notif"');
+      await db().query('INSERT INTO settings (type, value) VALUES ("notif", "__configured__")');
       for (const t of types) {
-        await db().query('INSERT INTO helen_infor (type, value) VALUES ("notif", ?)', [t]);
+        await db().query('INSERT INTO settings (type, value) VALUES ("notif", ?)', [t]);
       }
       return res.json({ ok:true });
     }
 
     /* ── Watch user list get ── */
     if (action === 'helen_watch_get') {
-      const [rows] = await db().query('SELECT value FROM helen_infor WHERE type="watch_user"');
+      const [rows] = await db().query('SELECT value FROM settings WHERE type="watch_user"');
       return res.json({ ok:true, watched: rows.map(r => r.value) });
     }
 
@@ -1114,9 +1114,9 @@ export default async function handler(req, res) {
     if (action === 'helen_watch_save') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
       const usernames = Array.isArray(body.watched) ? body.watched.filter(u => typeof u === 'string' && u.trim()) : [];
-      await db().query('DELETE FROM helen_infor WHERE type="watch_user"');
+      await db().query('DELETE FROM settings WHERE type="watch_user"');
       for (const u of usernames) {
-        await db().query('INSERT INTO helen_infor (type, value) VALUES ("watch_user", ?)', [u.trim()]);
+        await db().query('INSERT INTO settings (type, value) VALUES ("watch_user", ?)', [u.trim()]);
       }
       return res.json({ ok:true });
     }
