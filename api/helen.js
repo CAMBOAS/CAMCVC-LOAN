@@ -1,4 +1,4 @@
-﻿/**
+/**
  * HELEN LOAN — MySQL API Handler
  * Replaces Google Apps Script backend.
  */
