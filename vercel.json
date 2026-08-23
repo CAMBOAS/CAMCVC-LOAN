@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/app.js": { "maxDuration": 30, "includeFiles": "node_modules/**" }
+    "api/app.js": { "maxDuration": 30 }
   },
   "headers": [
     {

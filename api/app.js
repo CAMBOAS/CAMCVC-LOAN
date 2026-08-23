@@ -3,8 +3,8 @@
  * Replaces Google Apps Script backend.
  */
 
-import mysql  from 'mysql2/promise';
-import crypto from 'crypto';
+const mysql  = require('mysql2/promise');
+const crypto = require('crypto');
 
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
 const TG_CHAT_ID   = process.env.TG_CHAT_ID   || '';
@@ -293,9 +293,7 @@ async function validateAuth(u, p) {
   return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '' };
 }
 
-export const config = { api: { bodyParser: false } };
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
