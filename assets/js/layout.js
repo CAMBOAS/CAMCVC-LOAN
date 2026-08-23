@@ -6,6 +6,38 @@
   function setLang(l) { localStorage.setItem('lang', l); }
   function t(kh, en) { return getLang() === 'en' ? en : kh; }
 
+  function getBrand() {
+    try { return JSON.parse(localStorage.getItem('helenBrand')||'null') || {}; } catch(e) { return {}; }
+  }
+  window.helenGetBrand = getBrand;
+  window.helenSetBrand = function(b) {
+    try { localStorage.setItem('helenBrand', JSON.stringify(b)); } catch(e) {}
+  };
+  window.helenSyncBrand = async function() {
+    try {
+      if (typeof CamboAPI === 'undefined') return;
+      var r = await CamboAPI.post({ action: 'get_settings' });
+      if (r && r.ok) {
+        var b = { name: r.app_name||'', sub: r.app_sub||'', logoUrl: r.app_logo_url||'' };
+        window.helenSetBrand(b);
+        window.helenApplyBrand();
+      }
+    } catch(e) {}
+  };
+  window.helenApplyBrand = function() {
+    var b = getBrand();
+    var name = b.name || 'CAMBO';
+    var sub  = b.sub  || 'Loan Management';
+    var el = document.querySelector('.sb-brand-name');
+    if (el) el.textContent = name;
+    var es = document.querySelector('.sb-brand-sub');
+    if (es) es.textContent = sub;
+    if (b.logoUrl) {
+      var img = document.querySelector('.sb-logo-img');
+      if (img) img.src = b.logoUrl;
+    }
+  };
+
   function getPageMeta() {
     return {
       'index.html':     { title: t('Dashboard','Dashboard'),   subtitle: t('ការវិភាគ និងទិដ្ឋភាពទូទៅ','Analytics & overview') },
@@ -126,15 +158,19 @@
       return `<li><a href="${base}${page}" class="${cls} ${active}" data-page="${pageName}" data-tooltip="${label}"${onclick}><span class="sb-icon">${icon}</span><span class="sb-label">${label}</span><span class="sb-active-dot"></span></a></li>`;
     }
 
+    const _brand = getBrand();
+    const _bName = _brand.name || 'CAMBO';
+    const _bSub  = _brand.sub  || 'Loan Management';
+    const _bLogo = _brand.logoUrl ? _brand.logoUrl : `${base}images/logo/LOGO.png`;
     return `
       <div class="sb-head">
         <button class="sb-brand-btn" id="sbBrandBtn" onclick="var t=document.getElementById('sbToggleBtn');if(t)t.click();" title="Toggle sidebar">
           <div class="sb-logo-wrap">
-            <img class="sb-logo-img" src="${base}images/logo/LOGO.png" alt="CAMBO" onerror="this.style.display='none'">
+            <img class="sb-logo-img" src="${_bLogo}" alt="${_bName}" onerror="this.style.display='none'">
           </div>
           <div class="sb-brand-text">
-            <div class="sb-brand-name">CAMBO</div>
-            <div class="sb-brand-sub">Loan Management</div>
+            <div class="sb-brand-name">${_bName}</div>
+            <div class="sb-brand-sub">${_bSub}</div>
           </div>
         </button>
         <button class="sb-collapse-btn" id="sbToggleBtn" title="Toggle sidebar" style="display:none"></button>
@@ -251,7 +287,7 @@
       + '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
       + '</div>'
       + '<div style="font-size:16px;font-weight:800;color:'+textPri+';margin-bottom:6px;font-family:inherit">Sign Out?</div>'
-      + '<div style="font-size:12.5px;color:'+textSec+';margin-bottom:22px;line-height:1.6">Are you sure you want to<br>sign out of HELEN LOAN?</div>'
+      + '<div style="font-size:12.5px;color:'+textSec+';margin-bottom:22px;line-height:1.6">Are you sure you want to<br>sign out of '+(getBrand().name||'this app')+'?</div>'
       + '<div style="display:flex;gap:10px">'
       + '<button id="hlLogoutCancel" style="flex:1;padding:11px;border-radius:11px;border:1.5px solid '+btnBdr+';background:transparent;color:'+btnClr+';font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s">Cancel</button>'
       + '<button id="hlLogoutOk" style="flex:1;padding:11px;border-radius:11px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(239,68,68,.35)">Sign Out</button>'
@@ -694,7 +730,7 @@
     try { _a = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e){}
     if (!_a || !_a.u) return;
 
-    var texts  = [_a.name || _a.u, 'HELEN LOAN'];
+    var texts  = [_a.name || _a.u, getBrand().name || 'CAMBO'];
     var colors = ['#a78bfa', '#06b6d4']; /* purple for user, cyan for brand */
     var idx    = 0;
     var style  = Math.floor(Math.random() * 9); /* pick ONE style for the whole session */
@@ -814,6 +850,6 @@
       document.head.appendChild(_s);
     }
     /* Sync role permissions and page access from DB (non-blocking) */
-    if (_pg !== 'login.html') setTimeout(function(){ window.helenSyncPerms && window.helenSyncPerms(); window.helenSyncPageAccess && window.helenSyncPageAccess(); }, 500);
+    if (_pg !== 'login.html') setTimeout(function(){ window.helenSyncPerms && window.helenSyncPerms(); window.helenSyncPageAccess && window.helenSyncPageAccess(); window.helenSyncBrand && window.helenSyncBrand(); }, 500);
   });
 })();

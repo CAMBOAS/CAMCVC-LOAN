@@ -513,12 +513,28 @@ export default async function handler(req, res) {
     /* ── Infor only ── */
     if (action === 'get_settings') {
       const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
+      const one = (type) => (infor.find(r=>r.type===type)||{}).value || '';
       return res.json({
         ok:          true,
         groups:      infor.filter(r=>r.type==='groups').map(r=>r.value),
         statuses:    infor.filter(r=>r.type==='statuses').map(r=>r.value),
         socialMedia: infor.filter(r=>r.type==='socialMedia').map(r=>r.value),
+        app_name:     one('app_name'),
+        app_sub:      one('app_sub'),
+        app_logo_url: one('app_logo_url'),
       });
+    }
+
+    /* ── Save brand ── */
+    if (action === 'brand_save') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const fields = ['app_name','app_sub','app_logo_url'];
+      for (const f of fields) {
+        await db().query('DELETE FROM settings WHERE type=?', [f]);
+        const val = String(body[f]||'').trim();
+        if (val) await db().query('INSERT INTO settings (type,value) VALUES (?,?)', [f, val]);
+      }
+      return res.json({ ok:true });
     }
 
     /* ── Trash list ── */
