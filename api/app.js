@@ -1,5 +1,5 @@
 ﻿/**
- * HELEN LOAN — MySQL API Handler
+ * App — MySQL API Handler
  * Replaces Google Apps Script backend.
  */
 
@@ -1092,7 +1092,7 @@ export default async function handler(req, res) {
       try {
         const tgRes = await fetch(`https://api.telegram.org/bot${bot}/sendMessage`, {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ chat_id: chat, text:'✅ *Helen Loan — Test Connection*\nTelegram is configured correctly!', parse_mode:'Markdown' }),
+          body: JSON.stringify({ chat_id: chat, text:'✅ *App — Test Connection*\nTelegram is configured correctly!', parse_mode:'Markdown' }),
         });
         const tgData = await tgRes.json();
         if (tgData.ok) return res.json({ ok:true });
@@ -1149,7 +1149,7 @@ export default async function handler(req, res) {
       const buf      = Buffer.from(rawB64, 'base64');
       const blob     = new Blob([buf], { type: mime });
       const timestamp = Math.floor(Date.now() / 1000);
-      const folder    = 'helen-loan';
+      const folder    = 'app-uploads';
       const signStr   = `folder=${folder}&timestamp=${timestamp}${CLD_SEC}`;
       const signature = crypto.createHash('sha1').update(signStr).digest('hex');
       const form = new FormData();
@@ -1168,7 +1168,7 @@ export default async function handler(req, res) {
     if (action === 'get_upload_sig') {
       if (!CLD_CLOUD || !CLD_KEY || !CLD_SEC) return res.json({ ok:false, message:'Cloudinary not configured' });
       const timestamp = Math.floor(Date.now() / 1000);
-      const folder    = 'helen-loan';
+      const folder    = 'app-uploads';
       const signStr   = `folder=${folder}&timestamp=${timestamp}${CLD_SEC}`;
       const signature = crypto.createHash('sha1').update(signStr).digest('hex');
       return res.json({ ok:true, timestamp, signature, api_key: CLD_KEY, cloud_name: CLD_CLOUD, folder });
@@ -1177,7 +1177,7 @@ export default async function handler(req, res) {
     return res.json({ ok:false, message:'Unknown action: ' + action });
 
   } catch(err) {
-    console.error('[helen-api]', err.message);
+    console.error('[api]', err.message);
     return res.status(500).json({ ok:false, message: err.message || 'Server error' });
   }
 }
