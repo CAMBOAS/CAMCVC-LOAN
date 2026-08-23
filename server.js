@@ -1,5 +1,5 @@
 ﻿/**
- * HELEN LOAN — Local Development Server
+ * Local Development Server
  * Run: node server.js
  * Open: http://localhost:5500
  *
@@ -378,7 +378,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log('');
   console.log('  ╔══════════════════════════════════════╗');
-  console.log('  ║   HELEN LOAN — Server Running        ║');
+  console.log('  ║   App Server Running                 ║');
   console.log('  ║   http://localhost:' + PORT + '              ║');
   console.log('  ╚══════════════════════════════════════╝');
   console.log('');
