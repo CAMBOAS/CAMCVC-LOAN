@@ -98,6 +98,51 @@
     .tm-spin  { width:26px; height:26px; border:3px solid rgba(124,92,255,.2); border-top-color:#7c5cff; border-radius:50%; animation:tmSpin .7s linear infinite; margin-right:10px; flex-shrink:0 }
     @keyframes tmSpin{ to{ transform:rotate(360deg) } }
 
+    /* -- Toolbar -- */
+    .tm-toolbar { display:flex; align-items:center; justify-content:flex-end; margin-bottom:14px; gap:6px }
+    .tm-view-btn {
+      width:34px; height:34px; border-radius:9px; border:1px solid var(--tm-border);
+      background:transparent; color:var(--tm-muted); cursor:pointer;
+      display:flex; align-items:center; justify-content:center; transition:.15s;
+    }
+    .tm-view-btn:hover { background:rgba(124,92,255,.08); color:#7c5cff; border-color:rgba(124,92,255,.3) }
+    .tm-view-btn.active { background:rgba(124,92,255,.12); color:#7c5cff; border-color:rgba(124,92,255,.35) }
+
+    /* -- List view -- */
+    .tm-list { display:flex; flex-direction:column; gap:7px }
+    .tm-row {
+      background:var(--tm-card); border-radius:14px; border:1px solid var(--tm-border);
+      box-shadow:var(--tm-shadow); padding:11px 16px; display:flex; align-items:center;
+      gap:13px; cursor:pointer; transition:.15s;
+    }
+    .tm-row:hover { border-color:rgba(124,92,255,.35); box-shadow:0 4px 18px rgba(124,92,255,.11); transform:translateX(2px) }
+    .tm-row:active { transform:translateX(0) }
+    .tm-row-av-wrap { position:relative; flex-shrink:0 }
+    .tm-row-av {
+      width:44px; height:44px; border-radius:50%; overflow:hidden;
+      border:2.5px solid rgba(124,92,255,.2); background:rgba(124,92,255,.1);
+      display:flex; align-items:center; justify-content:center;
+      font-size:17px; font-weight:800; color:#7c5cff;
+    }
+    .tm-row-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
+    .tm-row-dot { position:absolute; bottom:0; right:0; width:13px; height:13px; border-radius:50%; border:2.5px solid var(--tm-card) }
+    .tm-row-dot.online  { background:#22c55e }
+    .tm-row-dot.offline { background:#94a3b8 }
+    .tm-row-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px }
+    .tm-row-name { font-size:13px; font-weight:800; color:var(--tm-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .tm-row-meta { display:flex; align-items:center; gap:6px; flex-wrap:wrap }
+    .tm-row-stats { display:flex; gap:14px; flex-shrink:0 }
+    .tm-row-stat { display:flex; flex-direction:column; align-items:center; gap:1px }
+    .tm-row-stat-val { font-size:14px; font-weight:800; color:var(--tm-text); font-variant-numeric:tabular-nums; line-height:1 }
+    .tm-row-stat-lbl { font-size:9px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.04em }
+    .tm-row-divider { width:1px; height:32px; background:var(--tm-border); flex-shrink:0 }
+    .tm-row-last { font-size:10.5px; color:var(--tm-muted); white-space:nowrap; flex-shrink:0 }
+    @media(max-width:540px){
+      .tm-row-last { display:none }
+      .tm-row-divider:last-of-type { display:none }
+    }
+    @media(max-width:380px){ .tm-row-stats { display:none } .tm-row-divider { display:none } }
+
     /* ------------------------------
        PROFILE MODAL
     ------------------------------ */
@@ -142,8 +187,17 @@
   <main class="main-content" id="mainContent">
     <div class="shared-topbar" id="sharedHeader"></div>
     <div class="tm-wrap">
+      <div class="tm-toolbar" id="tmToolbar" style="display:none">
+        <button class="tm-view-btn active" id="btnGrid" onclick="setView('grid')" title="Grid view">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="tm-view-btn" id="btnList" onclick="setView('list')" title="List view">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
       <div id="tmState" class="tm-state"><div class="tm-spin"></div><span>Loading…</span></div>
       <div class="tm-grid" id="tmGrid" style="display:none"></div>
+      <div class="tm-list" id="tmList" style="display:none"></div>
     </div>
   </main>
 </div>
@@ -339,7 +393,7 @@ function openChatFromProfile() {
 /* Update unread badges when global chat widget broadcasts */
 document.addEventListener('app-unread-update', function(e) {
   var counts=(e.detail&&e.detail.counts)||{};
-  document.querySelectorAll('.tm-card').forEach(function(card){
+  document.querySelectorAll('.tm-card, .tm-row').forEach(function(card){
     var uname=card.getAttribute('data-username')||'';
     var old=card.querySelector('.tm-unread'); if(old) old.remove();
     var cnt=counts[uname]||0;
@@ -353,18 +407,72 @@ document.addEventListener('app-unread-update', function(e) {
 
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeProfile(); });
 
+function renderRow(u, idx) {
+  var name=u.display_name||u.username||'?';
+  var init=name.charAt(0).toUpperCase();
+  var photo=u.photo_url||'';
+  var avInner=photo
+    ?'<img src="'+esc(photo)+'" alt="'+esc(init)+'" onerror="this.parentNode.innerHTML=\''+esc(init)+'\'">'
+    :esc(init);
+  var online=isOnline(u.last_seen);
+  var rc=roleCls(u.role);
+  return '<div class="tm-row" data-username="'+esc(u.username)+'" onclick="openCard('+idx+')">'
+    +'<div class="tm-row-av-wrap">'
+      +'<div class="tm-row-av">'+avInner+'</div>'
+      +'<span class="tm-row-dot '+(online?'online':'offline')+'" title="'+(online?'Online':'Offline')+'"></span>'
+    +'</div>'
+    +'<div class="tm-row-info">'
+      +'<div class="tm-row-name">'+esc(name)+'</div>'
+      +'<div class="tm-row-meta">'
+        +'<span class="tm-role '+rc+'">'+esc(u.role||'Staff')+'</span>'
+        +expBadge(u.exp_date)
+      +'</div>'
+    +'</div>'
+    +'<div class="tm-row-divider"></div>'
+    +'<div class="tm-row-stats">'
+      +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_added||0)+'</div><div class="tm-row-stat-lbl">Added</div></div>'
+      +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_edited||0)+'</div><div class="tm-row-stat-lbl">Edited</div></div>'
+    +'</div>'
+    +'<div class="tm-row-divider"></div>'
+    +'<div class="tm-row-last">'+esc(fmtLastActive(u.last_login||''))+'</div>'
+    +'</div>';
+}
+
+var _curView = localStorage.getItem('tm_view') || 'grid';
+
+function setView(mode) {
+  _curView = mode;
+  localStorage.setItem('tm_view', mode);
+  var gridEl=document.getElementById('tmGrid');
+  var listEl=document.getElementById('tmList');
+  var btnG=document.getElementById('btnGrid');
+  var btnL=document.getElementById('btnList');
+  if (mode === 'list') {
+    gridEl.style.display='none'; listEl.style.display='';
+    btnG.classList.remove('active'); btnL.classList.add('active');
+    if (!listEl.innerHTML) listEl.innerHTML=_users.map(renderRow).join('');
+  } else {
+    listEl.style.display='none'; gridEl.style.display='';
+    btnG.classList.add('active'); btnL.classList.remove('active');
+  }
+}
+
 /* -- Load -- */
 document.addEventListener('DOMContentLoaded', async function() {
   if (window.CamcvcAuth&&!window.CamcvcAuth.check()) return;
   try {
     var res=await CamboAPI.post({ action:'team_list' });
     var stateEl=document.getElementById('tmState');
-    var gridEl=document.getElementById('tmGrid');
     if (!res||!res.ok){ stateEl.textContent=(res&&res.message)||'Error loading team'; return; }
     if (!res.users||!res.users.length){ stateEl.textContent='No team members found'; return; }
     _users=res.users;
+    var gridEl=document.getElementById('tmGrid');
+    var listEl=document.getElementById('tmList');
     gridEl.innerHTML=_users.map(renderCard).join('');
-    gridEl.style.display=''; stateEl.style.display='none';
+    listEl.innerHTML=_users.map(renderRow).join('');
+    stateEl.style.display='none';
+    document.getElementById('tmToolbar').style.display='';
+    setView(_curView);
   } catch(e){ document.getElementById('tmState').textContent='Error loading team'; }
 });
 </script>
