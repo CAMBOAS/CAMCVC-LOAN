@@ -31,13 +31,13 @@ const url   = require('url');
 })();
 
 /* ── Cache the app.js handler (ES-module, loaded once) ── */
-let _helenHandler = null;
-async function getHelenHandler() {
-  if (!_helenHandler) {
+let _camcvcHandler = null;
+async function getCamcvcHandler() {
+  if (!_camcvcHandler) {
     const mod = await import('./api/app.js');
-    _helenHandler = mod.default;
+    _camcvcHandler = mod.default;
   }
-  return _helenHandler;
+  return _camcvcHandler;
 }
 
 const PORT           = 5500;
@@ -220,7 +220,7 @@ const server = http.createServer(async (req, res) => {
           res.end(JSON.stringify(data));
         },
       };
-      const handler = await getHelenHandler();
+      const handler = await getCamcvcHandler();
       await handler(mockReq, mockRes);
     } catch (err) {
       console.error('[/api/app error]', err.message);

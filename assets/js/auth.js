@@ -36,5 +36,5 @@
     location.replace('login.html');
   }
 
-  window.HelenAuth = { get: get, save: save, clear: clear, check: check, logout: logout };
+  window.CamcvcAuth = { get: get, save: save, clear: clear, check: check, logout: logout };
 })();

@@ -4,7 +4,7 @@
   <script>(function(){document.documentElement.style.visibility='';})();</script>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-  <title>Customers - HELEN LOAN</title>
+  <title>Customers - CAMCVC LOAN</title>
   <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -473,10 +473,10 @@ function _setDefaultDT(){
 function goBack(){history.length>1?history.back():location.href='../index.html';}
 
 /* ── Load groups, statuses, linkedTo & recent customers ── */
-var _helenGroups=[];
-var _helenStatuses=[];
-var _helenSocialMedia=[];
-var _helenLinkedTo=[];
+var _camcvcGroups=[];
+var _camcvcStatuses=[];
+var _camcvcSocialMedia=[];
+var _camcvcLinkedTo=[];
 var _allLoans=[];
 var _editingLoanId=null;
 
@@ -484,10 +484,10 @@ async function loadMeta(){
   try{
     var data=await Promise.race([CamboAPI.post({action:'get_all'}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},20000);})]);
     if(data&&data.ok){
-      _helenGroups    =Array.isArray(data.groups)     ?data.groups.filter(function(g){return g&&g.toLowerCase()!=='groups';})         :[];
-      _helenStatuses  =Array.isArray(data.statuses)   ?data.statuses.filter(function(s){return s&&s.toLowerCase()!=='status';})       :[];
-      _helenSocialMedia=Array.isArray(data.socialMedia)?data.socialMedia.filter(function(v){return v&&v.toLowerCase()!=='social media';}):[];
-      _helenLinkedTo  =Array.isArray(data.linkedTo)   ?data.linkedTo.filter(function(v){return v&&v.toLowerCase()!=='linked to';})    :[];
+      _camcvcGroups    =Array.isArray(data.groups)     ?data.groups.filter(function(g){return g&&g.toLowerCase()!=='groups';})         :[];
+      _camcvcStatuses  =Array.isArray(data.statuses)   ?data.statuses.filter(function(s){return s&&s.toLowerCase()!=='status';})       :[];
+      _camcvcSocialMedia=Array.isArray(data.socialMedia)?data.socialMedia.filter(function(v){return v&&v.toLowerCase()!=='social media';}):[];
+      _camcvcLinkedTo  =Array.isArray(data.linkedTo)   ?data.linkedTo.filter(function(v){return v&&v.toLowerCase()!=='linked to';})    :[];
       _allLoans=Array.isArray(data.loans)?data.loans:[];
     }
   }catch(e){}
@@ -498,8 +498,8 @@ async function loadMeta(){
 function populateSelects(){
   var gSel=document.getElementById('af_Groups');
   var sSel=document.getElementById('af_Status');
-  var groups=_helenGroups.length?_helenGroups:[];
-  var statuses=_helenStatuses.length?_helenStatuses:['Good','Normal','BlackListed','High Risk'];
+  var groups=_camcvcGroups.length?_camcvcGroups:[];
+  var statuses=_camcvcStatuses.length?_camcvcStatuses:['Good','Normal','BlackListed','High Risk'];
   groups.forEach(function(g){var o=document.createElement('option');o.value=g;o.textContent=g;gSel.appendChild(o);});
   statuses.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(s==='Normal')o.selected=true;sSel.appendChild(o);});
   updateLinkedToSelect();
@@ -509,7 +509,7 @@ function updateLinkedToSelect(){
   var sel=document.getElementById('af_LinkedTo');if(!sel)return;
   var cur=sel.value;
   sel.innerHTML='<option value="">— None —</option>';
-  _helenLinkedTo.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  _camcvcLinkedTo.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
   if(cur)sel.value=cur;
 }
 
@@ -542,7 +542,7 @@ function _updateMGSTabs(){
 }
 function _renderMGSList(){
   var list=document.getElementById('mgs_list');if(!list)return;
-  var arr=_mgsActiveTab==='group'?_helenGroups:_mgsActiveTab==='status'?_helenStatuses:_helenLinkedTo;
+  var arr=_mgsActiveTab==='group'?_camcvcGroups:_mgsActiveTab==='status'?_camcvcStatuses:_camcvcLinkedTo;
   if(!arr.length){list.innerHTML='<div class="mgs-empty">មិនមានទិន្នន័យ</div>';return;}
   list.innerHTML=arr.map(function(v){
     return '<div class="mgs-item"><span class="mgs-item-name">'+esc(v)+'</span>'
@@ -557,15 +557,15 @@ async function mgsDelItem(val){
     var res=await CamboAPI.post({action:'settings_delete',type:dbType,value:val});
     if(res&&res.ok){
       if(_mgsActiveTab==='group'){
-        _helenGroups=_helenGroups.filter(function(g){return g!==val;});
+        _camcvcGroups=_camcvcGroups.filter(function(g){return g!==val;});
         var sel=document.getElementById('af_Groups');
         for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===val){sel.remove(i);break;}}
       }else if(_mgsActiveTab==='status'){
-        _helenStatuses=_helenStatuses.filter(function(s){return s!==val;});
+        _camcvcStatuses=_camcvcStatuses.filter(function(s){return s!==val;});
         var sel2=document.getElementById('af_Status');
         for(var j=0;j<sel2.options.length;j++){if(sel2.options[j].value===val){sel2.remove(j);break;}}
       }else{
-        _helenLinkedTo=_helenLinkedTo.filter(function(l){return l!==val;});
+        _camcvcLinkedTo=_camcvcLinkedTo.filter(function(l){return l!==val;});
         updateLinkedToSelect();
       }
       _renderMGSList();toast(val+' removed');
@@ -576,7 +576,7 @@ async function mgsConfirmAdd(){
   var inp=document.getElementById('mgs_addinput');
   var val=(inp?inp.value:'').trim();
   if(!val)return;
-  var arr=_mgsActiveTab==='group'?_helenGroups:_mgsActiveTab==='status'?_helenStatuses:_helenLinkedTo;
+  var arr=_mgsActiveTab==='group'?_camcvcGroups:_mgsActiveTab==='status'?_camcvcStatuses:_camcvcLinkedTo;
   for(var i=0;i<arr.length;i++){if(arr[i].toLowerCase()===val.toLowerCase()){toast(val+' already exists',true);inp.focus();return;}}
   var dbType=_mgsActiveTab==='group'?'groups':_mgsActiveTab==='status'?'statuses':'linkedTo';
   var btn=document.getElementById('mgs_addbtn');
@@ -587,13 +587,13 @@ async function mgsConfirmAdd(){
       if(_mgsActiveTab==='group'){
         var sel=document.getElementById('af_Groups');
         var o=document.createElement('option');o.value=val;o.textContent=val;sel.appendChild(o);
-        _helenGroups.push(val);
+        _camcvcGroups.push(val);
       }else if(_mgsActiveTab==='status'){
         var sel2=document.getElementById('af_Status');
         var o2=document.createElement('option');o2.value=val;o2.textContent=val;sel2.appendChild(o2);
-        _helenStatuses.push(val);
+        _camcvcStatuses.push(val);
       }else{
-        _helenLinkedTo.push(val);
+        _camcvcLinkedTo.push(val);
         updateLinkedToSelect();
       }
       inp.value='';_renderMGSList();toast(val+' added');

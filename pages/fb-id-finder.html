@@ -4,7 +4,7 @@
   <script>(function(){document.documentElement.style.visibility='';})();</script>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-  <title>Facebook ID Finder - HELEN LOAN</title>
+  <title>Facebook ID Finder - CAMCVC LOAN</title>
   <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -616,7 +616,7 @@ updateCfgStatus();
 /* ── Website Links Panel (Area 1) ── */
 var _sitesList    = [];
 var _activeSiteUrl = null;
-var HELEN_AS_URL  = 'https://script.google.com/macros/s/AKfycbzrKtkKz0ni5BCvZl2f-yWcMFw9-BPqfdp28Aom1nws-X9bOibOivHebPXh8WPMX0Ie/exec';
+var CAMCVC_AS_URL  = 'https://script.google.com/macros/s/AKfycbzrKtkKz0ni5BCvZl2f-yWcMFw9-BPqfdp28Aom1nws-X9bOibOivHebPXh8WPMX0Ie/exec';
 
 function loadSites() {
   var body = document.getElementById('fbSitesBody');
@@ -627,7 +627,7 @@ function loadSites() {
   var base = getApiBase();
   var fetchUrl = base
     ? base + '/api/proxy?action=get_settings'
-    : HELEN_AS_URL + '?action=get_settings';
+    : CAMCVC_AS_URL + '?action=get_settings';
 
   fetch(fetchUrl)
     .then(function(r) { return r.json(); })
@@ -646,7 +646,7 @@ function renderSites(sites) {
   var body = document.getElementById('fbSitesBody');
   if (!sites || !sites.length) {
     body.innerHTML = '<div class="fb-sites-empty">គ្មាន Website Links<br>'
-      + '<span style="font-size:10px">បន្ថែម Links នៅ Google Sheet<br>HelenInfor · Columns D + E</span></div>';
+      + '<span style="font-size:10px">បន្ថែម Links នៅ Google Sheet<br>CamcvcInfor · Columns D + E</span></div>';
     return;
   }
   body.innerHTML = '<div class="fb-sites-list">'

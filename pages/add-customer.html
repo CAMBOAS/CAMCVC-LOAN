@@ -4,7 +4,7 @@
   <script>(function(){document.documentElement.style.visibility='';})();</script>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-  <title>Add Customer - HELEN LOAN</title>
+  <title>Add Customer - CAMCVC LOAN</title>
   <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -409,19 +409,19 @@ function _setDefaultDT(){
 function goBack(){history.length>1?history.back():location.href='customers.html';}
 
 /* ── Load groups, statuses & linkedTo ── */
-var _helenGroups=[];
-var _helenStatuses=[];
-var _helenSocialMedia=[];
-var _helenLinkedTo=[];
+var _camcvcGroups=[];
+var _camcvcStatuses=[];
+var _camcvcSocialMedia=[];
+var _camcvcLinkedTo=[];
 
 async function loadMeta(){
   try{
     var data=await Promise.race([CamboAPI.post({action:'get_all'}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},20000);})]);
     if(data&&data.ok){
-      _helenGroups    =Array.isArray(data.groups)     ?data.groups.filter(function(g){return g&&g.toLowerCase()!=='groups';})         :[];
-      _helenStatuses  =Array.isArray(data.statuses)   ?data.statuses.filter(function(s){return s&&s.toLowerCase()!=='status';})       :[];
-      _helenSocialMedia=Array.isArray(data.socialMedia)?data.socialMedia.filter(function(v){return v&&v.toLowerCase()!=='social media';}):[];
-      _helenLinkedTo  =Array.isArray(data.linkedTo)   ?data.linkedTo.filter(function(v){return v&&v.toLowerCase()!=='linked to';})    :[];
+      _camcvcGroups    =Array.isArray(data.groups)     ?data.groups.filter(function(g){return g&&g.toLowerCase()!=='groups';})         :[];
+      _camcvcStatuses  =Array.isArray(data.statuses)   ?data.statuses.filter(function(s){return s&&s.toLowerCase()!=='status';})       :[];
+      _camcvcSocialMedia=Array.isArray(data.socialMedia)?data.socialMedia.filter(function(v){return v&&v.toLowerCase()!=='social media';}):[];
+      _camcvcLinkedTo  =Array.isArray(data.linkedTo)   ?data.linkedTo.filter(function(v){return v&&v.toLowerCase()!=='linked to';})    :[];
     }
   }catch(e){}
   populateSelects();
@@ -430,8 +430,8 @@ async function loadMeta(){
 function populateSelects(){
   var gSel=document.getElementById('af_Groups');
   var sSel=document.getElementById('af_Status');
-  var groups=_helenGroups.length?_helenGroups:[];
-  var statuses=_helenStatuses.length?_helenStatuses:['Good','Normal','BlackListed','High Risk'];
+  var groups=_camcvcGroups.length?_camcvcGroups:[];
+  var statuses=_camcvcStatuses.length?_camcvcStatuses:['Good','Normal','BlackListed','High Risk'];
   groups.forEach(function(g){var o=document.createElement('option');o.value=g;o.textContent=g;gSel.appendChild(o);});
   statuses.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(s==='Normal')o.selected=true;sSel.appendChild(o);});
   updateLinkedToSelect();
@@ -442,14 +442,14 @@ function updateLinkedToSelect(){
   var sel=document.getElementById('af_LinkedTo');if(!sel)return;
   var cur=sel.value;
   sel.innerHTML='<option value="">— None —</option>';
-  _helenLinkedTo.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  _camcvcLinkedTo.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
   if(cur)sel.value=cur;
 }
 
 function renderLinkedToList(){
   var el=document.getElementById('acLtList');if(!el)return;
-  if(!_helenLinkedTo.length){el.innerHTML='<div class="ac-lt-empty">No names added yet. Use the field above to add.</div>';return;}
-  el.innerHTML=_helenLinkedTo.map(function(name){
+  if(!_camcvcLinkedTo.length){el.innerHTML='<div class="ac-lt-empty">No names added yet. Use the field above to add.</div>';return;}
+  el.innerHTML=_camcvcLinkedTo.map(function(name){
     return '<div class="ac-lt-item">'
       +'<div class="ac-lt-item-name">'+esc(name)+'</div>'
       +'<button type="button" class="ac-lt-item-del" onclick="removeLinkedToItem(\''+name.replace(/'/g,"\\'")+'\')" title="Remove">×</button>'
@@ -471,11 +471,11 @@ function closeLinkedToMgmt(){
 async function addLinkedToItem(){
   var inp=document.getElementById('acLtNewInput');if(!inp)return;
   var val=inp.value.trim();if(!val){inp.focus();return;}
-  if(_helenLinkedTo.indexOf(val)!==-1){toast('Name already exists',true);inp.focus();return;}
+  if(_camcvcLinkedTo.indexOf(val)!==-1){toast('Name already exists',true);inp.focus();return;}
   inp.disabled=true;
   try{
     var res=await CamboAPI.post({action:'settings_add',type:'linkedTo',value:val});
-    if(res&&res.ok){_helenLinkedTo.push(val);inp.value='';updateLinkedToSelect();renderLinkedToList();toast('Added: '+val);}
+    if(res&&res.ok){_camcvcLinkedTo.push(val);inp.value='';updateLinkedToSelect();renderLinkedToList();toast('Added: '+val);}
     else{toast((res&&res.message)||'Failed to add',true);}
   }catch(e){toast('Error: '+(e.message||'failed'),true);}
   inp.disabled=false;inp.focus();
@@ -486,7 +486,7 @@ async function removeLinkedToItem(name){
   try{
     var res=await CamboAPI.post({action:'settings_delete',type:'linkedTo',value:name});
     if(res&&res.ok){
-      _helenLinkedTo=_helenLinkedTo.filter(function(n){return n!==name;});
+      _camcvcLinkedTo=_camcvcLinkedTo.filter(function(n){return n!==name;});
       updateLinkedToSelect();renderLinkedToList();toast('Removed: '+name);
     }else{toast((res&&res.message)||'Failed to remove',true);}
   }catch(e){toast('Error: '+(e.message||'failed'),true);}

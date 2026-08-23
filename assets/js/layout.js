@@ -1,4 +1,4 @@
-﻿/* HELEN LOAN — Shared Layout (Sidebar + Topbar) v19 */
+﻿/* CAMCVC LOAN — Shared Layout (Sidebar + Topbar) v19 */
 (function () {
   'use strict';
 
@@ -282,7 +282,7 @@
           ]);
         }
       } catch(e) {}
-      if (window.HelenAuth) window.HelenAuth.logout();
+      if (window.CamcvcAuth) window.CamcvcAuth.logout();
       else location.href = getBase() + 'pages/login.html';
     };
   }
@@ -295,7 +295,7 @@
       el.innerHTML = '<img src="'+url+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
     } else {
       var base = getBase();
-      el.innerHTML = '<img src="'+base+'images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display=\'none\';this.parentNode.textContent=\'HL\'">';
+      el.innerHTML = '<img src="'+base+'images/logo/CAMCVC-Loan.png" alt="CAMCVC Loan" onerror="this.style.display=\'none\';this.parentNode.textContent=\'HL\'">';
     }
   }
 

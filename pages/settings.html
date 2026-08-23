@@ -3,7 +3,7 @@
 <head>
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Settings - HELEN LOAN</title>
+  <title>Settings - CAMCVC LOAN</title>
   <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -877,9 +877,9 @@
 <script>
 'use strict';
 
-if (!HelenAuth.check()) { throw new Error('not authenticated'); }
+if (!CamcvcAuth.check()) { throw new Error('not authenticated'); }
 
-var _auth     = HelenAuth.get();
+var _auth     = CamcvcAuth.get();
 var _isAdmin  = _auth && _auth.role === 'Admin';
 var _selfUser = _auth ? (_auth.u || '') : '';
 
@@ -1379,7 +1379,7 @@ function _onDragEnd() {
   document.querySelectorAll('#stTabBar .st-tab').forEach(function(t){ t.classList.remove('st-dragging','st-drag-over'); });
 }
 
-setInterval(function(){ HelenAuth.check(); }, 60000);
+setInterval(function(){ CamcvcAuth.check(); }, 60000);
 
 /* ── Notifications ── */
 function _esc(s) {

@@ -1,8 +1,8 @@
-{
+﻿{
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "HELEN LOAN — Dev Server",
+      "name": "CAMCVC LOAN — Dev Server",
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
       "port": 5500

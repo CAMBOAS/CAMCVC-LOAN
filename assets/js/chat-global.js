@@ -1,4 +1,4 @@
-﻿/* HELEN LOAN — Global Chat Widget (auto-injected on every page via layout.js) */
+﻿/* CAMCVC LOAN — Global Chat Widget (auto-injected on every page via layout.js) */
 (function () {
   'use strict';
 
