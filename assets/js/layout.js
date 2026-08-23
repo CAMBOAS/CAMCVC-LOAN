@@ -36,6 +36,15 @@
       var img = document.querySelector('.sb-logo-img');
       if (img) img.src = b.logoUrl;
     }
+    /* Update page <title>: keep the page-specific part, replace the brand suffix */
+    try {
+      var parts = document.title.split(/\s*[-–—]\s*/);
+      if (parts.length >= 2) {
+        document.title = parts[0] + ' — ' + name;
+      } else if (parts.length === 1 && parts[0]) {
+        document.title = parts[0] + ' — ' + name;
+      }
+    } catch(e) {}
   };
 
   function getPageMeta() {
@@ -840,6 +849,8 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     renderLayout();
+    /* Apply cached brand immediately (no flash) */
+    window.helenApplyBrand && window.helenApplyBrand();
     applyLogoAnimation();
     applyUserCardAnimation();
     /* Inject global chat widget on every page except login */

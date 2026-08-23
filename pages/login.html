@@ -437,10 +437,10 @@
       <!-- Logo -->
       <div class="logo-wrap">
         <div class="logo-ring">
-          <img src="../images/logo/LOGO.png" class="logo-img" alt="HELEN LOAN"
+          <img src="../images/logo/LOGO.png" class="logo-img" id="loginLogoImg" alt="HELEN LOAN"
                onerror="this.style.display='none'">
         </div>
-        <div class="logo-title">HELEN LOAN</div>
+        <div class="logo-title" id="loginAppName">HELEN LOAN</div>
         <div class="logo-sub">Sign in to access your account</div>
       </div>
 
@@ -506,7 +506,7 @@
     </div>
 
     <footer class="login-footer">
-      <span>© <span id="cpYear"></span> HELEN LOAN</span>
+      <span>© <span id="cpYear"></span> <span id="loginFooterName">HELEN LOAN</span></span>
       <span class="dot">·</span>
       <span>Design By
         <a href="https://www.facebook.com/SEREYROB22" target="_blank" rel="noopener noreferrer">
@@ -517,6 +517,28 @@
     </footer>
   </div>
 
+<script>
+  /* Apply brand from localStorage so login page shows correct name immediately */
+  (function() {
+    try {
+      var b = JSON.parse(localStorage.getItem('helenBrand') || 'null');
+      if (!b) return;
+      var name = b.name || '';
+      var logo = b.logoUrl || '';
+      if (name) {
+        var el = document.getElementById('loginAppName');
+        if (el) el.textContent = name;
+        var ft = document.getElementById('loginFooterName');
+        if (ft) ft.textContent = name;
+        document.title = 'Sign In — ' + name;
+      }
+      if (logo) {
+        var img = document.getElementById('loginLogoImg');
+        if (img) img.src = logo;
+      }
+    } catch(e) {}
+  })();
+</script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
   /* Redirect if already logged in */
