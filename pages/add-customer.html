@@ -21,7 +21,7 @@
 
     /* ── Page layout ── */
     .ac-wrap{padding:0 24px 60px;overflow-y:auto;height:calc(100vh - 64px);box-sizing:border-box}
-    @media(max-width:900px){.ac-wrap{height:auto;padding:0 12px 100px}}
+    @media(max-width:980px){.ac-wrap{height:auto;padding:60px 12px 100px}}
 
     /* ── Page header ── */
     .ac-page-hdr{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:22px 0 18px;border-bottom:1px solid rgba(148,163,184,.1);margin-bottom:24px}
@@ -153,7 +153,9 @@
     .toast-err{background:linear-gradient(135deg,#ef4444,#dc2626)}
 
     @media(max-width:600px){
-      .ac-page-hdr{padding:14px 0 14px}
+      .ac-page-hdr{padding:14px 0 10px;flex-direction:column;gap:10px;align-items:stretch}
+      .ac-hdr-actions{display:flex;justify-content:flex-end}
+      .ac-btn-save{width:100%;justify-content:center}
       .ac-title{font-size:18px}
       .ac-btn-cancel{display:none}
       .ac-section{padding:14px 14px 12px;border-radius:16px}

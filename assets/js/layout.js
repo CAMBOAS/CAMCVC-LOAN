@@ -173,7 +173,7 @@
     const _bLogo = _brand.logoUrl ? _brand.logoUrl : `${base}images/logo/LOGO.png`;
     return `
       <div class="sb-head">
-        <button class="sb-brand-btn" id="sbBrandBtn" onclick="var t=document.getElementById('sbToggleBtn');if(t)t.click();" title="Toggle sidebar">
+        <button class="sb-brand-btn" id="sbBrandBtn" onclick="location.href=location.pathname.includes('/pages/')? '../index.html':'index.html'" title="Dashboard">
           <div class="sb-logo-wrap">
             <img class="sb-logo-img" src="${_bLogo}" alt="${_bName}" onerror="this.style.display='none'">
           </div>
@@ -210,40 +210,7 @@
         </ul>
       </nav>
 
-      <div class="sb-grow"></div>
-
-      <div class="sb-footer">
-        ${(function(){
-          var _a = null;
-          try { _a = JSON.parse(localStorage.getItem('appAuth')||'null'); } catch(e){}
-          var _name = _a ? (_a.name || _a.u || 'HELEN LOAN') : 'HELEN LOAN';
-          var _role = _a ? (_a.role || 'User') : 'Administrator';
-          var _exp = '';
-          var _expMs = _a && _a.expDate
-            ? new Date(_a.expDate+'T23:59:59').getTime()
-            : (_a && _a.exp ? _a.exp : 0);
-          if (_a && _expMs) {
-            var _d = Math.ceil((_expMs - Date.now()) / 86400000);
-            if (_d <= 0)     _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(239,68,68,.18);color:#ef4444;margin-left:4px">Expired</span>';
-            else if (_d <= 3)_exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(245,158,11,.18);color:#f59e0b;margin-left:4px">'+_d+' days</span>';
-            else             _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(16,185,129,.13);color:#10b981;margin-left:4px">'+_d+' days</span>';
-          }
-          var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowUserMenu&&window._hlShowUserMenu()" title="Options"' : '';
-          var _photo = localStorage.getItem('user_photo') || '';
-          var _avatarInner = _photo
-            ? '<img src="'+_photo+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
-            : '<img src="'+base+'images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display=\'none\';this.parentNode.textContent=\'HL\'">';
-          return '<div class="sb-user-card" id="sbUserRow"'+_onclick+'>'
-            +'<div class="sb-user-avatar sb-user-avatar-img" id="sbUserAvatar">'
-            +_avatarInner
-            +'</div>'
-            +'<div class="sb-user-info">'
-            +'<div class="sb-user-name" id="sbUserName">'+_name+'</div>'
-            +'<div class="sb-user-role" id="sbUserRole"><span class="sb-online-dot"></span>'+_role+_exp+'</div>'
-            +'</div>'
-            +'</div>';
-        })()}
-      </div>`;
+      `;
   }
 
   function buildTopbar() {
