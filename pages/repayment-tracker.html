@@ -100,6 +100,32 @@
     @media(max-width:1200px){ .rt-body.detail-open{ grid-template-columns:1.2fr 2.6fr } }
     @media(max-width:960px){ .rt-body.detail-open{ grid-template-columns:1fr } }
 
+    /* ---- Mobile bottom-sheet portal ---- */
+    #rtMobileBackdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:1100; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px) }
+    #rtMobileBackdrop.show { display:block; animation:rtFadeIn .2s }
+    #rtMobileSheetPortal { display:none }
+    #rtMobileSheetPortal.show {
+      display:block; position:fixed; left:0; right:0; bottom:0; top:auto;
+      z-index:1101; max-height:88vh; overflow-y:auto;
+      border-radius:18px 18px 0 0;
+      background:var(--rt-card); border:1px solid var(--rt-border);
+      border-bottom:none; border-left:none; border-right:none;
+      animation:rtSlideUp .28s cubic-bezier(.32,1.2,.5,1);
+    }
+    /* On mobile, the panel inside portal fills the portal */
+    #rtMobileSheetPortal #rtPersonalPanel {
+      display:block !important; position:static !important;
+      max-height:none; border-radius:0; border:none;
+      background:transparent; overflow:visible;
+    }
+    @keyframes rtSlideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .rt-mobile-close-btn { display:none }
+    @media(max-width:768px){ .rt-mobile-close-btn { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; border:1.5px solid var(--rt-border); background:var(--rt-input); color:var(--rt-muted); cursor:pointer; flex-shrink:0; transition:.15s } }
+    .rt-mobile-close-btn:hover { color:var(--rt-text); border-color:var(--rt-accent) }
+    /* drag handle */
+    .rt-sheet-handle { display:none }
+    @media(max-width:768px){ .rt-sheet-handle { display:block; width:36px; height:4px; border-radius:2px; background:var(--rt-border); margin:10px auto 0; } }
+
     /* -- Table panel -- */
     .rt-tbl-wrap { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; overflow:hidden }
 
@@ -476,6 +502,8 @@
 
         <!-- Combined Detail panel -->
         <div class="rt-detail rt-detail-split" id="rtPersonalPanel" style="display:none">
+          <!-- drag handle (mobile only) -->
+          <div class="rt-sheet-handle"></div>
 
           <!-- Empty state -->
           <div class="rt-detail-empty" id="rtPersonalEmpty">
@@ -508,6 +536,9 @@
                   <span class="rt-dp-chip" id="dpDob"></span>
                 </div>
               </div>
+              <button class="rt-mobile-close-btn" onclick="closeMobileSheet()" title="Close" aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </div>
 
             <!-- -- Edit form -- -->
@@ -1669,13 +1700,38 @@ function selectLoan(key) {
   _execSelectLoan(key);
 }
 
+function _isMobileSheet() { return window.innerWidth <= 768; }
+
+var _panelOrigParent = null;
+var _panelOrigNext   = null;
+
+function closeMobileSheet() {
+  var panel   = document.getElementById('rtPersonalPanel');
+  var portal  = document.getElementById('rtMobileSheetPortal');
+  var backdrop= document.getElementById('rtMobileBackdrop');
+  // return panel to its original position in the grid
+  if (_panelOrigParent) {
+    _panelOrigParent.insertBefore(panel, _panelOrigNext);
+    _panelOrigParent = null; _panelOrigNext = null;
+  }
+  portal.classList.remove('show');
+  backdrop.classList.remove('show');
+  document.body.style.overflow = '';
+  panel.style.display = 'none';
+  document.querySelector('.rt-body').classList.remove('detail-open');
+  _selectedKey = null;
+  renderTable();
+}
+
 function _execSelectLoan(key) {
   _dirty = false;
   if (_selectedKey === key) {
-    _selectedKey = null;
-    document.getElementById('rtPersonalPanel').style.display = 'none';
-    document.querySelector('.rt-body').classList.remove('detail-open');
-    renderTable();
+    if (_isMobileSheet()) { closeMobileSheet(); } else {
+      _selectedKey = null;
+      document.getElementById('rtPersonalPanel').style.display = 'none';
+      document.querySelector('.rt-body').classList.remove('detail-open');
+      renderTable();
+    }
     return;
   }
   _selectedKey = key;
@@ -1688,9 +1744,21 @@ function _execSelectLoan(key) {
   populateDetail(loan);
   loadRphEntries(key);
   document.getElementById('rtPersonalPanel').style.display   = '';
-  document.querySelector('.rt-body').classList.add('detail-open');
   document.getElementById('rtPersonalEmpty').style.display   = 'none';
   document.getElementById('rtPersonalContent').style.display = '';
+  if (_isMobileSheet()) {
+    var panel  = document.getElementById('rtPersonalPanel');
+    var portal = document.getElementById('rtMobileSheetPortal');
+    // remember original position so we can restore on close
+    _panelOrigParent = panel.parentNode;
+    _panelOrigNext   = panel.nextSibling;
+    portal.appendChild(panel);
+    portal.classList.add('show');
+    document.getElementById('rtMobileBackdrop').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.querySelector('.rt-body').classList.add('detail-open');
+  }
 }
 
 function _unsavedDiscard() {
@@ -1912,6 +1980,9 @@ async function doDelete() {
       _selectedKey = null;
       closeDeleteConfirm();
       document.getElementById('rtPersonalPanel').style.display = 'none';
+      document.getElementById('rtPersonalPanel').classList.remove('rt-mobile-sheet');
+      document.getElementById('rtMobileBackdrop').classList.remove('show');
+      document.body.style.overflow = '';
       document.querySelector('.rt-body').classList.remove('detail-open');
       render();
       toast('Borrower moved to Trash');
@@ -2092,5 +2163,10 @@ document.addEventListener('DOMContentLoaded', function() {
   loadData();
 });
 </script>
+
+<!-- Mobile bottom-sheet portal (direct body child — avoids overflow:hidden trap) -->
+<div id="rtMobileBackdrop" onclick="closeMobileSheet()"></div>
+<div id="rtMobileSheetPortal"><!-- panel moved here on mobile --></div>
+
 </body>
 </html>
