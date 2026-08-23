@@ -7,24 +7,24 @@
   function t(kh, en) { return getLang() === 'en' ? en : kh; }
 
   function getBrand() {
-    try { return JSON.parse(localStorage.getItem('helenBrand')||'null') || {}; } catch(e) { return {}; }
+    try { return JSON.parse(localStorage.getItem('appBrand')||'null') || {}; } catch(e) { return {}; }
   }
-  window.helenGetBrand = getBrand;
-  window.helenSetBrand = function(b) {
-    try { localStorage.setItem('helenBrand', JSON.stringify(b)); } catch(e) {}
+  window.appGetBrand = getBrand;
+  window.appSetBrand = function(b) {
+    try { localStorage.setItem('appBrand', JSON.stringify(b)); } catch(e) {}
   };
-  window.helenSyncBrand = async function() {
+  window.appSyncBrand = async function() {
     try {
       if (typeof CamboAPI === 'undefined') return;
       var r = await CamboAPI.post({ action: 'get_settings' });
       if (r && r.ok) {
         var b = { name: r.app_name||'', sub: r.app_sub||'', logoUrl: r.app_logo_url||'' };
-        window.helenSetBrand(b);
-        window.helenApplyBrand();
+        window.appSetBrand(b);
+        window.appApplyBrand();
       }
     } catch(e) {}
   };
-  window.helenApplyBrand = function() {
+  window.appApplyBrand = function() {
     var b = getBrand();
     var name = b.name || 'CAMBO';
     var sub  = b.sub  || 'Loan Management';
@@ -95,7 +95,7 @@
   }
 
   function getAuthRole() {
-    try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a ? (a.role||'') : ''; } catch(e) { return ''; }
+    try { var a = JSON.parse(localStorage.getItem('appAuth')||'null'); return a ? (a.role||'') : ''; } catch(e) { return ''; }
   }
 
   var _PERMS = {
@@ -109,25 +109,25 @@
   /* merge saved overrides from localStorage */
   (function(){
     try {
-      var saved = JSON.parse(localStorage.getItem('helenPerms')||'null');
+      var saved = JSON.parse(localStorage.getItem('appPerms')||'null');
       if (saved && typeof saved==='object') Object.keys(saved).forEach(function(k){ _PERMS[k]=saved[k]; });
     } catch(e){}
   })();
-  window.helenCan = function(perm) {
+  window.appCan = function(perm) {
     var role = getAuthRole();
     return (_PERMS[perm]||[]).indexOf(role) !== -1;
   };
   /* called by settings page after saving to DB */
-  window.helenUpdatePerms = function(perms) {
+  window.appUpdatePerms = function(perms) {
     Object.keys(perms).forEach(function(k){ _PERMS[k]=perms[k]; });
-    try { localStorage.setItem('helenPerms', JSON.stringify(_PERMS)); } catch(e){}
+    try { localStorage.setItem('appPerms', JSON.stringify(_PERMS)); } catch(e){}
   };
   /* fetch fresh perms from DB and cache — call once on login/init */
-  window.helenSyncPerms = async function() {
+  window.appSyncPerms = async function() {
     try {
       if (typeof CamboAPI==='undefined') return;
       var r = await CamboAPI.post({ action:'perms_get' });
-      if (r && r.ok && r.perms) window.helenUpdatePerms(r.perms);
+      if (r && r.ok && r.perms) window.appUpdatePerms(r.perms);
     } catch(e){}
   };
 
@@ -135,23 +135,23 @@
   var _PA_ALL = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
   var _PAGE_ACCESS = (function(){
     var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), repaymentii:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), borrowerprofile:_PA_ALL.slice(), settings:['Admin'] };
-    try { var s = JSON.parse(localStorage.getItem('helenPageAccess')||'null'); if (s && typeof s==='object') Object.keys(s).forEach(function(k){ def[k]=s[k]; }); } catch(e){}
+    try { var s = JSON.parse(localStorage.getItem('appPageAccess')||'null'); if (s && typeof s==='object') Object.keys(s).forEach(function(k){ def[k]=s[k]; }); } catch(e){}
     return def;
   })();
-  window.helenCanPage = function(page) {
+  window.appCanPage = function(page) {
     var role = getAuthRole();
     if (role === 'Admin') return true;
     return (_PAGE_ACCESS[page]||[]).indexOf(role) !== -1;
   };
-  window.helenUpdatePageAccess = function(acc) {
+  window.appUpdatePageAccess = function(acc) {
     Object.keys(acc).forEach(function(k){ _PAGE_ACCESS[k]=acc[k]; });
-    try { localStorage.setItem('helenPageAccess', JSON.stringify(_PAGE_ACCESS)); } catch(e){}
+    try { localStorage.setItem('appPageAccess', JSON.stringify(_PAGE_ACCESS)); } catch(e){}
   };
-  window.helenSyncPageAccess = async function() {
+  window.appSyncPageAccess = async function() {
     try {
       if (typeof CamboAPI==='undefined') return;
       var r = await CamboAPI.post({ action:'page_access_get' });
-      if (r && r.ok && r.access) window.helenUpdatePageAccess(r.access);
+      if (r && r.ok && r.access) window.appUpdatePageAccess(r.access);
     } catch(e){}
   };
 
@@ -195,15 +195,15 @@
       <nav class="sb-nav">
         <div class="sb-section-label">${t('ម៉ឺនុយចំបង','Main Menu')}</div>
         <ul class="sb-list">
-          ${helenCanPage('dashboard') ? link('index.html', ic.dashboard, t('Dashboard','Dashboard')) : ''}
-          ${helenCanPage('customers') ? link('pages/customers.html', ic.customers, t('អតិថិជន','Customers')) : ''}
-          ${helenCanPage('loanlist') ? link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List')) : ''}
-          ${(helenCan('reports') && helenCanPage('reports')) ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
-          ${helenCanPage('repayment') ? link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment')) : ''}
-          ${helenCanPage('repaymentii') ? link('pages/repayment-ii.html', ic.repayment, t('Repayment II','Repayment II')) : ''}
-          ${helenCanPage('fbid') ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder')) : ''}
-          ${helenCanPage('activitylog') ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
-          ${helenCanPage('team') ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
+          ${appCanPage('dashboard') ? link('index.html', ic.dashboard, t('Dashboard','Dashboard')) : ''}
+          ${appCanPage('customers') ? link('pages/customers.html', ic.customers, t('អតិថិជន','Customers')) : ''}
+          ${appCanPage('loanlist') ? link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List')) : ''}
+          ${(appCan('reports') && appCanPage('reports')) ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
+          ${appCanPage('repayment') ? link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment')) : ''}
+          ${appCanPage('repaymentii') ? link('pages/repayment-ii.html', ic.repayment, t('Repayment II','Repayment II')) : ''}
+          ${appCanPage('fbid') ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder')) : ''}
+          ${appCanPage('activitylog') ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
+          ${appCanPage('team') ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
           ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
           <li class="sb-divider sb-divider-sm"></li>
           <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('User','User')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('User','User')}</span><span class="sb-active-dot"></span></a></li>
@@ -215,7 +215,7 @@
       <div class="sb-footer">
         ${(function(){
           var _a = null;
-          try { _a = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e){}
+          try { _a = JSON.parse(localStorage.getItem('appAuth')||'null'); } catch(e){}
           var _name = _a ? (_a.name || _a.u || 'HELEN LOAN') : 'HELEN LOAN';
           var _role = _a ? (_a.role || 'User') : 'Administrator';
           var _exp = '';
@@ -337,7 +337,7 @@
     if (existing) existing.remove();
 
     var _a = null;
-    try { _a = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e){}
+    try { _a = JSON.parse(localStorage.getItem('appAuth')||'null'); } catch(e){}
     if (!_a) return;
 
     var isDark  = document.documentElement.getAttribute('data-theme') !== 'light';
@@ -460,7 +460,7 @@
           var api = window.CamboAPI;
           if (!api) { statusEl.textContent = 'CamboAPI not found'; return; }
           var auth = null;
-          try { auth = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(ee){}
+          try { auth = JSON.parse(localStorage.getItem('appAuth')||'null'); } catch(ee){}
           var r = await api.post({ action:'upload_photo', auth:auth, data: ev.target.result });
           if (!r || !r.ok) { statusEl.textContent = 'Failed: '+(r&&r.message||'Error'); return; }
           var r2 = await api.post({ action:'user_self_update', auth:auth, type:'photo', photo_url: r.url });
@@ -517,7 +517,7 @@
       if (!api) { errEl.textContent = 'CamboAPI not found'; btn.disabled=false; btn.textContent='Save'; return; }
 
       function freshAuth() {
-        try { return JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(ee) { return null; }
+        try { return JSON.parse(localStorage.getItem('appAuth')||'null'); } catch(ee) { return null; }
       }
 
       try {
@@ -536,7 +536,7 @@
           var auth2 = freshAuth() || {};
           if (nameChanged) auth2.name = r.display_name || displayName;
           if (userChanged)  auth2.u   = r.username     || newUsername;
-          localStorage.setItem('helenAuth', JSON.stringify(auth2));
+          localStorage.setItem('appAuth', JSON.stringify(auth2));
           var nameEl = document.getElementById('sbUserName');
           if (nameEl) nameEl.textContent = auth2.name || auth2.u;
         }
@@ -554,7 +554,7 @@
           }
           var auth3 = freshAuth() || {};
           auth3.p = newPin;
-          localStorage.setItem('helenAuth', JSON.stringify(auth3));
+          localStorage.setItem('appAuth', JSON.stringify(auth3));
         }
 
         btn.style.cssText = 'width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:default';
@@ -736,7 +736,7 @@
     var el = document.getElementById('sbUserName');
     if (!el) return;
     var _a = null;
-    try { _a = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e){}
+    try { _a = JSON.parse(localStorage.getItem('appAuth')||'null'); } catch(e){}
     if (!_a || !_a.u) return;
 
     var texts  = [_a.name || _a.u, getBrand().name || 'CAMBO'];
@@ -850,7 +850,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     renderLayout();
     /* Apply cached brand immediately (no flash) */
-    window.helenApplyBrand && window.helenApplyBrand();
+    window.appApplyBrand && window.appApplyBrand();
     applyLogoAnimation();
     applyUserCardAnimation();
     /* Inject global chat widget on every page except login */
@@ -861,6 +861,6 @@
       document.head.appendChild(_s);
     }
     /* Sync role permissions and page access from DB (non-blocking) */
-    if (_pg !== 'login.html') setTimeout(function(){ window.helenSyncPerms && window.helenSyncPerms(); window.helenSyncPageAccess && window.helenSyncPageAccess(); window.helenSyncBrand && window.helenSyncBrand(); }, 500);
+    if (_pg !== 'login.html') setTimeout(function(){ window.appSyncPerms && window.appSyncPerms(); window.appSyncPageAccess && window.appSyncPageAccess(); window.appSyncBrand && window.appSyncBrand(); }, 500);
   });
 })();

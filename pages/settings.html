@@ -1703,12 +1703,12 @@ async function saveBrand() {
       status.textContent = 'Saved!';
       status.style.color = '#4ade80';
       /* update localStorage so sidebar reflects immediately */
-      if (window.helenSetBrand) window.helenSetBrand({
+      if (window.appSetBrand) window.appSetBrand({
         name:    (document.getElementById('brandName').value    || '').trim(),
         sub:     (document.getElementById('brandSub').value     || '').trim(),
         logoUrl: (document.getElementById('brandLogoUrl').value || '').trim(),
       });
-      if (window.helenApplyBrand) window.helenApplyBrand();
+      if (window.appApplyBrand) window.appApplyBrand();
     } else {
       status.textContent = r && r.message ? r.message : 'Error';
       status.style.color = '#f87171';
@@ -1792,7 +1792,7 @@ async function savePerms() {
     var res = await CamboAPI.post({ action:'perms_set', perms:perms });
     if (!res || !res.ok) throw new Error(res&&res.message||'Save failed');
     /* Update in-memory + localStorage */
-    if (window.helenUpdatePerms) window.helenUpdatePerms(perms);
+    if (window.appUpdatePerms) window.appUpdatePerms(perms);
     renderPermMatrix(perms);
     if (st) { st.className='perm-status ok'; st.textContent='Saved!'; setTimeout(function(){ if(st)st.textContent=''; },3000); }
   } catch(e) {
@@ -1969,7 +1969,7 @@ async function savePageAccess() {
   try {
     var res = await CamboAPI.post({ action:'page_access_set', access:access });
     if (!res || !res.ok) throw new Error(res&&res.message||'Save failed');
-    if (window.helenUpdatePageAccess) window.helenUpdatePageAccess(access);
+    if (window.appUpdatePageAccess) window.appUpdatePageAccess(access);
     renderPageMatrix(access);
     if (st) { st.className='perm-status ok'; st.textContent='Saved!'; setTimeout(function(){ if(st)st.textContent=''; },3000); }
   } catch(e) {

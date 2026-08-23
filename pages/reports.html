@@ -232,7 +232,7 @@
 <script src="../assets/js/api.js?v=8"></script>
 <script>
 if (!HelenAuth.check()) throw new Error('auth');
-if (!helenCan('reports')) { location.replace('../index.html'); }
+if (!appCan('reports')) { location.replace('../index.html'); }
 
 /* -- roundRect polyfill -- */
 if (!CanvasRenderingContext2D.prototype.roundRect) {

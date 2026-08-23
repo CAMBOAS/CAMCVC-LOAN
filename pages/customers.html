@@ -832,7 +832,7 @@ async function saveCustomer(){
 
 /* ── Init ── */
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){var lb=document.getElementById('acLb');if(lb)lb.style.display='none';closeMGS();}});
-if(!helenCan('write')){var _savebtn=document.getElementById('acSaveBtn');if(_savebtn)_savebtn.style.display='none';}
+if(!appCan('write')){var _savebtn=document.getElementById('acSaveBtn');if(_savebtn)_savebtn.style.display='none';}
 
 loadMeta();
 renderSocialLinks();

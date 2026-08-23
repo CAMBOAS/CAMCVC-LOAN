@@ -2081,7 +2081,7 @@ async function loadRphEntries(key) {
 
 function renderRphList() {
   var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
-  var canWrite = typeof helenCan==='function' ? helenCan('write') : true;
+  var canWrite = typeof appCan==='function' ? appCan('write') : true;
 
   ['payment','discount'].forEach(function(type) {
     var entries = _rphEntries.filter(function(e){ return e.type===type; });

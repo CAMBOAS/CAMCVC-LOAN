@@ -6,7 +6,7 @@
   if (page === 'login.html') return;
 
   /* ── Auth helpers ── */
-  function getMyAuth() { try { return JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(e) { return null; } }
+  function getMyAuth() { try { return JSON.parse(localStorage.getItem('appAuth')||'null'); } catch(e) { return null; } }
   function getMyUsername() { var a=getMyAuth(); return a?(a.u||''):''; }
 
   function gcPost(body) {
@@ -424,7 +424,7 @@
     el._gcTimer=timer;
 
     /* dispatch event so team.html can react */
-    document.dispatchEvent(new CustomEvent('helen-new-msg', { detail:{ sender:sender } }));
+    document.dispatchEvent(new CustomEvent('app-new-msg', { detail:{ sender:sender } }));
   }
 
   function dismissNotif(el) {
@@ -455,7 +455,7 @@
     _prevCounts=newCounts;
 
     /* broadcast for team.html badges */
-    document.dispatchEvent(new CustomEvent('helen-unread-update', { detail:{ counts:res.counts||{}, unread:unread } }));
+    document.dispatchEvent(new CustomEvent('app-unread-update', { detail:{ counts:res.counts||{}, unread:unread } }));
   }
 
   /* ── Notification sound (Web Audio API — no file needed) ── */

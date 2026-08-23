@@ -344,7 +344,7 @@ function setDateFilter(f) {
 }
 
 function _isAdmin() {
-  try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a && a.role === 'Admin'; } catch(e) { return false; }
+  try { var a = JSON.parse(localStorage.getItem('appAuth')||'null'); return a && a.role === 'Admin'; } catch(e) { return false; }
 }
 
 function _initRoleUI() {
@@ -364,7 +364,7 @@ function esc(s) {
 /* -- Photo cache: actor_user ? photo URL -- */
 var _photoCache = {};
 function _myUser() {
-  try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a ? (a.u||'') : ''; } catch(e) { return ''; }
+  try { var a = JSON.parse(localStorage.getItem('appAuth')||'null'); return a ? (a.u||'') : ''; } catch(e) { return ''; }
 }
 function _myPhoto() { return localStorage.getItem('user_photo') || ''; }
 function _buildPhotoCache(logs) {

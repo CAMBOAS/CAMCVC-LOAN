@@ -8,7 +8,7 @@
 
   function _authBody() {
     try {
-      var a = JSON.parse(localStorage.getItem('helenAuth') || 'null');
+      var a = JSON.parse(localStorage.getItem('appAuth') || 'null');
       if (a && a.u && a.p) return { auth: { u: a.u, p: a.p } };
     } catch(e) {}
     return {};

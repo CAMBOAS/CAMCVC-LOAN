@@ -513,11 +513,11 @@
   /* Redirect if already logged in */
   (function() {
     try {
-      var a = JSON.parse(localStorage.getItem('helenAuth') || 'null');
+      var a = JSON.parse(localStorage.getItem('appAuth') || 'null');
       if (a && a.u && a.p && (!a.exp || Date.now() < a.exp)) {
         location.replace('pages/loan-list.html');
       } else if (a && a.exp && Date.now() > a.exp) {
-        localStorage.removeItem('helenAuth');
+        localStorage.removeItem('appAuth');
       }
     } catch(e) {}
     if (location.search.indexOf('expired=1') !== -1) {
@@ -571,7 +571,7 @@
           if (_failCount >= 2) sendLoginFailAlert('expired', u, _failCount);
         } else {
           _failCount = 0;
-          localStorage.setItem('helenAuth', JSON.stringify({
+          localStorage.setItem('appAuth', JSON.stringify({
             u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || ''
           }));
           var next = new URLSearchParams(location.search).get('next') || 'pages/loan-list.html';

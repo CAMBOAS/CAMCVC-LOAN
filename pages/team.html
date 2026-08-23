@@ -202,7 +202,7 @@ var _pmCurIdx = null;
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function getMyUsername(){ try{ var a=JSON.parse(localStorage.getItem('helenAuth')||'null'); return a?(a.u||''):''; }catch(e){return '';} }
+function getMyUsername(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return a?(a.u||''):''; }catch(e){return '';} }
 
 function isOnline(dtStr) {
   if (!dtStr) return false;
@@ -337,7 +337,7 @@ function openChatFromProfile() {
 }
 
 /* Update unread badges when global chat widget broadcasts */
-document.addEventListener('helen-unread-update', function(e) {
+document.addEventListener('app-unread-update', function(e) {
   var counts=(e.detail&&e.detail.counts)||{};
   document.querySelectorAll('.tm-card').forEach(function(card){
     var uname=card.getAttribute('data-username')||'';

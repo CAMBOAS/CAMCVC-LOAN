@@ -909,8 +909,8 @@
 /* ── Auth guard — redirect to login if not authenticated ── */
 if (!HelenAuth.check()) { throw new Error('redirect'); }
 var _me = HelenAuth.get(); /* { u, p, name, role } */
-var _canDelete = helenCan('delete');
-var _canWrite  = helenCan('write');
+var _canDelete = appCan('delete');
+var _canWrite  = appCan('write');
 if (!_canDelete) { var _dbtn = document.getElementById('lrSheetDelBtn'); if (_dbtn) _dbtn.style.display = 'none'; }
 
 var _allLoans   = [];

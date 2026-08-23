@@ -1,6 +1,6 @@
 ﻿(function () {
   'use strict';
-  var KEY        = 'helenAuth';
+  var KEY        = 'appAuth';
   var EXPIRY_MS  = 7 * 24 * 60 * 60 * 1000; /* 7 days */
 
   function get() {
