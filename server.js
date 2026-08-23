@@ -13,6 +13,33 @@ const fs    = require('fs');
 const path  = require('path');
 const url   = require('url');
 
+/* ── Load .env.local into process.env ── */
+(function loadEnv() {
+  try {
+    const envFile = fs.readFileSync(path.join(__dirname, '.env.local'), 'utf8');
+    for (const line of envFile.split('\n')) {
+      const t = line.trim();
+      if (!t || t.startsWith('#')) continue;
+      const eq = t.indexOf('=');
+      if (eq < 0) continue;
+      const key = t.slice(0, eq).trim();
+      let val = t.slice(eq + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
+      if (!process.env[key]) process.env[key] = val;
+    }
+  } catch(e) {}
+})();
+
+/* ── Cache the helen.js handler (ES-module, loaded once) ── */
+let _helenHandler = null;
+async function getHelenHandler() {
+  if (!_helenHandler) {
+    const mod = await import('./api/helen.js');
+    _helenHandler = mod.default;
+  }
+  return _helenHandler;
+}
+
 const PORT           = 5500;
 const STATIC_DIR     = __dirname;
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzX_Qd171kv2O2u0h6BpPBh9cMRO5WusbpZphFemHijjRunLIpsMefDidGufqx_doVccw/exec';
@@ -165,25 +192,42 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(200); return res.end(); }
 
-  /* ── /api/helen — proxy to Vercel production (MySQL API) ── */
+  /* ── /api/helen — run api/helen.js locally (connects to Railway MySQL) ── */
   if (pathname === '/api/helen') {
     try {
       let body = '';
       await new Promise((ok) => { req.on('data', c => { body += c; }); req.on('end', ok); });
-      const response = await fetch('https://helenloan.vercel.app/api/helen', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    body,
-      });
-      const text = await response.text();
-      res.setHeader('Content-Type', 'application/json');
-      res.writeHead(response.status);
-      return res.end(text);
+      const parsedBody = body ? JSON.parse(body) : {};
+      const rawBody = body || '{}';
+      const mockReq = {
+        method: req.method,
+        body: parsedBody,
+        on(event, cb) {
+          if (event === 'data') cb(rawBody);
+          if (event === 'end')  cb();
+          return this;
+        },
+      };
+      let statusCode = 200;
+      const mockRes = {
+        _hdrs: {},
+        setHeader(k, v) { this._hdrs[k] = v; return this; },
+        status(code) { statusCode = code; return this; },
+        json(data) {
+          res.setHeader('Content-Type', 'application/json');
+          Object.entries(this._hdrs).forEach(([k, v]) => res.setHeader(k, v));
+          res.writeHead(statusCode);
+          res.end(JSON.stringify(data));
+        },
+      };
+      const handler = await getHelenHandler();
+      await handler(mockReq, mockRes);
     } catch (err) {
-      console.error('[/api/helen proxy error]', err.message);
-      res.writeHead(502);
+      console.error('[/api/helen error]', err.message);
+      res.writeHead(500);
       return res.end(JSON.stringify({ ok: false, message: err.message }));
     }
+    return;
   }
 
   /* ── /api/proxy — forward to Apps Script (uses built-in fetch, auto redirect) ── */
