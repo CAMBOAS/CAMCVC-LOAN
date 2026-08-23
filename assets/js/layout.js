@@ -1,4 +1,4 @@
-﻿/* CAMCVC LOAN — Shared Layout (Sidebar + Topbar) v19 */
+/* CAMCVC LOAN — Shared Layout (Sidebar + Topbar) v19 */
 (function () {
   'use strict';
 

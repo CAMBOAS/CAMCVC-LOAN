@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CAMCVC LOAN — Facebook ID Lookup (Vercel Serverless)
  * GET /api/fb-lookup?url=<encoded_facebook_url>
  */

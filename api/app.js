@@ -1,4 +1,4 @@
-﻿/**
+/**
  * App — MySQL API Handler
  * Replaces Google Apps Script backend.
  */

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CAMCVC LOAN — Vercel Serverless Proxy
  * Forwards requests to Google Apps Script to bypass browser CORS.
  */

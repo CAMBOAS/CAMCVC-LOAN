@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Local Development Server
  * Run: node server.js
  * Open: http://localhost:5500
