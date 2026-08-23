@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
@@ -391,7 +391,7 @@ function custKey(loan) {
 async function loadAll() {
   document.getElementById('custList').innerHTML =
     '<div style="padding:40px;text-align:center;color:var(--r2-muted)"><div class="r2-spin" style="margin:0 auto 10px"></div><div style="font-size:12px">កំពុងទាញ...</div></div>';
-  var r = await CamboAPI.post({ action:'helen_all' });
+  var r = await CamboAPI.post({ action:'get_all' });
   if (!r||!r.ok) {
     var msg = (r&&r.code===401) ? 'សូម Login ជាអ្នកគ្រប់គ្រងជាមុន' : 'Error — សូមសាកម្ដងទៀត';
     document.getElementById('custList').innerHTML =
@@ -589,7 +589,7 @@ async function loadLoanBody() {
     '<div style="padding:40px;text-align:center;color:var(--r2-muted)"><div class="r2-spin" style="margin:0 auto 8px"></div><div style="font-size:12px">កំពុងទាញ...</div></div>';
 
   if (!_repCache[loan.DateTime]) {
-    var r = await CamboAPI.post({ action:'helen_repayment_list', key:loan.DateTime });
+    var r = await CamboAPI.post({ action:'repayment_list', key:loan.DateTime });
     _repCache[loan.DateTime] = (r&&r.ok) ? (r.repayments||[]) : [];
   }
   renderLoanBody(loan, _repCache[loan.DateTime]);
@@ -690,7 +690,7 @@ function renderLoanBody(loan, reps) {
 
 /* ── Toggle paid ── */
 async function togglePaid(key) {
-  var r = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:key });
+  var r = await CamboAPI.post({ action:'loan_toggle_paid', key:key });
   if (!r||!r.ok) { showToast('Error'); return; }
   var loan = _custs[_selCust].loans[_selTab];
   loan.Paid = loan.Paid ? 0 : 1;
@@ -718,7 +718,7 @@ async function addRep(key) {
   var note   = (document.getElementById('repNote').value||'').trim();
   if (!amount||amount<=0) { showToast('សូមបញ្ចូលចំនួន'); return; }
   if (!date) { showToast('សូមជ្រើសកាលបរិច្ឆេទ'); return; }
-  var r = await CamboAPI.post({ action:'helen_repayment_add', key:key, type:type, amount:amount, paid_at:date, note:note });
+  var r = await CamboAPI.post({ action:'repayment_add', key:key, type:type, amount:amount, paid_at:date, note:note });
   if (!r||!r.ok) { showToast('Error — សូមព្យាយាមម្ដងទៀត'); return; }
   delete _repCache[key];
   showToast('បានបន្ថែម ✓');
@@ -728,7 +728,7 @@ async function addRep(key) {
 /* ── Delete repayment ── */
 async function delRep(key, id) {
   if (!confirm('លុបការទូទាត់នេះ?')) return;
-  var r = await CamboAPI.post({ action:'helen_repayment_delete', id:id });
+  var r = await CamboAPI.post({ action:'repayment_delete', id:id });
   if (!r||!r.ok) { showToast('Error'); return; }
   delete _repCache[key];
   showToast('បានលុប');
@@ -767,7 +767,7 @@ async function submitNewLoan() {
     Note:        document.getElementById('nlNote').value.trim(),
     LinkedTo:    base.DateTime||'',
   };
-  var r = await CamboAPI.post({ action:'helen_loan_add', loan:loan });
+  var r = await CamboAPI.post({ action:'loan_add', loan:loan });
   if (!r||!r.ok) { showToast('Error — '+JSON.stringify(r)); return; }
   closeNewLoan();
   showToast('បានបន្ថែមការខ្ចីថ្មី ✓');

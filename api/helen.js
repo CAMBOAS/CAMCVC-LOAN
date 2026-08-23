@@ -1,4 +1,4 @@
-/**
+﻿/**
  * HELEN LOAN — MySQL API Handler
  * Replaces Google Apps Script backend.
  */
@@ -319,7 +319,7 @@ export default async function handler(req, res) {
     const action = String(body.action || '').trim();
 
     /* ── Public: login ── */
-    if (action === 'helen_login') {
+    if (action === 'api_login') {
       const v = await validateAuth(String(body.username||'').trim(), String(body.pin||'').trim());
       if (!v)          return res.json({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
       if (v.expired)   return res.json({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
@@ -329,7 +329,7 @@ export default async function handler(req, res) {
       return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate, photo_url:v.photo_url||'' });
     }
 
-    if (action === 'helen_login_alert') {
+    if (action === 'login_alert') {
       if (await isNotifEnabled('login_fail')) {
         try { await sendTelegramEvent('login_fail', { username:body.username, reason:body.reason, attempt:body.attempt }); } catch(e) {}
       }
@@ -337,7 +337,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Public: Borrower self-service portal login ── */
-    if (action === 'helen_portal_login') {
+    if (action === 'portal_login') {
       const method = String(body.method || 'name').trim();
       /* Normalize phone/NID: strip spaces and dashes so "089 993 814" = "089993814" */
       const phone  = String(body.phone  || '').trim().replace(/[\s\-]/g, '');
@@ -428,7 +428,7 @@ export default async function handler(req, res) {
     db().query('UPDATE users SET last_seen=NOW() WHERE username=?', [_bu]).catch(()=>{});
 
     /* ── All data (loans + infor) ── */
-    if (action === 'helen_all') {
+    if (action === 'get_all') {
       await ensureCreatedByUserCol();
       const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL ORDER BY l.loan_key DESC`);
       const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
@@ -443,7 +443,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Borrower Profile (single loan + history by same NID) ── */
-    if (action === 'helen_loan_profile') {
+    if (action === 'loan_profile') {
       const key = String(body.key || '').trim();
       if (!key) return res.json({ ok: false, message: 'key required' });
       await ensureCreatedByUserCol();
@@ -466,14 +466,14 @@ export default async function handler(req, res) {
     }
 
     /* ── Logout log ── */
-    if (action === 'helen_user_logout') {
+    if (action === 'user_logout') {
       db().query("UPDATE users SET last_seen='2000-01-01 00:00:00' WHERE username=?", [_bu]).catch(()=>{});
       logActivity('user_logout', actor, _bu, null, null).catch(()=>{});
       return res.json({ ok: true });
     }
 
     /* ── Activity Log list ── */
-    if (action === 'helen_activity_list') {
+    if (action === 'activity_list') {
       await ensureActivityLogTable();
       const isAdmin = ['Admin','Owner','Moderator'].includes(_bv.role);
       const limit  = Math.min(parseInt(body.limit||150, 10), 500);
@@ -511,7 +511,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Infor only ── */
-    if (action === 'helen_infor') {
+    if (action === 'get_settings') {
       const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
       return res.json({
         ok:          true,
@@ -522,14 +522,14 @@ export default async function handler(req, res) {
     }
 
     /* ── Trash list ── */
-    if (action === 'helen_loan_list_trash') {
+    if (action === 'loan_list_trash') {
       await ensureCreatedByUserCol();
       const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NOT NULL ORDER BY l.deleted_at DESC`);
       return res.json({ ok:true, loans: loans.map(rowToLoan) });
     }
 
     /* ── Add infor ── */
-    if (action === 'helen_infor_add') {
+    if (action === 'settings_add') {
       const type  = String(body.type ||'').trim();
       const value = String(body.value||'').trim();
       if (!type || !value) return res.json({ ok:false, message:'Missing type or value' });
@@ -538,14 +538,14 @@ export default async function handler(req, res) {
     }
 
     /* ── Delete infor ── */
-    if (action === 'helen_infor_delete') {
+    if (action === 'settings_delete') {
       await db().query('DELETE FROM settings WHERE type=? AND value=?',
         [String(body.type||'').trim(), String(body.value||'').trim()]);
       return res.json({ ok:true });
     }
 
     /* ── Add loan ── */
-    if (action === 'helen_loan_add') {
+    if (action === 'loan_add') {
       if (_bv.role === 'Viewer') return res.json({ ok:false, message:'Permission denied', code:403 });
       await ensureSocialLinksCol();
       await ensurePaidCol();
@@ -574,7 +574,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Update loan ── */
-    if (action === 'helen_loan_update') {
+    if (action === 'loan_update') {
       if (_bv.role === 'Viewer') return res.json({ ok:false, message:'Permission denied', code:403 });
       await ensureSocialLinksCol();
       await ensurePaidCol();
@@ -607,7 +607,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Toggle paid ── */
-    if (action === 'helen_loan_toggle_paid') {
+    if (action === 'loan_toggle_paid') {
       await ensurePaidCol();
       const key = String(body.key||'').trim();
       const [rows] = await db().query('SELECT paid, full_name FROM loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
@@ -619,7 +619,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Delete loan (soft) ── */
-    if (action === 'helen_loan_delete') {
+    if (action === 'loan_delete') {
       if (!['Admin','Owner','Moderator'].includes(_bv.role)) return res.json({ ok:false, message:'Permission denied', code:403 });
       const key = String(body.key||'').trim();
       const [rows] = await db().query('SELECT * FROM loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
@@ -631,7 +631,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Recover loan ── */
-    if (action === 'helen_loan_recover') {
+    if (action === 'loan_recover') {
       const key = String(body.key||'').trim();
       const [trashRow] = await db().query('SELECT full_name FROM loans WHERE loan_key=? AND deleted_at IS NOT NULL', [key]);
       const [r] = await db().query(
@@ -641,7 +641,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Permanent delete ── */
-    if (action === 'helen_loan_perm_delete') {
+    if (action === 'loan_perm_delete') {
       if (!['Admin','Owner','Moderator'].includes(_bv.role)) return res.json({ ok:false, message:'Permission denied', code:403 });
       const key = String(body.key||'').trim();
       const [r] = await db().query(
@@ -664,7 +664,7 @@ export default async function handler(req, res) {
     }
 
     /* ── List repayment entries ── */
-    if (action === 'helen_repayment_list') {
+    if (action === 'repayment_list') {
       const key = String(body.key||'').trim();
       if (!key) return res.json({ ok:false, message:'key required' });
       await ensureRepaymentsTable();
@@ -673,7 +673,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Add repayment entry ── */
-    if (action === 'helen_repayment_add') {
+    if (action === 'repayment_add') {
       if (_bv.role === 'Viewer') return res.json({ ok:false, message:'Permission denied', code:403 });
       const key    = String(body.key||'').trim();
       const type   = body.type === 'discount' ? 'discount' : 'payment';
@@ -691,7 +691,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Delete repayment entry ── */
-    if (action === 'helen_repayment_delete') {
+    if (action === 'repayment_delete') {
       if (_bv.role === 'Viewer') return res.json({ ok:false, message:'Permission denied', code:403 });
       const id = parseInt(body.id)||0;
       if (!id) return res.json({ ok:false, message:'id required' });
@@ -715,7 +715,7 @@ export default async function handler(req, res) {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
     }
 
-    if (action === 'helen_msg_send') {
+    if (action === 'msg_send') {
       await ensureMessagesTable();
       const to  = String(body.to  || '').trim();
       const txt = String(body.body || '').trim();
@@ -729,7 +729,7 @@ export default async function handler(req, res) {
       return res.json({ ok:true, id: ins.insertId });
     }
 
-    if (action === 'helen_msg_list') {
+    if (action === 'msg_list') {
       await ensureMessagesTable();
       const w = String(body.with || '').trim();
       if (!w) return res.json({ ok:false, message:'Missing with' });
@@ -747,7 +747,7 @@ export default async function handler(req, res) {
       return res.json({ ok:true, messages: msgs });
     }
 
-    if (action === 'helen_msg_unread') {
+    if (action === 'msg_unread') {
       await ensureMessagesTable();
       const [rows] = await db().query(
         `SELECT hm.sender, COUNT(*) AS cnt,
@@ -769,7 +769,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Team list (all authenticated users) ── */
-    if (action === 'helen_team_list') {
+    if (action === 'team_list') {
       await ensureUserPhotoCol();
       const [users] = await db().query(`
         SELECT u.username, u.display_name, u.role, u.photo_url, u.exp_date, u.status, u.last_seen,
@@ -791,7 +791,7 @@ export default async function handler(req, res) {
     }
 
     /* ── User list (Admin only) ── */
-    if (action === 'helen_user_list') {
+    if (action === 'user_list') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       await ensureUserPhotoCol();
       const [users] = await db().query(
@@ -801,7 +801,7 @@ export default async function handler(req, res) {
     }
 
     /* ── User add (Admin only) ── */
-    if (action === 'helen_user_add') {
+    if (action === 'user_add') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const u = String(body.username||'').trim();
       const p = String(body.pin||'').trim();
@@ -822,7 +822,7 @@ export default async function handler(req, res) {
     }
 
     /* ── User update (Admin only) ── */
-    if (action === 'helen_user_update') {
+    if (action === 'user_update') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
@@ -850,7 +850,7 @@ export default async function handler(req, res) {
     }
 
     /* ── User delete (Admin only, cannot delete self) ── */
-    if (action === 'helen_user_delete') {
+    if (action === 'user_delete') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
@@ -862,7 +862,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Admin update user photo ── */
-    if (action === 'helen_user_update_photo') {
+    if (action === 'user_update_photo') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
@@ -873,7 +873,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Self update profile (any authenticated user) ── */
-    if (action === 'helen_user_self_update') {
+    if (action === 'user_self_update') {
       const type = String(body.type || '').trim();
 
       if (type === 'photo') {
@@ -933,7 +933,7 @@ export default async function handler(req, res) {
     }
 
     /* ── UI Preferences: get (any authenticated user, own prefs only) ── */
-    if (action === 'helen_ui_prefs_get') {
+    if (action === 'ui_prefs_get') {
       await ensureUiPrefsCol();
       const [rows] = await db().query('SELECT ui_prefs FROM users WHERE username=?', [_bu]);
       if (!rows.length) return res.json({ ok: true, prefs: {} });
@@ -943,7 +943,7 @@ export default async function handler(req, res) {
     }
 
     /* ── UI Preferences: set (any authenticated user, own prefs only) ── */
-    if (action === 'helen_ui_prefs_set') {
+    if (action === 'ui_prefs_set') {
       await ensureUiPrefsCol();
       const incoming = body.prefs;
       if (!incoming || typeof incoming !== 'object') return res.json({ ok: false, message: 'Invalid prefs' });
@@ -969,7 +969,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Get role permissions ── */
-    if (action === 'helen_perms_get') {
+    if (action === 'perms_get') {
       const [rows] = await db().query('SELECT type, value FROM settings WHERE type LIKE "perm_%"');
       if (!rows.length) return res.json({ ok:true, perms: defaultPerms() });
       const perms = {};
@@ -981,7 +981,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Save role permissions (Admin only) ── */
-    if (action === 'helen_perms_set') {
+    if (action === 'perms_set') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
       const perms = body.perms;
       if (!perms || typeof perms !== 'object') return res.json({ ok:false, message:'perms required' });
@@ -996,7 +996,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Get page access settings ── */
-    if (action === 'helen_page_access_get') {
+    if (action === 'page_access_get') {
       const [rows] = await db().query('SELECT type, value FROM settings WHERE type LIKE "pageaccess_%"');
       if (!rows.length) return res.json({ ok:true, access: null });
       const access = {};
@@ -1008,7 +1008,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Save page access settings (Admin only) ── */
-    if (action === 'helen_page_access_set') {
+    if (action === 'page_access_set') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
       const access = body.access;
       if (!access || typeof access !== 'object') return res.json({ ok:false, message:'access required' });
@@ -1029,7 +1029,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Verify current user's PIN ── */
-    if (action === 'helen_verify_pin') {
+    if (action === 'verify_pin') {
       const pin = String(body.pin || '').trim();
       if (!pin) return res.json({ ok:false });
       const [rows] = await db().query(
@@ -1040,7 +1040,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Telegram config get ── */
-    if (action === 'helen_tg_config_get') {
+    if (action === 'tg_config_get') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
       const [rows] = await db().query("SELECT type, value FROM settings WHERE type IN ('tg_bot_token','tg_chat_id')");
       const m = {};
@@ -1052,7 +1052,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Telegram config save ── */
-    if (action === 'helen_tg_config_save') {
+    if (action === 'tg_config_save') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
       const bot  = String(body.bot_token || '').trim();
       const chat = String(body.chat_id   || '').trim();
@@ -1068,7 +1068,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Telegram test ── */
-    if (action === 'helen_tg_test') {
+    if (action === 'tg_test') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
       const bot  = String(body.bot_token || '').trim() || TG_BOT_TOKEN;
       const chat = String(body.chat_id   || '').trim() || TG_CHAT_ID;
@@ -1085,7 +1085,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Notif settings get ── */
-    if (action === 'helen_notif_get') {
+    if (action === 'notif_get') {
       const [rows] = await db().query('SELECT value FROM settings WHERE type="notif"');
       const configured = rows.some(r => r.value === '__configured__');
       const enabled = rows.filter(r => r.value !== '__configured__').map(r => r.value);
@@ -1093,7 +1093,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Notif settings save (Admin only) ── */
-    if (action === 'helen_notif_save') {
+    if (action === 'notif_save') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
       const types = Array.isArray(body.enabled) ? body.enabled.filter(t => ['add','edit','delete','login','login_fail','user'].includes(t)) : [];
       await db().query('DELETE FROM settings WHERE type="notif"');
@@ -1105,13 +1105,13 @@ export default async function handler(req, res) {
     }
 
     /* ── Watch user list get ── */
-    if (action === 'helen_watch_get') {
+    if (action === 'watch_get') {
       const [rows] = await db().query('SELECT value FROM settings WHERE type="watch_user"');
       return res.json({ ok:true, watched: rows.map(r => r.value) });
     }
 
     /* ── Watch user list save (Admin only) ── */
-    if (action === 'helen_watch_save') {
+    if (action === 'watch_save') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin access required', code:403 });
       const usernames = Array.isArray(body.watched) ? body.watched.filter(u => typeof u === 'string' && u.trim()) : [];
       await db().query('DELETE FROM settings WHERE type="watch_user"');
@@ -1122,7 +1122,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Upload photo to Cloudinary (server-side, images only) ── */
-    if (action === 'helen_upload_photo') {
+    if (action === 'upload_photo') {
       if (!CLD_CLOUD || !CLD_KEY || !CLD_SEC) return res.json({ ok:false, message:'Cloudinary not configured' });
       const b64 = body.data;
       if (!b64) return res.json({ ok:false, message:'No image data' });
@@ -1149,7 +1149,7 @@ export default async function handler(req, res) {
     }
 
     /* ── Return signature for browser-direct upload (videos/large files) ── */
-    if (action === 'helen_get_upload_sig') {
+    if (action === 'get_upload_sig') {
       if (!CLD_CLOUD || !CLD_KEY || !CLD_SEC) return res.json({ ok:false, message:'Cloudinary not configured' });
       const timestamp = Math.floor(Date.now() / 1000);
       const folder    = 'helen-loan';

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
@@ -712,7 +712,7 @@ window.addEventListener('load', async function() {
 
   if (sm && sp && sc) {
     /* silently re-fetch to restore session */
-    var body = { action: 'helen_portal_login', method: sm, phone: sp };
+    var body = { action: 'portal_login', method: sm, phone: sp };
     if (sm === 'name') body.name = sc; else body.nid = sc;
     var r = await portalAPI(body);
     if (r && r.ok) {
@@ -792,7 +792,7 @@ async function doLogin() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span> កំពុងស្វែងរក...';
 
-  var body = { action: 'helen_portal_login', method: _method, phone: phone };
+  var body = { action: 'portal_login', method: _method, phone: phone };
   if (_method === 'name') body.name = name;
   else                    body.nid  = nid;
 

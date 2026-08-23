@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
@@ -913,7 +913,7 @@ function renderKPIs() {
 async function loadUsers() {
   if (!_isAdmin) return;
   try {
-    var res = await CamboAPI.post({ action: 'helen_user_list' });
+    var res = await CamboAPI.post({ action: 'user_list' });
     if (res && res.ok) { _users = res.users || []; }
     else { toast((res&&res.message||'Load failed'), true); }
   } catch(e) { toast('Network error', true); }
@@ -999,7 +999,7 @@ async function saveUser() {
   btn.textContent = 'Saving…';
 
   try {
-    var payload = { action: _editingUser ? 'helen_user_update' : 'helen_user_add',
+    var payload = { action: _editingUser ? 'user_update' : 'user_add',
                     username: username, display_name: display_name,
                     role: role, exp_date: exp_date, status: status };
     if (pin) payload.pin = pin;
@@ -1023,7 +1023,7 @@ async function deleteUserConfirm() {
   if (!username) return;
   _pendingDelUser = null;
   try {
-    var res = await CamboAPI.post({ action: 'helen_user_delete', username: username });
+    var res = await CamboAPI.post({ action: 'user_delete', username: username });
     if (res && res.ok) { toast('User "'+username+'" deleted!'); await loadUsers(); }
     else { toast((res&&res.message||'Delete failed'), true); renderTable(); }
   } catch(e) { toast('Network error', true); renderTable(); }
@@ -1055,9 +1055,9 @@ document.getElementById('umPhotoFile').addEventListener('change', async function
     var reader = new FileReader();
     reader.onload = async function(ev) {
       try {
-        var r = await CamboAPI.post({ action:'helen_upload_photo', data: ev.target.result });
+        var r = await CamboAPI.post({ action:'upload_photo', data: ev.target.result });
         if (!r || !r.ok) { toast('Upload failed: '+(r&&r.message||''), true); circle.innerHTML = origContent; return; }
-        var r2 = await CamboAPI.post({ action:'helen_user_update_photo', username: _editingUser.username, photo_url: r.url });
+        var r2 = await CamboAPI.post({ action:'user_update_photo', username: _editingUser.username, photo_url: r.url });
         if (!r2 || !r2.ok) { toast((r2&&r2.message||'Save failed'), true); circle.innerHTML = origContent; return; }
         _editingUser.photo_url = r.url;
         var idx = _users.findIndex(function(x){ return x.username === _editingUser.username; });
@@ -1089,9 +1089,9 @@ document.getElementById('umQuickPhotoFile').addEventListener('change', async fun
     var reader = new FileReader();
     reader.onload = async function(ev) {
       try {
-        var r = await CamboAPI.post({ action:'helen_upload_photo', data: ev.target.result });
+        var r = await CamboAPI.post({ action:'upload_photo', data: ev.target.result });
         if (!r || !r.ok) { toast('Upload failed: '+(r&&r.message||''), true); return; }
-        var r2 = await CamboAPI.post({ action:'helen_user_update_photo', username: username, photo_url: r.url });
+        var r2 = await CamboAPI.post({ action:'user_update_photo', username: username, photo_url: r.url });
         if (!r2 || !r2.ok) { toast((r2&&r2.message||'Save failed'), true); return; }
         var idx = _users.findIndex(function(x){ return x.username === username; });
         if (idx >= 0) _users[idx].photo_url = r.url;
@@ -1141,7 +1141,7 @@ var _dragSrcPanel = null;
 var _lpTimer      = null;
 var _lpTab        = null;
 
-function _tabKey() { return 'helen_tab_order_'+(_selfUser||'default'); }
+function _tabKey() { return 'tab_order_'+(_selfUser||'default'); }
 
 function loadTabOrder() {
   try {
@@ -1159,14 +1159,14 @@ async function _saveTabOrder() {
   toast('Tab order saved!');
   /* Persist to DB (fire and forget — localStorage already updated) */
   try {
-    await CamboAPI.post({ action: 'helen_ui_prefs_set', prefs: { tab_order: _TAB_ORDER } });
+    await CamboAPI.post({ action: 'ui_prefs_set', prefs: { tab_order: _TAB_ORDER } });
   } catch(e) {}
 }
 
 /* Load tab order from DB and sync (called after localStorage + renderTabs) */
 async function syncTabOrderFromDB() {
   try {
-    var r = await CamboAPI.post({ action: 'helen_ui_prefs_get' });
+    var r = await CamboAPI.post({ action: 'ui_prefs_get' });
     if (!r || !r.ok || !r.prefs) return;
     var arr = r.prefs.tab_order;
     if (!Array.isArray(arr) || arr.length !== _TAB_DEFS.length) return;
@@ -1293,9 +1293,9 @@ function _esc(s) {
 async function loadNotif() {
   try {
     var results = await Promise.all([
-      CamboAPI.post({ action:'helen_notif_get' }),
-      CamboAPI.post({ action:'helen_user_list' }),
-      CamboAPI.post({ action:'helen_watch_get' })
+      CamboAPI.post({ action:'notif_get' }),
+      CamboAPI.post({ action:'user_list' }),
+      CamboAPI.post({ action:'watch_get' })
     ]);
     var rNotif = results[0], rUsers = results[1], rWatch = results[2];
 
@@ -1345,8 +1345,8 @@ async function saveNotif() {
   document.querySelectorAll('.nt-watch-cb:checked').forEach(function(cb){ watched.push(cb.dataset.user); });
   try {
     var results = await Promise.all([
-      CamboAPI.post({ action:'helen_notif_save', enabled }),
-      CamboAPI.post({ action:'helen_watch_save', watched })
+      CamboAPI.post({ action:'notif_save', enabled }),
+      CamboAPI.post({ action:'watch_save', watched })
     ]);
     var ok = results[0].ok && results[1].ok;
     if (ok) {
@@ -1425,7 +1425,7 @@ async function tgConfirmPin() {
   var okBtn = document.getElementById('tgPinOkBtn');
   okBtn.disabled = true; errEl.textContent = '';
   try {
-    var r = await CamboAPI.post({ action:'helen_verify_pin', pin: pin });
+    var r = await CamboAPI.post({ action:'verify_pin', pin: pin });
     if (r.ok) {
       var pending = _tgPending;
       tgClosePinModal();
@@ -1443,7 +1443,7 @@ async function tgConfirmPin() {
 
 async function loadTgConfig() {
   try {
-    var r = await CamboAPI.post({ action:'helen_tg_config_get' });
+    var r = await CamboAPI.post({ action:'tg_config_get' });
     if (!r.ok) { _tgSetState('', 'Not configured'); return; }
     _tgRealBot  = r.bot_token || '';
     _tgRealChat = r.chat_id   || '';
@@ -1469,7 +1469,7 @@ async function _tgDoSave() {
   var chat = _tgRevealed ? document.getElementById('tgChatId').value.trim()   : _tgRealChat;
   btn.disabled = true;
   try {
-    var r = await CamboAPI.post({ action:'helen_tg_config_save', bot_token:bot, chat_id:chat });
+    var r = await CamboAPI.post({ action:'tg_config_save', bot_token:bot, chat_id:chat });
     if (r.ok) {
       _tgRealBot = bot; _tgRealChat = chat;
       _tgApplyMask();
@@ -1489,7 +1489,7 @@ async function testTgConfig() {
   if (!bot || !chat) { _tgSetState('', 'Bot Token and Chat ID not configured'); return; }
   btn.disabled = true; btn.textContent = 'Testing…';
   try {
-    var r = await CamboAPI.post({ action:'helen_tg_test', bot_token:bot, chat_id:chat });
+    var r = await CamboAPI.post({ action:'tg_test', bot_token:bot, chat_id:chat });
     if (r.ok) {
       _tgSetState('green', 'Test message sent!');
       setTimeout(function(){ _tgSetState('green', 'Config looks good'); }, 3000);
@@ -1545,7 +1545,7 @@ function renderPermMatrix(perms) {
 
 async function loadPermMatrix() {
   try {
-    var res = await CamboAPI.post({ action:'helen_perms_get' });
+    var res = await CamboAPI.post({ action:'perms_get' });
     if (!res || !res.ok) throw new Error(res&&res.message||'Load failed');
     renderPermMatrix(res.perms);
   } catch(e) {
@@ -1571,7 +1571,7 @@ async function savePerms() {
   if (!perms.settings) perms.settings = [];
   if (perms.settings.indexOf('Admin') === -1) perms.settings.unshift('Admin');
   try {
-    var res = await CamboAPI.post({ action:'helen_perms_set', perms:perms });
+    var res = await CamboAPI.post({ action:'perms_set', perms:perms });
     if (!res || !res.ok) throw new Error(res&&res.message||'Save failed');
     /* Update in-memory + localStorage */
     if (window.helenUpdatePerms) window.helenUpdatePerms(perms);
@@ -1619,7 +1619,7 @@ function renderPageMatrix(access) {
 
 async function loadPageMatrix() {
   try {
-    var res = await CamboAPI.post({ action:'helen_page_access_get' });
+    var res = await CamboAPI.post({ action:'page_access_get' });
     if (!res || !res.ok) throw new Error(res&&res.message||'Load failed');
     var access = res.access || {};
     if (!res.access) {
@@ -1640,7 +1640,7 @@ var _PA_SEL   = null;
 
 async function loadPAUsers() {
   try {
-    var r = await CamboAPI.post({ action:'helen_user_list' });
+    var r = await CamboAPI.post({ action:'user_list' });
     if (!r || !r.ok) return;
     _PA_USERS = r.users || [];
     renderPAChips();
@@ -1749,7 +1749,7 @@ async function savePageAccess() {
     if (access[p.key].indexOf('Admin') === -1) access[p.key].unshift('Admin');
   });
   try {
-    var res = await CamboAPI.post({ action:'helen_page_access_set', access:access });
+    var res = await CamboAPI.post({ action:'page_access_set', access:access });
     if (!res || !res.ok) throw new Error(res&&res.message||'Save failed');
     if (window.helenUpdatePageAccess) window.helenUpdatePageAccess(access);
     renderPageMatrix(access);

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -333,7 +333,7 @@ async function loadDashboard(){
   document.getElementById('dbContent').style.display='none';
   try {
     var timeout = new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); },30000); });
-    var res = await Promise.race([CamboAPI.get({ action:'helen_all' }), timeout]);
+    var res = await Promise.race([CamboAPI.get({ action:'get_all' }), timeout]);
     if(!res || !Array.isArray(res.loans)) throw new Error('No data');
     _loans = res.loans;
     _loans.forEach(function(l){ l._date=(l.DateTime||'').split('T')[0]; l._money=Number(l.Money||0)||0; });

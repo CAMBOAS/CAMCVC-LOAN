@@ -1104,7 +1104,7 @@ function exitPaintMode() {
 async function updateLoanStatus(loan, newStatus) {
   var updated = Object.assign({}, loan, { Status: newStatus });
   try {
-    await CamboAPI.post({ action: 'helen_loan_update', key: loan.DateTime, loan: updated });
+    await CamboAPI.post({ action: 'loan_update', key: loan.DateTime, loan: updated });
     var idx = _allLoans.findIndex(function(x){ return x.DateTime === loan.DateTime; });
     if (idx >= 0) _allLoans[idx].Status = newStatus;
     renderTable(); renderKPIs(); renderStatusDonut(); renderGroupBars();
@@ -1143,7 +1143,7 @@ async function loadData(opts) {
   for (var attempt = 0; attempt < 2; attempt++) {
     try {
       var data = await Promise.race([
-        CamboAPI.get({ action: 'helen_all' }),
+        CamboAPI.get({ action: 'get_all' }),
         new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 30000); })
       ]);
       if (data && data.ok) { fetchedData = data; break; }
@@ -2126,7 +2126,7 @@ async function confirmDelete() {
   populateFilters(); applyFilter(); renderCharts();
 
   try {
-    var res = await CamboAPI.post({ action: 'helen_loan_delete', key: delKey });
+    var res = await CamboAPI.post({ action: 'loan_delete', key: delKey });
     if (res && res.ok) {
       showDeleteSuccess_();
     } else {
@@ -2310,7 +2310,7 @@ async function toggleTrashMode() {
   document.getElementById('lrTbody').innerHTML = '<tr><td colspan="18" class="lr-loading">កំពុងផ្ទុក Trash...</td></tr>';
   try {
     var data = await Promise.race([
-      CamboAPI.post({ action: 'helen_loan_list_trash' }),
+      CamboAPI.post({ action: 'loan_list_trash' }),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
     _trashLoans = (data.ok && Array.isArray(data.loans)) ? data.loans : [];
@@ -2382,7 +2382,7 @@ async function executeTAAction() {
   var btn = document.getElementById('lrTAConfirmBtn');
   btn.disabled = true;
   btn.textContent = 'កំពុង...';
-  var apiAction = _taAction.type === 'recover' ? 'helen_loan_recover' : 'helen_loan_perm_delete';
+  var apiAction = _taAction.type === 'recover' ? 'loan_recover' : 'loan_perm_delete';
   try {
     var res = await CamboAPI.post({ action: apiAction, key: _taAction.key });
     if (res && res.ok) {
@@ -2445,7 +2445,7 @@ function switchInforTab(tab) {
 async function loadInforData() {
   document.getElementById('lrInforList').innerHTML = '<div style="padding:14px 16px;color:var(--muted);font-size:13px">កំពុងផ្ទុក...</div>';
   try {
-    var res = await CamboAPI.get({ action: 'helen_infor' });
+    var res = await CamboAPI.get({ action: 'get_settings' });
     if (res && res.ok) {
       _inforData.groups   = res.groups   || [];
       _inforData.statuses = res.statuses || [];
@@ -2484,7 +2484,7 @@ async function addInforItem() {
   var val = (document.getElementById('lrInforNewVal').value || '').trim();
   if (!val) return toast('សូមបញ្ចូលឈ្មោះ!');
   try {
-    var res = await CamboAPI.post({ action: 'helen_infor_add', type: _inforTab, value: val });
+    var res = await CamboAPI.post({ action: 'settings_add', type: _inforTab, value: val });
     if (res && res.ok) {
       _inforData[_inforTab].push(val);
       _helenInfor[_inforTab] = _inforData[_inforTab].slice();
@@ -2508,7 +2508,7 @@ async function deleteInforItemConfirm() {
   if (!val) return;
   _inforPendingDel = null;
   try {
-    var res = await CamboAPI.post({ action: 'helen_infor_delete', type: _inforTab, value: val });
+    var res = await CamboAPI.post({ action: 'settings_delete', type: _inforTab, value: val });
     if (res && res.ok) {
       _inforData[_inforTab] = _inforData[_inforTab].filter(function(x){ return x !== val; });
       _helenInfor[_inforTab] = _inforData[_inforTab].slice();
@@ -2542,7 +2542,7 @@ function isVideoUrl(url) {
   return /\/video\/upload\/|\.mp4|\.mov|\.webm|\.avi|\.mkv/i.test(String(url||''));
 }
 async function uploadDirectToCloudinary(file) {
-  var sigRes = await CamboAPI.post({ action: 'helen_get_upload_sig' });
+  var sigRes = await CamboAPI.post({ action: 'get_upload_sig' });
   if (!sigRes.ok) throw new Error(sigRes.message || 'Signature failed');
   var form = new FormData();
   form.append('file', file);
@@ -3030,7 +3030,7 @@ async function saveAdd() {
   var profileUrl = '';
   if (_profilePhoto) {
     try {
-      var pur = await CamboAPI.post({ action:'helen_upload_photo', data: _profilePhoto.b64 });
+      var pur = await CamboAPI.post({ action:'upload_photo', data: _profilePhoto.b64 });
       if (pur.ok && pur.url) profileUrl = pur.url;
     } catch(e) {}
   }
@@ -3046,7 +3046,7 @@ async function saveAdd() {
           var vUrl = await uploadDirectToCloudinary(pItem.file);
           if (vUrl) photoUrls.push(vUrl);
         } else {
-          var ur = await CamboAPI.post({ action:'helen_upload_photo', data: pItem.b64 });
+          var ur = await CamboAPI.post({ action:'upload_photo', data: pItem.b64 });
           if (ur.ok && ur.url) photoUrls.push(ur.url);
         }
       } catch(e) {}
@@ -3057,7 +3057,7 @@ async function saveAdd() {
   var _addBtnHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg> Save';
   try {
     var res = await Promise.race([
-      CamboAPI.post({ action: 'helen_loan_add', loan: loan }),
+      CamboAPI.post({ action: 'loan_add', loan: loan }),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 30000); })
     ]);
     if (res && res.ok) {
@@ -3237,7 +3237,7 @@ async function saveEdit() {
   var finalProfileUrl = _editProfileRemoved ? '' : (_editProfileNew ? null : _editProfileUrl);
   if (_editProfileNew && _editProfileNew.b64) {
     try {
-      var pur = await CamboAPI.post({ action:'helen_upload_photo', data: _editProfileNew.b64 });
+      var pur = await CamboAPI.post({ action:'upload_photo', data: _editProfileNew.b64 });
       finalProfileUrl = (pur.ok && pur.url) ? pur.url : _editProfileUrl;
     } catch(e) { finalProfileUrl = _editProfileUrl; }
   }
@@ -3253,7 +3253,7 @@ async function saveEdit() {
           var evUrl = await uploadDirectToCloudinary(epItem.file);
           if (evUrl) finalPhotos.push(evUrl);
         } else {
-          var eur = await CamboAPI.post({ action:'helen_upload_photo', data: epItem.b64 });
+          var eur = await CamboAPI.post({ action:'upload_photo', data: epItem.b64 });
           if (eur.ok && eur.url) finalPhotos.push(eur.url);
         }
       } catch(e) {}
@@ -3264,7 +3264,7 @@ async function saveEdit() {
   var _saveBtnHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg> Save';
   try {
     var res = await Promise.race([
-      CamboAPI.post({ action: 'helen_loan_update', key: _editLoan.DateTime, loan: updated }),
+      CamboAPI.post({ action: 'loan_update', key: _editLoan.DateTime, loan: updated }),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 30000); })
     ]);
     if (res && res.ok) {
@@ -3358,7 +3358,7 @@ async function doLrPaidToggle() {
   var ok = document.getElementById('lrPaidConfOkBtn');
   ok.disabled = true; ok.textContent = '…';
   closeLrPaidConfirm();
-  var res = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:dt });
+  var res = await CamboAPI.post({ action:'loan_toggle_paid', key:dt });
   if (res && res.ok) {
     var loan = _allLoans.find(function(x){ return x.DateTime===dt; });
     if (loan) loan.Paid = res.paid;

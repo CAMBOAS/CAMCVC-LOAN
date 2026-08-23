@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -357,7 +357,7 @@ document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeProfi
 document.addEventListener('DOMContentLoaded', async function() {
   if (window.HelenAuth&&!window.HelenAuth.check()) return;
   try {
-    var res=await CamboAPI.post({ action:'helen_team_list' });
+    var res=await CamboAPI.post({ action:'team_list' });
     var stateEl=document.getElementById('tmState');
     var gridEl=document.getElementById('tmGrid');
     if (!res||!res.ok){ stateEl.textContent=(res&&res.message)||'Error loading team'; return; }

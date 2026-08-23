@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -334,7 +334,7 @@
 <script src="../assets/js/layout.js"></script>
 <script>
 /* ── Config ── */
-var CFG_KEY = 'helen_fb_cfg';
+var CFG_KEY = 'fb_cfg';
 function loadCfg() { try { return JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); } catch(e){ return {}; } }
 function saveCfg() {
   var appId = document.getElementById('cfgAppId').value.trim();
@@ -558,7 +558,7 @@ function copyId(id) {
 }
 
 /* ── History ── */
-var HIST_KEY = 'helen_fb_hist';
+var HIST_KEY = 'fb_hist';
 
 function loadHistory() {
   try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch(e) { return []; }
@@ -626,8 +626,8 @@ function loadSites() {
 
   var base = getApiBase();
   var fetchUrl = base
-    ? base + '/api/proxy?action=helen_infor'
-    : HELEN_AS_URL + '?action=helen_infor';
+    ? base + '/api/proxy?action=get_settings'
+    : HELEN_AS_URL + '?action=get_settings';
 
   fetch(fetchUrl)
     .then(function(r) { return r.json(); })

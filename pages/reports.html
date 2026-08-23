@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -598,7 +598,7 @@ async function loadData() {
   btn.classList.add('spinning');
   try {
     var res = await Promise.race([
-      CamboAPI.get({ action: 'helen_all' }),
+      CamboAPI.get({ action: 'get_all' }),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); },30000); })
     ]);
     if (res && res.ok) {

@@ -1,4 +1,4 @@
-/* HELEN LOAN — Global Chat Widget (auto-injected on every page via layout.js) */
+﻿/* HELEN LOAN — Global Chat Widget (auto-injected on every page via layout.js) */
 (function () {
   'use strict';
 
@@ -263,7 +263,7 @@
   /* ── Load messages ── */
   async function gcLoadMsgs(scrollDown) {
     if (!_chatWith) return;
-    var res = await gcPost({ action:'helen_msg_list', with:_chatWith });
+    var res = await gcPost({ action:'msg_list', with:_chatWith });
     var el  = document.getElementById('gcMsgs');
     if (!res||!res.ok) {
       if (el.querySelector('.gc-spin')) el.innerHTML='<div class="gc-empty" style="color:#ef4444">Could not load messages — retrying…</div>';
@@ -355,7 +355,7 @@
     var img=_chatImg;
     if (!text&&!img) return;
     var btn=document.getElementById('gcSendBtn'); btn.disabled=true;
-    await gcPost({ action:'helen_msg_send', to:_chatWith, body:text, image_url:img });
+    await gcPost({ action:'msg_send', to:_chatWith, body:text, image_url:img });
     input.value=''; gcClearImg();
     await gcLoadMsgs(true);
     btn.disabled=false;
@@ -370,7 +370,7 @@
     prev.style.display='flex'; prevImg.src='';
     var reader=new FileReader();
     reader.onload=async function(ev){
-      var r=await gcPost({ action:'helen_upload_photo', data:ev.target.result });
+      var r=await gcPost({ action:'upload_photo', data:ev.target.result });
       if (!r||!r.ok){ prev.style.display='none'; btn.disabled=false; return; }
       _chatImg=r.url; prevImg.src=r.url; btn.disabled=false;
     };
@@ -410,7 +410,7 @@
     el.addEventListener('click', function(e){
       if (e.target.classList.contains('gc-notif-close')){ dismissNotif(el); return; }
       dismissNotif(el);
-      gcPost({ action:'helen_team_list' }).then(function(res){
+      gcPost({ action:'team_list' }).then(function(res){
         var u=(res&&res.users||[]).find(function(x){ return x.username===sender; })||{};
         gcOpen(sender, u.display_name||name, u.photo_url||photoUrl, isOnlineDt(u.last_seen));
       }).catch(function(){ gcOpen(sender, name, photoUrl, false); });
@@ -437,7 +437,7 @@
   /* ── Poll unread ── */
   async function gcPollUnread() {
     if (!getMyUsername()) return;
-    var res=await gcPost({ action:'helen_msg_unread' });
+    var res=await gcPost({ action:'msg_unread' });
     if (!res||!res.ok) return;
 
     var unread=res.unread||[];

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
@@ -550,7 +550,7 @@
     if (now - _lastAlertTime < 5 * 60 * 1000) return; // max 1 alert per 5 min
     _lastAlertTime = now;
     try {
-      CamboAPI.post({ action: 'helen_login_alert', username: username, reason: reason, attempt: attempt });
+      CamboAPI.post({ action: 'login_alert', username: username, reason: reason, attempt: attempt });
     } catch(e) {}
   }
 
@@ -569,7 +569,7 @@
     document.getElementById('btnSpin').style.display = 'block';
 
     try {
-      var res = await CamboAPI.post({ action: 'helen_login', username: u, pin: p });
+      var res = await CamboAPI.post({ action: 'api_login', username: u, pin: p });
       if (res && res.ok) {
         var _exp = res.expDate
           ? new Date(res.expDate + 'T23:59:59').getTime()
@@ -583,8 +583,8 @@
           localStorage.setItem('helenAuth', JSON.stringify({
             u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || ''
           }));
-          if (res.photo_url) localStorage.setItem('helen_user_photo', res.photo_url);
-          else localStorage.removeItem('helen_user_photo');
+          if (res.photo_url) localStorage.setItem('user_photo', res.photo_url);
+          else localStorage.removeItem('user_photo');
           var next = new URLSearchParams(location.search).get('next') || 'loan-list.html';
           location.replace(next);
         }

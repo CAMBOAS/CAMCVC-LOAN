@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="km">
 <head>
   <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
@@ -964,13 +964,13 @@ function hideUploadOv() {
   if (_uploadOv) { _uploadOv.remove(); _uploadOv = null; }
 }
 
-/* -- Upload: image (server-side via helen_upload_photo) -- */
+/* -- Upload: image (server-side via upload_photo) -- */
 async function uploadImage(file) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
     reader.onload = async function(ev) {
       try {
-        var res = await CamboAPI.post({ action:'helen_upload_photo', data: ev.target.result });
+        var res = await CamboAPI.post({ action:'upload_photo', data: ev.target.result });
         if (res && res.ok && res.url) resolve(res.url);
         else reject(new Error(res && res.message || 'Upload failed'));
       } catch(e) { reject(e); }
@@ -982,7 +982,7 @@ async function uploadImage(file) {
 
 /* -- Upload: video (browser-direct to Cloudinary via signature) -- */
 async function uploadVideo(file) {
-  var sig = await CamboAPI.post({ action:'helen_get_upload_sig' });
+  var sig = await CamboAPI.post({ action:'get_upload_sig' });
   if (!sig || !sig.ok) throw new Error('Could not get upload signature');
   return new Promise(function(resolve, reject) {
     var form = new FormData();
@@ -1526,7 +1526,7 @@ async function doPaidToggle() {
   render();
   if (_selectedKey === key) populateDetail(_loans.find(function(l){ return l.DateTime === key; }));
   try {
-    var res = await CamboAPI.post({ action:'helen_loan_toggle_paid', key:key });
+    var res = await CamboAPI.post({ action:'loan_toggle_paid', key:key });
     if (!res || !res.ok) {
       if (loan) loan.Paid = wasPaid ? 1 : 0;
       render();
@@ -1672,7 +1672,7 @@ async function addLoanTab() {
   populateTabFields(newTab);
   _repKey = newTab.tab_id;
   loadRphEntries(_repKey);
-  try { await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:_loanPayload(loan) }); } catch(e) {}
+  try { await CamboAPI.post({ action:'loan_update', key:_selectedKey, loan:_loanPayload(loan) }); } catch(e) {}
 }
 
 async function removeLoanTab() {
@@ -1686,7 +1686,7 @@ async function removeLoanTab() {
   populateTabFields(getTabData(loan, _loanTabIdx));
   _repKey = getCurrentRepKey(loan);
   loadRphEntries(_repKey);
-  try { await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:_loanPayload(loan) }); } catch(e) {}
+  try { await CamboAPI.post({ action:'loan_update', key:_selectedKey, loan:_loanPayload(loan) }); } catch(e) {}
 }
 
 function markDirty() { _dirty = true; }
@@ -1880,7 +1880,7 @@ async function autoSaveLoan(showToast) {
   if (!loan) return;
   try {
     var updated = buildLoanObj(loan);
-    var res = await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:updated });
+    var res = await CamboAPI.post({ action:'loan_update', key:_selectedKey, loan:updated });
     if (res && res.ok) { if (updated.DateTime !== _selectedKey) _selectedKey = updated.DateTime; Object.assign(loan, updated); }
     if (showToast) toast(res && res.ok ? 'Saved!' : (res&&res.message||'Save failed'));
   } catch(e) { if (showToast) toast('Error: '+e.message); }
@@ -1905,7 +1905,7 @@ async function saveLoan() {
   btn.innerHTML = '<div class="rt-spin" style="width:14px;height:14px;border-width:2px"></div> Saving...';
   try {
     var updatedLoan = buildLoanObj(loan);
-    var res = await CamboAPI.post({ action:'helen_loan_update', key:_selectedKey, loan:updatedLoan });
+    var res = await CamboAPI.post({ action:'loan_update', key:_selectedKey, loan:updatedLoan });
     if (res && res.ok) {
       _dirty = false;
       if (updatedLoan.DateTime !== _selectedKey) _selectedKey = updatedLoan.DateTime;
@@ -1965,7 +1965,7 @@ async function doDelete() {
   btn.disabled = true;
   btn.innerHTML = '<div class="rt-spin" style="width:12px;height:12px;border-width:2px"></div> Verifying…';
   try {
-    var vr = await CamboAPI.post({ action:'helen_verify_pin', pin:pin });
+    var vr = await CamboAPI.post({ action:'verify_pin', pin:pin });
     if (!vr || !vr.ok) {
       if (pinErr) pinErr.textContent = 'Wrong PIN — try again';
       if (pinInp) { pinInp.classList.add('rt-pin-shake'); setTimeout(function(){ pinInp.classList.remove('rt-pin-shake'); }, 400); pinInp.select(); }
@@ -1974,7 +1974,7 @@ async function doDelete() {
       return;
     }
     btn.innerHTML = '<div class="rt-spin" style="width:12px;height:12px;border-width:2px"></div> Deleting…';
-    var res = await CamboAPI.post({ action: 'helen_loan_delete', key: _selectedKey });
+    var res = await CamboAPI.post({ action: 'loan_delete', key: _selectedKey });
     if (res && res.ok) {
       _loans = _loans.filter(function(l){ return l.DateTime !== _selectedKey; });
       _selectedKey = null;
@@ -2002,7 +2002,7 @@ async function loadData() {
   document.getElementById('rtState').style.display = 'flex';
   document.getElementById('rtTbl').style.display   = 'none';
   try {
-    var res = await CamboAPI.post({ action:'helen_all' });
+    var res = await CamboAPI.post({ action:'get_all' });
     if (!res||!res.ok) { document.getElementById('rtState').innerHTML='Failed to load'; return; }
     _loans    = (res.loans||[]).filter(function(l){ return !l.deleted; });
     _groups   = res.groups   || [];
@@ -2073,7 +2073,7 @@ async function loadRphEntries(key) {
     if (el && !el.value) el.value = nowLocal;
   });
   try {
-    var res = await CamboAPI.post({ action:'helen_repayment_list', key:key });
+    var res = await CamboAPI.post({ action:'repayment_list', key:key });
     if (res && res.ok) _rphEntries = res.entries || [];
   } catch(e) {}
   renderRphList();
@@ -2140,7 +2140,7 @@ async function addRphEntry(type) {
   var note   = noteEl.value.trim();
   if (btn) btn.disabled = true;
   try {
-    var res = await CamboAPI.post({ action:'helen_repayment_add', key:(_repKey||_selectedKey), type:type, amount:amount, paid_at:paidAt, note:note });
+    var res = await CamboAPI.post({ action:'repayment_add', key:(_repKey||_selectedKey), type:type, amount:amount, paid_at:paidAt, note:note });
     if (res && res.ok) {
       amtEl.value = '';
       noteEl.value = '';
@@ -2153,7 +2153,7 @@ async function addRphEntry(type) {
 async function deleteRphEntry(id) {
   if (!id) return;
   try {
-    var res = await CamboAPI.post({ action:'helen_repayment_delete', id:id });
+    var res = await CamboAPI.post({ action:'repayment_delete', id:id });
     if (res && res.ok) await loadRphEntries(_repKey||_selectedKey);
   } catch(e) {}
 }

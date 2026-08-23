@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -479,7 +479,7 @@ var _editingLoanId=null;
 
 async function loadMeta(){
   try{
-    var data=await Promise.race([CamboAPI.post({action:'helen_all'}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},20000);})]);
+    var data=await Promise.race([CamboAPI.post({action:'get_all'}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},20000);})]);
     if(data&&data.ok){
       _helenGroups    =Array.isArray(data.groups)     ?data.groups.filter(function(g){return g&&g.toLowerCase()!=='groups';})         :[];
       _helenStatuses  =Array.isArray(data.statuses)   ?data.statuses.filter(function(s){return s&&s.toLowerCase()!=='status';})       :[];
@@ -551,7 +551,7 @@ async function mgsDelItem(val){
   var btn=event.target;
   btn.disabled=true;btn.textContent='...';
   try{
-    var res=await CamboAPI.post({action:'helen_infor_delete',type:dbType,value:val});
+    var res=await CamboAPI.post({action:'settings_delete',type:dbType,value:val});
     if(res&&res.ok){
       if(_mgsActiveTab==='group'){
         _helenGroups=_helenGroups.filter(function(g){return g!==val;});
@@ -579,7 +579,7 @@ async function mgsConfirmAdd(){
   var btn=document.getElementById('mgs_addbtn');
   btn.disabled=true;
   try{
-    var res=await CamboAPI.post({action:'helen_infor_add',type:dbType,value:val});
+    var res=await CamboAPI.post({action:'settings_add',type:dbType,value:val});
     if(res&&res.ok){
       if(_mgsActiveTab==='group'){
         var sel=document.getElementById('af_Groups');
@@ -767,7 +767,7 @@ var _profilePhoto=null;
 function compressPhoto(file){return new Promise(function(resolve){var img=new Image();var url=URL.createObjectURL(file);img.onload=function(){URL.revokeObjectURL(url);var MAX=1024,w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);resolve(c.toDataURL('image/jpeg',.78));};img.onerror=function(){URL.revokeObjectURL(url);resolve(null);};img.src=url;});}
 
 async function uploadDirectToCloudinary(file){
-  var sigRes=await CamboAPI.post({action:'helen_get_upload_sig'});
+  var sigRes=await CamboAPI.post({action:'get_upload_sig'});
   if(!sigRes.ok)throw new Error(sigRes.message||'Signature failed');
   var form=new FormData();form.append('file',file);form.append('api_key',sigRes.api_key);form.append('timestamp',String(sigRes.timestamp));form.append('folder',sigRes.folder);form.append('signature',sigRes.signature);
   var r=await fetch('https://api.cloudinary.com/v1_1/'+sigRes.cloud_name+'/auto/upload',{method:'POST',body:form});
@@ -805,13 +805,13 @@ async function saveCustomer(){
     Note:(document.getElementById('af_Note').value||'').trim(),DateTime:customDT,
     LinkedTo:(document.getElementById('af_LinkedTo').value||''),
     social_links:getSocialLinksData()};
-  if(_profilePhoto&&_profilePhoto.b64){try{var pur=await CamboAPI.post({action:'helen_upload_photo',data:_profilePhoto.b64});if(pur.ok&&pur.url)loan.photo_url=pur.url;}catch(e){}}
+  if(_profilePhoto&&_profilePhoto.b64){try{var pur=await CamboAPI.post({action:'upload_photo',data:_profilePhoto.b64});if(pur.ok&&pur.url)loan.photo_url=pur.url;}catch(e){}}
   else if(_profilePhoto&&_profilePhoto.existing&&_profilePhoto.preview){loan.photo_url=_profilePhoto.preview;}
   var photoUrls=[];
-  for(var pi=0;pi<_addPhotos.length;pi++){var pItem=_addPhotos[pi];try{if(pItem.isVideo){var vUrl=await uploadDirectToCloudinary(pItem.file);if(vUrl)photoUrls.push(vUrl);}else{var ur=await CamboAPI.post({action:'helen_upload_photo',data:pItem.b64});if(ur.ok&&ur.url)photoUrls.push(ur.url);}}catch(e){}}
+  for(var pi=0;pi<_addPhotos.length;pi++){var pItem=_addPhotos[pi];try{if(pItem.isVideo){var vUrl=await uploadDirectToCloudinary(pItem.file);if(vUrl)photoUrls.push(vUrl);}else{var ur=await CamboAPI.post({action:'upload_photo',data:pItem.b64});if(ur.ok&&ur.url)photoUrls.push(ur.url);}}catch(e){}}
   loan.photos=photoUrls;
   var isUpdate=!!_editingLoanId;
-  var apiAction=isUpdate?'helen_loan_update':'helen_loan_add';
+  var apiAction=isUpdate?'loan_update':'loan_add';
   var _saveIcon='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>';
   try{
     var postBody=isUpdate?{action:apiAction,key:_editingLoanId,loan:loan}:{action:apiAction,loan:loan};

@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   'use strict';
   var KEY        = 'helenAuth';
   var EXPIRY_MS  = 7 * 24 * 60 * 60 * 1000; /* 7 days */
@@ -32,7 +32,7 @@
 
   function logout() {
     clear();
-    localStorage.removeItem('helen_user_photo');
+    localStorage.removeItem('user_photo');
     location.replace('login.html');
   }
 

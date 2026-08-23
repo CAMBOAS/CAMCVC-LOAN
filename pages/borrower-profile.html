@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -414,7 +414,7 @@ async function loadProfile() {
   }
 
   try {
-    var data = await window.CamboAPI.post({ action: 'helen_loan_profile', key: key });
+    var data = await window.CamboAPI.post({ action: 'loan_profile', key: key });
     if (!data || !data.ok) {
       document.getElementById('bpLoading').innerHTML = '<div style="color:#ef4444;font-size:14px">'
         + esc(data && data.message || 'Failed to load profile') + '</div>';

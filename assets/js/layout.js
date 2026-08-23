@@ -1,9 +1,9 @@
-/* HELEN LOAN — Shared Layout (Sidebar + Topbar) v19 */
+﻿/* HELEN LOAN — Shared Layout (Sidebar + Topbar) v19 */
 (function () {
   'use strict';
 
-  function getLang() { return localStorage.getItem('helen_lang') || 'en'; }
-  function setLang(l) { localStorage.setItem('helen_lang', l); }
+  function getLang() { return localStorage.getItem('lang') || 'en'; }
+  function setLang(l) { localStorage.setItem('lang', l); }
   function t(kh, en) { return getLang() === 'en' ? en : kh; }
 
   function getPageMeta() {
@@ -85,7 +85,7 @@
   window.helenSyncPerms = async function() {
     try {
       if (typeof CamboAPI==='undefined') return;
-      var r = await CamboAPI.post({ action:'helen_perms_get' });
+      var r = await CamboAPI.post({ action:'perms_get' });
       if (r && r.ok && r.perms) window.helenUpdatePerms(r.perms);
     } catch(e){}
   };
@@ -109,7 +109,7 @@
   window.helenSyncPageAccess = async function() {
     try {
       if (typeof CamboAPI==='undefined') return;
-      var r = await CamboAPI.post({ action:'helen_page_access_get' });
+      var r = await CamboAPI.post({ action:'page_access_get' });
       if (r && r.ok && r.access) window.helenUpdatePageAccess(r.access);
     } catch(e){}
   };
@@ -184,7 +184,7 @@
             else             _exp = '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(16,185,129,.13);color:#10b981;margin-left:4px">'+_d+' days</span>';
           }
           var _onclick = _a ? ' style="cursor:pointer" onclick="window._hlShowUserMenu&&window._hlShowUserMenu()" title="Options"' : '';
-          var _photo = localStorage.getItem('helen_user_photo') || '';
+          var _photo = localStorage.getItem('user_photo') || '';
           var _avatarInner = _photo
             ? '<img src="'+_photo+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
             : '<img src="'+base+'images/logo/Helen-Loan.png" alt="Helen Loan" onerror="this.style.display=\'none\';this.parentNode.textContent=\'HL\'">';
@@ -265,7 +265,7 @@
       try {
         if (window.CamboAPI) {
           await Promise.race([
-            window.CamboAPI.post({ action: 'helen_user_logout' }),
+            window.CamboAPI.post({ action: 'user_logout' }),
             new Promise(function(r){ setTimeout(r, 800); })
           ]);
         }
@@ -303,7 +303,7 @@
     var inputBdr = isDark ? 'rgba(148,163,184,.2)' : 'rgba(203,213,225,1)';
     var divBdr  = isDark ? 'rgba(148,163,184,.12)' : 'rgba(203,213,225,.6)';
 
-    var photoUrl = localStorage.getItem('helen_user_photo') || '';
+    var photoUrl = localStorage.getItem('user_photo') || '';
     var avatarInner = photoUrl
       ? '<img src="'+photoUrl+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
       : '<span style="font-size:26px;font-weight:800;color:#a78bfa">'+(_a.name||_a.u||'HL').charAt(0).toUpperCase()+'</span>';
@@ -388,7 +388,7 @@
 
     /* Avatar circle click → preview current photo */
     document.getElementById('hlProfAvatarCircle').addEventListener('click', function() {
-      var url = localStorage.getItem('helen_user_photo') || '';
+      var url = localStorage.getItem('user_photo') || '';
       if (!url) return;
       var prev = document.createElement('div');
       prev.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);cursor:zoom-out;animation:hlFadeIn .15s ease';
@@ -416,11 +416,11 @@
           if (!api) { statusEl.textContent = 'CamboAPI not found'; return; }
           var auth = null;
           try { auth = JSON.parse(localStorage.getItem('helenAuth')||'null'); } catch(ee){}
-          var r = await api.post({ action:'helen_upload_photo', auth:auth, data: ev.target.result });
+          var r = await api.post({ action:'upload_photo', auth:auth, data: ev.target.result });
           if (!r || !r.ok) { statusEl.textContent = 'Failed: '+(r&&r.message||'Error'); return; }
-          var r2 = await api.post({ action:'helen_user_self_update', auth:auth, type:'photo', photo_url: r.url });
+          var r2 = await api.post({ action:'user_self_update', auth:auth, type:'photo', photo_url: r.url });
           if (!r2 || !r2.ok) { statusEl.textContent = 'Failed: '+(r2&&r2.message||'Error'); return; }
-          localStorage.setItem('helen_user_photo', r.url);
+          localStorage.setItem('user_photo', r.url);
           var circle = document.getElementById('hlProfAvatarCircle');
           if (circle) {
             circle.innerHTML = '<img src="'+r.url+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
@@ -478,7 +478,7 @@
       try {
         if (nameChanged || userChanged) {
           var r = await api.post({
-            action:'helen_user_self_update', auth: freshAuth(),
+            action:'user_self_update', auth: freshAuth(),
             type:'profile',
             display_name: nameChanged ? displayName : origName,
             new_username: userChanged ? newUsername : '',
@@ -498,7 +498,7 @@
 
         if (pinChanged) {
           var r2 = await api.post({
-            action:'helen_user_self_update', auth: freshAuth(),
+            action:'user_self_update', auth: freshAuth(),
             type:'pin',
             current_pin: currentPin,
             new_pin: newPin
@@ -605,7 +605,7 @@
     var dashboard = document.querySelector('.dashboard');
 
     /* Restore collapsed state */
-    var collapsed = localStorage.getItem('helen_sb_collapsed') === '1';
+    var collapsed = localStorage.getItem('sb_collapsed') === '1';
     if (collapsed && sb) { sb.classList.add('sb-collapsed'); document.body.classList.add('sb-collapsed'); }
 
     /* Toggle collapse on click */
@@ -613,7 +613,7 @@
       if (!sb) return;
       var c = sb.classList.toggle('sb-collapsed');
       document.body.classList.toggle('sb-collapsed', c);
-      localStorage.setItem('helen_sb_collapsed', c ? '1' : '0');
+      localStorage.setItem('sb_collapsed', c ? '1' : '0');
     });
 
     /* Mobile overlay close */
@@ -651,7 +651,7 @@
     var header  = document.getElementById('sharedHeader');
     if (sidebar) {
       sidebar.innerHTML = buildSidebar();
-      if (localStorage.getItem('helen_sb_collapsed') === '1') {
+      if (localStorage.getItem('sb_collapsed') === '1') {
         sidebar.classList.add('sb-collapsed');
         document.body.classList.add('sb-collapsed');
       }

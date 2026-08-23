@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>(function(){document.documentElement.style.visibility='';})();</script>
@@ -366,7 +366,7 @@ var _photoCache = {};
 function _myUser() {
   try { var a = JSON.parse(localStorage.getItem('helenAuth')||'null'); return a ? (a.u||'') : ''; } catch(e) { return ''; }
 }
-function _myPhoto() { return localStorage.getItem('helen_user_photo') || ''; }
+function _myPhoto() { return localStorage.getItem('user_photo') || ''; }
 function _buildPhotoCache(logs) {
   var mu = _myUser(), mp = _myPhoto();
   if (mu && mp) _photoCache[mu] = mp;
@@ -376,11 +376,11 @@ function _buildPhotoCache(logs) {
     }
   });
 }
-/* Admin: pre-load all user photos from helen_user_list so cache is ready before render */
+/* Admin: pre-load all user photos from user_list so cache is ready before render */
 async function _loadUserPhotos() {
   if (!_isAdmin()) return;
   try {
-    var res = await CamboAPI.post({ action: 'helen_user_list' });
+    var res = await CamboAPI.post({ action: 'user_list' });
     if (res && res.ok && res.users) {
       res.users.forEach(function(u) {
         if (u.username && u.photo_url) _photoCache[u.username] = u.photo_url;
@@ -691,7 +691,7 @@ async function loadData() {
 
   try {
     var data = await window.CamboAPI.post({
-      action: 'helen_activity_list',
+      action: 'activity_list',
       limit: _PAGE, offset: 0,
       filter_action: '', filter_actor: fUser
     });
@@ -721,7 +721,7 @@ async function loadMore() {
   if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
   try {
     var data = await window.CamboAPI.post({
-      action: 'helen_activity_list',
+      action: 'activity_list',
       limit: _PAGE, offset: _offset,
       filter_action: '', filter_actor: fUser
     });
