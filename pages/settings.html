@@ -482,14 +482,49 @@
                 onblur="this.style.borderColor='rgba(148,163,184,.15)';this.style.background='rgba(148,163,184,.07)'">
             </div>
 
-            <!-- Logo URL -->
+            <!-- Logo -->
             <div>
-              <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Logo URL <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Logo <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+
+              <!-- Upload area -->
+              <input type="file" id="brandLogoFile" accept="image/*" style="display:none" onchange="uploadBrandLogo(this)">
+              <div id="brandLogoDropZone"
+                style="position:relative;border:2px dashed rgba(6,182,212,.3);border-radius:11px;padding:18px 16px;text-align:center;cursor:pointer;transition:.18s;background:rgba(6,182,212,.03)"
+                onclick="document.getElementById('brandLogoFile').click()"
+                ondragover="event.preventDefault();this.style.borderColor='rgba(6,182,212,.7)';this.style.background='rgba(6,182,212,.08)'"
+                ondragleave="this.style.borderColor='rgba(6,182,212,.3)';this.style.background='rgba(6,182,212,.03)'"
+                ondrop="event.preventDefault();this.style.borderColor='rgba(6,182,212,.3)';this.style.background='rgba(6,182,212,.03)';if(event.dataTransfer.files[0])uploadBrandLogo({files:event.dataTransfer.files})">
+                <!-- Thumbnail (shown after upload) -->
+                <div id="brandLogoThumb" style="display:none;margin-bottom:10px;justify-content:center">
+                  <img id="brandLogoThumbImg" src="" alt="logo"
+                    style="width:56px;height:56px;object-fit:contain;border-radius:10px;border:1.5px solid rgba(148,163,184,.18);background:rgba(148,163,184,.06)">
+                </div>
+                <!-- Default prompt -->
+                <div id="brandLogoPrompt" style="display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(6,182,212,.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <div style="font-size:12.5px;font-weight:700;color:var(--text)">Click to upload or drag & drop</div>
+                  <div style="font-size:11px;color:var(--muted)">PNG, JPG, SVG · max 5 MB</div>
+                </div>
+                <!-- Upload spinner -->
+                <div id="brandLogoSpinner" style="display:none;align-items:center;justify-content:center;gap:8px;pointer-events:none">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"/></svg>
+                  <span style="font-size:12px;color:var(--muted)">Uploading…</span>
+                </div>
+                <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+              </div>
+              <div id="brandLogoUploadErr" style="margin-top:5px;font-size:11.5px;color:#f87171;display:none"></div>
+
+              <!-- Manual URL input -->
+              <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+                <div style="flex:1;height:1px;background:rgba(148,163,184,.12)"></div>
+                <span style="font-size:10.5px;color:var(--muted);white-space:nowrap">or paste URL</span>
+                <div style="flex:1;height:1px;background:rgba(148,163,184,.12)"></div>
+              </div>
               <input id="brandLogoUrl" type="url" placeholder="https://example.com/logo.png"
-                style="width:100%;box-sizing:border-box;padding:10px 13px;border-radius:9px;border:1.5px solid rgba(148,163,184,.15);background:rgba(148,163,184,.07);color:var(--text);font-size:12.5px;font-family:inherit;outline:none;transition:.15s"
+                style="margin-top:8px;width:100%;box-sizing:border-box;padding:9px 13px;border-radius:9px;border:1.5px solid rgba(148,163,184,.15);background:rgba(148,163,184,.07);color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:.15s"
                 onfocus="this.style.borderColor='rgba(6,182,212,.45)';this.style.background='rgba(6,182,212,.06)'"
                 onblur="this.style.borderColor='rgba(148,163,184,.15)';this.style.background='rgba(148,163,184,.07)'">
-              <div style="margin-top:6px;font-size:11px;color:var(--muted)">Leave blank to keep the default logo image</div>
+              <div style="margin-top:5px;font-size:11px;color:var(--muted)">Leave blank to keep the default logo image</div>
             </div>
 
             <!-- Preview -->
@@ -1587,6 +1622,53 @@ function _brandPreviewUpdate() {
   if (el) el.addEventListener('input', _brandPreviewUpdate);
 });
 
+async function uploadBrandLogo(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    var errEl = document.getElementById('brandLogoUploadErr');
+    errEl.textContent = 'File too large (max 5 MB)';
+    errEl.style.display = 'block';
+    return;
+  }
+  document.getElementById('brandLogoUploadErr').style.display = 'none';
+  document.getElementById('brandLogoPrompt').style.display = 'none';
+  document.getElementById('brandLogoThumb').style.display = 'none';
+  document.getElementById('brandLogoSpinner').style.display = 'flex';
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var b64 = e.target.result;
+    try {
+      var r = await CamboAPI.post({ action: 'upload_photo', data: b64 });
+      document.getElementById('brandLogoSpinner').style.display = 'none';
+      if (r && r.ok && r.url) {
+        document.getElementById('brandLogoUrl').value = r.url;
+        /* show thumbnail */
+        var thumb = document.getElementById('brandLogoThumbImg');
+        thumb.src = r.url;
+        document.getElementById('brandLogoThumb').style.display = 'flex';
+        document.getElementById('brandLogoPrompt').style.display = 'none';
+        _brandPreviewUpdate();
+      } else {
+        document.getElementById('brandLogoPrompt').style.display = 'flex';
+        var errEl = document.getElementById('brandLogoUploadErr');
+        errEl.textContent = (r && r.message) || 'Upload failed';
+        errEl.style.display = 'block';
+      }
+    } catch(ex) {
+      document.getElementById('brandLogoSpinner').style.display = 'none';
+      document.getElementById('brandLogoPrompt').style.display = 'flex';
+      var errEl = document.getElementById('brandLogoUploadErr');
+      errEl.textContent = 'Upload error: ' + ex.message;
+      errEl.style.display = 'block';
+    }
+    /* reset file input so same file can be re-selected */
+    document.getElementById('brandLogoFile').value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
 async function loadBrand() {
   try {
     var r = await CamboAPI.post({ action: 'get_settings' });
@@ -1594,6 +1676,12 @@ async function loadBrand() {
     document.getElementById('brandName').value    = r.app_name     || '';
     document.getElementById('brandSub').value     = r.app_sub      || '';
     document.getElementById('brandLogoUrl').value = r.app_logo_url || '';
+    if (r.app_logo_url) {
+      var thumb = document.getElementById('brandLogoThumbImg');
+      thumb.src = r.app_logo_url;
+      document.getElementById('brandLogoThumb').style.display = 'flex';
+      document.getElementById('brandLogoPrompt').style.display = 'none';
+    }
     _brandPreviewUpdate();
   } catch(e) {}
 }
