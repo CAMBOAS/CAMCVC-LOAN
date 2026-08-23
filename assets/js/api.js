@@ -1,6 +1,6 @@
 /**
  * HELEN LOAN — Central API helper
- * All requests POST to /api/helen (Vercel → MySQL on Railway)
+ * All requests POST to /api/app (Vercel → MySQL on Railway)
  */
 
 (function () {
@@ -14,7 +14,7 @@
     return {};
   }
 
-  /* get() and post() both use POST to /api/helen */
+  /* get() and post() both use POST to /api/app */
   async function get(params) {
     return post(params);
   }
@@ -24,7 +24,7 @@
       return { ok: false, message: 'គ្មានការតភ្ជាប់អ៊ីនធឺណិត — សូមពិនិត្យ Wifi/Data' };
     }
     const fullBody = Object.assign({}, _authBody(), body);
-    const res  = await fetch('/api/helen', {
+    const res  = await fetch('/api/app', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(fullBody),

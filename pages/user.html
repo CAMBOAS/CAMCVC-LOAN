@@ -759,8 +759,8 @@ function clearErr() {
        from any context (file://, localhost without proxy, etc.) ── */
 var _API_URL = (function() {
   var h = location.hostname;
-  if (h === 'localhost' || h === '127.0.0.1') return '/api/helen';
-  return 'https://helenloan.vercel.app/api/helen';
+  if (h === 'localhost' || h === '127.0.0.1') return '/api/app';
+  return 'https://helenloan.vercel.app/api/app';
 })();
 
 async function portalAPI(body) {

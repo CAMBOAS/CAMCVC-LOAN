@@ -30,11 +30,11 @@ const url   = require('url');
   } catch(e) {}
 })();
 
-/* ── Cache the helen.js handler (ES-module, loaded once) ── */
+/* ── Cache the app.js handler (ES-module, loaded once) ── */
 let _helenHandler = null;
 async function getHelenHandler() {
   if (!_helenHandler) {
-    const mod = await import('./api/helen.js');
+    const mod = await import('./api/app.js');
     _helenHandler = mod.default;
   }
   return _helenHandler;
@@ -192,8 +192,8 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(200); return res.end(); }
 
-  /* ── /api/helen — run api/helen.js locally (connects to Railway MySQL) ── */
-  if (pathname === '/api/helen') {
+  /* ── /api/app — run api/app.js locally (connects to Railway MySQL) ── */
+  if (pathname === '/api/app') {
     try {
       let body = '';
       await new Promise((ok) => { req.on('data', c => { body += c; }); req.on('end', ok); });
@@ -223,7 +223,7 @@ const server = http.createServer(async (req, res) => {
       const handler = await getHelenHandler();
       await handler(mockReq, mockRes);
     } catch (err) {
-      console.error('[/api/helen error]', err.message);
+      console.error('[/api/app error]', err.message);
       res.writeHead(500);
       return res.end(JSON.stringify({ ok: false, message: err.message }));
     }

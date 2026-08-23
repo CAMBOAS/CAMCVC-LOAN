@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/helen.js": { "maxDuration": 30 }
+    "api/app.js": { "maxDuration": 30 }
   },
   "headers": [
     {

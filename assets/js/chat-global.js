@@ -14,7 +14,7 @@
     var auth=getMyAuth();
     if (!auth||!auth.u) return Promise.resolve({ ok:false });
     var full=Object.assign({}, { auth:{ u:auth.u, p:auth.p } }, body);
-    return fetch('/api/helen', {
+    return fetch('/api/app', {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(full)
     }).then(function(r){ return r.text(); })
       .then(function(t){ try{ return JSON.parse(t); }catch(e){ return {ok:false}; } })
