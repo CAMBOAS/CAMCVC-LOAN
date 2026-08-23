@@ -1,6 +1,7 @@
 {
   "name": "camcvc-loan",
   "version": "1.0.0",
+  "type": "module",
   "engines": {
     "node": "22.x"
   },
