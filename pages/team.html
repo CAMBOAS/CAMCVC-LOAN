@@ -109,39 +109,75 @@
     .tm-view-btn.active { background:rgba(124,92,255,.12); color:#7c5cff; border-color:rgba(124,92,255,.35) }
 
     /* -- List view -- */
-    .tm-list { display:flex; flex-direction:column; gap:7px }
-    .tm-row {
-      background:var(--tm-card); border-radius:14px; border:1px solid var(--tm-border);
-      box-shadow:var(--tm-shadow); padding:11px 16px; display:flex; align-items:center;
-      gap:13px; cursor:pointer; transition:.15s;
+    .tm-list { display:flex; flex-direction:column; gap:0 }
+
+    /* Header row */
+    .tm-list-header {
+      display:grid;
+      grid-template-columns: 40px 1fr 90px 64px 64px 130px;
+      align-items:center; padding:7px 14px 7px 10px;
+      font-size:9.5px; font-weight:800; color:var(--tm-muted);
+      text-transform:uppercase; letter-spacing:.07em;
+      border-bottom:1px solid var(--tm-border); margin-bottom:6px;
     }
-    .tm-row:hover { border-color:rgba(124,92,255,.35); box-shadow:0 4px 18px rgba(124,92,255,.11); transform:translateX(2px) }
-    .tm-row:active { transform:translateX(0) }
-    .tm-row-av-wrap { position:relative; flex-shrink:0 }
+    .tm-list-header > span { text-align:center }
+    .tm-list-header > span:nth-child(2) { text-align:left }
+    .tm-list-header > span:last-child   { text-align:right }
+
+    .tm-row {
+      background:var(--tm-card); border-radius:12px; border:1px solid var(--tm-border);
+      box-shadow:var(--tm-shadow); padding:9px 14px 9px 10px;
+      display:grid;
+      grid-template-columns: 40px 1fr 90px 64px 64px 130px;
+      align-items:center; gap:0;
+      cursor:pointer; transition:.15s; margin-bottom:5px;
+    }
+    .tm-row:hover { border-color:rgba(124,92,255,.35); box-shadow:0 4px 18px rgba(124,92,255,.1) }
+    .tm-row:active { opacity:.88 }
+
+    /* Col 1 – avatar */
+    .tm-row-av-wrap { position:relative; width:40px; display:flex; align-items:center; justify-content:center; flex-shrink:0 }
     .tm-row-av {
-      width:44px; height:44px; border-radius:50%; overflow:hidden;
-      border:2.5px solid rgba(124,92,255,.2); background:rgba(124,92,255,.1);
+      width:38px; height:38px; border-radius:50%; overflow:hidden;
+      border:2px solid rgba(124,92,255,.2); background:rgba(124,92,255,.1);
       display:flex; align-items:center; justify-content:center;
-      font-size:17px; font-weight:800; color:#7c5cff;
+      font-size:15px; font-weight:800; color:#7c5cff;
     }
     .tm-row-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block }
-    .tm-row-dot { position:absolute; bottom:0; right:0; width:13px; height:13px; border-radius:50%; border:2.5px solid var(--tm-card) }
+    .tm-row-dot { position:absolute; bottom:0; right:2px; width:11px; height:11px; border-radius:50%; border:2px solid var(--tm-card) }
     .tm-row-dot.online  { background:#22c55e }
     .tm-row-dot.offline { background:#94a3b8 }
-    .tm-row-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px }
-    .tm-row-name { font-size:13px; font-weight:800; color:var(--tm-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-    .tm-row-meta { display:flex; align-items:center; gap:6px; flex-wrap:wrap }
-    .tm-row-stats { display:flex; gap:14px; flex-shrink:0 }
+
+    /* Col 2 – name */
+    .tm-row-info { min-width:0; padding:0 10px 0 8px }
+    .tm-row-name { font-size:13px; font-weight:800; color:var(--tm-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px }
+    .tm-row-uname { font-size:10px; color:var(--tm-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+
+    /* Col 3 – role */
+    .tm-row-role-col { display:flex; justify-content:center }
+
+    /* Col 4 & 5 – stats */
     .tm-row-stat { display:flex; flex-direction:column; align-items:center; gap:1px }
-    .tm-row-stat-val { font-size:14px; font-weight:800; color:var(--tm-text); font-variant-numeric:tabular-nums; line-height:1 }
-    .tm-row-stat-lbl { font-size:9px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.04em }
-    .tm-row-divider { width:1px; height:32px; background:var(--tm-border); flex-shrink:0 }
-    .tm-row-last { font-size:10.5px; color:var(--tm-muted); white-space:nowrap; flex-shrink:0 }
-    @media(max-width:540px){
+    .tm-row-stat-val { font-size:15px; font-weight:800; color:var(--tm-text); font-variant-numeric:tabular-nums; line-height:1 }
+    .tm-row-stat-lbl { font-size:8.5px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.04em }
+
+    /* Col 6 – last active */
+    .tm-row-last { font-size:10.5px; color:var(--tm-muted); white-space:nowrap; text-align:right }
+
+    @media(max-width:700px){
+      .tm-list-header,
+      .tm-row { grid-template-columns: 40px 1fr 78px 54px 54px }
       .tm-row-last { display:none }
-      .tm-row-divider:last-of-type { display:none }
+      .tm-list-header > span:last-child { display:none }
     }
-    @media(max-width:380px){ .tm-row-stats { display:none } .tm-row-divider { display:none } }
+    @media(max-width:460px){
+      .tm-list-header,
+      .tm-row { grid-template-columns: 40px 1fr 70px 52px }
+      .tm-row > *:nth-child(5),
+      .tm-row > *:nth-child(6) { display:none }
+      .tm-list-header > span:nth-child(5),
+      .tm-list-header > span:nth-child(6) { display:none }
+    }
 
     /* ------------------------------
        PROFILE MODAL
@@ -407,6 +443,17 @@ document.addEventListener('app-unread-update', function(e) {
 
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeProfile(); });
 
+function listHeader() {
+  return '<div class="tm-list-header">'
+    +'<span></span>'
+    +'<span>MEMBER</span>'
+    +'<span>ROLE</span>'
+    +'<span>ADDED</span>'
+    +'<span>EDITED</span>'
+    +'<span>LAST ACTIVE</span>'
+    +'</div>';
+}
+
 function renderRow(u, idx) {
   var name=u.display_name||u.username||'?';
   var init=name.charAt(0).toUpperCase();
@@ -423,17 +470,11 @@ function renderRow(u, idx) {
     +'</div>'
     +'<div class="tm-row-info">'
       +'<div class="tm-row-name">'+esc(name)+'</div>'
-      +'<div class="tm-row-meta">'
-        +'<span class="tm-role '+rc+'">'+esc(u.role||'Staff')+'</span>'
-        +expBadge(u.exp_date)
-      +'</div>'
+      +'<div class="tm-row-uname">'+esc(u.username||'')+(expBadge(u.exp_date)?'&nbsp;·&nbsp;'+expBadge(u.exp_date):'')+'</div>'
     +'</div>'
-    +'<div class="tm-row-divider"></div>'
-    +'<div class="tm-row-stats">'
-      +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_added||0)+'</div><div class="tm-row-stat-lbl">Added</div></div>'
-      +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_edited||0)+'</div><div class="tm-row-stat-lbl">Edited</div></div>'
-    +'</div>'
-    +'<div class="tm-row-divider"></div>'
+    +'<div class="tm-row-role-col"><span class="tm-role '+rc+'">'+esc(u.role||'Staff')+'</span></div>'
+    +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_added||0)+'</div><div class="tm-row-stat-lbl">Added</div></div>'
+    +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_edited||0)+'</div><div class="tm-row-stat-lbl">Edited</div></div>'
     +'<div class="tm-row-last">'+esc(fmtLastActive(u.last_login||''))+'</div>'
     +'</div>';
 }
@@ -450,7 +491,7 @@ function setView(mode) {
   if (mode === 'list') {
     gridEl.style.display='none'; listEl.style.display='';
     btnG.classList.remove('active'); btnL.classList.add('active');
-    if (!listEl.innerHTML) listEl.innerHTML=_users.map(renderRow).join('');
+    if (!listEl.innerHTML) listEl.innerHTML=listHeader()+_users.map(renderRow).join('');
   } else {
     listEl.style.display='none'; gridEl.style.display='';
     btnG.classList.add('active'); btnL.classList.remove('active');
@@ -469,7 +510,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var gridEl=document.getElementById('tmGrid');
     var listEl=document.getElementById('tmList');
     gridEl.innerHTML=_users.map(renderCard).join('');
-    listEl.innerHTML=_users.map(renderRow).join('');
+    listEl.innerHTML=listHeader()+_users.map(renderRow).join('');
     stateEl.style.display='none';
     document.getElementById('tmToolbar').style.display='';
     setView(_curView);
