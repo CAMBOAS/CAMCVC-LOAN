@@ -121,11 +121,11 @@
     }
     @keyframes rtSlideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
     .rt-mobile-close-btn { display:none }
-    @media(max-width:768px){ .rt-mobile-close-btn { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; border:1.5px solid var(--rt-border); background:var(--rt-input); color:var(--rt-muted); cursor:pointer; flex-shrink:0; transition:.15s } }
+    @media(max-width:1024px){ .rt-mobile-close-btn { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; border:1.5px solid var(--rt-border); background:var(--rt-input); color:var(--rt-muted); cursor:pointer; flex-shrink:0; transition:.15s } }
     .rt-mobile-close-btn:hover { color:var(--rt-text); border-color:var(--rt-accent) }
     /* drag handle */
     .rt-sheet-handle { display:none }
-    @media(max-width:768px){ .rt-sheet-handle { display:block; width:36px; height:4px; border-radius:2px; background:var(--rt-border); margin:10px auto 0; } }
+    @media(max-width:1024px){ .rt-sheet-handle { display:block; width:36px; height:4px; border-radius:2px; background:var(--rt-border); margin:10px auto 0; } }
 
     /* -- Table panel -- */
     .rt-tbl-wrap { background:var(--rt-card); border:1px solid var(--rt-border); border-radius:14px; overflow:hidden }
@@ -242,7 +242,7 @@
     .rt-sl-tab.sl-add:hover { background:rgba(167,139,250,.18) }
     .rt-sl-tab.sl-rem { color:var(--rt-red); border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.06) }
     .rt-sl-tab.sl-rem:hover { background:rgba(248,113,113,.15) }
-    .rt-sl-form { background:var(--rt-input); border:1px solid var(--rt-input-border); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:8px }
+    .rt-sl-form { background:transparent; border:none; border-radius:0; padding:10px 0; display:flex; flex-direction:column; gap:8px }
     .rt-sl-row { display:grid; grid-template-columns:1fr 1fr; gap:8px }
     .rt-sl-field { display:flex; flex-direction:column; gap:3px }
     .rt-sl-label { font-size:9.5px; font-weight:800; color:var(--rt-muted); letter-spacing:.05em; text-transform:uppercase }
@@ -1115,7 +1115,7 @@ function renderSocialLinks(loan) {
   var tabsEl = document.getElementById('slTabs');
   var formEl = document.getElementById('slForm');
   if (!tabsEl || !formEl) return;
-  var links = Array.isArray(loan.socialLinks) ? loan.socialLinks : [];
+  var links = Array.isArray(loan.social_links) ? loan.social_links : [];
   if (_slIdx >= links.length) _slIdx = Math.max(0, links.length - 1);
 
   var th = '<button class="rt-sl-tab sl-add" onclick="slAdd()" title="Add">+</button>';
@@ -1168,18 +1168,18 @@ function renderSocialLinks(loan) {
 function slAdd() {
   var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
   if (!loan) return;
-  if (!Array.isArray(loan.socialLinks)) loan.socialLinks = [];
-  loan.socialLinks.push({ platform:'Facebook', name:'', url:'', id:'', fbid:'' });
-  _slIdx = loan.socialLinks.length - 1;
+  if (!Array.isArray(loan.social_links)) loan.social_links = [];
+  loan.social_links.push({ platform:'Facebook', name:'', url:'', id:'', fbid:'' });
+  _slIdx = loan.social_links.length - 1;
   renderSocialLinks(loan);
   autoSaveLoan(false);
 }
 
 function slRemove() {
   var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
-  if (!loan || !Array.isArray(loan.socialLinks) || !loan.socialLinks.length) return;
-  loan.socialLinks.splice(_slIdx, 1);
-  if (_slIdx >= loan.socialLinks.length) _slIdx = Math.max(0, loan.socialLinks.length - 1);
+  if (!loan || !Array.isArray(loan.social_links) || !loan.social_links.length) return;
+  loan.social_links.splice(_slIdx, 1);
+  if (_slIdx >= loan.social_links.length) _slIdx = Math.max(0, loan.social_links.length - 1);
   renderSocialLinks(loan);
   autoSaveLoan(false);
 }
@@ -1192,16 +1192,16 @@ function slSwitch(i) {
 
 function slField(field, val) {
   var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
-  if (!loan || !Array.isArray(loan.socialLinks) || !loan.socialLinks[_slIdx]) return;
-  loan.socialLinks[_slIdx][field] = val;
+  if (!loan || !Array.isArray(loan.social_links) || !loan.social_links[_slIdx]) return;
+  loan.social_links[_slIdx][field] = val;
 }
 
 function slSave() { autoSaveLoan(false); }
 
 function slAutoFbid() {
   var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
-  if (!loan || !Array.isArray(loan.socialLinks) || !loan.socialLinks[_slIdx]) return;
-  var lk = loan.socialLinks[_slIdx];
+  if (!loan || !Array.isArray(loan.social_links) || !loan.social_links[_slIdx]) return;
+  var lk = loan.social_links[_slIdx];
   var url = (document.getElementById('slInUrl')||{}).value || lk.url || '';
   var fbid = '';
   var m = url.match(/facebook\.com\/(?:profile\.php\?id=)?(\d{5,})/);
@@ -1224,8 +1224,8 @@ function slOpenUrl() {
 
 function slOpenFbid() {
   var loan = _selectedKey ? _loans.find(function(l){ return l.DateTime===_selectedKey; }) : null;
-  if (!loan || !Array.isArray(loan.socialLinks) || !loan.socialLinks[_slIdx]) return;
-  var lk = loan.socialLinks[_slIdx];
+  if (!loan || !Array.isArray(loan.social_links) || !loan.social_links[_slIdx]) return;
+  var lk = loan.social_links[_slIdx];
   var target = lk.fbid ? 'https://www.facebook.com/'+lk.fbid : lk.url;
   if (target) window.open(target, '_blank', 'noopener');
 }
@@ -1569,7 +1569,7 @@ function _loanPayload(loan) {
     FBID:        loan.FBID        || '',
     photo_url:   loan.photo_url   || '',
     photos:      Array.isArray(loan.photos)      ? loan.photos      : [],
-    socialLinks: Array.isArray(loan.socialLinks) ? loan.socialLinks : [],
+    social_links: Array.isArray(loan.social_links) ? loan.social_links : [],
     loan_tabs:   Array.isArray(loan.loan_tabs)   ? loan.loan_tabs   : [],
   };
 }
@@ -1701,7 +1701,7 @@ function selectLoan(key) {
   _execSelectLoan(key);
 }
 
-function _isMobileSheet() { return window.innerWidth <= 768; }
+function _isMobileSheet() { return window.innerWidth <= 1024; }
 
 var _panelOrigParent = null;
 var _panelOrigNext   = null;
@@ -1869,7 +1869,7 @@ function buildLoanObj(loan) {
     FBID:        loan.FBID        || '',
     photo_url:   loan.photo_url   || '',
     photos:      Array.isArray(loan.photos) ? loan.photos : [],
-    socialLinks: Array.isArray(loan.socialLinks) ? loan.socialLinks : [],
+    social_links: Array.isArray(loan.social_links) ? loan.social_links : [],
     loan_tabs:   Array.isArray(loan.loan_tabs) ? loan.loan_tabs : [],
   };
 }
