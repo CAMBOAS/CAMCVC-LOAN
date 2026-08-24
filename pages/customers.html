@@ -625,7 +625,8 @@ function renderRecentCustomers(){
   if(!sorted.length){wrap.style.display='none';return;}
   wrap.style.display='';
   if(countEl)countEl.textContent=sorted.length+' customers';
-  listEl.innerHTML=sorted.map(function(loan){
+  var recent=sorted.slice(0,10);
+  listEl.innerHTML=recent.map(function(loan){
     var avatarHtml=loan.photo_url
       ?'<img src="'+esc(loan.photo_url)+'" alt="">'
       :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
@@ -675,6 +676,15 @@ function loadCustomerIntoForm(loanKey){
   /* Profile photo */
   if(loan.photo_url){_profilePhoto={b64:null,preview:loan.photo_url,existing:true};renderProfilePhoto();}
   else{_profilePhoto=null;renderProfilePhoto();}
+
+  /* Additional photos (existing) */
+  var existingPhotos=[];
+  try{existingPhotos=typeof loan.photos==='string'?JSON.parse(loan.photos):(loan.photos||[]);}catch(e){existingPhotos=[];}
+  _addPhotos=(Array.isArray(existingPhotos)?existingPhotos:[]).map(function(url){
+    var isVideo=/\.(mp4|mov|webm|avi|mkv)(\?|$)/i.test(url)||/\/video\/upload\//.test(url);
+    return {b64:null,preview:url,isVideo:isVideo,file:null,existing:true};
+  });
+  renderAddPhotos();
 
   /* Social links */
   try{var sl=typeof loan.social_links==='string'?JSON.parse(loan.social_links):loan.social_links;
@@ -811,7 +821,7 @@ async function saveCustomer(){
   if(_profilePhoto&&_profilePhoto.b64){try{var pur=await CamboAPI.post({action:'upload_photo',data:_profilePhoto.b64});if(pur.ok&&pur.url)loan.photo_url=pur.url;}catch(e){}}
   else if(_profilePhoto&&_profilePhoto.existing&&_profilePhoto.preview){loan.photo_url=_profilePhoto.preview;}
   var photoUrls=[];
-  for(var pi=0;pi<_addPhotos.length;pi++){var pItem=_addPhotos[pi];try{if(pItem.isVideo){var vUrl=await uploadDirectToCloudinary(pItem.file);if(vUrl)photoUrls.push(vUrl);}else{var ur=await CamboAPI.post({action:'upload_photo',data:pItem.b64});if(ur.ok&&ur.url)photoUrls.push(ur.url);}}catch(e){}}
+  for(var pi=0;pi<_addPhotos.length;pi++){var pItem=_addPhotos[pi];try{if(pItem.existing&&pItem.preview){photoUrls.push(pItem.preview);}else if(pItem.isVideo){var vUrl=await uploadDirectToCloudinary(pItem.file);if(vUrl)photoUrls.push(vUrl);}else{var ur=await CamboAPI.post({action:'upload_photo',data:pItem.b64});if(ur.ok&&ur.url)photoUrls.push(ur.url);}}catch(e){}}
   loan.photos=photoUrls;
   var isUpdate=!!_editingLoanId;
   var apiAction=isUpdate?'loan_update':'loan_add';
