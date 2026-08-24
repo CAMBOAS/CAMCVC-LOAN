@@ -293,7 +293,7 @@ async function validateAuth(u, p) {
   return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '' };
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -303,13 +303,17 @@ module.exports = async function handler(req, res) {
   try {
     let body = {};
     if (req.method === 'POST') {
-      let raw = '';
-      await new Promise((resolve, reject) => {
-        req.on('data', chunk => { raw += chunk.toString(); });
-        req.on('end', resolve);
-        req.on('error', reject);
-      });
-      try { body = JSON.parse(raw || '{}'); } catch { body = {}; }
+      if (req.body !== undefined && req.body !== null) {
+        body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body;
+      } else {
+        let raw = '';
+        await new Promise((resolve, reject) => {
+          req.on('data', chunk => { raw += chunk.toString(); });
+          req.on('end', resolve);
+          req.on('error', reject);
+        });
+        try { body = JSON.parse(raw || '{}'); } catch { body = {}; }
+      }
     } else {
       body = req.query || {};
     }
@@ -1179,3 +1183,6 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ ok:false, message: err.message || 'Server error' });
   }
 }
+
+handler.config = { api: { bodyParser: false } };
+module.exports = handler;

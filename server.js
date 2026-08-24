@@ -40,7 +40,7 @@ async function getCamcvcHandler() {
   return _camcvcHandler;
 }
 
-const PORT           = 5500;
+const PORT           = 3000;
 const STATIC_DIR     = __dirname;
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzX_Qd171kv2O2u0h6BpPBh9cMRO5WusbpZphFemHijjRunLIpsMefDidGufqx_doVccw/exec';
 
