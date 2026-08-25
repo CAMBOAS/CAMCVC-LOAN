@@ -58,6 +58,7 @@
       'add-customer.html':  { title: t('បន្ថែមអតិថិជន','Add Customer'),  subtitle: t('បំពេញព័ត៌មានអតិថិជនខាងក្រោម','Fill in the customer information below') },
       'repayment-tracker.html': { title: t('Repayment Tracker','Repayment Tracker'), subtitle: t('តាមដានការសងប្រាក់','Track loan repayments and paid status') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
+      'journal.html':   { title: t('កំណត់ត្រា','Journal'), subtitle: t('ទម្លាប់ និងកំណត់ចំណាំផ្ទាល់ខ្លួន','Personal habits and notes') },
       'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },
     };
@@ -80,6 +81,7 @@
     customers: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M15 9h3M15 13h3M5 17c0-1.1 1.79-2 4-2s4 .9 4 2"/></svg>',
     portal:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
     profile:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>',
+    journal:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   };
 
   function getCurrentPage() {
@@ -134,7 +136,7 @@
   /* ── Page access ── */
   var _PA_ALL = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
   var _PAGE_ACCESS = (function(){
-    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), borrowerprofile:_PA_ALL.slice(), settings:['Admin'] };
+    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), borrowerprofile:_PA_ALL.slice(), journal:_PA_ALL.slice(), settings:['Admin'] };
     try { var s = JSON.parse(localStorage.getItem('appPageAccess')||'null'); if (s && typeof s==='object') Object.keys(s).forEach(function(k){ def[k]=s[k]; }); } catch(e){}
     return def;
   })();
@@ -204,6 +206,7 @@
           ${appCanPage('activitylog') ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
           ${appCanPage('team') ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
           ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
+          ${appCanPage('journal') ? link('pages/journal.html', ic.journal, t('កំណត់ត្រា','Journal')) : ''}
           ${link('pages/my-profile.html', ic.profile, t('Profile','My Profile'))}
           <li class="sb-divider sb-divider-sm"></li>
           <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('User','User')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('User','User')}</span><span class="sb-active-dot"></span></a></li>

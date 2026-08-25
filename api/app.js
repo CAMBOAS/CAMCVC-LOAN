@@ -718,6 +718,117 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
+    /* ── Journal: habit + note tables ── */
+    async function ensureJournalTables() {
+      await db().query(`CREATE TABLE IF NOT EXISTS habits (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        owner_user VARCHAR(100) NOT NULL,
+        name       VARCHAR(255) NOT NULL,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_owner (owner_user)
+      )`).catch(()=>{});
+      await db().query(`CREATE TABLE IF NOT EXISTS habit_logs (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        habit_id   INT NOT NULL,
+        owner_user VARCHAR(100) NOT NULL,
+        log_date   DATE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_habit_date (habit_id, log_date),
+        INDEX idx_owner_date (owner_user, log_date)
+      )`).catch(()=>{});
+      await db().query(`CREATE TABLE IF NOT EXISTS journal_notes (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        owner_user VARCHAR(100) NOT NULL,
+        scope      ENUM('year','month','week','day','hour') NOT NULL,
+        note_date  DATE NOT NULL,
+        note_hour  TINYINT NOT NULL DEFAULT -1,
+        content    TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_note (owner_user, scope, note_date, note_hour),
+        INDEX idx_owner_scope (owner_user, scope, note_date)
+      )`).catch(()=>{});
+    }
+
+    /* ── List habits (personal, owned by the logged-in user) ── */
+    if (action === 'habit_list') {
+      await ensureJournalTables();
+      const [rows] = await db().query('SELECT id, name, sort_order FROM habits WHERE owner_user=? ORDER BY sort_order ASC, id ASC', [_bu]);
+      return res.json({ ok:true, habits: rows });
+    }
+
+    /* ── Add habit ── */
+    if (action === 'habit_add') {
+      const name = String(body.name||'').trim();
+      if (!name) return res.json({ ok:false, message:'name required' });
+      await ensureJournalTables();
+      const [cnt] = await db().query('SELECT COUNT(*) AS n FROM habits WHERE owner_user=?', [_bu]);
+      const [r] = await db().query('INSERT INTO habits (owner_user, name, sort_order) VALUES (?,?,?)', [_bu, name, cnt[0].n]);
+      return res.json({ ok:true, id: r.insertId });
+    }
+
+    /* ── Delete habit (+ its logs) ── */
+    if (action === 'habit_delete') {
+      const id = parseInt(body.id)||0;
+      if (!id) return res.json({ ok:false, message:'id required' });
+      await ensureJournalTables();
+      await db().query('DELETE FROM habit_logs WHERE habit_id=? AND owner_user=?', [id, _bu]);
+      await db().query('DELETE FROM habits WHERE id=? AND owner_user=?', [id, _bu]);
+      return res.json({ ok:true });
+    }
+
+    /* ── Toggle a habit's completion for one date ── */
+    if (action === 'habit_toggle') {
+      const habitId = parseInt(body.habit_id)||0;
+      const date    = String(body.date||'').trim();
+      if (!habitId || !date) return res.json({ ok:false, message:'habit_id and date required' });
+      await ensureJournalTables();
+      const [existing] = await db().query('SELECT id FROM habit_logs WHERE habit_id=? AND owner_user=? AND log_date=?', [habitId, _bu, date]);
+      if (existing.length) {
+        await db().query('DELETE FROM habit_logs WHERE id=?', [existing[0].id]);
+        return res.json({ ok:true, done:false });
+      }
+      await db().query('INSERT INTO habit_logs (habit_id, owner_user, log_date) VALUES (?,?,?)', [habitId, _bu, date]);
+      return res.json({ ok:true, done:true });
+    }
+
+    /* ── Habit completion logs within a date range ── */
+    if (action === 'habit_logs_range') {
+      const from = String(body.from||'').trim();
+      const to   = String(body.to||'').trim();
+      if (!from || !to) return res.json({ ok:false, message:'from and to required' });
+      await ensureJournalTables();
+      const [rows] = await db().query('SELECT habit_id, log_date FROM habit_logs WHERE owner_user=? AND log_date BETWEEN ? AND ?', [_bu, from, to]);
+      return res.json({ ok:true, logs: rows });
+    }
+
+    /* ── Get one journal note ── */
+    if (action === 'note_get') {
+      const scope = String(body.scope||'').trim();
+      const date  = String(body.date||'').trim();
+      const hour  = (body.hour !== undefined && body.hour !== null && body.hour !== '') ? parseInt(body.hour) : -1;
+      if (!['year','month','week','day','hour'].includes(scope) || !date) return res.json({ ok:false, message:'scope and date required' });
+      await ensureJournalTables();
+      const [rows] = await db().query('SELECT content FROM journal_notes WHERE owner_user=? AND scope=? AND note_date=? AND note_hour=?', [_bu, scope, date, hour]);
+      return res.json({ ok:true, content: rows.length ? (rows[0].content||'') : '' });
+    }
+
+    /* ── Save (upsert) a journal note ── */
+    if (action === 'note_save') {
+      const scope   = String(body.scope||'').trim();
+      const date    = String(body.date||'').trim();
+      const hour    = (body.hour !== undefined && body.hour !== null && body.hour !== '') ? parseInt(body.hour) : -1;
+      const content = String(body.content||'');
+      if (!['year','month','week','day','hour'].includes(scope) || !date) return res.json({ ok:false, message:'scope and date required' });
+      await ensureJournalTables();
+      await db().query(
+        `INSERT INTO journal_notes (owner_user, scope, note_date, note_hour, content) VALUES (?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE content=VALUES(content), updated_at=NOW()`,
+        [_bu, scope, date, hour, content]
+      );
+      return res.json({ ok:true });
+    }
+
     /* ── Messages ── */
     async function ensureMessagesTable() {
       await db().query(`CREATE TABLE IF NOT EXISTS messages (

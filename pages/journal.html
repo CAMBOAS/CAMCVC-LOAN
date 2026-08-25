@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>(function(){document.documentElement.style.visibility='';})();</script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <title>Journal - CAMCVC LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=21">
+  <style>
+    .orb{display:none!important}.background{background:#0c0e1a!important}.background::before{display:none!important}
+    body{background:#0c0e1a!important}
+    [data-theme="light"] .background{background:#f8fafc!important}[data-theme="light"] body{background:#f8fafc!important}
+    html[data-theme="light"] .header-shell,html[data-theme="light"] .shared-topbar{background:#ffffff!important;border-bottom-color:rgba(0,0,0,.09)!important}
+    .sb-logo-wrap{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+    .sb-user-card{border-color:transparent!important;background:transparent!important}.sb-user-avatar{box-shadow:none!important}
+    .main-content{padding:0!important}
+
+    :root {
+      --jn-bg:#f1f5f9;--jn-card:#ffffff;--jn-text:#0f172a;--jn-muted:#64748b;
+      --jn-border:rgba(148,163,184,.2);--jn-shadow:0 2px 12px rgba(0,0,0,.07);
+      --jn-accent:#7c5cff;--jn-accent-soft:rgba(124,92,255,.1);
+      --jn-th:#f8fafc;
+    }
+    [data-theme="dark"] {
+      --jn-bg:#18181b;--jn-card:#1e293b;--jn-text:#f1f5f9;--jn-muted:#94a3b8;
+      --jn-border:rgba(148,163,184,.12);--jn-shadow:0 2px 16px rgba(0,0,0,.4);
+      --jn-accent:#a78bfa;--jn-accent-soft:rgba(167,139,250,.14);
+      --jn-th:#0f172a;
+    }
+
+    .jn-wrap { padding:16px 20px 40px; overflow-y:auto; height:calc(100vh - 64px); box-sizing:border-box }
+    @media(max-width:980px){ .jn-wrap{ height:auto; padding:60px 10px 100px } }
+
+    /* -- Top-level tabs -- */
+    .jn-toptabs { display:flex; gap:8px; margin-bottom:16px }
+    .jn-toptab { display:inline-flex; align-items:center; gap:7px; padding:10px 18px; border-radius:12px; border:1.5px solid var(--jn-border); background:var(--jn-card); color:var(--jn-muted); font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:.15s }
+    .jn-toptab:hover { color:var(--jn-text) }
+    .jn-toptab.jn-toptab-active { border-color:var(--jn-accent); color:var(--jn-accent); background:var(--jn-accent-soft) }
+
+    .jn-panel { display:none }
+    .jn-panel.jn-panel-active { display:block }
+
+    /* -- Stat cards -- */
+    .jn-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px }
+    @media(max-width:700px){ .jn-kpi-row{ grid-template-columns:repeat(2,1fr) } }
+    .jn-kpi { background:var(--jn-card); border-radius:14px; padding:12px 14px; border:1px solid var(--jn-border); box-shadow:var(--jn-shadow) }
+    .jn-kpi-label { font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--jn-muted); margin-bottom:5px }
+    .jn-kpi-val { font-size:22px; font-weight:800; color:var(--jn-accent); line-height:1 }
+    .jn-kpi-bar { margin-top:8px; height:5px; border-radius:3px; background:rgba(148,163,184,.18); overflow:hidden }
+    .jn-kpi-bar-fill { height:100%; background:var(--jn-accent); border-radius:3px; transition:width .3s }
+
+    /* -- Habits toolbar -- */
+    .jn-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px }
+    .jn-add-form { display:flex; gap:6px; align-items:center }
+    .jn-input { padding:8px 12px; border-radius:9px; border:1.5px solid var(--jn-border); background:var(--jn-card); color:var(--jn-text); font-size:12.5px; font-family:inherit; outline:none; transition:.15s }
+    .jn-input:focus { border-color:var(--jn-accent) }
+    .jn-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:9px; border:1.5px solid var(--jn-accent); background:var(--jn-accent); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .jn-btn:hover { opacity:.9 }
+    .jn-btn:disabled { opacity:.5; cursor:default }
+    .jn-btn-ghost { background:transparent; color:var(--jn-text); border-color:var(--jn-border) }
+    .jn-btn-ghost:hover { border-color:var(--jn-accent); color:var(--jn-accent) }
+    .jn-week-nav { display:flex; align-items:center; gap:8px; margin-left:auto }
+    .jn-week-btn { width:30px; height:30px; border-radius:8px; border:1.5px solid var(--jn-border); background:var(--jn-card); color:var(--jn-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s }
+    .jn-week-btn:hover { color:var(--jn-accent); border-color:var(--jn-accent) }
+    .jn-week-label { font-size:12.5px; font-weight:700; color:var(--jn-text); white-space:nowrap }
+
+    /* -- Habit grid -- */
+    .jn-grid-wrap { background:var(--jn-card); border-radius:16px; border:1px solid var(--jn-border); box-shadow:var(--jn-shadow); overflow:hidden }
+    .jn-grid-scroll { overflow-x:auto }
+    table.jn-grid { width:100%; border-collapse:collapse; font-size:12.5px }
+    table.jn-grid thead th { background:var(--jn-th); color:var(--jn-muted); font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:10px 8px; text-align:center; border-bottom:1px solid var(--jn-border); white-space:nowrap }
+    table.jn-grid thead th:first-child { text-align:left; padding-left:14px }
+    table.jn-grid thead th.jn-th-today { color:var(--jn-accent) }
+    table.jn-grid tbody tr { border-bottom:1px solid var(--jn-border) }
+    table.jn-grid tbody tr:last-child { border-bottom:none }
+    table.jn-grid td { padding:8px; text-align:center; vertical-align:middle }
+    table.jn-grid td.jn-habit-name { text-align:left; padding-left:14px; font-weight:700; color:var(--jn-text) }
+    .jn-habit-rm { background:none; border:none; color:var(--jn-muted); cursor:pointer; font-size:14px; padding:0 0 0 8px; opacity:.5; transition:.15s }
+    .jn-habit-rm:hover { opacity:1; color:#ef4444 }
+    .jn-check { width:26px; height:26px; border-radius:8px; border:1.5px solid var(--jn-border); background:transparent; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:transparent; transition:.15s }
+    .jn-check:hover { border-color:var(--jn-accent) }
+    .jn-check.jn-checked { background:var(--jn-accent); border-color:var(--jn-accent); color:#fff }
+    .jn-week-count { color:var(--jn-muted); font-weight:700; font-variant-numeric:tabular-nums }
+    .jn-empty { padding:40px 20px; text-align:center; color:var(--jn-muted); font-size:13px }
+
+    /* -- Notes tab -- */
+    .jn-scope-pills { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap }
+    .jn-pill { padding:7px 15px; border-radius:50px; border:1.5px solid var(--jn-border); background:var(--jn-card); color:var(--jn-muted); font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .jn-pill:hover { color:var(--jn-text) }
+    .jn-pill.jn-pill-active { background:var(--jn-accent); border-color:var(--jn-accent); color:#fff }
+    .jn-date-nav { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap }
+    .jn-date-input { padding:7px 11px; border-radius:9px; border:1.5px solid var(--jn-border); background:var(--jn-card); color:var(--jn-text); font-size:12.5px; font-family:inherit; outline:none }
+    .jn-save-state { font-size:11px; color:var(--jn-muted); margin-left:auto }
+    .jn-note-card { background:var(--jn-card); border-radius:16px; border:1px solid var(--jn-border); box-shadow:var(--jn-shadow); padding:14px }
+    .jn-note-textarea { width:100%; min-height:260px; resize:vertical; border:none; outline:none; background:transparent; color:var(--jn-text); font-family:inherit; font-size:13.5px; line-height:1.6; box-sizing:border-box }
+    .jn-hour-list { display:flex; flex-direction:column; gap:1px }
+    .jn-hour-row { display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--jn-border) }
+    .jn-hour-row:last-child { border-bottom:none }
+    .jn-hour-label { flex:0 0 62px; font-size:11.5px; font-weight:700; color:var(--jn-muted); padding-top:6px; font-variant-numeric:tabular-nums }
+    .jn-hour-label.jn-hour-now { color:var(--jn-accent) }
+    .jn-hour-text { flex:1; min-height:34px; resize:vertical; border:1px solid var(--jn-border); border-radius:8px; padding:6px 9px; background:transparent; color:var(--jn-text); font-family:inherit; font-size:12.5px; outline:none; transition:.15s }
+    .jn-hour-text:focus { border-color:var(--jn-accent) }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
+    <div class="jn-wrap" id="jnWrap">
+
+      <div class="jn-toptabs">
+        <button class="jn-toptab jn-toptab-active" data-tab="habits" onclick="switchTopTab('habits')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Habits
+        </button>
+        <button class="jn-toptab" data-tab="notes" onclick="switchTopTab('notes')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Notes
+        </button>
+      </div>
+
+      <!-- ── Habits panel ── -->
+      <div class="jn-panel jn-panel-active" id="panelHabits">
+        <div class="jn-kpi-row">
+          <div class="jn-kpi"><div class="jn-kpi-label">Today</div><div class="jn-kpi-val" id="kpiToday">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barToday" style="width:0%"></div></div></div>
+          <div class="jn-kpi"><div class="jn-kpi-label">This Week</div><div class="jn-kpi-val" id="kpiWeek">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barWeek" style="width:0%"></div></div></div>
+          <div class="jn-kpi"><div class="jn-kpi-label">This Month</div><div class="jn-kpi-val" id="kpiMonth">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barMonth" style="width:0%"></div></div></div>
+          <div class="jn-kpi"><div class="jn-kpi-label">This Year</div><div class="jn-kpi-val" id="kpiYear">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barYear" style="width:0%"></div></div></div>
+        </div>
+
+        <div class="jn-toolbar">
+          <form class="jn-add-form" onsubmit="return addHabit(event)">
+            <input class="jn-input" id="jnNewHabit" type="text" placeholder="New habit name...">
+            <button class="jn-btn" type="submit">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Habit
+            </button>
+          </form>
+          <div class="jn-week-nav">
+            <button class="jn-week-btn" onclick="shiftWeek(-1)" title="Previous week">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="jn-week-label" id="jnWeekLabel">—</span>
+            <button class="jn-week-btn" onclick="shiftWeek(1)" title="Next week">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="jn-btn jn-btn-ghost" onclick="goThisWeek()">Today</button>
+          </div>
+        </div>
+
+        <div class="jn-grid-wrap">
+          <div class="jn-grid-scroll">
+            <table class="jn-grid" id="jnHabitTable" style="display:none">
+              <thead><tr id="jnGridHead"></tr></thead>
+              <tbody id="jnGridBody"></tbody>
+            </table>
+          </div>
+          <div class="jn-empty" id="jnHabitEmpty">No habits yet — add your first one above.</div>
+        </div>
+      </div>
+
+      <!-- ── Notes panel ── -->
+      <div class="jn-panel" id="panelNotes">
+        <div class="jn-scope-pills" id="jnScopePills">
+          <button class="jn-pill jn-pill-active" data-scope="year"  onclick="setScope('year')">Year</button>
+          <button class="jn-pill"                data-scope="month" onclick="setScope('month')">Month</button>
+          <button class="jn-pill"                data-scope="week"  onclick="setScope('week')">Week</button>
+          <button class="jn-pill"                data-scope="day"   onclick="setScope('day')">Day</button>
+          <button class="jn-pill"                data-scope="hour"  onclick="setScope('hour')">Hour</button>
+        </div>
+
+        <div class="jn-date-nav">
+          <button class="jn-week-btn" onclick="shiftNote(-1)" title="Previous"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="jn-week-label" id="jnNoteLabel">—</span>
+          <button class="jn-week-btn" onclick="shiftNote(1)" title="Next"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <input class="jn-date-input" id="jnDatePick" type="date" onchange="onDatePick()">
+          <button class="jn-btn jn-btn-ghost" onclick="goToday()">Today</button>
+          <span class="jn-save-state" id="jnSaveState"></span>
+        </div>
+
+        <div class="jn-note-card" id="jnNoteCardSingle">
+          <textarea class="jn-note-textarea" id="jnNoteText" placeholder="Write your note..." onblur="saveNoteSingle()"></textarea>
+        </div>
+
+        <div class="jn-note-card" id="jnNoteCardHour" style="display:none">
+          <div class="jn-hour-list" id="jnHourList"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/layout.js?v=19"></script>
+<script src="../assets/js/dashboard-layout.js?v=19"></script>
+<script src="../assets/js/auth.js?v=2"></script>
+<script src="../assets/js/api.js?v=8"></script>
+<script>
+'use strict';
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtYMD(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function mondayOf(d) { var x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); var day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); return x; }
+function dayOfYear(d) { var start=new Date(d.getFullYear(),0,1); return Math.floor((d-start)/86400000)+1; }
+var DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* ── Top-level tab switch ── */
+function switchTopTab(tab) {
+  document.querySelectorAll('.jn-toptab').forEach(function(b){ b.classList.toggle('jn-toptab-active', b.dataset.tab===tab); });
+  document.getElementById('panelHabits').classList.toggle('jn-panel-active', tab==='habits');
+  document.getElementById('panelNotes').classList.toggle('jn-panel-active', tab==='notes');
+  if (tab==='notes' && !_notesLoaded) { _notesLoaded = true; renderNotePanel(); }
+}
+
+/* =========================================================
+   HABITS
+   ========================================================= */
+var _habits    = [];
+var _logs      = [];  /* {habit_id, log_date} for the whole current year */
+var _weekStart = mondayOf(new Date());
+
+async function loadHabits() {
+  var r = await CamboAPI.post({ action:'habit_list' });
+  _habits = (r && r.ok && Array.isArray(r.habits)) ? r.habits : [];
+  await loadYearLogs();
+  renderHabitGrid();
+  renderKpis();
+}
+
+async function loadYearLogs() {
+  var y = new Date().getFullYear();
+  var r = await CamboAPI.post({ action:'habit_logs_range', from:y+'-01-01', to:y+'-12-31' });
+  _logs = (r && r.ok && Array.isArray(r.logs)) ? r.logs : [];
+}
+
+function isDone(habitId, dateStr) {
+  return _logs.some(function(l){ return l.habit_id===habitId && String(l.log_date).substring(0,10)===dateStr; });
+}
+
+function renderHabitGrid() {
+  var wrap  = document.getElementById('jnHabitTable');
+  var empty = document.getElementById('jnHabitEmpty');
+  var head  = document.getElementById('jnGridHead');
+  var body  = document.getElementById('jnGridBody');
+  var todayStr = fmtYMD(new Date());
+
+  var days = [];
+  for (var i=0;i<7;i++) { var d=new Date(_weekStart); d.setDate(d.getDate()+i); days.push(d); }
+  document.getElementById('jnWeekLabel').textContent =
+    days[0].toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' – ' +
+    days[6].toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+
+  if (!_habits.length) {
+    wrap.style.display = 'none';
+    empty.style.display = '';
+    return;
+  }
+  wrap.style.display = '';
+  empty.style.display = 'none';
+
+  head.innerHTML = '<th>Habit</th>' + days.map(function(d){
+    var ds = fmtYMD(d);
+    return '<th class="'+(ds===todayStr?'jn-th-today':'')+'">'+DOW[(d.getDay()+6)%7]+'<br>'+d.getDate()+'</th>';
+  }).join('') + '<th>Week</th><th></th>';
+
+  body.innerHTML = _habits.map(function(h){
+    var count = 0;
+    var cells = days.map(function(d){
+      var ds = fmtYMD(d);
+      var done = isDone(h.id, ds);
+      if (done) count++;
+      return '<td><button class="jn-check'+(done?' jn-checked':'')+'" onclick="toggleHabit('+h.id+',\''+ds+'\')">'
+           + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+           + '</button></td>';
+    }).join('');
+    return '<tr>'
+      + '<td class="jn-habit-name">'+esc(h.name)+'</td>'
+      + cells
+      + '<td class="jn-week-count">'+count+'/7</td>'
+      + '<td><button class="jn-habit-rm" onclick="removeHabit('+h.id+')" title="Remove">×</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function renderKpis() {
+  var n = _habits.length;
+  var today = new Date();
+  var todayStr = fmtYMD(today);
+  var wStart = mondayOf(today);
+  var todayDowIdx = (today.getDay()+6)%7; /* 0=Mon..6=Sun, days elapsed so far this week = idx+1 */
+
+  function pct(done, possible) { return possible>0 ? Math.round(done/possible*100) : 0; }
+
+  var doneToday = _logs.filter(function(l){ return String(l.log_date).substring(0,10)===todayStr; }).length;
+  var pToday = pct(doneToday, n);
+
+  var doneWeek = 0;
+  for (var i=0;i<=todayDowIdx;i++) {
+    var d = new Date(wStart); d.setDate(d.getDate()+i);
+    var ds = fmtYMD(d);
+    doneWeek += _logs.filter(function(l){ return String(l.log_date).substring(0,10)===ds; }).length;
+  }
+  var pWeek = pct(doneWeek, n*(todayDowIdx+1));
+
+  var monthPrefix = todayStr.substring(0,7);
+  var doneMonth = _logs.filter(function(l){ return String(l.log_date).substring(0,7)===monthPrefix; }).length;
+  var pMonth = pct(doneMonth, n*today.getDate());
+
+  var yearPrefix = String(today.getFullYear());
+  var doneYear = _logs.filter(function(l){ return String(l.log_date).substring(0,4)===yearPrefix; }).length;
+  var pYear = pct(doneYear, n*dayOfYear(today));
+
+  setKpi('Today', pToday); setKpi('Week', pWeek); setKpi('Month', pMonth); setKpi('Year', pYear);
+}
+function setKpi(key, pct) {
+  document.getElementById('kpi'+key).textContent = pct+'%';
+  document.getElementById('bar'+key).style.width = Math.min(100,pct)+'%';
+}
+
+async function addHabit(e) {
+  e.preventDefault();
+  var inp = document.getElementById('jnNewHabit');
+  var name = inp.value.trim();
+  if (!name) return false;
+  var r = await CamboAPI.post({ action:'habit_add', name:name });
+  if (r && r.ok) {
+    inp.value = '';
+    await loadHabits();
+  }
+  return false;
+}
+
+async function removeHabit(id) {
+  await CamboAPI.post({ action:'habit_delete', id:id });
+  await loadHabits();
+}
+
+async function toggleHabit(habitId, dateStr) {
+  /* optimistic UI update */
+  var idx = _logs.findIndex(function(l){ return l.habit_id===habitId && String(l.log_date).substring(0,10)===dateStr; });
+  if (idx>-1) _logs.splice(idx,1); else _logs.push({habit_id:habitId, log_date:dateStr});
+  renderHabitGrid();
+  renderKpis();
+  await CamboAPI.post({ action:'habit_toggle', habit_id:habitId, date:dateStr });
+}
+
+function shiftWeek(dir) { var d=new Date(_weekStart); d.setDate(d.getDate()+dir*7); _weekStart=mondayOf(d); renderHabitGrid(); }
+function goThisWeek() { _weekStart = mondayOf(new Date()); renderHabitGrid(); }
+
+/* =========================================================
+   NOTES
+   ========================================================= */
+var _notesLoaded = false;
+var _scope   = 'year';
+var _noteRef = new Date(); /* the date currently being viewed for the active scope */
+
+function setScope(s) {
+  _scope = s;
+  document.querySelectorAll('.jn-pill').forEach(function(p){ p.classList.toggle('jn-pill-active', p.dataset.scope===s); });
+  renderNotePanel();
+}
+
+function scopeKey() {
+  var d = _noteRef;
+  if (_scope==='year')  return d.getFullYear()+'-01-01';
+  if (_scope==='month') return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';
+  if (_scope==='week')  return fmtYMD(mondayOf(d));
+  return fmtYMD(d); /* day, hour */
+}
+
+function scopeLabel() {
+  var d = _noteRef;
+  if (_scope==='year')  return String(d.getFullYear());
+  if (_scope==='month') return MONTHS[d.getMonth()]+' '+d.getFullYear();
+  if (_scope==='week') { var mon=mondayOf(d), sun=new Date(mon); sun.setDate(sun.getDate()+6); return mon.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+sun.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+  return d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+
+function shiftNote(dir) {
+  var d = new Date(_noteRef);
+  if (_scope==='year')  d.setFullYear(d.getFullYear()+dir);
+  else if (_scope==='month') d.setMonth(d.getMonth()+dir);
+  else if (_scope==='week')  d.setDate(d.getDate()+dir*7);
+  else d.setDate(d.getDate()+dir);
+  _noteRef = d;
+  renderNotePanel();
+}
+function goToday() { _noteRef = new Date(); renderNotePanel(); }
+function onDatePick() {
+  var v = document.getElementById('jnDatePick').value;
+  if (v) { _noteRef = new Date(v+'T00:00:00'); renderNotePanel(); }
+}
+
+async function renderNotePanel() {
+  document.getElementById('jnNoteLabel').textContent = scopeLabel();
+  document.getElementById('jnDatePick').value = fmtYMD(_noteRef);
+  document.getElementById('jnSaveState').textContent = '';
+
+  var isHour = _scope==='hour';
+  document.getElementById('jnNoteCardSingle').style.display = isHour ? 'none' : '';
+  document.getElementById('jnNoteCardHour').style.display   = isHour ? '' : 'none';
+
+  if (isHour) {
+    await renderHourList();
+  } else {
+    var ta = document.getElementById('jnNoteText');
+    ta.value = '…';
+    var r = await CamboAPI.post({ action:'note_get', scope:_scope, date:scopeKey() });
+    ta.value = (r && r.ok) ? (r.content||'') : '';
+  }
+}
+
+async function saveNoteSingle() {
+  var content = document.getElementById('jnNoteText').value;
+  var st = document.getElementById('jnSaveState');
+  st.textContent = 'Saving…';
+  var r = await CamboAPI.post({ action:'note_save', scope:_scope, date:scopeKey(), content:content });
+  st.textContent = (r && r.ok) ? 'Saved' : 'Failed to save';
+  setTimeout(function(){ st.textContent=''; }, 1500);
+}
+
+async function renderHourList() {
+  var list = document.getElementById('jnHourList');
+  var dateKey = fmtYMD(_noteRef);
+  var nowHour = fmtYMD(new Date())===dateKey ? new Date().getHours() : -1;
+  list.innerHTML = '';
+  for (var h=0; h<24; h++) {
+    var row = document.createElement('div');
+    row.className = 'jn-hour-row';
+    var label = String(h).padStart(2,'0')+':00';
+    row.innerHTML = '<div class="jn-hour-label'+(h===nowHour?' jn-hour-now':'')+'">'+label+'</div>'
+      + '<textarea class="jn-hour-text" data-hour="'+h+'" placeholder="…"></textarea>';
+    list.appendChild(row);
+  }
+  list.querySelectorAll('.jn-hour-text').forEach(function(el){
+    el.addEventListener('blur', function(){ saveHourNote(dateKey, parseInt(el.dataset.hour), el.value); });
+  });
+  /* fetch each hour's saved content */
+  var fetches = [];
+  for (var i=0;i<24;i++) {
+    fetches.push(CamboAPI.post({ action:'note_get', scope:'hour', date:dateKey, hour:i }));
+  }
+  var results = await Promise.all(fetches);
+  var els = list.querySelectorAll('.jn-hour-text');
+  results.forEach(function(r, i){ if (r && r.ok) els[i].value = r.content||''; });
+}
+
+async function saveHourNote(dateKey, hour, content) {
+  var st = document.getElementById('jnSaveState');
+  st.textContent = 'Saving…';
+  var r = await CamboAPI.post({ action:'note_save', scope:'hour', date:dateKey, hour:hour, content:content });
+  st.textContent = (r && r.ok) ? 'Saved' : 'Failed to save';
+  setTimeout(function(){ st.textContent=''; }, 1500);
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.CamcvcAuth && !window.CamcvcAuth.check()) return;
+  loadHabits();
+});
+</script>
+</body>
+</html>
