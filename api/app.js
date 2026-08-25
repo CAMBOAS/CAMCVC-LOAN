@@ -101,6 +101,15 @@ async function ensureRestrictedCol() {
   _restrictedColReady = true;
 }
 
+/* ── One-time migration: add created_by_team column to settings if absent
+     (tracks which Sub Admin's team created a Group/Linked To entry; NULL = shared/global) ── */
+let _settingsTeamColReady = false;
+async function ensureSettingsTeamCol() {
+  if (_settingsTeamColReady) return;
+  try { await db().query('ALTER TABLE settings ADD COLUMN created_by_team VARCHAR(100) DEFAULT NULL'); } catch(e) {}
+  _settingsTeamColReady = true;
+}
+
 /* ── One-time migration: add loan_tabs column to loans if absent ── */
 let _loanTabsColReady = false;
 async function ensureLoanTabsCol() {
@@ -297,7 +306,7 @@ async function validateAuth(u, p) {
   await ensureUserPhotoCol();
   await ensureUserScopeCols();
   const [rows] = await db().query(
-    'SELECT username, role, display_name, exp_date, photo_url, scope_linked_to, max_normal_users FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
+    'SELECT username, role, display_name, exp_date, photo_url, scope_linked_to, max_normal_users, created_by FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
     [u, p]
   );
   if (!rows.length) return null;
@@ -315,18 +324,31 @@ async function validateAuth(u, p) {
   let scopeGroups = [];
   try { scopeGroups = user.scope_linked_to ? JSON.parse(user.scope_linked_to) : []; } catch(e) { scopeGroups = []; }
   if (!Array.isArray(scopeGroups)) scopeGroups = [];
-  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_linked_to: scopeGroups, max_normal_users: user.max_normal_users||0 };
+  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_linked_to: scopeGroups, max_normal_users: user.max_normal_users||0, created_by: user.created_by||null };
+}
+
+/* ── The "team owner" (a Sub Admin's own username) for a requester, or null if unscoped ──
+   Sub Admin -> themselves. A Normal User a Sub Admin created -> that Sub Admin. Anyone else -> null.
+   Deliberately independent of how many scope_linked_to entries they currently have — a brand new
+   Sub Admin with zero grants yet is still a scoped role and must NOT fall through to "sees everything". */
+function teamOwnerOf(_bv) {
+  if (!_bv) return null;
+  if (_bv.role === 'Sub Admin') return _bv.username;
+  if (_bv.created_by) return _bv.created_by;
+  return null;
 }
 
 /* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_linked_to
-     (no-op if unscoped). Scoped viewers also never see loans an Admin has explicitly marked
-     "restricted" — an extra Admin-only hide on top of team scope. ── */
+     (no-op if unscoped). A scoped role with zero grants yet sees nothing (not everything) — an
+     empty scope_linked_to must never be treated the same as "unscoped". Scoped viewers also never
+     see loans an Admin has explicitly marked "restricted" — an extra Admin-only hide on top of
+     team scope. ── */
 function scopeFilterSQL(_bv, column) {
   var col = column || 'linked_to';
-  if (_bv && Array.isArray(_bv.scope_linked_to) && _bv.scope_linked_to.length) {
-    return { clause: ' AND ' + col + ' IN (?) AND (l.restricted = 0 OR l.restricted IS NULL)', params: [_bv.scope_linked_to] };
-  }
-  return { clause: '', params: [] };
+  if (teamOwnerOf(_bv) === null) return { clause: '', params: [] };
+  var list = (_bv && Array.isArray(_bv.scope_linked_to)) ? _bv.scope_linked_to : [];
+  if (!list.length) return { clause: ' AND 1=0', params: [] };
+  return { clause: ' AND ' + col + ' IN (?) AND (l.restricted = 0 OR l.restricted IS NULL)', params: [list] };
 }
 
 async function handler(req, res) {
@@ -468,16 +490,23 @@ async function handler(req, res) {
     /* ── All data (loans + infor) ── */
     if (action === 'get_all') {
       await ensureCreatedByUserCol();
+      await ensureSettingsTeamCol();
       const _sf = scopeFilterSQL(_bv, 'l.linked_to');
       const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL${_sf.clause} ORDER BY l.loan_key DESC`, _sf.params);
-      const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
+      const [infor] = await db().query('SELECT type, value, created_by_team FROM settings ORDER BY id');
+      /* Group & Linked To option lists are team-owned: a scoped user only sees entries their
+         own team created (or shared/global ones with no owner). Status stays a shared default
+         list for everyone regardless of scope. Admin/unscoped sees everything. */
+      const _team = teamOwnerOf(_bv);
+      const _scoped = _team !== null;
+      const _visible = r => !_scoped || !r.created_by_team || r.created_by_team === _team;
       return res.json({
         ok:          true,
         loans:       loans.map(rowToLoan),
-        groups:      infor.filter(r=>r.type==='groups').map(r=>r.value),
+        groups:      infor.filter(r=>r.type==='groups' && _visible(r)).map(r=>r.value),
         statuses:    infor.filter(r=>r.type==='statuses').map(r=>r.value),
         socialMedia: infor.filter(r=>r.type==='socialMedia').map(r=>r.value),
-        linkedTo:    infor.filter(r=>r.type==='linkedTo').map(r=>r.value),
+        linkedTo:    infor.filter(r=>r.type==='linkedTo' && _visible(r)).map(r=>r.value),
       });
     }
 
@@ -583,19 +612,44 @@ async function handler(req, res) {
       return res.json({ ok:true, loans: loans.map(rowToLoan) });
     }
 
-    /* ── Add infor ── */
+    /* ── Add infor (Group/Linked To entries are owned by the creating team, if scoped) ── */
     if (action === 'settings_add') {
       const type  = String(body.type ||'').trim();
       const value = String(body.value||'').trim();
       if (!type || !value) return res.json({ ok:false, message:'Missing type or value' });
-      await db().query('INSERT IGNORE INTO settings (type, value) VALUES (?,?)', [type, value]);
+      await ensureSettingsTeamCol();
+      const team = (type === 'groups' || type === 'linkedTo') ? teamOwnerOf(_bv) : null;
+      const [r] = await db().query('INSERT IGNORE INTO settings (type, value, created_by_team) VALUES (?,?,?)', [type, value, team]);
+      /* If this Linked To tag is brand new and team-owned, auto-grant it into that team's own scope
+         so the Sub Admin doesn't have to ask an Admin to grant what they just created themselves. */
+      if (type === 'linkedTo' && team && r.affectedRows > 0) {
+        const [rows] = await db().query('SELECT scope_linked_to FROM users WHERE username=?', [team]);
+        if (rows.length) {
+          let arr = [];
+          try { arr = rows[0].scope_linked_to ? JSON.parse(rows[0].scope_linked_to) : []; } catch(e) { arr = []; }
+          if (!Array.isArray(arr)) arr = [];
+          if (!arr.includes(value)) {
+            arr.push(value);
+            await db().query('UPDATE users SET scope_linked_to=? WHERE username=?', [JSON.stringify(arr), team]);
+          }
+        }
+      }
       return res.json({ ok:true });
     }
 
-    /* ── Delete infor ── */
+    /* ── Delete infor (a scoped user may only delete Group/Linked To entries their own team created) ── */
     if (action === 'settings_delete') {
-      await db().query('DELETE FROM settings WHERE type=? AND value=?',
-        [String(body.type||'').trim(), String(body.value||'').trim()]);
+      const type  = String(body.type||'').trim();
+      const value = String(body.value||'').trim();
+      await ensureSettingsTeamCol();
+      const team = teamOwnerOf(_bv);
+      if (team && (type === 'groups' || type === 'linkedTo')) {
+        const [rows] = await db().query('SELECT created_by_team FROM settings WHERE type=? AND value=?', [type, value]);
+        if (rows.length && rows[0].created_by_team !== team) {
+          return res.json({ ok:false, message:'អ្នកអាចលុបបានតែឈ្មោះដែលក្រុមអ្នកបានបង្កើត', code:403 });
+        }
+      }
+      await db().query('DELETE FROM settings WHERE type=? AND value=?', [type, value]);
       return res.json({ ok:true });
     }
 
