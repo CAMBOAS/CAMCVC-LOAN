@@ -860,9 +860,9 @@
       </div>
       <div id="uf_subadmin_fields" style="display:none;margin-top:14px">
         <div class="um-field">
-          <label class="um-label">Assigned Groups (scope) <span>*</span></label>
-          <div class="um-hint" style="margin-bottom:6px">This Sub Admin will only see loans/customers in the group(s) checked below.</div>
-          <div id="uf_scope_groups" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          <label class="um-label">Assigned Linked To (scope) <span>*</span></label>
+          <div class="um-hint" style="margin-bottom:6px">This Sub Admin will only see loans/customers whose "Linked To" is checked below.</div>
+          <div id="uf_scope_linked_to" style="display:flex;flex-wrap:wrap;gap:6px"></div>
         </div>
         <div class="um-field" style="margin-bottom:0">
           <label class="um-label">Max Normal Users <span>*</span></label>
@@ -904,25 +904,25 @@ if (!_isAdmin) {
 var _users         = [];
 var _editingUser   = null;
 var _pendingDelUser = null;
-var _allGroups     = [];
+var _allLinkedTo   = [];
 
-/* ── Sub Admin: groups scope + quota fields ── */
-async function loadGroupsForScope() {
-  if (_allGroups.length) return;
+/* ── Sub Admin: "Linked To" scope + quota fields ── */
+async function loadLinkedToForScope() {
+  if (_allLinkedTo.length) return;
   try {
     var res = await CamboAPI.post({ action:'get_all' });
-    if (res && res.ok) _allGroups = (res.groups||[]).filter(function(g){ return g && g.toLowerCase()!=='groups'; });
+    if (res && res.ok) _allLinkedTo = (res.linkedTo||[]).filter(function(v){ return v && v.toLowerCase()!=='linked to'; });
   } catch(e) {}
 }
-function renderScopeGroups(checked) {
-  var wrap = document.getElementById('uf_scope_groups');
+function renderScopeLinkedTo(checked) {
+  var wrap = document.getElementById('uf_scope_linked_to');
   if (!wrap) return;
   checked = checked || [];
-  if (!_allGroups.length) { wrap.innerHTML = '<span class="um-hint">No groups defined yet.</span>'; return; }
-  wrap.innerHTML = _allGroups.map(function(g){
-    var isChecked = checked.indexOf(g) !== -1;
+  if (!_allLinkedTo.length) { wrap.innerHTML = '<span class="um-hint">No "Linked To" entries defined yet.</span>'; return; }
+  wrap.innerHTML = _allLinkedTo.map(function(v){
+    var isChecked = checked.indexOf(v) !== -1;
     return '<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;font-size:12px">'
-      + '<input type="checkbox" class="uf_scope_chk" value="'+esc(g)+'"'+(isChecked?' checked':'')+'> '+esc(g)
+      + '<input type="checkbox" class="uf_scope_chk" value="'+esc(v)+'"'+(isChecked?' checked':'')+'> '+esc(v)
       + '</label>';
   }).join('');
 }
@@ -931,9 +931,9 @@ async function toggleSubAdminFields() {
   var box  = document.getElementById('uf_subadmin_fields');
   if (role === 'Sub Admin') {
     box.style.display = '';
-    await loadGroupsForScope();
-    var checked = (_editingUser && _editingUser.role==='Sub Admin' && Array.isArray(_editingUser.scope_groups)) ? _editingUser.scope_groups : [];
-    renderScopeGroups(checked);
+    await loadLinkedToForScope();
+    var checked = (_editingUser && _editingUser.role==='Sub Admin' && Array.isArray(_editingUser.scope_linked_to)) ? _editingUser.scope_linked_to : [];
+    renderScopeLinkedTo(checked);
     document.getElementById('uf_max_normal_users').value = (_editingUser && _editingUser.max_normal_users) || 0;
   } else {
     box.style.display = 'none';
@@ -1145,8 +1145,8 @@ async function saveUser() {
   btn.textContent = 'Saving…';
 
   if (role === 'Sub Admin') {
-    var checkedGroups = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
-    if (!checkedGroups.length) return toast('Please select at least one Group for this Sub Admin!', true);
+    var checkedLinkedTo = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
+    if (!checkedLinkedTo.length) return toast('Please select at least one "Linked To" entry for this Sub Admin!', true);
   }
 
   try {
@@ -1155,7 +1155,7 @@ async function saveUser() {
                     role: role, exp_date: exp_date, status: status };
     if (pin) payload.pin = pin;
     if (role === 'Sub Admin') {
-      payload.scope_groups     = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
+      payload.scope_linked_to  = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
       payload.max_normal_users = parseInt(document.getElementById('uf_max_normal_users').value)||0;
     }
     var res = await CamboAPI.post(payload);

@@ -58,10 +58,12 @@ async function ensureUiPrefsCol() {
 }
 
 /* ── One-time migration: add Sub Admin scope/quota columns to users if absent ── */
+/* scope is keyed by "Linked To" tag names (distinct entities like a bank name), not Groups */
 let _userScopeColsReady = false;
 async function ensureUserScopeCols() {
   if (_userScopeColsReady) return;
-  try { await db().query('ALTER TABLE users ADD COLUMN scope_groups TEXT DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE users CHANGE COLUMN scope_groups scope_linked_to TEXT DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE users ADD COLUMN scope_linked_to TEXT DEFAULT NULL'); } catch(e) {}
   try { await db().query('ALTER TABLE users ADD COLUMN max_normal_users INT NOT NULL DEFAULT 0'); } catch(e) {}
   try { await db().query('ALTER TABLE users ADD COLUMN created_by VARCHAR(100) DEFAULT NULL'); } catch(e) {}
   _userScopeColsReady = true;
@@ -286,7 +288,7 @@ async function validateAuth(u, p) {
   await ensureUserPhotoCol();
   await ensureUserScopeCols();
   const [rows] = await db().query(
-    'SELECT username, role, display_name, exp_date, photo_url, scope_groups, max_normal_users FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
+    'SELECT username, role, display_name, exp_date, photo_url, scope_linked_to, max_normal_users FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
     [u, p]
   );
   if (!rows.length) return null;
@@ -302,16 +304,16 @@ async function validateAuth(u, p) {
     ? (user.exp_date instanceof Date ? user.exp_date.toISOString().split('T')[0] : String(user.exp_date).substring(0,10))
     : '';
   let scopeGroups = [];
-  try { scopeGroups = user.scope_groups ? JSON.parse(user.scope_groups) : []; } catch(e) { scopeGroups = []; }
+  try { scopeGroups = user.scope_linked_to ? JSON.parse(user.scope_linked_to) : []; } catch(e) { scopeGroups = []; }
   if (!Array.isArray(scopeGroups)) scopeGroups = [];
-  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_groups: scopeGroups, max_normal_users: user.max_normal_users||0 };
+  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_linked_to: scopeGroups, max_normal_users: user.max_normal_users||0 };
 }
 
-/* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_groups (no-op if unscoped) ── */
+/* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_linked_to (no-op if unscoped) ── */
 function scopeFilterSQL(_bv, column) {
-  var col = column || 'loan_group';
-  if (_bv && Array.isArray(_bv.scope_groups) && _bv.scope_groups.length) {
-    return { clause: ' AND ' + col + ' IN (?)', params: [_bv.scope_groups] };
+  var col = column || 'linked_to';
+  if (_bv && Array.isArray(_bv.scope_linked_to) && _bv.scope_linked_to.length) {
+    return { clause: ' AND ' + col + ' IN (?)', params: [_bv.scope_linked_to] };
   }
   return { clause: '', params: [] };
 }
@@ -455,7 +457,7 @@ async function handler(req, res) {
     /* ── All data (loans + infor) ── */
     if (action === 'get_all') {
       await ensureCreatedByUserCol();
-      const _sf = scopeFilterSQL(_bv, 'l.loan_group');
+      const _sf = scopeFilterSQL(_bv, 'l.linked_to');
       const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL${_sf.clause} ORDER BY l.loan_key DESC`, _sf.params);
       const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
       return res.json({
@@ -966,9 +968,9 @@ async function handler(req, res) {
       await ensureUserPhotoCol();
       await ensureUserScopeCols();
       const [users] = await db().query(
-        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url, scope_groups, max_normal_users, created_by FROM users ORDER BY id'
+        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url, scope_linked_to, max_normal_users, created_by FROM users ORDER BY id'
       );
-      users.forEach(u => { try { u.scope_groups = u.scope_groups ? JSON.parse(u.scope_groups) : []; } catch(e) { u.scope_groups = []; } });
+      users.forEach(u => { try { u.scope_linked_to = u.scope_linked_to ? JSON.parse(u.scope_linked_to) : []; } catch(e) { u.scope_linked_to = []; } });
       return res.json({ ok:true, users });
     }
 
@@ -990,18 +992,18 @@ async function handler(req, res) {
         if (!_NORMAL_ROLES.includes(role)) return res.json({ ok:false, message:'Sub Admin អាចបង្កើតបានតែ Normal User' });
         const [cnt] = await db().query('SELECT COUNT(*) AS n FROM users WHERE created_by=?', [_bu]);
         if (cnt[0].n >= (_bv.max_normal_users||0)) return res.json({ ok:false, message:'ដល់កំណត់ចំនួន User អតិបរមាហើយ (quota exceeded)' });
-        scopeGroupsJson = JSON.stringify(_bv.scope_groups||[]);
+        scopeGroupsJson = JSON.stringify(_bv.scope_linked_to||[]);
         createdBy = _bu;
       } else if (role === 'Sub Admin') {
         /* Admin granting scope/quota to a new Sub Admin */
-        const g = Array.isArray(body.scope_groups) ? body.scope_groups : [];
+        const g = Array.isArray(body.scope_linked_to) ? body.scope_linked_to : [];
         scopeGroupsJson = JSON.stringify(g);
         maxNormalUsers  = parseInt(body.max_normal_users)||0;
       }
 
       try {
         await db().query(
-          'INSERT INTO users (username, pin, role, display_name, exp_date, status, scope_groups, max_normal_users, created_by) VALUES (?,?,?,?,?,?,?,?,?)',
+          'INSERT INTO users (username, pin, role, display_name, exp_date, status, scope_linked_to, max_normal_users, created_by) VALUES (?,?,?,?,?,?,?,?,?)',
           [u, p, role, String(body.display_name||u).trim(),
            body.exp_date||null, body.status||'active', scopeGroupsJson, maxNormalUsers, createdBy]
         );
@@ -1044,9 +1046,9 @@ async function handler(req, res) {
           [role, newDisplayName, body.exp_date||null, body.status||'active', u]
         );
       }
-      if (_bv.role === 'Admin' && role === 'Sub Admin' && (body.scope_groups !== undefined || body.max_normal_users !== undefined)) {
-        const g = Array.isArray(body.scope_groups) ? body.scope_groups : [];
-        await db().query('UPDATE users SET scope_groups=?, max_normal_users=? WHERE username=?', [JSON.stringify(g), parseInt(body.max_normal_users)||0, u]);
+      if (_bv.role === 'Admin' && role === 'Sub Admin' && (body.scope_linked_to !== undefined || body.max_normal_users !== undefined)) {
+        const g = Array.isArray(body.scope_linked_to) ? body.scope_linked_to : [];
+        await db().query('UPDATE users SET scope_linked_to=?, max_normal_users=? WHERE username=?', [JSON.stringify(g), parseInt(body.max_normal_users)||0, u]);
       }
       if (oldDisplayName && newDisplayName && oldDisplayName !== newDisplayName) {
         await db().query('UPDATE loans SET created_by=? WHERE created_by=?', [newDisplayName, oldDisplayName]);
