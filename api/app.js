@@ -802,6 +802,16 @@ async function handler(req, res) {
       return res.json({ ok:true, logs: rows });
     }
 
+    /* ── Reset (clear) all habit check-ins within a date range ── */
+    if (action === 'habit_reset_range') {
+      const from = String(body.from||'').trim();
+      const to   = String(body.to||'').trim();
+      if (!from || !to) return res.json({ ok:false, message:'from and to required' });
+      await ensureJournalTables();
+      await db().query('DELETE FROM habit_logs WHERE owner_user=? AND log_date BETWEEN ? AND ?', [_bu, from, to]);
+      return res.json({ ok:true });
+    }
+
     /* ── Get one journal note ── */
     if (action === 'note_get') {
       const scope = String(body.scope||'').trim();

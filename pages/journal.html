@@ -45,8 +45,8 @@
     .jn-panel.jn-panel-active { display:block }
 
     /* -- Stat cards -- */
-    .jn-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px }
-    @media(max-width:700px){ .jn-kpi-row{ grid-template-columns:repeat(2,1fr) } }
+    .jn-kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px }
+    @media(max-width:700px){ .jn-kpi-row{ grid-template-columns:1fr } }
     .jn-kpi { background:var(--jn-card); border-radius:14px; padding:12px 14px; border:1px solid var(--jn-border); box-shadow:var(--jn-shadow) }
     .jn-kpi-label { font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--jn-muted); margin-bottom:5px }
     .jn-kpi-val { font-size:22px; font-weight:800; color:var(--jn-accent); line-height:1 }
@@ -63,28 +63,32 @@
     .jn-btn:disabled { opacity:.5; cursor:default }
     .jn-btn-ghost { background:transparent; color:var(--jn-text); border-color:var(--jn-border) }
     .jn-btn-ghost:hover { border-color:var(--jn-accent); color:var(--jn-accent) }
-    .jn-week-nav { display:flex; align-items:center; gap:8px; margin-left:auto }
-    .jn-week-btn { width:30px; height:30px; border-radius:8px; border:1.5px solid var(--jn-border); background:var(--jn-card); color:var(--jn-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s }
-    .jn-week-btn:hover { color:var(--jn-accent); border-color:var(--jn-accent) }
-    .jn-week-label { font-size:12.5px; font-weight:700; color:var(--jn-text); white-space:nowrap }
+    .jn-btn-danger { background:transparent; color:#ef4444; border-color:rgba(239,68,68,.35) }
+    .jn-btn-danger:hover { background:rgba(239,68,68,.08); border-color:#ef4444 }
+    .jn-range-pills { display:flex; gap:6px; margin-left:auto }
 
-    /* -- Habit grid -- */
+    /* -- Habit grid: rows = days, columns = habits -- */
     .jn-grid-wrap { background:var(--jn-card); border-radius:16px; border:1px solid var(--jn-border); box-shadow:var(--jn-shadow); overflow:hidden }
-    .jn-grid-scroll { overflow-x:auto }
+    .jn-grid-scroll { overflow:auto; max-height:560px }
     table.jn-grid { width:100%; border-collapse:collapse; font-size:12.5px }
-    table.jn-grid thead th { background:var(--jn-th); color:var(--jn-muted); font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:10px 8px; text-align:center; border-bottom:1px solid var(--jn-border); white-space:nowrap }
-    table.jn-grid thead th:first-child { text-align:left; padding-left:14px }
+    table.jn-grid thead th { position:sticky; top:0; z-index:1; background:var(--jn-th); color:var(--jn-muted); font-size:10.5px; font-weight:800; letter-spacing:.03em; padding:9px 10px; text-align:center; border-bottom:1px solid var(--jn-border); white-space:nowrap }
+    table.jn-grid thead th:first-child { text-align:left; padding-left:14px; left:0; z-index:2 }
     table.jn-grid thead th.jn-th-today { color:var(--jn-accent) }
+    .jn-habit-th { display:inline-flex; align-items:center; gap:5px; text-transform:none; font-weight:700 }
+    .jn-habit-rm { background:none; border:none; color:var(--jn-muted); cursor:pointer; font-size:13px; padding:0; opacity:.45; transition:.15s; line-height:1 }
+    .jn-habit-rm:hover { opacity:1; color:#ef4444 }
     table.jn-grid tbody tr { border-bottom:1px solid var(--jn-border) }
     table.jn-grid tbody tr:last-child { border-bottom:none }
-    table.jn-grid td { padding:8px; text-align:center; vertical-align:middle }
-    table.jn-grid td.jn-habit-name { text-align:left; padding-left:14px; font-weight:700; color:var(--jn-text) }
-    .jn-habit-rm { background:none; border:none; color:var(--jn-muted); cursor:pointer; font-size:14px; padding:0 0 0 8px; opacity:.5; transition:.15s }
-    .jn-habit-rm:hover { opacity:1; color:#ef4444 }
-    .jn-check { width:26px; height:26px; border-radius:8px; border:1.5px solid var(--jn-border); background:transparent; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:transparent; transition:.15s }
+    table.jn-grid tbody tr.jn-row-today { background:var(--jn-accent-soft) }
+    table.jn-grid td { padding:7px 10px; text-align:center; vertical-align:middle }
+    table.jn-grid td.jn-day-cell { text-align:left; padding-left:14px; background:var(--jn-card); position:sticky; left:0 }
+    tr.jn-row-today td.jn-day-cell { background:var(--jn-accent-soft) }
+    .jn-day-label { font-weight:700; color:var(--jn-text); white-space:nowrap }
+    .jn-day-sub { font-size:10.5px; color:var(--jn-muted) }
+    .jn-check { width:24px; height:24px; border-radius:7px; border:1.5px solid var(--jn-border); background:transparent; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:transparent; transition:.15s }
     .jn-check:hover { border-color:var(--jn-accent) }
     .jn-check.jn-checked { background:var(--jn-accent); border-color:var(--jn-accent); color:#fff }
-    .jn-week-count { color:var(--jn-muted); font-weight:700; font-variant-numeric:tabular-nums }
+    .jn-progress-cell { color:var(--jn-muted); font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap }
     .jn-empty { padding:40px 20px; text-align:center; color:var(--jn-muted); font-size:13px }
 
     /* -- Notes tab -- */
@@ -128,10 +132,9 @@
       <!-- ── Habits panel ── -->
       <div class="jn-panel jn-panel-active" id="panelHabits">
         <div class="jn-kpi-row">
-          <div class="jn-kpi"><div class="jn-kpi-label">Today</div><div class="jn-kpi-val" id="kpiToday">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barToday" style="width:0%"></div></div></div>
-          <div class="jn-kpi"><div class="jn-kpi-label">This Week</div><div class="jn-kpi-val" id="kpiWeek">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barWeek" style="width:0%"></div></div></div>
-          <div class="jn-kpi"><div class="jn-kpi-label">This Month</div><div class="jn-kpi-val" id="kpiMonth">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barMonth" style="width:0%"></div></div></div>
-          <div class="jn-kpi"><div class="jn-kpi-label">This Year</div><div class="jn-kpi-val" id="kpiYear">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barYear" style="width:0%"></div></div></div>
+          <div class="jn-kpi"><div class="jn-kpi-label">This Week's Average Progress</div><div class="jn-kpi-val" id="kpiWeek">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barWeek" style="width:0%"></div></div></div>
+          <div class="jn-kpi"><div class="jn-kpi-label">This Month's Average Progress</div><div class="jn-kpi-val" id="kpiMonth">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barMonth" style="width:0%"></div></div></div>
+          <div class="jn-kpi"><div class="jn-kpi-label">This Quarter's Average Progress</div><div class="jn-kpi-val" id="kpiQuarter">0%</div><div class="jn-kpi-bar"><div class="jn-kpi-bar-fill" id="barQuarter" style="width:0%"></div></div></div>
         </div>
 
         <div class="jn-toolbar">
@@ -142,15 +145,14 @@
               Add Habit
             </button>
           </form>
-          <div class="jn-week-nav">
-            <button class="jn-week-btn" onclick="shiftWeek(-1)" title="Previous week">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <span class="jn-week-label" id="jnWeekLabel">—</span>
-            <button class="jn-week-btn" onclick="shiftWeek(1)" title="Next week">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-            <button class="jn-btn jn-btn-ghost" onclick="goThisWeek()">Today</button>
+          <button class="jn-btn jn-btn-danger" onclick="resetTracker()" style="margin-left:6px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+            Reset the tracker
+          </button>
+          <div class="jn-range-pills">
+            <button class="jn-pill jn-pill-active" data-range="week"  onclick="setRange('week')">This Week</button>
+            <button class="jn-pill"                data-range="month" onclick="setRange('month')">This Month</button>
+            <button class="jn-pill"                data-range="quarter" onclick="setRange('quarter')">This Quarter</button>
           </div>
         </div>
 
@@ -220,28 +222,40 @@ function switchTopTab(tab) {
 }
 
 /* =========================================================
-   HABITS
+   HABITS — rows are days, columns are habits (like a Notion database)
    ========================================================= */
-var _habits    = [];
-var _logs      = [];  /* {habit_id, log_date} for the whole current year */
-var _weekStart = mondayOf(new Date());
+var _habits = [];
+var _logs   = [];  /* {habit_id, log_date} within the current quarter */
+var _range  = 'week'; /* week | month | quarter — which range of days is shown as rows */
+
+function quarterStart(d) { var qm = Math.floor(d.getMonth()/3)*3; return new Date(d.getFullYear(), qm, 1); }
+function quarterEnd(d)   { var qs = quarterStart(d); return new Date(qs.getFullYear(), qs.getMonth()+3, 0); }
+function rangeBounds(range, ref) {
+  var d = ref || new Date();
+  if (range==='week')  { var mon=mondayOf(d), sun=new Date(mon); sun.setDate(sun.getDate()+6); return [mon,sun]; }
+  if (range==='month') { return [new Date(d.getFullYear(),d.getMonth(),1), new Date(d.getFullYear(),d.getMonth()+1,0)]; }
+  return [quarterStart(d), quarterEnd(d)];
+}
 
 async function loadHabits() {
   var r = await CamboAPI.post({ action:'habit_list' });
   _habits = (r && r.ok && Array.isArray(r.habits)) ? r.habits : [];
-  await loadYearLogs();
+  var today = new Date();
+  var qb = rangeBounds('quarter', today);
+  var lr = await CamboAPI.post({ action:'habit_logs_range', from:fmtYMD(qb[0]), to:fmtYMD(qb[1]) });
+  _logs = (lr && lr.ok && Array.isArray(lr.logs)) ? lr.logs : [];
   renderHabitGrid();
   renderKpis();
 }
 
-async function loadYearLogs() {
-  var y = new Date().getFullYear();
-  var r = await CamboAPI.post({ action:'habit_logs_range', from:y+'-01-01', to:y+'-12-31' });
-  _logs = (r && r.ok && Array.isArray(r.logs)) ? r.logs : [];
-}
-
 function isDone(habitId, dateStr) {
   return _logs.some(function(l){ return l.habit_id===habitId && String(l.log_date).substring(0,10)===dateStr; });
+}
+
+function setRange(r) {
+  _range = r;
+  document.querySelectorAll('.jn-range-pills .jn-pill').forEach(function(p){ p.classList.toggle('jn-pill-active', p.dataset.range===r); });
+  renderHabitGrid();
 }
 
 function renderHabitGrid() {
@@ -251,12 +265,6 @@ function renderHabitGrid() {
   var body  = document.getElementById('jnGridBody');
   var todayStr = fmtYMD(new Date());
 
-  var days = [];
-  for (var i=0;i<7;i++) { var d=new Date(_weekStart); d.setDate(d.getDate()+i); days.push(d); }
-  document.getElementById('jnWeekLabel').textContent =
-    days[0].toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' – ' +
-    days[6].toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-
   if (!_habits.length) {
     wrap.style.display = 'none';
     empty.style.display = '';
@@ -265,26 +273,30 @@ function renderHabitGrid() {
   wrap.style.display = '';
   empty.style.display = 'none';
 
-  head.innerHTML = '<th>Habit</th>' + days.map(function(d){
-    var ds = fmtYMD(d);
-    return '<th class="'+(ds===todayStr?'jn-th-today':'')+'">'+DOW[(d.getDay()+6)%7]+'<br>'+d.getDate()+'</th>';
-  }).join('') + '<th>Week</th><th></th>';
+  var bounds = rangeBounds(_range, new Date());
+  var days = [];
+  var cur = new Date(bounds[0]);
+  while (cur <= bounds[1]) { days.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
 
-  body.innerHTML = _habits.map(function(h){
+  head.innerHTML = '<th>Date</th>' + _habits.map(function(h){
+    return '<th><span class="jn-habit-th" title="'+esc(h.name)+'">'+esc(h.name)
+         + '<button class="jn-habit-rm" onclick="removeHabit('+h.id+')" title="Remove habit">×</button></span></th>';
+  }).join('') + '<th>Progress</th>';
+
+  body.innerHTML = days.map(function(d){
+    var ds = fmtYMD(d);
     var count = 0;
-    var cells = days.map(function(d){
-      var ds = fmtYMD(d);
+    var cells = _habits.map(function(h){
       var done = isDone(h.id, ds);
       if (done) count++;
       return '<td><button class="jn-check'+(done?' jn-checked':'')+'" onclick="toggleHabit('+h.id+',\''+ds+'\')">'
-           + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+           + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
            + '</button></td>';
     }).join('');
-    return '<tr>'
-      + '<td class="jn-habit-name">'+esc(h.name)+'</td>'
+    return '<tr class="'+(ds===todayStr?'jn-row-today':'')+'">'
+      + '<td class="jn-day-cell"><div class="jn-day-label">'+d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+'</div><div class="jn-day-sub">'+DOW[(d.getDay()+6)%7]+'</div></td>'
       + cells
-      + '<td class="jn-week-count">'+count+'/7</td>'
-      + '<td><button class="jn-habit-rm" onclick="removeHabit('+h.id+')" title="Remove">×</button></td>'
+      + '<td class="jn-progress-cell">'+count+'/'+_habits.length+'</td>'
       + '</tr>';
   }).join('');
 }
@@ -292,32 +304,24 @@ function renderHabitGrid() {
 function renderKpis() {
   var n = _habits.length;
   var today = new Date();
-  var todayStr = fmtYMD(today);
-  var wStart = mondayOf(today);
-  var todayDowIdx = (today.getDay()+6)%7; /* 0=Mon..6=Sun, days elapsed so far this week = idx+1 */
-
   function pct(done, possible) { return possible>0 ? Math.round(done/possible*100) : 0; }
-
-  var doneToday = _logs.filter(function(l){ return String(l.log_date).substring(0,10)===todayStr; }).length;
-  var pToday = pct(doneToday, n);
-
-  var doneWeek = 0;
-  for (var i=0;i<=todayDowIdx;i++) {
-    var d = new Date(wStart); d.setDate(d.getDate()+i);
-    var ds = fmtYMD(d);
-    doneWeek += _logs.filter(function(l){ return String(l.log_date).substring(0,10)===ds; }).length;
+  function countInRange(s, e) {
+    var sStr=fmtYMD(s), eStr=fmtYMD(e);
+    return _logs.filter(function(l){ var ds=String(l.log_date).substring(0,10); return ds>=sStr && ds<=eStr; }).length;
   }
-  var pWeek = pct(doneWeek, n*(todayDowIdx+1));
 
-  var monthPrefix = todayStr.substring(0,7);
-  var doneMonth = _logs.filter(function(l){ return String(l.log_date).substring(0,7)===monthPrefix; }).length;
-  var pMonth = pct(doneMonth, n*today.getDate());
+  var wb = rangeBounds('week', today);
+  var wDays = Math.floor((today - wb[0])/86400000) + 1;
+  var pWeek = pct(countInRange(wb[0], today), n*wDays);
 
-  var yearPrefix = String(today.getFullYear());
-  var doneYear = _logs.filter(function(l){ return String(l.log_date).substring(0,4)===yearPrefix; }).length;
-  var pYear = pct(doneYear, n*dayOfYear(today));
+  var mb = rangeBounds('month', today);
+  var pMonth = pct(countInRange(mb[0], today), n*today.getDate());
 
-  setKpi('Today', pToday); setKpi('Week', pWeek); setKpi('Month', pMonth); setKpi('Year', pYear);
+  var qb = rangeBounds('quarter', today);
+  var qDays = Math.floor((today - qb[0])/86400000) + 1;
+  var pQuarter = pct(countInRange(qb[0], today), n*qDays);
+
+  setKpi('Week', pWeek); setKpi('Month', pMonth); setKpi('Quarter', pQuarter);
 }
 function setKpi(key, pct) {
   document.getElementById('kpi'+key).textContent = pct+'%';
@@ -351,8 +355,13 @@ async function toggleHabit(habitId, dateStr) {
   await CamboAPI.post({ action:'habit_toggle', habit_id:habitId, date:dateStr });
 }
 
-function shiftWeek(dir) { var d=new Date(_weekStart); d.setDate(d.getDate()+dir*7); _weekStart=mondayOf(d); renderHabitGrid(); }
-function goThisWeek() { _weekStart = mondayOf(new Date()); renderHabitGrid(); }
+async function resetTracker() {
+  if (!_habits.length) return;
+  if (!confirm('Clear all check-ins for the ' + _range + ' currently shown? This cannot be undone.')) return;
+  var bounds = rangeBounds(_range, new Date());
+  await CamboAPI.post({ action:'habit_reset_range', from:fmtYMD(bounds[0]), to:fmtYMD(bounds[1]) });
+  await loadHabits();
+}
 
 /* =========================================================
    NOTES
