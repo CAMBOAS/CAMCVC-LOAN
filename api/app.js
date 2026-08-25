@@ -69,6 +69,14 @@ async function ensureUserScopeCols() {
   _userScopeColsReady = true;
 }
 
+/* ── One-time migration: add team_name column to users if absent (Sub Admin-only, editable by Admin) ── */
+let _teamNameColReady = false;
+async function ensureTeamNameCol() {
+  if (_teamNameColReady) return;
+  try { await db().query('ALTER TABLE users ADD COLUMN team_name VARCHAR(100) DEFAULT NULL'); } catch(e) {}
+  _teamNameColReady = true;
+}
+
 /* ── One-time migration: add created_by column to loans if absent ── */
 let _createdByColReady = false;
 async function ensureCreatedByCol() {
@@ -1037,11 +1045,24 @@ async function handler(req, res) {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       await ensureUserPhotoCol();
       await ensureUserScopeCols();
+      await ensureTeamNameCol();
       const [users] = await db().query(
-        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url, scope_linked_to, max_normal_users, created_by FROM users ORDER BY id'
+        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url, scope_linked_to, max_normal_users, created_by, team_name FROM users ORDER BY id'
       );
       users.forEach(u => { try { u.scope_linked_to = u.scope_linked_to ? JSON.parse(u.scope_linked_to) : []; } catch(e) { u.scope_linked_to = []; } });
       return res.json({ ok:true, users });
+    }
+
+    /* ── Set a Sub Admin's display team name (Admin only) — deliberately separate from user_update,
+         which defaults role to 'Staff Loan' when omitted and would silently demote a Sub Admin ── */
+    if (action === 'user_set_team_name') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const u = String(body.username||'').trim();
+      if (!u) return res.json({ ok:false, message:'Username required' });
+      await ensureTeamNameCol();
+      const teamName = String(body.team_name||'').trim();
+      await db().query('UPDATE users SET team_name=? WHERE username=?', [teamName || null, u]);
+      return res.json({ ok:true });
     }
 
     /* ── User add (Admin, or Sub Admin creating a scoped Normal User within quota) ── */

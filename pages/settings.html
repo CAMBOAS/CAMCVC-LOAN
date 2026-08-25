@@ -300,6 +300,35 @@
     .nt-save-btn:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(124,92,255,.4) }
     .nt-save-btn:disabled { opacity:.6; cursor:not-allowed; transform:none }
     .nt-status { font-size:12px; color:var(--muted) }
+
+    /* ── Sub Admin org-chart ── */
+    .org-wrap { display:flex; flex-direction:column; align-items:center; padding:10px 4px 20px }
+    .org-root { display:flex; flex-direction:column; align-items:center; gap:0 }
+    .org-root-node { display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; background:linear-gradient(135deg,rgba(124,92,255,.16),rgba(6,182,212,.1)); border:1.5px solid rgba(124,92,255,.35); font-size:13px; font-weight:800; color:var(--text) }
+    .org-trunk { width:2px; height:22px; background:rgba(148,163,184,.3) }
+    .org-teams { display:flex; flex-wrap:wrap; justify-content:center; gap:18px; padding-top:2px; position:relative }
+    .org-team { display:flex; flex-direction:column; align-items:center; width:220px }
+    .org-branch { width:2px; height:16px; background:rgba(148,163,184,.3) }
+    .org-team-card { width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,.06) }
+    .org-team-name-row { display:flex; align-items:center; gap:6px; margin-bottom:6px }
+    .org-team-name { font-size:13px; font-weight:800; color:#a78bfa; cursor:pointer; padding:2px 5px; border-radius:6px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .org-team-name:hover { background:rgba(124,92,255,.1) }
+    .org-team-name-input { flex:1; min-width:0; font-size:13px; font-weight:800; color:#a78bfa; background:transparent; border:1.5px solid rgba(124,92,255,.4); border-radius:6px; padding:2px 5px; font-family:inherit; outline:none }
+    .org-sub-name { font-size:11.5px; color:var(--text); font-weight:700; margin-bottom:2px }
+    .org-sub-username { font-size:10.5px; color:var(--muted); margin-bottom:8px }
+    .org-scope-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px }
+    .org-scope-tag { font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:20px; background:rgba(6,182,212,.12); color:#22d3ee }
+    .org-scope-empty { font-size:10px; color:var(--muted); font-style:italic }
+    .org-quota { font-size:10.5px; color:var(--muted); font-weight:700; margin-bottom:8px }
+    .org-quota b { color:var(--text) }
+    .org-manage-link { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#7c5cff; cursor:pointer; background:none; border:none; padding:0; font-family:inherit }
+    .org-manage-link:hover { text-decoration:underline }
+    .org-members-branch { width:2px; height:14px; background:rgba(148,163,184,.25) }
+    .org-members { display:flex; flex-direction:column; gap:5px; width:100%; background:rgba(148,163,184,.05); border:1px dashed var(--border); border-radius:10px; padding:8px }
+    .org-member-chip { display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--text) }
+    .org-member-dot { width:6px; height:6px; border-radius:50%; background:#22c55e; flex-shrink:0 }
+    .org-members-empty { font-size:10px; color:var(--muted); font-style:italic; text-align:center; padding:2px }
+    .org-empty-state { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px }
   </style>
 </head>
 <body class="background">
@@ -414,6 +443,7 @@
                 <tr>
                   <th class="perm-th-left" style="min-width:160px">Permission</th>
                   <th><span class="perm-role-admin">Admin</span></th>
+                  <th>Sub Admin</th>
                   <th>Owner</th>
                   <th>Staff Loan</th>
                   <th>Staff</th>
@@ -423,7 +453,7 @@
                 </tr>
               </thead>
               <tbody id="permBody">
-                <tr><td colspan="8" style="text-align:center;padding:16px;color:var(--muted);font-size:12px">Loading…</td></tr>
+                <tr><td colspan="9" style="text-align:center;padding:16px;color:var(--muted);font-size:12px">Loading…</td></tr>
               </tbody>
             </table>
           </div>
@@ -766,6 +796,7 @@
                 <tr>
                   <th class="perm-th-left" style="min-width:200px">Page</th>
                   <th><span class="perm-role-admin">Admin</span></th>
+                  <th>Sub Admin</th>
                   <th>Owner</th>
                   <th>Staff Loan</th>
                   <th>Staff</th>
@@ -782,6 +813,18 @@
           <div style="font-size:11px;color:var(--muted);line-height:1.6">Control which roles can see and access each page. Admin always has full access. Settings is always Admin only.</div>
         </div>
       </div><!-- /Panel 4 -->
+
+      <!-- ══ Panel 5: Sub Admin ══ -->
+      <div class="st-panel" id="stPanel5">
+        <div class="glass-card" style="padding:16px">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.7;flex-shrink:0"><circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V12"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 12L5 16.5M12 12l7 4.5"/></svg>
+            <span style="font-size:12px;font-weight:700">Sub Admin Teams</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Overview of every Sub Admin team and the Normal Users each one manages. Click a team name to rename it.</div>
+          <div id="orgChartWrap"></div>
+        </div>
+      </div><!-- /Panel 5 -->
 
     </div><!-- /st-wrap -->
   </div>
@@ -1063,6 +1106,88 @@ async function loadUsers() {
   } catch(e) { toast('Network error', true); }
   renderTable();
   renderKPIs();
+  renderOrgChart();
+}
+
+/* ── Sub Admin org chart ── */
+function renderOrgChart() {
+  var wrap = document.getElementById('orgChartWrap');
+  if (!wrap) return;
+  var subAdmins = _users.filter(function(u){ return u.role === 'Sub Admin'; });
+
+  if (!subAdmins.length) {
+    wrap.innerHTML = '<div class="org-empty-state">No Sub Admins yet — create one from the User Management tab (role = "Sub Admin").</div>';
+    return;
+  }
+
+  var teamsHtml = subAdmins.map(function(sa){
+    var members = _users.filter(function(u){ return u.created_by === sa.username; });
+    var scopeTags = (Array.isArray(sa.scope_linked_to) && sa.scope_linked_to.length)
+      ? sa.scope_linked_to.map(function(t){ return '<span class="org-scope-tag">'+esc(t)+'</span>'; }).join('')
+      : '<span class="org-scope-empty">No Linked To scope yet</span>';
+    var membersHtml = members.length
+      ? members.map(function(m){ return '<div class="org-member-chip"><span class="org-member-dot"></span>'+esc(m.display_name||m.username)+' <span style="color:var(--muted)">('+esc(m.role)+')</span></div>'; }).join('')
+      : '<div class="org-members-empty">No Normal Users yet</div>';
+    var teamName = sa.team_name || sa.display_name || sa.username;
+    return ''
+      + '<div class="org-team">'
+        + '<div class="org-branch"></div>'
+        + '<div class="org-team-card">'
+          + '<div class="org-team-name-row">'
+            + '<span class="org-team-name" id="orgTeamName_'+esc(sa.username)+'" onclick="editTeamName(\''+esc(sa.username)+'\')" title="Click to rename team">'+esc(teamName)+'</span>'
+          + '</div>'
+          + '<div class="org-sub-name">'+esc(sa.display_name||sa.username)+'</div>'
+          + '<div class="org-sub-username">@'+esc(sa.username)+'</div>'
+          + '<div class="org-scope-tags">'+scopeTags+'</div>'
+          + '<div class="org-quota">Quota: <b>'+members.length+' / '+(sa.max_normal_users||0)+'</b> Normal Users</div>'
+          + '<button class="org-manage-link" onclick="openEditModal(\''+esc(sa.username)+'\')">Manage &rarr;</button>'
+        + '</div>'
+        + '<div class="org-members-branch"></div>'
+        + '<div class="org-members">'+membersHtml+'</div>'
+      + '</div>';
+  }).join('');
+
+  wrap.innerHTML = ''
+    + '<div class="org-wrap">'
+      + '<div class="org-root">'
+        + '<div class="org-root-node"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/></svg> Super Admin</div>'
+        + '<div class="org-trunk"></div>'
+      + '</div>'
+      + '<div class="org-teams">'+teamsHtml+'</div>'
+    + '</div>';
+}
+
+function editTeamName(username) {
+  var el = document.getElementById('orgTeamName_'+username);
+  if (!el || el.tagName === 'INPUT') return;
+  var current = el.textContent;
+  var input = document.createElement('input');
+  input.className = 'org-team-name-input';
+  input.value = current;
+  input.id = el.id;
+  el.replaceWith(input);
+  input.focus();
+  input.select();
+  var done = false;
+  function commit() {
+    if (done) return; done = true;
+    saveTeamName(username, input.value.trim());
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') { input.blur(); }
+    if (e.key === 'Escape') { done = true; renderOrgChart(); }
+  });
+}
+
+async function saveTeamName(username, teamName) {
+  var idx = _users.findIndex(function(u){ return u.username === username; });
+  if (idx >= 0) _users[idx].team_name = teamName;
+  renderOrgChart();
+  try {
+    var r = await CamboAPI.post({ action:'user_set_team_name', username: username, team_name: teamName });
+    if (!r || !r.ok) toast((r&&r.message)||'Failed to save team name', true);
+  } catch(e) { toast('Network error', true); }
 }
 
 /* ── Add modal ── */
@@ -1288,9 +1413,10 @@ var _TAB_DEFS = [
   { panel:1, label:'Groups & Statuses', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>' },
   { panel:2, label:'App Config',        icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>' },
   { panel:3, label:'Notifications',     icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' },
-  { panel:4, label:'Page Access',       icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' }
+  { panel:4, label:'Page Access',       icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+  { panel:5, label:'Sub Admin',         icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V12"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 12L5 16.5M12 12l7 4.5"/></svg>' }
 ];
-var _TAB_ORDER    = [0,1,2,3,4];
+var _TAB_ORDER    = [0,1,2,3,4,5];
 var _DRAG_MODE    = false;
 var _dragSrcPanel = null;
 var _lpTimer      = null;
@@ -1827,7 +1953,7 @@ async function loadPermMatrix() {
     renderPermMatrix(res.perms);
   } catch(e) {
     var body = document.getElementById('permBody');
-    if (body) body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:14px;color:#f87171;font-size:12px">Failed to load permissions</td></tr>';
+    if (body) body.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:14px;color:#f87171;font-size:12px">Failed to load permissions</td></tr>';
   }
 }
 
@@ -1907,7 +2033,7 @@ async function loadPageMatrix() {
     renderPageMatrix(access);
   } catch(e) {
     var body = document.getElementById('paBody');
-    if (body) body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Failed to load</td></tr>';
+    if (body) body.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">Failed to load</td></tr>';
   }
 }
 
