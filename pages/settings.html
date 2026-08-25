@@ -833,8 +833,9 @@
         </div>
         <div class="um-field" style="margin-bottom:0">
           <label class="um-label">Role <span>*</span></label>
-          <select class="um-select" id="uf_role">
+          <select class="um-select" id="uf_role" onchange="toggleSubAdminFields()">
             <option value="Admin">Admin</option>
+            <option value="Sub Admin">Sub Admin</option>
             <option value="Owner">Owner</option>
             <option value="Moderator">Moderator</option>
             <option value="Staff">Staff</option>
@@ -855,6 +856,18 @@
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+        </div>
+      </div>
+      <div id="uf_subadmin_fields" style="display:none;margin-top:14px">
+        <div class="um-field">
+          <label class="um-label">Assigned Groups (scope) <span>*</span></label>
+          <div class="um-hint" style="margin-bottom:6px">This Sub Admin will only see loans/customers in the group(s) checked below.</div>
+          <div id="uf_scope_groups" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
+        <div class="um-field" style="margin-bottom:0">
+          <label class="um-label">Max Normal Users <span>*</span></label>
+          <input class="um-input" id="uf_max_normal_users" type="number" min="0" step="1" placeholder="e.g. 5" style="max-width:120px">
+          <div class="um-hint">How many Normal User accounts this Sub Admin may create.</div>
         </div>
       </div>
     </div>
@@ -891,6 +904,41 @@ if (!_isAdmin) {
 var _users         = [];
 var _editingUser   = null;
 var _pendingDelUser = null;
+var _allGroups     = [];
+
+/* ── Sub Admin: groups scope + quota fields ── */
+async function loadGroupsForScope() {
+  if (_allGroups.length) return;
+  try {
+    var res = await CamboAPI.post({ action:'get_all' });
+    if (res && res.ok) _allGroups = (res.groups||[]).filter(function(g){ return g && g.toLowerCase()!=='groups'; });
+  } catch(e) {}
+}
+function renderScopeGroups(checked) {
+  var wrap = document.getElementById('uf_scope_groups');
+  if (!wrap) return;
+  checked = checked || [];
+  if (!_allGroups.length) { wrap.innerHTML = '<span class="um-hint">No groups defined yet.</span>'; return; }
+  wrap.innerHTML = _allGroups.map(function(g){
+    var isChecked = checked.indexOf(g) !== -1;
+    return '<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;font-size:12px">'
+      + '<input type="checkbox" class="uf_scope_chk" value="'+esc(g)+'"'+(isChecked?' checked':'')+'> '+esc(g)
+      + '</label>';
+  }).join('');
+}
+async function toggleSubAdminFields() {
+  var role = document.getElementById('uf_role').value;
+  var box  = document.getElementById('uf_subadmin_fields');
+  if (role === 'Sub Admin') {
+    box.style.display = '';
+    await loadGroupsForScope();
+    var checked = (_editingUser && _editingUser.role==='Sub Admin' && Array.isArray(_editingUser.scope_groups)) ? _editingUser.scope_groups : [];
+    renderScopeGroups(checked);
+    document.getElementById('uf_max_normal_users').value = (_editingUser && _editingUser.max_normal_users) || 0;
+  } else {
+    box.style.display = 'none';
+  }
+}
 
 /* ── Toast ── */
 function toast(msg, isErr) {
@@ -1034,6 +1082,7 @@ function openAddModal() {
   document.getElementById('umModalIcon').style.background    = 'rgba(124,92,255,.15)';
   document.getElementById('umModalIcon').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
   document.getElementById('umPhotoWrap').style.display = 'none';
+  toggleSubAdminFields();
   document.getElementById('umModalBg').classList.add('open');
   setTimeout(function(){ document.getElementById('uf_username').focus(); }, 80);
 }
@@ -1067,6 +1116,7 @@ function openEditModal(username) {
     photoCircle.textContent = (u.display_name||u.username||'?').charAt(0).toUpperCase();
     photoCircle.style.cursor = 'default'; photoCircle.title = '';
   }
+  toggleSubAdminFields();
   document.getElementById('umModalBg').classList.add('open');
   setTimeout(function(){ document.getElementById('uf_display_name').focus(); }, 80);
 }
@@ -1094,11 +1144,20 @@ async function saveUser() {
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
+  if (role === 'Sub Admin') {
+    var checkedGroups = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
+    if (!checkedGroups.length) return toast('Please select at least one Group for this Sub Admin!', true);
+  }
+
   try {
     var payload = { action: _editingUser ? 'user_update' : 'user_add',
                     username: username, display_name: display_name,
                     role: role, exp_date: exp_date, status: status };
     if (pin) payload.pin = pin;
+    if (role === 'Sub Admin') {
+      payload.scope_groups     = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
+      payload.max_normal_users = parseInt(document.getElementById('uf_max_normal_users').value)||0;
+    }
     var res = await CamboAPI.post(payload);
     if (res && res.ok) {
       toast(_editingUser ? 'User updated successfully!' : 'User added successfully!');
@@ -1735,7 +1794,7 @@ document.addEventListener('change', function(e) {
 });
 
 /* ── Permission Matrix ── */
-var _PM_ROLES = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
+var _PM_ROLES = ['Admin','Sub Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
 var _PM_PERMS = [
   { key:'settings', label:'Settings (User Mgmt)' },
   { key:'write',    label:'Add / Edit Loan' },
@@ -1802,7 +1861,7 @@ async function savePerms() {
 }
 
 /* ── Page Access Matrix ── */
-var _PA_ROLES = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
+var _PA_ROLES = ['Admin','Sub Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
 var _PA_PAGES = [
   { key:'dashboard',   label:'Dashboard',        note:'index.html' },
   { key:'customers',   label:'Customers',         note:'customers.html' },

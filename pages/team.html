@@ -100,6 +100,25 @@
 
     /* -- Toolbar -- */
     .tm-toolbar { display:flex; align-items:center; justify-content:flex-end; margin-bottom:14px; gap:6px }
+    .tm-quota { font-size:11.5px; color:var(--tm-muted); font-weight:700; margin-right:auto }
+    .tm-add-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:9px; border:1.5px solid #7c5cff; background:#7c5cff; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .tm-add-btn:hover { opacity:.9 }
+    .tm-add-btn:disabled { opacity:.5; cursor:not-allowed }
+
+    /* -- Add/Edit Normal User modal -- */
+    .au-backdrop { position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; pointer-events:none; transition:opacity .2s }
+    .au-backdrop.au-open { opacity:1; pointer-events:auto }
+    .au-box { background:var(--tm-card); border-radius:18px; border:1px solid var(--tm-border); box-shadow:0 24px 60px rgba(0,0,0,.25); width:100%; max-width:380px; padding:20px; transform:translateY(16px) scale(.97); transition:transform .2s, opacity .2s; opacity:0 }
+    .au-backdrop.au-open .au-box { transform:translateY(0) scale(1); opacity:1 }
+    .au-title { font-size:15px; font-weight:800; color:var(--tm-text); margin-bottom:14px }
+    .au-field { margin-bottom:12px }
+    .au-label { font-size:11px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:5px }
+    .au-input { width:100%; box-sizing:border-box; padding:8px 11px; border-radius:9px; border:1.5px solid var(--tm-border); background:transparent; color:var(--tm-text); font-size:13px; font-family:inherit; outline:none }
+    .au-input:focus { border-color:#7c5cff }
+    .au-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:16px }
+    .au-btn { padding:8px 16px; border-radius:9px; border:1.5px solid var(--tm-border); background:transparent; color:var(--tm-text); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit }
+    .au-btn-save { border-color:#7c5cff; background:#7c5cff; color:#fff }
+    .au-btn-save:disabled { opacity:.5; cursor:default }
     .tm-view-btn {
       width:34px; height:34px; border-radius:9px; border:1px solid var(--tm-border);
       background:transparent; color:var(--tm-muted); cursor:pointer;
@@ -224,6 +243,11 @@
     <div class="shared-topbar" id="sharedHeader"></div>
     <div class="tm-wrap">
       <div class="tm-toolbar" id="tmToolbar" style="display:none">
+        <span class="tm-quota" id="tmQuota" style="display:none"></span>
+        <button class="tm-add-btn" id="tmAddBtn" style="display:none" onclick="openAddUserModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add User
+        </button>
         <button class="tm-view-btn active" id="btnGrid" onclick="setView('grid')" title="Grid view">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         </button>
@@ -236,6 +260,39 @@
       <div class="tm-list" id="tmList" style="display:none"></div>
     </div>
   </main>
+</div>
+
+<!-- Add/Edit Normal User Modal (Sub Admin only) -->
+<div class="au-backdrop" id="auBackdrop" onclick="if(event.target===this)closeAddUserModal()">
+  <div class="au-box">
+    <div class="au-title" id="auTitle">Add User</div>
+    <div class="au-field">
+      <label class="au-label">Username *</label>
+      <input class="au-input" id="au_username" autocomplete="off">
+    </div>
+    <div class="au-field">
+      <label class="au-label">Display Name *</label>
+      <input class="au-input" id="au_display_name" autocomplete="off">
+    </div>
+    <div class="au-field">
+      <label class="au-label" id="au_pin_label">PIN *</label>
+      <input class="au-input" id="au_pin" type="password" autocomplete="new-password" maxlength="20">
+    </div>
+    <div class="au-field">
+      <label class="au-label">Role *</label>
+      <select class="au-input" id="au_role">
+        <option value="Staff Loan">Staff Loan</option>
+        <option value="Staff">Staff</option>
+        <option value="Moderator">Moderator</option>
+        <option value="Viewer">Viewer</option>
+        <option value="Tester">Tester</option>
+      </select>
+    </div>
+    <div class="au-footer">
+      <button class="au-btn" onclick="closeAddUserModal()">Cancel</button>
+      <button class="au-btn au-btn-save" id="auSaveBtn" onclick="saveNormalUser()">Save</button>
+    </div>
+  </div>
 </div>
 
 <!-- Profile Modal -->
@@ -293,6 +350,63 @@ var _pmCurIdx = null;
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function getMyUsername(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return a?(a.u||''):''; }catch(e){return '';} }
+function getMyRole(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return a?(a.role||''):''; }catch(e){return '';} }
+
+/* ── Sub Admin: Add Normal User ── */
+function updateSubAdminToolbar() {
+  if (getMyRole() !== 'Sub Admin') return;
+  var me = _users.find(function(u){ return u.username===getMyUsername(); });
+  var quota = me ? Number(me.max_normal_users||0) : 0;
+  var used  = _users.filter(function(u){ return u.created_by===getMyUsername(); }).length;
+  var quotaEl = document.getElementById('tmQuota');
+  var btnEl   = document.getElementById('tmAddBtn');
+  quotaEl.textContent = used+' / '+quota+' Normal Users created';
+  quotaEl.style.display = '';
+  btnEl.style.display = '';
+  btnEl.disabled = used >= quota;
+}
+function openAddUserModal() {
+  document.getElementById('auTitle').textContent = 'Add Normal User';
+  document.getElementById('au_username').value = '';
+  document.getElementById('au_username').readOnly = false;
+  document.getElementById('au_display_name').value = '';
+  document.getElementById('au_pin').value = '';
+  document.getElementById('au_role').value = 'Staff Loan';
+  document.getElementById('auBackdrop').classList.add('au-open');
+  setTimeout(function(){ document.getElementById('au_username').focus(); }, 80);
+}
+function closeAddUserModal() {
+  document.getElementById('auBackdrop').classList.remove('au-open');
+}
+async function saveNormalUser() {
+  var username = document.getElementById('au_username').value.trim();
+  var display_name = document.getElementById('au_display_name').value.trim();
+  var pin = document.getElementById('au_pin').value.trim();
+  var role = document.getElementById('au_role').value;
+  if (!username) return toast('Please enter a Username');
+  if (!display_name) return toast('Please enter a Display Name');
+  if (!pin) return toast('Please enter a PIN');
+  var btn = document.getElementById('auSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    var res = await CamboAPI.post({ action:'user_add', username:username, display_name:display_name, pin:pin, role:role, status:'active' });
+    if (res && res.ok) {
+      toast('User added!');
+      closeAddUserModal();
+      location.reload();
+    } else {
+      toast((res&&res.message)||'Failed to add user', true);
+    }
+  } catch(e) { toast('Network error', true); }
+  btn.disabled = false; btn.textContent = 'Save';
+}
+function toast(msg, isErr) {
+  var el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:'+(isErr?'#ef4444':'#16a34a')+';color:#fff;padding:10px 18px;border-radius:10px;font-size:12.5px;font-weight:700;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2200);
+}
 
 function isOnline(dtStr) {
   if (!dtStr) return false;
@@ -513,6 +627,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     listEl.innerHTML=listHeader()+_users.map(renderRow).join('');
     stateEl.style.display='none';
     document.getElementById('tmToolbar').style.display='';
+    updateSubAdminToolbar();
     setView(_curView);
   } catch(e){ document.getElementById('tmState').textContent='Error loading team'; }
 });

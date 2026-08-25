@@ -57,6 +57,16 @@ async function ensureUiPrefsCol() {
   _uiPrefsColReady = true;
 }
 
+/* ── One-time migration: add Sub Admin scope/quota columns to users if absent ── */
+let _userScopeColsReady = false;
+async function ensureUserScopeCols() {
+  if (_userScopeColsReady) return;
+  try { await db().query('ALTER TABLE users ADD COLUMN scope_groups TEXT DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE users ADD COLUMN max_normal_users INT NOT NULL DEFAULT 0'); } catch(e) {}
+  try { await db().query('ALTER TABLE users ADD COLUMN created_by VARCHAR(100) DEFAULT NULL'); } catch(e) {}
+  _userScopeColsReady = true;
+}
+
 /* ── One-time migration: add created_by column to loans if absent ── */
 let _createdByColReady = false;
 async function ensureCreatedByCol() {
@@ -274,8 +284,9 @@ async function isWatched(username) {
 async function validateAuth(u, p) {
   if (!u || !p) return null;
   await ensureUserPhotoCol();
+  await ensureUserScopeCols();
   const [rows] = await db().query(
-    'SELECT username, role, display_name, exp_date, photo_url FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
+    'SELECT username, role, display_name, exp_date, photo_url, scope_groups, max_normal_users FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
     [u, p]
   );
   if (!rows.length) return null;
@@ -290,7 +301,19 @@ async function validateAuth(u, p) {
   const expDate = user.exp_date
     ? (user.exp_date instanceof Date ? user.exp_date.toISOString().split('T')[0] : String(user.exp_date).substring(0,10))
     : '';
-  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '' };
+  let scopeGroups = [];
+  try { scopeGroups = user.scope_groups ? JSON.parse(user.scope_groups) : []; } catch(e) { scopeGroups = []; }
+  if (!Array.isArray(scopeGroups)) scopeGroups = [];
+  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_groups: scopeGroups, max_normal_users: user.max_normal_users||0 };
+}
+
+/* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_groups (no-op if unscoped) ── */
+function scopeFilterSQL(_bv, column) {
+  var col = column || 'loan_group';
+  if (_bv && Array.isArray(_bv.scope_groups) && _bv.scope_groups.length) {
+    return { clause: ' AND ' + col + ' IN (?)', params: [_bv.scope_groups] };
+  }
+  return { clause: '', params: [] };
 }
 
 async function handler(req, res) {
@@ -432,7 +455,8 @@ async function handler(req, res) {
     /* ── All data (loans + infor) ── */
     if (action === 'get_all') {
       await ensureCreatedByUserCol();
-      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL ORDER BY l.loan_key DESC`);
+      const _sf = scopeFilterSQL(_bv, 'l.loan_group');
+      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL${_sf.clause} ORDER BY l.loan_key DESC`, _sf.params);
       const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
       return res.json({
         ok:          true,
@@ -907,11 +931,17 @@ async function handler(req, res) {
       return res.json({ ok:true, counts, unread });
     }
 
-    /* ── Team list (all authenticated users) ── */
+    /* ── Team list (scoped: Admin sees all; Sub Admin sees self + users they created; everyone else sees only self) ── */
     if (action === 'team_list') {
       await ensureUserPhotoCol();
+      await ensureUserScopeCols();
+      let teamWhere = '';
+      let teamParams = [];
+      if (_bv.role === 'Sub Admin') { teamWhere = 'WHERE u.created_by=? OR u.username=?'; teamParams = [_bu, _bu]; }
+      else if (_bv.role !== 'Admin') { teamWhere = 'WHERE u.username=?'; teamParams = [_bu]; }
       const [users] = await db().query(`
         SELECT u.username, u.display_name, u.role, u.photo_url, u.exp_date, u.status, u.last_seen,
+          u.created_by, u.max_normal_users,
           COALESCE(s.loans_added, 0)  AS loans_added,
           COALESCE(s.loans_edited, 0) AS loans_edited,
           s.last_login
@@ -924,8 +954,9 @@ async function handler(req, res) {
           FROM activity_log
           GROUP BY actor_user
         ) s ON s.actor_user COLLATE utf8mb4_unicode_ci = u.username COLLATE utf8mb4_unicode_ci
+        ${teamWhere}
         ORDER BY u.display_name
-      `);
+      `, teamParams);
       return res.json({ ok: true, users });
     }
 
@@ -933,52 +964,89 @@ async function handler(req, res) {
     if (action === 'user_list') {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       await ensureUserPhotoCol();
+      await ensureUserScopeCols();
       const [users] = await db().query(
-        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url FROM users ORDER BY id'
+        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url, scope_groups, max_normal_users, created_by FROM users ORDER BY id'
       );
+      users.forEach(u => { try { u.scope_groups = u.scope_groups ? JSON.parse(u.scope_groups) : []; } catch(e) { u.scope_groups = []; } });
       return res.json({ ok:true, users });
     }
 
-    /* ── User add (Admin only) ── */
+    /* ── User add (Admin, or Sub Admin creating a scoped Normal User within quota) ── */
     if (action === 'user_add') {
-      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const _NORMAL_ROLES = ['Staff Loan','Staff','Moderator','Viewer','Tester'];
+      if (!['Admin','Sub Admin'].includes(_bv.role)) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      await ensureUserScopeCols();
       const u = String(body.username||'').trim();
       const p = String(body.pin||'').trim();
       if (!u || !p) return res.json({ ok:false, message:'Username និង PIN ត្រូវការ' });
+
+      let role = String(body.role||'Staff Loan');
+      let scopeGroupsJson = null;
+      let maxNormalUsers  = 0;
+      let createdBy       = null;
+
+      if (_bv.role === 'Sub Admin') {
+        if (!_NORMAL_ROLES.includes(role)) return res.json({ ok:false, message:'Sub Admin អាចបង្កើតបានតែ Normal User' });
+        const [cnt] = await db().query('SELECT COUNT(*) AS n FROM users WHERE created_by=?', [_bu]);
+        if (cnt[0].n >= (_bv.max_normal_users||0)) return res.json({ ok:false, message:'ដល់កំណត់ចំនួន User អតិបរមាហើយ (quota exceeded)' });
+        scopeGroupsJson = JSON.stringify(_bv.scope_groups||[]);
+        createdBy = _bu;
+      } else if (role === 'Sub Admin') {
+        /* Admin granting scope/quota to a new Sub Admin */
+        const g = Array.isArray(body.scope_groups) ? body.scope_groups : [];
+        scopeGroupsJson = JSON.stringify(g);
+        maxNormalUsers  = parseInt(body.max_normal_users)||0;
+      }
+
       try {
         await db().query(
-          'INSERT INTO users (username, pin, role, display_name, exp_date, status) VALUES (?,?,?,?,?,?)',
-          [u, p, String(body.role||'Staff Loan'), String(body.display_name||u).trim(),
-           body.exp_date||null, body.status||'active']
+          'INSERT INTO users (username, pin, role, display_name, exp_date, status, scope_groups, max_normal_users, created_by) VALUES (?,?,?,?,?,?,?,?,?)',
+          [u, p, role, String(body.display_name||u).trim(),
+           body.exp_date||null, body.status||'active', scopeGroupsJson, maxNormalUsers, createdBy]
         );
       } catch(e) {
         if (e.code === 'ER_DUP_ENTRY') return res.json({ ok:false, message:'Username "'+u+'" មានរួចហើយ' });
         throw e;
       }
-      if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'add', username:u, display_name:String(body.display_name||u).trim(), role:String(body.role||'Staff Loan'), status:body.status||'active', actor }); } catch(e) {} }
-      logActivity('user_add', actor, _bu, u, { display_name: String(body.display_name||u).trim(), role: String(body.role||'Staff Loan') }).catch(()=>{});
+      if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'add', username:u, display_name:String(body.display_name||u).trim(), role, status:body.status||'active', actor }); } catch(e) {} }
+      logActivity('user_add', actor, _bu, u, { display_name: String(body.display_name||u).trim(), role }).catch(()=>{});
       return res.json({ ok:true });
     }
 
-    /* ── User update (Admin only) ── */
+    /* ── User update (Admin, or Sub Admin editing a user they created) ── */
     if (action === 'user_update') {
-      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const _NORMAL_ROLES = ['Staff Loan','Staff','Moderator','Viewer','Tester'];
+      if (!['Admin','Sub Admin'].includes(_bv.role)) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      await ensureUserScopeCols();
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
-      const [oldRows] = await db().query('SELECT display_name FROM users WHERE username=?', [u]);
-      const oldDisplayName = oldRows.length ? (oldRows[0].display_name || '') : '';
+      const [oldRows] = await db().query('SELECT display_name, created_by FROM users WHERE username=?', [u]);
+      if (!oldRows.length) return res.json({ ok:false, message:'User not found' });
+      if (_bv.role === 'Sub Admin' && oldRows[0].created_by !== _bu) {
+        return res.json({ ok:false, message:'អ្នកអាចកែបានតែ User ដែលអ្នកបានបង្កើត', code:403 });
+      }
+      const oldDisplayName = oldRows[0].display_name || '';
       const newDisplayName = String(body.display_name||u).trim();
+      let role = String(body.role||'Staff Loan');
+      if (_bv.role === 'Sub Admin' && !_NORMAL_ROLES.includes(role)) {
+        return res.json({ ok:false, message:'Sub Admin អាចកំណត់បានតែ role Normal User' });
+      }
       const p = String(body.pin||'').trim();
       if (p) {
         await db().query(
           'UPDATE users SET pin=?,role=?,display_name=?,exp_date=?,status=? WHERE username=?',
-          [p, String(body.role||'Staff Loan'), newDisplayName, body.exp_date||null, body.status||'active', u]
+          [p, role, newDisplayName, body.exp_date||null, body.status||'active', u]
         );
       } else {
         await db().query(
           'UPDATE users SET role=?,display_name=?,exp_date=?,status=? WHERE username=?',
-          [String(body.role||'Staff Loan'), newDisplayName, body.exp_date||null, body.status||'active', u]
+          [role, newDisplayName, body.exp_date||null, body.status||'active', u]
         );
+      }
+      if (_bv.role === 'Admin' && role === 'Sub Admin' && (body.scope_groups !== undefined || body.max_normal_users !== undefined)) {
+        const g = Array.isArray(body.scope_groups) ? body.scope_groups : [];
+        await db().query('UPDATE users SET scope_groups=?, max_normal_users=? WHERE username=?', [JSON.stringify(g), parseInt(body.max_normal_users)||0, u]);
       }
       if (oldDisplayName && newDisplayName && oldDisplayName !== newDisplayName) {
         await db().query('UPDATE loans SET created_by=? WHERE created_by=?', [newDisplayName, oldDisplayName]);
@@ -988,12 +1056,16 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
-    /* ── User delete (Admin only, cannot delete self) ── */
+    /* ── User delete (Admin, or Sub Admin deleting a user they created; cannot delete self) ── */
     if (action === 'user_delete') {
-      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      if (!['Admin','Sub Admin'].includes(_bv.role)) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
       if (u === _bu) return res.json({ ok:false, message:'មិនអាចលុប Account ខ្លួនឯងបាន' });
+      if (_bv.role === 'Sub Admin') {
+        const [chk] = await db().query('SELECT created_by FROM users WHERE username=?', [u]);
+        if (!chk.length || chk[0].created_by !== _bu) return res.json({ ok:false, message:'អ្នកអាចលុបបានតែ User ដែលអ្នកបានបង្កើត', code:403 });
+      }
       await db().query('DELETE FROM users WHERE username=?', [u]);
       if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'delete', username:u, actor }); } catch(e) {} }
       logActivity('user_delete', actor, _bu, u, null).catch(()=>{});
