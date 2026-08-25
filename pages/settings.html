@@ -319,6 +319,13 @@
     .org-admin-card { display:flex; align-items:center; gap:8px; padding:8px 16px 8px 8px; border-radius:12px; background:linear-gradient(135deg,rgba(124,92,255,.16),rgba(6,182,212,.1)); border:1.5px solid rgba(124,92,255,.35) }
     .org-admin-name { font-size:12.5px; font-weight:800; color:var(--text); line-height:1.3 }
     .org-admin-username { font-size:10px; color:var(--muted) }
+    .org-assistants-row { position:relative; z-index:1; display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:14px }
+    .org-assistant-chip { display:flex; flex-direction:column; align-items:center; width:64px; text-align:center }
+    .org-assistant-avatar { width:32px; height:32px; border-radius:50%; overflow:hidden; background:rgba(245,158,11,.14); border:1.5px solid rgba(245,158,11,.5); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#f59e0b; margin-bottom:3px }
+    .org-assistant-avatar img { width:100%; height:100%; object-fit:cover; display:block }
+    .org-assistant-name { font-size:9.5px; font-weight:700; color:var(--text); width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .org-assistant-tag { font-size:8px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:#f59e0b }
+    .org-lines line.org-line-assist { stroke:#f59e0b; stroke-width:1.3; stroke-dasharray:4 3; opacity:.7 }
     .org-teams { position:relative; z-index:1; display:flex; flex-wrap:wrap; justify-content:center; gap:18px 22px; padding-top:16px; width:100% }
     .org-teams.org-drag-mode .org-team-card { cursor:grab; border-style:dashed; border-color:rgba(124,92,255,.35) }
     .org-teams.org-drag-mode .org-team-card:active { cursor:grabbing }
@@ -945,6 +952,11 @@
           <div class="um-hint">How many Normal User accounts this Sub Admin may create.</div>
         </div>
       </div>
+      <div class="um-field" id="uf_manages_teams_wrap" style="margin-top:14px">
+        <label class="um-label">Manages Teams (Assistant access)</label>
+        <div class="um-hint" style="margin-bottom:6px">Grant this user full Admin-level control (scope, quota, rename, add/delete Normal Users) over the Sub Admin team(s) checked below.</div>
+        <div id="uf_manages_teams" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
     </div>
     <div class="um-modal-footer">
       <button class="um-btn-cancel" onclick="closeModal()">Cancel</button>
@@ -1013,6 +1025,29 @@ async function toggleSubAdminFields() {
   } else {
     box.style.display = 'none';
   }
+  renderManagesTeams();
+}
+
+/* ── Assistant grants: which Sub Admin team(s) this account may administer ── */
+function renderManagesTeams() {
+  var wrap = document.getElementById('uf_manages_teams_wrap');
+  var list = document.getElementById('uf_manages_teams');
+  if (!wrap || !list) return;
+  var role = document.getElementById('uf_role').value;
+  /* A Sub Admin's own delegated authority is implicit over their own team; this grant is for
+     everyone else (typically a Normal User acting as Super Admin's assistant). */
+  if (role === 'Sub Admin') { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  var teams = _users.filter(function(u){ return u.role === 'Sub Admin' && (!_editingUser || u.username !== _editingUser.username); });
+  if (!teams.length) { list.innerHTML = '<span class="um-hint">No Sub Admin teams exist yet.</span>'; return; }
+  var checked = (_editingUser && Array.isArray(_editingUser.manages_teams)) ? _editingUser.manages_teams : [];
+  list.innerHTML = teams.map(function(t){
+    var isChecked = checked.indexOf(t.username) !== -1;
+    var label = t.team_name ? (t.team_name+' ('+t.username+')') : t.username;
+    return '<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;font-size:12px">'
+      + '<input type="checkbox" class="uf_manages_chk" value="'+esc(t.username)+'"'+(isChecked?' checked':'')+'> '+esc(label)
+      + '</label>';
+  }).join('');
 }
 
 /* ── Toast ── */
@@ -1166,22 +1201,24 @@ function _orgAvatarHtml(u, cls) {
     : init;
 }
 
-function renderOrgStats(admins, subAdmins) {
+function renderOrgStats(admins, subAdmins, assistants) {
   var row = document.getElementById('orgStatsRow');
   if (!row) return;
   var totalNormal = _users.filter(function(u){ return u.created_by; }).length;
   row.innerHTML = ''
     + '<div class="org-stat"><span class="org-stat-val">'+admins.length+'</span><span class="org-stat-lbl">Super Admins</span></div>'
     + '<div class="org-stat"><span class="org-stat-val">'+subAdmins.length+'</span><span class="org-stat-lbl">Sub Admin Teams</span></div>'
-    + '<div class="org-stat"><span class="org-stat-val">'+totalNormal+'</span><span class="org-stat-lbl">Total Normal Users</span></div>';
+    + '<div class="org-stat"><span class="org-stat-val">'+totalNormal+'</span><span class="org-stat-lbl">Total Normal Users</span></div>'
+    + (assistants.length ? '<div class="org-stat"><span class="org-stat-val">'+assistants.length+'</span><span class="org-stat-lbl">Assistants</span></div>' : '');
 }
 
 function renderOrgChart() {
   var wrap = document.getElementById('orgChartWrap');
   if (!wrap) return;
-  var admins    = _users.filter(function(u){ return u.role === 'Admin'; });
-  var subAdmins = _orderedSubAdmins();
-  renderOrgStats(admins, subAdmins);
+  var admins     = _users.filter(function(u){ return u.role === 'Admin'; });
+  var subAdmins  = _orderedSubAdmins();
+  var assistants = _users.filter(function(u){ return Array.isArray(u.manages_teams) && u.manages_teams.length; });
+  renderOrgStats(admins, subAdmins, assistants);
 
   var teamsHtml = !subAdmins.length
     ? '<div class="org-empty-state">No Sub Admins yet — create one from the User Management tab (role = "Sub Admin").</div>'
@@ -1230,12 +1267,24 @@ function renderOrgChart() {
     + '</div>';
   }).join('');
 
+  var assistantsHtml = !assistants.length ? '' : (''
+    + '<div class="org-assistants-row" id="orgAssistantsRow">'
+    + assistants.map(function(u){
+        return '<div class="org-assistant-chip" data-username="'+esc(u.username)+'" data-manages="'+esc(u.manages_teams.join(','))+'" title="'+esc(u.display_name||u.username)+' — Assistant for: '+esc(u.manages_teams.join(', '))+'">'
+          + '<div class="org-assistant-avatar">'+_orgAvatarHtml(u)+'</div>'
+          + '<div class="org-assistant-name">'+esc(u.display_name||u.username)+'</div>'
+          + '<div class="org-assistant-tag">Assistant</div>'
+        + '</div>';
+      }).join('')
+    + '</div>');
+
   wrap.className = 'org-wrap';
   wrap.innerHTML = ''
     + '<svg class="org-lines" id="orgLinesSvg"></svg>'
     + '<div class="org-root">'
       + '<div class="org-root-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/></svg> Super Admin</div>'
       + '<div class="org-admin-row" id="orgAdminRow">'+(adminsHtml || '<div class="org-empty-state" style="padding:8px">No Admin accounts found</div>')+'</div>'
+      + assistantsHtml
     + '</div>'
     + '<div class="org-teams" id="orgTeamsRow">'+teamsHtml+'</div>';
 
@@ -1268,6 +1317,26 @@ function drawOrgLines() {
   var lines = ['<line x1="'+rootX+'" y1="'+rootY+'" x2="'+rootX+'" y2="'+busY+'"/>'];
   if (pts.length > 1) lines.push('<line x1="'+minX+'" y1="'+busY+'" x2="'+maxX+'" y2="'+busY+'"/>');
   pts.forEach(function(p){ lines.push('<line x1="'+p.x+'" y1="'+busY+'" x2="'+p.x+'" y2="'+p.y+'"/>'); });
+
+  /* Dashed "matrix management" lines: assistant chip -> each Sub Admin team card it manages */
+  var assistChips = Array.prototype.slice.call(wrap.querySelectorAll('.org-assistant-chip'));
+  var cardByUser = {};
+  cards.forEach(function(c){ cardByUser[c.getAttribute('data-username')] = c; });
+  assistChips.forEach(function(chip){
+    var aRect = chip.getBoundingClientRect();
+    var ax = aRect.left + aRect.width/2 - wRect.left;
+    var ay = aRect.bottom - wRect.top;
+    var managed = (chip.getAttribute('data-manages')||'').split(',').filter(Boolean);
+    managed.forEach(function(teamUser){
+      var card = cardByUser[teamUser];
+      if (!card) return;
+      var cRect = card.getBoundingClientRect();
+      var cx = cRect.left + cRect.width/2 - wRect.left;
+      var cy = cRect.top - wRect.top;
+      lines.push('<line class="org-line-assist" x1="'+ax+'" y1="'+ay+'" x2="'+cx+'" y2="'+cy+'"/>');
+    });
+  });
+
   svg.innerHTML = lines.join('');
 }
 var _orgResizeTimer = null;
@@ -1546,6 +1615,8 @@ async function saveUser() {
     if (role === 'Sub Admin') {
       payload.scope_linked_to  = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
       payload.max_normal_users = parseInt(document.getElementById('uf_max_normal_users').value)||0;
+    } else {
+      payload.manages_teams = Array.from(document.querySelectorAll('.uf_manages_chk:checked')).map(function(el){ return el.value; });
     }
     var res = await CamboAPI.post(payload);
     if (res && res.ok) {

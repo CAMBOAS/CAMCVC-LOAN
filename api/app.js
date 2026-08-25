@@ -66,6 +66,7 @@ async function ensureUserScopeCols() {
   try { await db().query('ALTER TABLE users ADD COLUMN scope_linked_to TEXT DEFAULT NULL'); } catch(e) {}
   try { await db().query('ALTER TABLE users ADD COLUMN max_normal_users INT NOT NULL DEFAULT 0'); } catch(e) {}
   try { await db().query('ALTER TABLE users ADD COLUMN created_by VARCHAR(100) DEFAULT NULL'); } catch(e) {}
+  try { await db().query('ALTER TABLE users ADD COLUMN manages_teams TEXT DEFAULT NULL'); } catch(e) {}
   _userScopeColsReady = true;
 }
 
@@ -314,7 +315,7 @@ async function validateAuth(u, p) {
   await ensureUserPhotoCol();
   await ensureUserScopeCols();
   const [rows] = await db().query(
-    'SELECT username, role, display_name, exp_date, photo_url, scope_linked_to, max_normal_users, created_by FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
+    'SELECT username, role, display_name, exp_date, photo_url, scope_linked_to, max_normal_users, created_by, manages_teams FROM users WHERE username=? AND pin=? AND status="active" LIMIT 1',
     [u, p]
   );
   if (!rows.length) return null;
@@ -345,7 +346,10 @@ async function validateAuth(u, p) {
       }
     } catch(e) {}
   }
-  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_linked_to: scopeGroups, max_normal_users: user.max_normal_users||0, created_by: user.created_by||null };
+  let managesTeams = [];
+  try { managesTeams = user.manages_teams ? JSON.parse(user.manages_teams) : []; } catch(e) { managesTeams = []; }
+  if (!Array.isArray(managesTeams)) managesTeams = [];
+  return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_linked_to: scopeGroups, max_normal_users: user.max_normal_users||0, created_by: user.created_by||null, manages_teams: managesTeams };
 }
 
 /* ── The "team owner" (a Sub Admin's own username) for a requester, or null if unscoped ──
@@ -357,6 +361,15 @@ function teamOwnerOf(_bv) {
   if (_bv.role === 'Sub Admin') return _bv.username;
   if (_bv.created_by) return _bv.created_by;
   return null;
+}
+
+/* ── Can this requester administer the given Sub Admin's team with full Admin-level power
+   (edit their scope/quota/team_name, add/delete their Normal Users)? Admin always can; anyone
+   else needs subAdminUsername in their own manages_teams grant list. ── */
+function managesTeam(_bv, subAdminUsername) {
+  if (!_bv || !subAdminUsername) return false;
+  if (_bv.role === 'Admin') return true;
+  return Array.isArray(_bv.manages_teams) && _bv.manages_teams.indexOf(subAdminUsername) !== -1;
 }
 
 /* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_linked_to
@@ -1060,18 +1073,21 @@ async function handler(req, res) {
       await ensureUserScopeCols();
       await ensureTeamNameCol();
       const [users] = await db().query(
-        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url, scope_linked_to, max_normal_users, created_by, team_name FROM users ORDER BY id'
+        'SELECT username, role, display_name, exp_date, status, last_seen, photo_url, scope_linked_to, max_normal_users, created_by, team_name, manages_teams FROM users ORDER BY id'
       );
-      users.forEach(u => { try { u.scope_linked_to = u.scope_linked_to ? JSON.parse(u.scope_linked_to) : []; } catch(e) { u.scope_linked_to = []; } });
+      users.forEach(u => {
+        try { u.scope_linked_to = u.scope_linked_to ? JSON.parse(u.scope_linked_to) : []; } catch(e) { u.scope_linked_to = []; }
+        try { u.manages_teams  = u.manages_teams  ? JSON.parse(u.manages_teams)  : []; } catch(e) { u.manages_teams  = []; }
+      });
       return res.json({ ok:true, users });
     }
 
     /* ── Set a Sub Admin's display team name (Admin only) — deliberately separate from user_update,
          which defaults role to 'Staff Loan' when omitted and would silently demote a Sub Admin ── */
     if (action === 'user_set_team_name') {
-      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
+      if (!managesTeam(_bv, u)) return res.json({ ok:false, message:'ត្រូវការសិទ្ធគ្រប់គ្រងលើក្រុមនេះ', code:403 });
       await ensureTeamNameCol();
       const teamName = String(body.team_name||'').trim();
       await db().query('UPDATE users SET team_name=? WHERE username=?', [teamName || null, u]);
@@ -1106,10 +1122,12 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
-    /* ── User add (Admin, or Sub Admin creating a scoped Normal User within quota) ── */
+    /* ── User add (Admin, Sub Admin creating within their own quota, or an Assistant creating
+         within a team they've been granted manages_teams over) ── */
     if (action === 'user_add') {
       const _NORMAL_ROLES = ['Staff Loan','Staff','Moderator','Viewer','Tester'];
-      if (!['Admin','Sub Admin'].includes(_bv.role)) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const _isAssistant = Array.isArray(_bv.manages_teams) && _bv.manages_teams.length > 0;
+      if (!['Admin','Sub Admin'].includes(_bv.role) && !_isAssistant) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       await ensureUserScopeCols();
       const u = String(body.username||'').trim();
       const p = String(body.pin||'').trim();
@@ -1127,6 +1145,16 @@ async function handler(req, res) {
         /* No scope snapshot here — a Normal User's scope resolves live from their Sub Admin
            (created_by) at auth time, see validateAuth(). */
         createdBy = _bu;
+      } else if (_bv.role !== 'Admin' && _isAssistant) {
+        /* Assistant creating a Normal User under a Sub Admin team they were granted */
+        if (!_NORMAL_ROLES.includes(role)) return res.json({ ok:false, message:'អាចបង្កើតបានតែ Normal User' });
+        const team = String(body.team||'').trim();
+        if (!managesTeam(_bv, team)) return res.json({ ok:false, message:'អ្នកមិនមានសិទ្ធិគ្រប់គ្រងលើក្រុមនេះទេ', code:403 });
+        const [teamRow] = await db().query('SELECT max_normal_users FROM users WHERE username=? AND role="Sub Admin"', [team]);
+        if (!teamRow.length) return res.json({ ok:false, message:'ក្រុមគោលដៅមិនត្រឹមត្រូវទេ' });
+        const [cnt] = await db().query('SELECT COUNT(*) AS n FROM users WHERE created_by=?', [team]);
+        if (cnt[0].n >= (teamRow[0].max_normal_users||0)) return res.json({ ok:false, message:'ដល់កំណត់ចំនួន User អតិបរមាហើយ (quota exceeded)' });
+        createdBy = team;
       } else if (role === 'Sub Admin') {
         /* Admin granting scope/quota to a new Sub Admin */
         const g = Array.isArray(body.scope_linked_to) ? body.scope_linked_to : [];
@@ -1134,11 +1162,15 @@ async function handler(req, res) {
         maxNormalUsers  = parseInt(body.max_normal_users)||0;
       }
 
+      /* Granting assistant (delegated Sub Admin) authority at creation time is Admin-only. */
+      const managesTeamsJson = (_bv.role === 'Admin' && Array.isArray(body.manages_teams))
+        ? JSON.stringify(body.manages_teams) : null;
+
       try {
         await db().query(
-          'INSERT INTO users (username, pin, role, display_name, exp_date, status, scope_linked_to, max_normal_users, created_by) VALUES (?,?,?,?,?,?,?,?,?)',
+          'INSERT INTO users (username, pin, role, display_name, exp_date, status, scope_linked_to, max_normal_users, created_by, manages_teams) VALUES (?,?,?,?,?,?,?,?,?,?)',
           [u, p, role, String(body.display_name||u).trim(),
-           body.exp_date||null, body.status||'active', scopeGroupsJson, maxNormalUsers, createdBy]
+           body.exp_date||null, body.status||'active', scopeGroupsJson, maxNormalUsers, createdBy, managesTeamsJson]
         );
       } catch(e) {
         if (e.code === 'ER_DUP_ENTRY') return res.json({ ok:false, message:'Username "'+u+'" មានរួចហើយ' });
@@ -1152,20 +1184,27 @@ async function handler(req, res) {
     /* ── User update (Admin, or Sub Admin editing a user they created) ── */
     if (action === 'user_update') {
       const _NORMAL_ROLES = ['Staff Loan','Staff','Moderator','Viewer','Tester'];
-      if (!['Admin','Sub Admin'].includes(_bv.role)) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const _isAssistant  = Array.isArray(_bv.manages_teams) && _bv.manages_teams.length > 0;
+      if (!['Admin','Sub Admin'].includes(_bv.role) && !_isAssistant) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       await ensureUserScopeCols();
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
-      const [oldRows] = await db().query('SELECT display_name, created_by FROM users WHERE username=?', [u]);
+      const [oldRows] = await db().query('SELECT display_name, created_by, role FROM users WHERE username=?', [u]);
       if (!oldRows.length) return res.json({ ok:false, message:'User not found' });
-      if (_bv.role === 'Sub Admin' && oldRows[0].created_by !== _bu) {
-        return res.json({ ok:false, message:'អ្នកអាចកែបានតែ User ដែលអ្នកបានបង្កើត', code:403 });
+      const targetOldRole = oldRows[0].role;
+      if (_bv.role === 'Sub Admin') {
+        if (oldRows[0].created_by !== _bu) return res.json({ ok:false, message:'អ្នកអាចកែបានតែ User ដែលអ្នកបានបង្កើត', code:403 });
+      } else if (_bv.role !== 'Admin') {
+        /* Assistant: allowed either on the Sub Admin account itself (a team they manage), or on
+           a Normal User whose created_by is a team they manage */
+        const targetTeam = targetOldRole === 'Sub Admin' ? u : oldRows[0].created_by;
+        if (!managesTeam(_bv, targetTeam)) return res.json({ ok:false, message:'អ្នកមិនមានសិទ្ធិកែ User នេះទេ', code:403 });
       }
       const oldDisplayName = oldRows[0].display_name || '';
       const newDisplayName = String(body.display_name||u).trim();
       let role = String(body.role||'Staff Loan');
-      if (_bv.role === 'Sub Admin' && !_NORMAL_ROLES.includes(role)) {
-        return res.json({ ok:false, message:'Sub Admin អាចកំណត់បានតែ role Normal User' });
+      if (_bv.role !== 'Admin' && targetOldRole !== 'Sub Admin' && !_NORMAL_ROLES.includes(role)) {
+        return res.json({ ok:false, message:'អាចកំណត់បានតែ role Normal User' });
       }
       const p = String(body.pin||'').trim();
       if (p) {
@@ -1179,9 +1218,14 @@ async function handler(req, res) {
           [role, newDisplayName, body.exp_date||null, body.status||'active', u]
         );
       }
-      if (_bv.role === 'Admin' && role === 'Sub Admin' && (body.scope_linked_to !== undefined || body.max_normal_users !== undefined)) {
+      if (managesTeam(_bv, u) && role === 'Sub Admin' && (body.scope_linked_to !== undefined || body.max_normal_users !== undefined)) {
         const g = Array.isArray(body.scope_linked_to) ? body.scope_linked_to : [];
         await db().query('UPDATE users SET scope_linked_to=?, max_normal_users=? WHERE username=?', [JSON.stringify(g), parseInt(body.max_normal_users)||0, u]);
+      }
+      /* Granting/revoking assistant (delegated Sub Admin) authority is Admin-only. */
+      if (_bv.role === 'Admin' && body.manages_teams !== undefined) {
+        const mt = Array.isArray(body.manages_teams) ? body.manages_teams : [];
+        await db().query('UPDATE users SET manages_teams=? WHERE username=?', [JSON.stringify(mt), u]);
       }
       if (oldDisplayName && newDisplayName && oldDisplayName !== newDisplayName) {
         await db().query('UPDATE loans SET created_by=? WHERE created_by=?', [newDisplayName, oldDisplayName]);
@@ -1191,15 +1235,25 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
-    /* ── User delete (Admin, or Sub Admin deleting a user they created; cannot delete self) ── */
+    /* ── User delete (Admin; Sub Admin deleting a user they created; or an Assistant deleting a
+         user under a team they manage. Cannot delete self.) ── */
     if (action === 'user_delete') {
-      if (!['Admin','Sub Admin'].includes(_bv.role)) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const _isAssistantDel = Array.isArray(_bv.manages_teams) && _bv.manages_teams.length > 0;
+      if (!['Admin','Sub Admin'].includes(_bv.role) && !_isAssistantDel) return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
       const u = String(body.username||'').trim();
       if (!u) return res.json({ ok:false, message:'Username required' });
       if (u === _bu) return res.json({ ok:false, message:'មិនអាចលុប Account ខ្លួនឯងបាន' });
       if (_bv.role === 'Sub Admin') {
         const [chk] = await db().query('SELECT created_by FROM users WHERE username=?', [u]);
         if (!chk.length || chk[0].created_by !== _bu) return res.json({ ok:false, message:'អ្នកអាចលុបបានតែ User ដែលអ្នកបានបង្កើត', code:403 });
+      } else if (_bv.role !== 'Admin') {
+        const [chk] = await db().query('SELECT created_by, role FROM users WHERE username=?', [u]);
+        if (!chk.length) return res.json({ ok:false, message:'User not found' });
+        /* Assistants may remove Normal Users from a team they manage, but not delete the Sub
+           Admin account itself — that stays an Admin-only, more structural action. */
+        if (chk[0].role === 'Sub Admin' || !managesTeam(_bv, chk[0].created_by)) {
+          return res.json({ ok:false, message:'អ្នកមិនមានសិទ្ធិលុប User នេះទេ', code:403 });
+        }
       }
       await db().query('DELETE FROM users WHERE username=?', [u]);
       if (await isNotifEnabled('user')) { try { await sendTelegramEvent('user', { act:'delete', username:u, actor }); } catch(e) {} }
