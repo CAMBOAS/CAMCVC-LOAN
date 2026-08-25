@@ -93,6 +93,14 @@ async function ensureLinkedToCol() {
   _linkedToColReady = true;
 }
 
+/* ── One-time migration: add restricted column to loans if absent (Admin-only extra hide, on top of team scope) ── */
+let _restrictedColReady = false;
+async function ensureRestrictedCol() {
+  if (_restrictedColReady) return;
+  try { await db().query('ALTER TABLE loans ADD COLUMN restricted TINYINT(1) NOT NULL DEFAULT 0'); } catch(e) {}
+  _restrictedColReady = true;
+}
+
 /* ── One-time migration: add loan_tabs column to loans if absent ── */
 let _loanTabsColReady = false;
 async function ensureLoanTabsCol() {
@@ -150,6 +158,7 @@ function rowToLoan(r) {
     ID:          r.social_id    || '',
     FBID:        r.fbid         || '',
     LinkedTo:    r.linked_to    || '',
+    Restricted:  !!r.restricted,
     Paid:        r.paid ? 1 : 0,
     created_by:  r.creator_display_name || r.created_by || '',
     photo_url:   r.photo_url    || '',
@@ -309,11 +318,13 @@ async function validateAuth(u, p) {
   return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_linked_to: scopeGroups, max_normal_users: user.max_normal_users||0 };
 }
 
-/* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_linked_to (no-op if unscoped) ── */
+/* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_linked_to
+     (no-op if unscoped). Scoped viewers also never see loans an Admin has explicitly marked
+     "restricted" — an extra Admin-only hide on top of team scope. ── */
 function scopeFilterSQL(_bv, column) {
   var col = column || 'linked_to';
   if (_bv && Array.isArray(_bv.scope_linked_to) && _bv.scope_linked_to.length) {
-    return { clause: ' AND ' + col + ' IN (?)', params: [_bv.scope_linked_to] };
+    return { clause: ' AND ' + col + ' IN (?) AND (l.restricted = 0 OR l.restricted IS NULL)', params: [_bv.scope_linked_to] };
   }
   return { clause: '', params: [] };
 }
@@ -596,20 +607,22 @@ async function handler(req, res) {
       await ensureCreatedByCol();
       await ensureCreatedByUserCol();
       await ensureLinkedToCol();
+      await ensureRestrictedCol();
       const l = body.loan || {};
       const datePart = l.DateTime ? l.DateTime.substring(0, 10) : new Date().toISOString().substring(0, 10);
       const key = datePart + 'T' + new Date().toISOString().substring(11);
       const photosJson = Array.isArray(l.photos) && l.photos.length ? JSON.stringify(l.photos) : null;
       const slJson = Array.isArray(l.social_links) && l.social_links.length ? JSON.stringify(l.social_links) : null;
       const sl0 = (l.social_links||[])[0] || {};
+      const restricted = (_bv.role === 'Admin' && l.Restricted) ? 1 : 0;
       await db().query(
         `INSERT INTO loans
-           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photo_url,photos,social_links,paid,created_by,created_by_user,linked_to)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+           (loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,fb_name,fb_url,social_media,social_id,fbid,photo_url,photos,social_links,paid,created_by,created_by_user,linked_to,restricted)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [key, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
          l.Note||'', sl0.name||l.FBName||'', sl0.url||l.URL||'', sl0.platform||l.FacebookCom||'', sl0.id||l.ID||'', sl0.fbid||l.FBID||'',
-         l.photo_url||null, photosJson, slJson, l.Paid ? 1 : 0, actor||null, _bu||null, l.LinkedTo||null]
+         l.photo_url||null, photosJson, slJson, l.Paid ? 1 : 0, actor||null, _bu||null, l.LinkedTo||null, restricted]
       );
       const [rows] = await db().query('SELECT * FROM loans WHERE loan_key=?', [key]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('add'))) { try { await sendTelegram(rows[0], 'add', actor); } catch(e) {} }
@@ -624,6 +637,7 @@ async function handler(req, res) {
       await ensurePaidCol();
       await ensureLinkedToCol();
       await ensureLoanTabsCol();
+      await ensureRestrictedCol();
       const key = String(body.key||'').trim();
       const l   = body.loan || {};
       const [old] = await db().query('SELECT * FROM loans WHERE loan_key=? AND deleted_at IS NULL', [key]);
@@ -633,16 +647,18 @@ async function handler(req, res) {
       const slJsonU       = Array.isArray(l.social_links) && l.social_links.length ? JSON.stringify(l.social_links) : null;
       const loanTabsJsonU = Array.isArray(l.loan_tabs) ? JSON.stringify(l.loan_tabs) : null;
       const sl0u = (l.social_links||[])[0] || {};
+      /* Only Admin can change the restricted flag; everyone else preserves whatever it already was */
+      const restrictedU = _bv.role === 'Admin' ? (l.Restricted ? 1 : 0) : (old[0].restricted ? 1 : 0);
       await db().query(
         `UPDATE loans SET
            loan_key=?,full_name=?,national_id=?,dob=?,phone=?,gender=?,loan_group=?,
            money=?,loan_status=?,note=?,fb_name=?,fb_url=?,social_media=?,social_id=?,fbid=?,
-           photo_url=?,photos=?,social_links=?,paid=?,linked_to=?,loan_tabs=?
+           photo_url=?,photos=?,social_links=?,paid=?,linked_to=?,loan_tabs=?,restricted=?
          WHERE loan_key=? AND deleted_at IS NULL`,
         [newKey, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
          l.Note||'', sl0u.name||l.FBName||'', sl0u.url||l.URL||'', sl0u.platform||l.FacebookCom||'', sl0u.id||l.ID||'', sl0u.fbid||l.FBID||'',
-         l.photo_url||null, photosJsonU, slJsonU, l.Paid ? 1 : 0, l.LinkedTo||null, loanTabsJsonU, key]
+         l.photo_url||null, photosJsonU, slJsonU, l.Paid ? 1 : 0, l.LinkedTo||null, loanTabsJsonU, restrictedU, key]
       );
       const [updated] = await db().query('SELECT * FROM loans WHERE loan_key=?', [newKey]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('edit'))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }

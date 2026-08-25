@@ -338,6 +338,13 @@
               <div class="ac-label">ជាប់ជំពាក់ជាមួយ <span style="font-size:9px;opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(Linked To)</span></div>
               <select class="ac-input" id="af_LinkedTo"><option value="">— None —</option></select>
             </div>
+            <div class="ac-field" id="af_RestrictedField" style="display:none">
+              <div class="ac-label">Admin</div>
+              <label style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text);cursor:pointer;padding:9px 0">
+                <input type="checkbox" id="af_Restricted" style="width:16px;height:16px;cursor:pointer">
+                Restricted (hide from Sub Admin teams)
+              </label>
+            </div>
             <div class="ac-field">
               <div class="ac-label">Note</div>
               <textarea class="ac-input" id="af_Note" placeholder="Add a note..." style="min-height:78px;height:78px;resize:none"></textarea>
@@ -668,6 +675,8 @@ function loadCustomerIntoForm(loanKey){
   if(gSel)gSel.value=loan.Groups||'';
   if(sSel)sSel.value=loan.Status||'Normal';
   if(ltSel)ltSel.value=loan.LinkedTo||'';
+  var restrictedChk=document.getElementById('af_Restricted');
+  if(restrictedChk)restrictedChk.checked=!!loan.Restricted;
 
   /* Entry date */
   var dtInput=document.getElementById('af_DateTime');
@@ -713,6 +722,7 @@ function cancelEdit(){
   document.querySelectorAll('input[name="gender"]').forEach(function(el){el.checked=false;});
   var gSel=document.getElementById('af_Groups');var sSel=document.getElementById('af_Status');var ltSel=document.getElementById('af_LinkedTo');
   if(gSel)gSel.value='';if(sSel)sSel.selectedIndex=0;if(ltSel)ltSel.value='';
+  var restrictedChk=document.getElementById('af_Restricted');if(restrictedChk)restrictedChk.checked=false;
   _setDefaultDT();
   renderProfilePhoto();renderSocialLinks();renderAddPhotos();
   /* Restore Save button, hide New button */
@@ -817,6 +827,7 @@ async function saveCustomer(){
     Money:(document.getElementById('af_Money').value||''),Status:status,
     Note:(document.getElementById('af_Note').value||'').trim(),DateTime:customDT,
     LinkedTo:(document.getElementById('af_LinkedTo').value||''),
+    Restricted:!!(document.getElementById('af_Restricted')&&document.getElementById('af_Restricted').checked),
     social_links:getSocialLinksData()};
   if(_profilePhoto&&_profilePhoto.b64){try{var pur=await CamboAPI.post({action:'upload_photo',data:_profilePhoto.b64});if(pur.ok&&pur.url)loan.photo_url=pur.url;}catch(e){}}
   else if(_profilePhoto&&_profilePhoto.existing&&_profilePhoto.preview){loan.photo_url=_profilePhoto.preview;}
@@ -846,6 +857,7 @@ async function saveCustomer(){
 /* ── Init ── */
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){var lb=document.getElementById('acLb');if(lb)lb.style.display='none';closeMGS();}});
 if(!appCan('write')){var _savebtn=document.getElementById('acSaveBtn');if(_savebtn)_savebtn.style.display='none';}
+(function(){try{var _a=JSON.parse(localStorage.getItem('appAuth')||'null');if(_a&&_a.role==='Admin'){var _rf=document.getElementById('af_RestrictedField');if(_rf)_rf.style.display='';}}catch(e){}})();
 
 loadMeta();
 renderSocialLinks();
