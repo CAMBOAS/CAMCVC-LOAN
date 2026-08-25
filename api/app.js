@@ -332,6 +332,19 @@ async function validateAuth(u, p) {
   let scopeGroups = [];
   try { scopeGroups = user.scope_linked_to ? JSON.parse(user.scope_linked_to) : []; } catch(e) { scopeGroups = []; }
   if (!Array.isArray(scopeGroups)) scopeGroups = [];
+  /* A Normal User's effective scope is resolved LIVE from their Sub Admin (created_by), not from
+     their own stored column — so moving them between teams (or the team's scope changing later)
+     takes effect immediately with no snapshot to keep in sync. Sub Admins use their own column. */
+  if (user.role !== 'Sub Admin' && user.created_by) {
+    try {
+      const [creatorRows] = await db().query('SELECT scope_linked_to FROM users WHERE username=?', [user.created_by]);
+      if (creatorRows.length) {
+        let creatorScope = [];
+        try { creatorScope = creatorRows[0].scope_linked_to ? JSON.parse(creatorRows[0].scope_linked_to) : []; } catch(e) { creatorScope = []; }
+        scopeGroups = Array.isArray(creatorScope) ? creatorScope : [];
+      }
+    } catch(e) {}
+  }
   return { username: user.username, role: user.role||'Staff', name: user.display_name||user.username, expDate, photo_url: user.photo_url || '', scope_linked_to: scopeGroups, max_normal_users: user.max_normal_users||0, created_by: user.created_by||null };
 }
 
@@ -1065,6 +1078,34 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
+    /* ── Move a Normal User to a different Sub Admin's team (Admin only).
+         Only reassigns ownership going forward — loan/customer records the user already created
+         stay tagged with their original Linked To value, so their old team still sees them; only
+         the moved user's own future visibility changes (resolved live via validateAuth). ── */
+    if (action === 'user_reassign_team') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const _NORMAL_ROLES_RA = ['Staff Loan','Staff','Moderator','Viewer','Tester'];
+      const u       = String(body.username||'').trim();
+      const newTeam = String(body.new_team||'').trim();
+      if (!u || !newTeam) return res.json({ ok:false, message:'Username and new_team required' });
+      await ensureUserScopeCols();
+      const [targetRows] = await db().query('SELECT role FROM users WHERE username=?', [u]);
+      if (!targetRows.length || !_NORMAL_ROLES_RA.includes(targetRows[0].role)) {
+        return res.json({ ok:false, message:'អាចផ្ទេរបានតែ Normal User' });
+      }
+      const [teamRows] = await db().query('SELECT role, max_normal_users FROM users WHERE username=?', [newTeam]);
+      if (!teamRows.length || teamRows[0].role !== 'Sub Admin') {
+        return res.json({ ok:false, message:'ក្រុមគោលដៅមិនត្រឹមត្រូវទេ' });
+      }
+      const [cnt] = await db().query('SELECT COUNT(*) AS n FROM users WHERE created_by=? AND username<>?', [newTeam, u]);
+      if (cnt[0].n >= (teamRows[0].max_normal_users||0)) {
+        return res.json({ ok:false, message:'ក្រុមគោលដៅដល់កំណត់ចំនួន User អតិបរមាហើយ (quota exceeded)' });
+      }
+      await db().query('UPDATE users SET created_by=? WHERE username=?', [newTeam, u]);
+      logActivity('user_reassign_team', actor, _bu, u, { new_team: newTeam }).catch(()=>{});
+      return res.json({ ok:true });
+    }
+
     /* ── User add (Admin, or Sub Admin creating a scoped Normal User within quota) ── */
     if (action === 'user_add') {
       const _NORMAL_ROLES = ['Staff Loan','Staff','Moderator','Viewer','Tester'];
@@ -1083,7 +1124,8 @@ async function handler(req, res) {
         if (!_NORMAL_ROLES.includes(role)) return res.json({ ok:false, message:'Sub Admin អាចបង្កើតបានតែ Normal User' });
         const [cnt] = await db().query('SELECT COUNT(*) AS n FROM users WHERE created_by=?', [_bu]);
         if (cnt[0].n >= (_bv.max_normal_users||0)) return res.json({ ok:false, message:'ដល់កំណត់ចំនួន User អតិបរមាហើយ (quota exceeded)' });
-        scopeGroupsJson = JSON.stringify(_bv.scope_linked_to||[]);
+        /* No scope snapshot here — a Normal User's scope resolves live from their Sub Admin
+           (created_by) at auth time, see validateAuth(). */
         createdBy = _bu;
       } else if (role === 'Sub Admin') {
         /* Admin granting scope/quota to a new Sub Admin */

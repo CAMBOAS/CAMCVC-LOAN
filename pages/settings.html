@@ -302,14 +302,23 @@
     .nt-status { font-size:12px; color:var(--muted) }
 
     /* ── Sub Admin org-chart ── */
-    .org-wrap { display:flex; flex-direction:column; align-items:center; padding:10px 4px 20px }
-    .org-root { display:flex; flex-direction:column; align-items:center; gap:0 }
-    .org-root-node { display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; background:linear-gradient(135deg,rgba(124,92,255,.16),rgba(6,182,212,.1)); border:1.5px solid rgba(124,92,255,.35); font-size:13px; font-weight:800; color:var(--text) }
-    .org-trunk { width:2px; height:22px; background:rgba(148,163,184,.3) }
-    .org-teams { display:flex; flex-wrap:wrap; justify-content:center; gap:18px; padding-top:2px; position:relative }
-    .org-team { display:flex; flex-direction:column; align-items:center; width:220px }
-    .org-branch { width:2px; height:16px; background:rgba(148,163,184,.3) }
-    .org-team-card { width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,.06) }
+    .org-toolbar { display:flex; justify-content:flex-end; margin-bottom:6px }
+    .org-reset-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:9px; border:1.5px solid var(--border); background:transparent; color:var(--muted); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
+    .org-reset-btn:hover { color:var(--text); border-color:rgba(124,92,255,.4) }
+    .org-scroll { overflow-x:auto; padding-bottom:4px }
+    .org-wrap { position:relative; display:flex; flex-direction:column; align-items:center; padding:10px 4px 20px; min-width:min-content }
+    .org-lines { position:absolute; top:0; left:0; pointer-events:none; z-index:0; overflow:visible }
+    .org-lines line { stroke:rgba(148,163,184,.4); stroke-width:1.5 }
+    .org-root { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center }
+    .org-root-node { display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; background:linear-gradient(135deg,rgba(124,92,255,.16),rgba(6,182,212,.1)); border:1.5px solid rgba(124,92,255,.35); font-size:13px; font-weight:800; color:var(--text); margin-bottom:16px }
+    .org-teams { position:relative; z-index:1; display:flex; flex-wrap:wrap; justify-content:center; gap:18px 22px; padding-top:16px }
+    .org-teams.org-drag-mode .org-team-card { cursor:grab; border-style:dashed; border-color:rgba(124,92,255,.35) }
+    .org-teams.org-drag-mode .org-team-card:active { cursor:grabbing }
+    .org-team { display:flex; flex-direction:column; align-items:center; width:220px; flex-shrink:0 }
+    .org-team-card { width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,.06); transition:opacity .15s,border-color .15s }
+    .org-team-card.org-dragging { opacity:.35 }
+    .org-team-card.org-drag-over { border-color:#7c5cff; box-shadow:0 0 0 3px rgba(124,92,255,.15) }
+    .org-team-card.org-lp-active { border-color:#7c5cff }
     .org-team-name-row { display:flex; align-items:center; gap:6px; margin-bottom:6px }
     .org-team-name { font-size:13px; font-weight:800; color:#a78bfa; cursor:pointer; padding:2px 5px; border-radius:6px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
     .org-team-name:hover { background:rgba(124,92,255,.1) }
@@ -323,10 +332,13 @@
     .org-quota b { color:var(--text) }
     .org-manage-link { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:#7c5cff; cursor:pointer; background:none; border:none; padding:0; font-family:inherit }
     .org-manage-link:hover { text-decoration:underline }
-    .org-members-branch { width:2px; height:14px; background:rgba(148,163,184,.25) }
-    .org-members { display:flex; flex-direction:column; gap:5px; width:100%; background:rgba(148,163,184,.05); border:1px dashed var(--border); border-radius:10px; padding:8px }
+    .org-members { display:flex; flex-direction:column; gap:5px; width:100%; background:rgba(148,163,184,.05); border:1px dashed var(--border); border-radius:10px; padding:8px; margin-top:10px }
     .org-member-chip { display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--text) }
     .org-member-dot { width:6px; height:6px; border-radius:50%; background:#22c55e; flex-shrink:0 }
+    .org-member-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .org-member-move { flex-shrink:0; width:18px; height:18px; border-radius:5px; border:none; background:transparent; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:11px; padding:0 }
+    .org-member-move:hover { background:rgba(124,92,255,.15); color:#a78bfa }
+    .org-member-select { font-size:10px; font-family:inherit; border-radius:5px; border:1.5px solid rgba(124,92,255,.4); background:var(--card); color:var(--text); padding:1px 3px; max-width:110px }
     .org-members-empty { font-size:10px; color:var(--muted); font-style:italic; text-align:center; padding:2px }
     .org-empty-state { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px }
   </style>
@@ -821,8 +833,14 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.7;flex-shrink:0"><circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V12"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 12L5 16.5M12 12l7 4.5"/></svg>
             <span style="font-size:12px;font-weight:700">Sub Admin Teams</span>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Overview of every Sub Admin team and the Normal Users each one manages. Click a team name to rename it.</div>
-          <div id="orgChartWrap"></div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Overview of every Sub Admin team and the Normal Users each one manages. Click a team name to rename it; press and hold a card to drag-reorder it; click ⇄ next to a member to move them to another team.</div>
+          <div class="org-toolbar">
+            <button class="org-reset-btn" onclick="resetOrgOrder()" title="Reset team card layout to default">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+              Reset layout
+            </button>
+          </div>
+          <div class="org-scroll"><div id="orgChartWrap"></div></div>
         </div>
       </div><!-- /Panel 5 -->
 
@@ -1110,10 +1128,27 @@ async function loadUsers() {
 }
 
 /* ── Sub Admin org chart ── */
+var _ORG_ORDER      = [];   /* usernames, custom card order */
+var _ORG_DRAG_MODE   = false;
+var _orgDragSrc      = null;
+var _orgLpTimer      = null;
+var _orgLpCard       = null;
+
+function _orgOrderKey() { return 'org_order_'+(_selfUser||'default'); }
+
+function _orderedSubAdmins() {
+  var subAdmins = _users.filter(function(u){ return u.role === 'Sub Admin'; });
+  var byUser = {}; subAdmins.forEach(function(sa){ byUser[sa.username] = sa; });
+  var ordered = _ORG_ORDER.map(function(u){ return byUser[u]; }).filter(Boolean);
+  var seen = {}; ordered.forEach(function(sa){ seen[sa.username] = true; });
+  subAdmins.forEach(function(sa){ if (!seen[sa.username]) ordered.push(sa); });
+  return ordered;
+}
+
 function renderOrgChart() {
   var wrap = document.getElementById('orgChartWrap');
   if (!wrap) return;
-  var subAdmins = _users.filter(function(u){ return u.role === 'Sub Admin'; });
+  var subAdmins = _orderedSubAdmins();
 
   if (!subAdmins.length) {
     wrap.innerHTML = '<div class="org-empty-state">No Sub Admins yet — create one from the User Management tab (role = "Sub Admin").</div>';
@@ -1125,14 +1160,22 @@ function renderOrgChart() {
     var scopeTags = (Array.isArray(sa.scope_linked_to) && sa.scope_linked_to.length)
       ? sa.scope_linked_to.map(function(t){ return '<span class="org-scope-tag">'+esc(t)+'</span>'; }).join('')
       : '<span class="org-scope-empty">No Linked To scope yet</span>';
+    var otherTeams = subAdmins.filter(function(x){ return x.username !== sa.username; });
     var membersHtml = members.length
-      ? members.map(function(m){ return '<div class="org-member-chip"><span class="org-member-dot"></span>'+esc(m.display_name||m.username)+' <span style="color:var(--muted)">('+esc(m.role)+')</span></div>'; }).join('')
+      ? members.map(function(m){
+          var teamOpts = otherTeams.map(function(t){ return '<option value="'+esc(t.username)+'">'+esc(t.team_name||t.display_name||t.username)+'</option>'; }).join('');
+          return '<div class="org-member-chip" id="orgMember_'+esc(m.username)+'">'
+            + '<span class="org-member-dot"></span>'
+            + '<span class="org-member-name">'+esc(m.display_name||m.username)+' <span style="color:var(--muted)">('+esc(m.role)+')</span></span>'
+            + (otherTeams.length ? '<button class="org-member-move" title="Move to another team" onclick="startMoveMember(\''+esc(m.username)+'\')">&#8644;</button>' : '')
+            + '<datalist id="orgTeamOpts_'+esc(m.username)+'">'+teamOpts+'</datalist>'
+          + '</div>';
+        }).join('')
       : '<div class="org-members-empty">No Normal Users yet</div>';
     var teamName = sa.team_name || sa.display_name || sa.username;
     return ''
-      + '<div class="org-team">'
-        + '<div class="org-branch"></div>'
-        + '<div class="org-team-card">'
+      + '<div class="org-team" data-username="'+esc(sa.username)+'">'
+        + '<div class="org-team-card" data-username="'+esc(sa.username)+'">'
           + '<div class="org-team-name-row">'
             + '<span class="org-team-name" id="orgTeamName_'+esc(sa.username)+'" onclick="editTeamName(\''+esc(sa.username)+'\')" title="Click to rename team">'+esc(teamName)+'</span>'
           + '</div>'
@@ -1141,22 +1184,57 @@ function renderOrgChart() {
           + '<div class="org-scope-tags">'+scopeTags+'</div>'
           + '<div class="org-quota">Quota: <b>'+members.length+' / '+(sa.max_normal_users||0)+'</b> Normal Users</div>'
           + '<button class="org-manage-link" onclick="openEditModal(\''+esc(sa.username)+'\')">Manage &rarr;</button>'
+          + '<div class="org-members">'+membersHtml+'</div>'
         + '</div>'
-        + '<div class="org-members-branch"></div>'
-        + '<div class="org-members">'+membersHtml+'</div>'
       + '</div>';
   }).join('');
 
+  wrap.className = 'org-wrap';
   wrap.innerHTML = ''
-    + '<div class="org-wrap">'
-      + '<div class="org-root">'
-        + '<div class="org-root-node"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/></svg> Super Admin</div>'
-        + '<div class="org-trunk"></div>'
-      + '</div>'
-      + '<div class="org-teams">'+teamsHtml+'</div>'
-    + '</div>';
+    + '<svg class="org-lines" id="orgLinesSvg"></svg>'
+    + '<div class="org-root">'
+      + '<div class="org-root-node" id="orgRootNode"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/></svg> Super Admin</div>'
+    + '</div>'
+    + '<div class="org-teams" id="orgTeamsRow">'+teamsHtml+'</div>';
+
+  _initOrgDrag();
+  requestAnimationFrame(drawOrgLines);
 }
 
+/* ── Connector lines (SVG, measured from real DOM positions so it stays correct through wrapping) ── */
+function drawOrgLines() {
+  var wrap = document.getElementById('orgChartWrap');
+  var svg  = document.getElementById('orgLinesSvg');
+  var root = document.getElementById('orgRootNode');
+  if (!wrap || !svg || !root) return;
+  var cards = Array.prototype.slice.call(wrap.querySelectorAll('.org-team-card'));
+  var W = wrap.scrollWidth, H = wrap.scrollHeight;
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', '0 0 '+W+' '+H);
+  if (!cards.length) { svg.innerHTML = ''; return; }
+  var wRect = wrap.getBoundingClientRect();
+  var rRect = root.getBoundingClientRect();
+  var rootX = rRect.left + rRect.width/2 - wRect.left;
+  var rootY = rRect.bottom - wRect.top;
+  var pts = cards.map(function(c){
+    var r = c.getBoundingClientRect();
+    return { x: r.left + r.width/2 - wRect.left, y: r.top - wRect.top };
+  });
+  var busY = rootY + 16;
+  var xs = pts.map(function(p){ return p.x; }).concat([rootX]);
+  var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+  var lines = ['<line x1="'+rootX+'" y1="'+rootY+'" x2="'+rootX+'" y2="'+busY+'"/>'];
+  if (pts.length > 1) lines.push('<line x1="'+minX+'" y1="'+busY+'" x2="'+maxX+'" y2="'+busY+'"/>');
+  pts.forEach(function(p){ lines.push('<line x1="'+p.x+'" y1="'+busY+'" x2="'+p.x+'" y2="'+p.y+'"/>'); });
+  svg.innerHTML = lines.join('');
+}
+var _orgResizeTimer = null;
+window.addEventListener('resize', function(){
+  clearTimeout(_orgResizeTimer);
+  _orgResizeTimer = setTimeout(drawOrgLines, 120);
+});
+
+/* ── Team rename (click-to-edit) ── */
 function editTeamName(username) {
   var el = document.getElementById('orgTeamName_'+username);
   if (!el || el.tagName === 'INPUT') return;
@@ -1189,6 +1267,150 @@ async function saveTeamName(username, teamName) {
     if (!r || !r.ok) toast((r&&r.message)||'Failed to save team name', true);
   } catch(e) { toast('Network error', true); }
 }
+
+/* ── Move a Normal User to another team (click ⇄ -> inline select) ── */
+function startMoveMember(username) {
+  var chip = document.getElementById('orgMember_'+username);
+  if (!chip) return;
+  var optsList = document.getElementById('orgTeamOpts_'+username);
+  var opts = optsList ? optsList.innerHTML : '';
+  if (!opts) return;
+  chip.innerHTML = '<span class="org-member-dot"></span>'
+    + '<span class="org-member-name">Move to:</span>'
+    + '<select class="org-member-select" onchange="confirmMoveMember(\''+username+'\',this.value)" onblur="renderOrgChart()">'
+      + '<option value="">— choose team —</option>' + opts
+    + '</select>';
+  var sel = chip.querySelector('select');
+  if (sel) sel.focus();
+}
+
+async function confirmMoveMember(username, newTeam) {
+  if (!newTeam) { renderOrgChart(); return; }
+  try {
+    var r = await CamboAPI.post({ action:'user_reassign_team', username: username, new_team: newTeam });
+    if (r && r.ok) {
+      var idx = _users.findIndex(function(u){ return u.username === username; });
+      if (idx >= 0) _users[idx].created_by = newTeam;
+      toast('Moved!');
+    } else {
+      toast((r&&r.message)||'Failed to move user', true);
+    }
+  } catch(e) { toast('Network error', true); }
+  renderOrgChart();
+}
+
+/* ── Drag-to-reorder team cards (mirrors the tab-reorder pattern: long-press then HTML5 drag) ── */
+function loadOrgOrder() {
+  try {
+    var s = localStorage.getItem(_orgOrderKey());
+    if (s) { var arr = JSON.parse(s); if (Array.isArray(arr)) _ORG_ORDER = arr; }
+  } catch(e) {}
+}
+async function syncOrgOrderFromDB() {
+  try {
+    var r = await CamboAPI.post({ action: 'ui_prefs_get' });
+    if (!r || !r.ok || !r.prefs) return;
+    var arr = r.prefs.sub_admin_order;
+    if (!Array.isArray(arr)) return;
+    _ORG_ORDER = arr;
+    try { localStorage.setItem(_orgOrderKey(), JSON.stringify(_ORG_ORDER)); } catch(e) {}
+    renderOrgChart();
+  } catch(e) {}
+}
+async function _saveOrgOrder() {
+  try { localStorage.setItem(_orgOrderKey(), JSON.stringify(_ORG_ORDER)); } catch(e) {}
+  try { await CamboAPI.post({ action: 'ui_prefs_set', prefs: { sub_admin_order: _ORG_ORDER } }); } catch(e) {}
+}
+function resetOrgOrder() {
+  _ORG_ORDER = [];
+  try { localStorage.removeItem(_orgOrderKey()); } catch(e) {}
+  CamboAPI.post({ action: 'ui_prefs_set', prefs: { sub_admin_order: [] } }).catch(function(){});
+  renderOrgChart();
+  toast('Layout reset!');
+}
+
+function _initOrgDrag() {
+  document.querySelectorAll('.org-team-card').forEach(function(card) {
+    card.addEventListener('mousedown',   _orgLpStart);
+    card.addEventListener('touchstart',  _orgLpStart, {passive:true});
+    card.addEventListener('mouseup',     _orgLpCancel);
+    card.addEventListener('mouseleave',  _orgLpCancel);
+    card.addEventListener('touchend',    _orgLpCancel);
+    card.addEventListener('touchcancel', _orgLpCancel);
+    card.addEventListener('dragstart',   _onOrgDragStart);
+    card.addEventListener('dragover',    _onOrgDragOver);
+    card.addEventListener('drop',        _onOrgDrop);
+    card.addEventListener('dragend',     _onOrgDragEnd);
+  });
+}
+function _orgLpStart(e) {
+  if (_ORG_DRAG_MODE) return;
+  if (e.target.closest('.org-team-name, .org-manage-link, .org-members')) return;
+  var card = this;
+  _orgLpCard = card;
+  card.classList.add('org-lp-active');
+  clearTimeout(_orgLpTimer);
+  _orgLpTimer = setTimeout(function() {
+    if (_orgLpCard === card) { card.classList.remove('org-lp-active'); _orgLpCard = null; }
+    _activateOrgDrag();
+  }, 1500);
+}
+function _orgLpCancel() {
+  clearTimeout(_orgLpTimer);
+  if (_orgLpCard) { _orgLpCard.classList.remove('org-lp-active'); _orgLpCard = null; }
+}
+function _activateOrgDrag() {
+  _ORG_DRAG_MODE = true;
+  var row = document.getElementById('orgTeamsRow');
+  if (row) row.classList.add('org-drag-mode');
+  document.querySelectorAll('.org-team-card').forEach(function(c){ c.setAttribute('draggable','true'); });
+  toast('Drag mode on — drop a card to reorder');
+}
+function _deactivateOrgDrag() {
+  _ORG_DRAG_MODE = false;
+  var row = document.getElementById('orgTeamsRow');
+  if (row) row.classList.remove('org-drag-mode');
+  document.querySelectorAll('.org-team-card').forEach(function(c){
+    c.setAttribute('draggable','false');
+    c.classList.remove('org-dragging','org-drag-over');
+  });
+}
+function _onOrgDragStart(e) {
+  if (!_ORG_DRAG_MODE) { e.preventDefault(); return; }
+  _orgDragSrc = this.dataset.username;
+  this.classList.add('org-dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', _orgDragSrc);
+}
+function _onOrgDragOver(e) {
+  if (!_ORG_DRAG_MODE) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.org-team-card').forEach(function(c){ c.classList.remove('org-drag-over'); });
+  this.classList.add('org-drag-over');
+}
+function _onOrgDrop(e) {
+  if (!_ORG_DRAG_MODE) return;
+  e.preventDefault();
+  var tgt = this.dataset.username;
+  if (_orgDragSrc && _orgDragSrc !== tgt) {
+    var order = _orderedSubAdmins().map(function(sa){ return sa.username; });
+    var srcPos = order.indexOf(_orgDragSrc), tgtPos = order.indexOf(tgt);
+    if (srcPos > -1 && tgtPos > -1) {
+      var v = order.splice(srcPos, 1)[0];
+      if (tgtPos > srcPos) tgtPos--;
+      order.splice(tgtPos, 0, v);
+      _ORG_ORDER = order;
+      _saveOrgOrder();
+    }
+  }
+  renderOrgChart();
+  _deactivateOrgDrag();
+}
+function _onOrgDragEnd() {
+  document.querySelectorAll('.org-team-card').forEach(function(c){ c.classList.remove('org-dragging','org-drag-over'); });
+}
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && _ORG_DRAG_MODE) _deactivateOrgDrag(); });
 
 /* ── Add modal ── */
 function openAddModal() {
@@ -1907,7 +2129,9 @@ async function saveBrand() {
 }
 
 loadBrand();
+loadOrgOrder();
 loadUsers();
+syncOrgOrderFromDB();
 loadNotif();
 loadTgConfig();
 loadPermMatrix();
