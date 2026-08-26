@@ -943,6 +943,14 @@
           <label class="um-label">Assigned Linked To (scope) <span>*</span></label>
           <div class="um-hint" style="margin-bottom:6px">This Sub Admin will only see loans/customers whose "Linked To" is checked below.</div>
           <div id="uf_scope_linked_to" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <input class="um-input" id="uf_scope_new" placeholder="New Linked To name…" autocomplete="off"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addScopeLinkedTo();}"
+                   style="flex:1;min-width:140px;padding:7px 11px;font-size:12px">
+            <button type="button" class="um-btn-save" id="uf_scope_add_btn" onclick="addScopeLinkedTo()"
+                    style="padding:7px 15px;font-size:12px;white-space:nowrap">+ Add</button>
+          </div>
+          <div class="um-hint" style="margin-top:5px">Create a new "Linked To" entry without leaving this page — it is added to the list above and ticked for this Sub Admin straight away.</div>
         </div>
         <div class="um-field" style="margin-bottom:0">
           <label class="um-label">Max Normal Users <span>*</span></label>
@@ -1018,6 +1026,44 @@ function renderScopeLinkedTo(checked) {
       + '</label>';
   }).join('');
 }
+/* Create a new "Linked To" entry inline, so building a Sub Admin's scope doesn't require a trip
+   to the Groups & Statuses page and back. Reuses the same settings_add action that page uses. */
+async function addScopeLinkedTo() {
+  var input = document.getElementById('uf_scope_new');
+  var btn   = document.getElementById('uf_scope_add_btn');
+  if (!input || !btn) return;
+  var name = input.value.trim();
+  if (!name) return toast('Enter a name first', true);
+
+  /* Read the ticks from the DOM, not from _editingUser — re-rendering the list below must not
+     discard boxes the Admin has ticked since the modal opened. */
+  var checked = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
+
+  var existing = _allLinkedTo.filter(function(v){ return v.toLowerCase() === name.toLowerCase(); })[0];
+  if (existing) {
+    /* Already there — just tick it rather than erroring out. */
+    if (checked.indexOf(existing) === -1) checked.push(existing);
+    renderScopeLinkedTo(checked);
+    input.value = '';
+    return toast('"'+existing+'" already exists — ticked it for you');
+  }
+
+  btn.disabled = true;
+  try {
+    var res = await CamboAPI.post({ action:'settings_add', type:'linkedTo', value:name });
+    if (res && res.ok) {
+      _allLinkedTo.push(name);
+      checked.push(name);
+      renderScopeLinkedTo(checked);
+      input.value = '';
+      toast('Added "'+name+'"');
+    } else {
+      toast((res && res.message) || 'Failed to add', true);
+    }
+  } catch(e) { toast('Network error', true); }
+  btn.disabled = false;
+}
+
 async function toggleSubAdminFields() {
   var role = document.getElementById('uf_role').value;
   var box  = document.getElementById('uf_subadmin_fields');
@@ -1026,6 +1072,8 @@ async function toggleSubAdminFields() {
     await loadLinkedToForScope();
     var checked = (_editingUser && _editingUser.role==='Sub Admin' && Array.isArray(_editingUser.scope_linked_to)) ? _editingUser.scope_linked_to : [];
     renderScopeLinkedTo(checked);
+    var newInput = document.getElementById('uf_scope_new');
+    if (newInput) newInput.value = '';
     document.getElementById('uf_max_normal_users').value = (_editingUser && _editingUser.max_normal_users) || 0;
   } else {
     box.style.display = 'none';
