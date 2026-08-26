@@ -306,13 +306,10 @@
     .org-stat { display:flex; align-items:center; gap:7px; padding:7px 12px; border-radius:10px; background:rgba(124,92,255,.07); border:1px solid rgba(124,92,255,.18) }
     .org-stat-val { font-size:15px; font-weight:800; color:#a78bfa; line-height:1 }
     .org-stat-lbl { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em }
-    .org-toolbar { display:flex; justify-content:flex-end; margin-bottom:6px }
-    .org-reset-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:9px; border:1.5px solid var(--border); background:transparent; color:var(--muted); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s }
-    .org-reset-btn:hover { color:var(--text); border-color:rgba(124,92,255,.4) }
     .org-scroll { overflow-x:auto; padding-bottom:4px }
     .org-wrap { position:relative; display:flex; flex-direction:column; align-items:center; padding:10px 4px 20px; width:100%; box-sizing:border-box }
     .org-lines { position:absolute; top:0; left:0; pointer-events:none; z-index:0; overflow:visible }
-    .org-lines line { stroke:rgba(148,163,184,.4); stroke-width:1.5 }
+    .org-lines path.org-line { stroke:rgba(148,163,184,.5); stroke-width:1.5; stroke-linecap:round }
     .org-root { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center }
     .org-root-label { display:flex; align-items:center; gap:5px; font-size:9.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px }
     .org-admin-row { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-bottom:16px }
@@ -325,7 +322,7 @@
     .org-assistant-avatar img { width:100%; height:100%; object-fit:cover; display:block }
     .org-assistant-name { font-size:9.5px; font-weight:700; color:var(--text); width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
     .org-assistant-tag { font-size:8px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:#f59e0b }
-    .org-lines line.org-line-assist { stroke:#f59e0b; stroke-width:1.3; stroke-dasharray:4 3; opacity:.7 }
+    .org-lines path.org-line-assist { stroke:#f59e0b; stroke-width:1.3; stroke-dasharray:4 3; stroke-linecap:round; opacity:.7 }
     .org-teams { position:relative; z-index:1; display:flex; flex-wrap:wrap; justify-content:center; gap:18px 22px; padding-top:16px; width:100% }
     .org-teams.org-drag-mode .org-team-card { cursor:grab; border-style:dashed; border-color:rgba(124,92,255,.35) }
     .org-teams.org-drag-mode .org-team-card:active { cursor:grabbing }
@@ -855,12 +852,6 @@
           </div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Overview of every Sub Admin team and the Normal Users each one manages. Click a team name to rename it; press and hold a card to drag-reorder it; click ⇄ next to a member to move them to another team.</div>
           <div class="org-stats-row" id="orgStatsRow"></div>
-          <div class="org-toolbar">
-            <button class="org-reset-btn" onclick="resetOrgOrder()" title="Reset team card layout to default">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
-              Reset layout
-            </button>
-          </div>
           <div class="org-scroll"><div id="orgChartWrap"></div></div>
         </div>
       </div><!-- /Panel 5 -->
@@ -1313,7 +1304,55 @@ function renderOrgChart() {
   requestAnimationFrame(drawOrgLines);
 }
 
-/* ── Connector lines (SVG, measured from real DOM positions so it stays correct through wrapping) ── */
+/* ── Connector lines (SVG, measured from real DOM positions so it stays correct through
+     wrapping). Routed as rounded trunk -> bus -> drop elbows (never a raw diagonal line), and
+     when targets wrap onto more than one row, later rows are fed via a vertical "spine" routed
+     outside every card's horizontal extent — so nothing ever crosses through a card, at any
+     viewport width, matching a clean org-chart look. ── */
+function _orgElbowPath(x1, y1, x2, y2, busY, r) {
+  if (Math.abs(x1 - x2) < 0.5) return 'M '+x1+' '+y1+' L '+x2+' '+y2;
+  var rr = Math.min(r, Math.abs(busY - y1) || r, Math.abs(y2 - busY) || r, Math.abs(x2 - x1) / 2 || r);
+  var dir = x2 > x1 ? 1 : -1;
+  return 'M '+x1+' '+y1+' '
+    + 'L '+x1+' '+(busY - rr)+' '
+    + 'Q '+x1+' '+busY+' '+(x1 + dir*rr)+' '+busY+' '
+    + 'L '+(x2 - dir*rr)+' '+busY+' '
+    + 'Q '+x2+' '+busY+' '+x2+' '+(busY + rr)+' '
+    + 'L '+x2+' '+y2;
+}
+/* Cluster points into visual rows by Y proximity (cards flex-wrap onto multiple lines as the
+   panel narrows), sorted top to bottom. */
+function _orgGroupByRow(pts) {
+  var sorted = pts.slice().sort(function(a,b){ return a.y - b.y; });
+  var rows = [];
+  sorted.forEach(function(p){
+    var last = rows[rows.length-1];
+    if (last && Math.abs(p.y - last[0].y) < 20) last.push(p);
+    else rows.push([p]);
+  });
+  return rows;
+}
+function _orgDrawTree(paths, sourceX, sourceY, targets, cls, gap, R) {
+  if (!targets.length) return;
+  var rows = _orgGroupByRow(targets);
+  var busY = rows.map(function(rowPts){ return rowPts[0].y - gap; });
+  var carryX = null;
+  if (rows.length > 1) {
+    var allX = targets.map(function(p){ return p.x; }).concat([sourceX]);
+    carryX = Math.max(6, Math.min.apply(null, allX) - 16);
+    paths.push('<path class="'+cls+'" d="M '+sourceX+' '+busY[0]+' L '+carryX+' '+busY[0]+'" fill="none"/>');
+    for (var i = 1; i < rows.length; i++) {
+      paths.push('<path class="'+cls+'" d="M '+carryX+' '+busY[i-1]+' L '+carryX+' '+busY[i]+'" fill="none"/>');
+    }
+  }
+  rows.forEach(function(rowPts, i){
+    var ex = i === 0 ? sourceX : carryX;
+    var ey = i === 0 ? sourceY : busY[i];
+    rowPts.forEach(function(p){
+      paths.push('<path class="'+cls+'" d="'+_orgElbowPath(ex, ey, p.x, p.y, busY[i], R)+'" fill="none"/>');
+    });
+  });
+}
 function drawOrgLines() {
   var wrap = document.getElementById('orgChartWrap');
   var svg  = document.getElementById('orgLinesSvg');
@@ -1323,48 +1362,52 @@ function drawOrgLines() {
   var W = wrap.scrollWidth, H = wrap.scrollHeight;
   svg.setAttribute('width', W); svg.setAttribute('height', H);
   svg.setAttribute('viewBox', '0 0 '+W+' '+H);
-  if (!cards.length) { svg.innerHTML = ''; return; }
+  if (!cards.length || !W || !H) { svg.innerHTML = ''; return; }
   var wRect = wrap.getBoundingClientRect();
   var rRect = root.getBoundingClientRect();
   var rootX = rRect.left + rRect.width/2 - wRect.left;
   var rootY = rRect.bottom - wRect.top;
+  var R = 10;
   var pts = cards.map(function(c){
     var r = c.getBoundingClientRect();
-    return { x: r.left + r.width/2 - wRect.left, y: r.top - wRect.top };
+    return { x: r.left + r.width/2 - wRect.left, y: r.top - wRect.top, username: c.getAttribute('data-username') };
   });
-  var busY = rootY + 16;
-  var xs = pts.map(function(p){ return p.x; }).concat([rootX]);
-  var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
-  var lines = ['<line x1="'+rootX+'" y1="'+rootY+'" x2="'+rootX+'" y2="'+busY+'"/>'];
-  if (pts.length > 1) lines.push('<line x1="'+minX+'" y1="'+busY+'" x2="'+maxX+'" y2="'+busY+'"/>');
-  pts.forEach(function(p){ lines.push('<line x1="'+p.x+'" y1="'+busY+'" x2="'+p.x+'" y2="'+p.y+'"/>'); });
+  var paths = [];
+  _orgDrawTree(paths, rootX, rootY, pts, 'org-line', 16, R);
 
-  /* Dashed "matrix management" lines: assistant chip -> each Sub Admin team card it manages */
+  /* Dashed "matrix management" lines: assistant chip -> each Sub Admin team card it manages,
+     same row-aware trunk/bus/spine/drop routing so they never cross diagonally through cards. */
   var assistChips = Array.prototype.slice.call(wrap.querySelectorAll('.org-assistant-chip'));
   var cardByUser = {};
-  cards.forEach(function(c){ cardByUser[c.getAttribute('data-username')] = c; });
+  pts.forEach(function(p){ cardByUser[p.username] = p; });
   assistChips.forEach(function(chip){
     var aRect = chip.getBoundingClientRect();
     var ax = aRect.left + aRect.width/2 - wRect.left;
     var ay = aRect.bottom - wRect.top;
     var managed = (chip.getAttribute('data-manages')||'').split(',').filter(Boolean);
-    managed.forEach(function(teamUser){
-      var card = cardByUser[teamUser];
-      if (!card) return;
-      var cRect = card.getBoundingClientRect();
-      var cx = cRect.left + cRect.width/2 - wRect.left;
-      var cy = cRect.top - wRect.top;
-      lines.push('<line class="org-line-assist" x1="'+ax+'" y1="'+ay+'" x2="'+cx+'" y2="'+cy+'"/>');
-    });
+    var targets = managed.map(function(u){ return cardByUser[u]; }).filter(Boolean);
+    _orgDrawTree(paths, ax, ay, targets, 'org-line-assist', 14, R);
   });
 
-  svg.innerHTML = lines.join('');
+  svg.innerHTML = paths.join('');
 }
 var _orgResizeTimer = null;
 window.addEventListener('resize', function(){
   clearTimeout(_orgResizeTimer);
   _orgResizeTimer = setTimeout(drawOrgLines, 120);
 });
+/* Redraw whenever the chart's own box changes size (avatar images finishing load, font swap,
+   drag-reorder, tab becoming visible) — more reliable than only listening for window resize. */
+if (typeof ResizeObserver !== 'undefined') {
+  var _orgRO = new ResizeObserver(function(){
+    clearTimeout(_orgResizeTimer);
+    _orgResizeTimer = setTimeout(drawOrgLines, 60);
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    var wrapEl = document.getElementById('orgChartWrap');
+    if (wrapEl) _orgRO.observe(wrapEl);
+  });
+}
 
 /* ── Team rename (click-to-edit) ── */
 function editTeamName(username) {
@@ -1453,14 +1496,6 @@ async function _saveOrgOrder() {
   try { localStorage.setItem(_orgOrderKey(), JSON.stringify(_ORG_ORDER)); } catch(e) {}
   try { await CamboAPI.post({ action: 'ui_prefs_set', prefs: { sub_admin_order: _ORG_ORDER } }); } catch(e) {}
 }
-function resetOrgOrder() {
-  _ORG_ORDER = [];
-  try { localStorage.removeItem(_orgOrderKey()); } catch(e) {}
-  CamboAPI.post({ action: 'ui_prefs_set', prefs: { sub_admin_order: [] } }).catch(function(){});
-  renderOrgChart();
-  toast('Layout reset!');
-}
-
 function _initOrgDrag() {
   document.querySelectorAll('.org-team-card').forEach(function(card) {
     card.addEventListener('mousedown',   _orgLpStart);
@@ -1763,6 +1798,9 @@ function switchTab(panelIdx, btn) {
   if (btn) btn.classList.add('st-tab-active');
   var panel = document.getElementById('stPanel'+panelIdx);
   if (panel) panel.classList.add('st-panel-active');
+  /* The org-chart's SVG connector lines are measured from real DOM positions — while Panel 5
+     is hidden (display:none) those measure as zero, so redraw once it's actually visible. */
+  if (panelIdx === 5 && typeof drawOrgLines === 'function') requestAnimationFrame(drawOrgLines);
 }
 
 /* ── Tab reorder (per-user, localStorage) ── */
