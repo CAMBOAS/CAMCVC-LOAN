@@ -287,6 +287,7 @@
       <div class="tm-manage-panel" id="tmManagePanel" style="display:none"></div>
       <div class="tm-toolbar" id="tmToolbar" style="display:none">
         <span class="tm-quota" id="tmQuota" style="display:none"></span>
+        <button class="tm-view-btn" id="tmPanelToggle" style="display:none" onclick="toggleManagePanel()"></button>
         <button class="tm-add-btn" id="tmAddBtn" style="display:none" onclick="openAddUserModal()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add User
@@ -517,6 +518,36 @@ async function loadLinkedToForManage() {
     if (res && res.ok) _allLinkedTo = (res.linkedTo||[]).filter(function(v){ return v && v.toLowerCase()!=='linked to'; });
   } catch(e) {}
 }
+/* ── Show/hide the whole Teams You Manage panel. Even collapsed to one line per team it is a
+     lot of screen for someone who is only here to look at members, so the button lets them
+     tuck it away. Remembered per browser so the choice survives a reload. ── */
+var _MG_HIDE_KEY = 'tm_manage_hidden';
+var _SVG_EYE     = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+var _SVG_EYE_OFF = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+function _isManagePanelHidden() {
+  try { return localStorage.getItem(_MG_HIDE_KEY) === '1'; } catch(e) { return false; }
+}
+function _paintManagePanel(hidden) {
+  var panel = document.getElementById('tmManagePanel');
+  var btn   = document.getElementById('tmPanelToggle');
+  /* Only meaningful when there is a panel to hide — an assistant with managed teams. */
+  var hasPanel = panel && panel.innerHTML.trim() !== '';
+  if (btn) btn.style.display = hasPanel ? '' : 'none';
+  if (!hasPanel) return;
+  panel.style.display = hidden ? 'none' : '';
+  if (btn) {
+    btn.innerHTML = hidden ? _SVG_EYE_OFF : _SVG_EYE;
+    btn.title = hidden ? 'Show the teams you manage' : 'Hide the teams you manage';
+    btn.classList.toggle('active', !hidden);
+  }
+}
+function toggleManagePanel() {
+  var hidden = !_isManagePanelHidden();
+  try { localStorage.setItem(_MG_HIDE_KEY, hidden ? '1' : '0'); } catch(e) {}
+  _paintManagePanel(hidden);
+}
+
 /* The panel used to render every managed team fully expanded. An assistant holding the '*'
    grant manages every team, so that meant one long editor per team — unusable once there are
    dozens. Now each team is a one-line summary and the editor is built only when you open it. */
@@ -855,6 +886,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!res.users||!res.users.length){ stateEl.textContent='No team members found'; return; }
     _users=res.users;
     if (getMyManagesTeams().length) { await loadLinkedToForManage(); renderManageTeamsPanel(); }
+    /* after the render, which sets display itself, so the remembered choice wins */
+    _paintManagePanel(_isManagePanelHidden());
     var gridEl=document.getElementById('tmGrid');
     var listEl=document.getElementById('tmList');
     gridEl.innerHTML=_users.map(renderCard).join('');
