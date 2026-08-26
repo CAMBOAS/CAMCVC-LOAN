@@ -273,6 +273,34 @@
         </div>
       </div>
 
+      <!-- Data focus (Super Admin / assistants only — everyone else is already scoped) -->
+      <div class="mp-card" id="mpFocusCard" style="display:none">
+        <div class="mp-card-hdr">
+          <div class="mp-card-icon" style="background:rgba(6,182,212,.1)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div class="mp-card-title">Data Focus</div>
+        </div>
+        <div class="mp-info-list">
+          <div class="mp-theme-row" style="padding:4px 0">
+            <div>
+              <div class="mp-theme-label">Show only my own data</div>
+              <div class="mp-theme-sub" id="mpFocusSub">Hide loans belonging to Sub Admin teams</div>
+            </div>
+            <label class="mp-toggle">
+              <input type="checkbox" id="mpFocusToggle" onchange="setFocusOwn(this.checked)">
+              <span class="mp-toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="mp-info-list" style="margin-top:-4px">
+          <div class="mp-info-row">
+            <span class="mp-info-key">Currently showing</span>
+            <span class="mp-info-val" id="mpFocusStatus">—</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Account info -->
       <div class="mp-card">
         <div class="mp-card-hdr">
@@ -604,9 +632,52 @@ async function syncThemePref() {
 }
 
 /* ── Start ── */
+/* ── Data focus: only meaningful for viewers who aren't already scoped to a team, ie. the
+     Super Admin and the assistants acting for them. Everyone else only ever sees their own
+     team's rows anyway, so the card stays hidden for them. ── */
+function _focusEligible() {
+  var a = getAuth();
+  if (a.role === 'Admin') return true;
+  return Array.isArray(a.manages_teams) && a.manages_teams.length > 0;
+}
+function _paintFocus(on) {
+  var t = document.getElementById('mpFocusToggle');
+  var s = document.getElementById('mpFocusStatus');
+  if (t) t.checked = !!on;
+  if (s) {
+    s.textContent = on ? 'My own data only' : 'All teams';
+    s.style.color = on ? '#06b6d4' : '';
+  }
+}
+async function loadFocusPref() {
+  if (!_focusEligible()) return;
+  var card = document.getElementById('mpFocusCard');
+  if (card) card.style.display = '';
+  try {
+    var r = await CamboAPI.post({ action:'ui_prefs_get' });
+    _paintFocus(!!(r && r.ok && r.prefs && r.prefs.focus_own_data));
+  } catch(e) { _paintFocus(false); }
+}
+async function setFocusOwn(on) {
+  var t = document.getElementById('mpFocusToggle');
+  if (t) t.disabled = true;
+  try {
+    var r = await CamboAPI.post({ action:'ui_prefs_set', prefs:{ focus_own_data: !!on } });
+    if (r && r.ok) {
+      _paintFocus(on);
+      mpToast(on ? 'Showing your own data only' : 'Showing all teams');
+    } else {
+      _paintFocus(!on);
+      mpToast((r && r.message) || 'Could not save', true);
+    }
+  } catch(e) { _paintFocus(!on); mpToast('Network error', true); }
+  if (t) t.disabled = false;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   initPage();
   syncThemePref();
+  loadFocusPref();
 });
 </script>
 </body>

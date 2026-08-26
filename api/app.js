@@ -376,6 +376,20 @@ function managesTeam(_bv, subAdminUsername) {
   return _bv.manages_teams.indexOf(subAdminUsername) !== -1;
 }
 
+/* ── Per-user "focus mode" flag, stored in the same ui_prefs bag as tab/card ordering.
+     Read fresh per request rather than carried on the session so toggling takes effect on the
+     next load without re-login. ── */
+async function isFocusOwnEnabled(username) {
+  if (!username) return false;
+  try {
+    await ensureUiPrefsCol();
+    const [rows] = await db().query('SELECT ui_prefs FROM users WHERE username=?', [username]);
+    if (!rows.length) return false;
+    const prefs = JSON.parse(rows[0].ui_prefs || '{}');
+    return prefs && prefs.focus_own_data === true;
+  } catch(e) { return false; }
+}
+
 /* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_linked_to
      (no-op if unscoped). A scoped role with zero grants yet sees nothing (not everything) — an
      empty scope_linked_to must never be treated the same as "unscoped". Scoped viewers also never
@@ -530,7 +544,26 @@ async function handler(req, res) {
       await ensureCreatedByUserCol();
       await ensureSettingsTeamCol();
       const _sf = scopeFilterSQL(_bv, 'l.linked_to');
-      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL${_sf.clause} ORDER BY l.loan_key DESC`, _sf.params);
+
+      /* "Focus mode": an unscoped viewer (Super Admin, or an assistant acting for them) sees
+         every team's rows, which buries their own operation. When they switch it on in My
+         Profile we drop rows whose Linked To is claimed by some Sub Admin team's scope, leaving
+         the values nobody else owns — ie. Super Admin's own work. Off by default, per-user, and
+         it can only ever narrow what they already had, so it grants nothing. */
+      let _focus = { clause: '', params: [] };
+      if (!_sf.clause && await isFocusOwnEnabled(_bu)) {
+        const [teamRows] = await db().query("SELECT scope_linked_to FROM users WHERE role='Sub Admin'");
+        const claimed = [];
+        teamRows.forEach(r => {
+          try { (JSON.parse(r.scope_linked_to || '[]') || []).forEach(v => { if (v && claimed.indexOf(v) === -1) claimed.push(v); }); } catch(e) {}
+        });
+        if (claimed.length) {
+          _focus.clause = ` AND (l.linked_to IS NULL OR l.linked_to NOT IN (${claimed.map(()=>'?').join(',')}))`;
+          _focus.params = claimed;
+        }
+      }
+
+      const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL${_sf.clause}${_focus.clause} ORDER BY l.loan_key DESC`, [..._sf.params, ..._focus.params]);
       const [infor] = await db().query('SELECT type, value, created_by_team FROM settings ORDER BY id');
       /* Option lists. Status/socialMedia stay a shared default list for everyone.
          Admin sees everything; so does an assistant (manages_teams), who is Super Admin's proxy —
