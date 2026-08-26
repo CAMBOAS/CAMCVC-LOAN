@@ -300,6 +300,16 @@ function renderProfile(loan, history, key) {
   /* ── Main grid ── */
   html += '<div class="bp-grid">';
 
+  /* Personal Info card */
+  html += '<div class="bp-card">'
+    + '<div class="bp-card-title">Personal Info</div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Full Name</span><span class="bp-info-val">'+esc(loan.FullName||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">National ID</span><span class="bp-info-val" style="font-family:monospace;color:#60a5fa">'+esc(loan.NationalID||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Date of Birth</span><span class="bp-info-val">'+esc(loan.DOB||'—')+'</span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Phone</span><span class="bp-info-val"><a href="tel:'+esc(loan.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(loan.Phone||'—')+'</a></span></div>'
+    + '<div class="bp-info-row"><span class="bp-info-lbl">Gender</span><span class="bp-info-val">'+genderHtml+'</span></div>'
+    + '</div>';
+
   /* Loan Details card */
   html += '<div class="bp-card">'
     + '<div class="bp-card-title">Loan Details</div>'
@@ -309,16 +319,6 @@ function renderProfile(loan, history, key) {
     + '<div class="bp-info-row"><span class="bp-info-lbl">Group</span><span class="bp-info-val">'+esc(loan.Groups||'—')+'</span></div>'
     + '<div class="bp-info-row"><span class="bp-info-lbl">Date Added</span><span class="bp-info-val">'+fmtDate(loan.DateTime)+'</span></div>'
     + '<div class="bp-info-row"><span class="bp-info-lbl">Created By</span><span class="bp-info-val" style="color:#a78bfa">'+esc(loan.created_by||'—')+'</span></div>'
-    + '</div>';
-
-  /* Personal Info card */
-  html += '<div class="bp-card">'
-    + '<div class="bp-card-title">Personal Info</div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Full Name</span><span class="bp-info-val">'+esc(loan.FullName||'—')+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">National ID</span><span class="bp-info-val" style="font-family:monospace;color:#60a5fa">'+esc(loan.NationalID||'—')+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Date of Birth</span><span class="bp-info-val">'+esc(loan.DOB||'—')+'</span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Phone</span><span class="bp-info-val"><a href="tel:'+esc(loan.Phone||'')+'" style="color:#60a5fa;text-decoration:none">'+esc(loan.Phone||'—')+'</a></span></div>'
-    + '<div class="bp-info-row"><span class="bp-info-lbl">Gender</span><span class="bp-info-val">'+genderHtml+'</span></div>'
     + '</div>';
 
   /* Social Media card */
