@@ -109,6 +109,26 @@
     .tm-manage-panel { margin-bottom:18px; display:flex; flex-direction:column; gap:10px }
     .tm-manage-title { font-size:11px; font-weight:800; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px }
     .tm-manage-card { background:var(--tm-card); border:1.5px solid rgba(245,158,11,.35); border-radius:14px; padding:14px 16px; box-shadow:var(--tm-shadow) }
+
+    /* -- Compact list: header, search, one-line summary rows -- */
+    .tm-manage-hdr { display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+    .tm-manage-search { flex:1; min-width:150px; max-width:260px; padding:7px 11px; border-radius:9px; border:1.5px solid var(--tm-border); background:var(--tm-card); color:var(--tm-text); font-size:12px; font-family:inherit; outline:none }
+    .tm-manage-search:focus { border-color:#7c5cff }
+    #tmManageRows { display:flex; flex-direction:column; gap:8px }
+    #tmManageRows .tm-manage-card { padding:0; overflow:hidden }
+    .tm-manage-summary { display:flex; align-items:center; gap:9px; padding:10px 14px; cursor:pointer; flex-wrap:wrap; transition:background .15s }
+    .tm-manage-summary:hover { background:rgba(245,158,11,.06) }
+    .tm-mini-caret { color:var(--tm-muted); font-size:11px; flex-shrink:0; width:10px }
+    .tm-mini-name { font-size:13px; font-weight:800; color:var(--tm-text); white-space:nowrap }
+    .tm-mini-user { font-size:10.5px; color:var(--tm-muted); white-space:nowrap }
+    .tm-mini-tags { display:flex; gap:4px; flex-wrap:wrap; flex:1; min-width:0 }
+    .tm-mini-tag { font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:20px; background:rgba(6,182,212,.12); color:#0891b2; white-space:nowrap }
+    [data-theme="dark"] .tm-mini-tag { color:#22d3ee }
+    .tm-mini-none { font-size:10px; color:var(--tm-muted); font-style:italic }
+    .tm-mini-quota { font-size:10.5px; font-weight:800; color:var(--tm-muted); white-space:nowrap; margin-left:auto }
+    .tm-manage-body { padding:0 14px 14px; border-top:1px solid var(--tm-border) }
+    .tm-manage-body .tm-manage-head { padding-top:12px }
+    .tm-manage-nomatch { font-size:12px; color:var(--tm-muted); padding:10px 2px }
     .tm-manage-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap }
     .tm-manage-name-input { font-size:14px; font-weight:800; color:var(--tm-text); background:transparent; border:1.5px solid var(--tm-border); border-radius:8px; padding:5px 9px; font-family:inherit; flex:1; min-width:140px }
     .tm-manage-name-input:focus { border-color:#7c5cff; outline:none }
@@ -497,6 +517,9 @@ async function loadLinkedToForManage() {
     if (res && res.ok) _allLinkedTo = (res.linkedTo||[]).filter(function(v){ return v && v.toLowerCase()!=='linked to'; });
   } catch(e) {}
 }
+/* The panel used to render every managed team fully expanded. An assistant holding the '*'
+   grant manages every team, so that meant one long editor per team — unusable once there are
+   dozens. Now each team is a one-line summary and the editor is built only when you open it. */
 function renderManageTeamsPanel() {
   var panel = document.getElementById('tmManagePanel');
   if (!panel) return;
@@ -506,20 +529,63 @@ function renderManageTeamsPanel() {
   if (!rows.length) { panel.style.display='none'; panel.innerHTML=''; return; }
   panel.style.display = '';
   var isAll = getMyManagesTeams().indexOf('*') !== -1;
-  var title = 'Teams You Manage' + (isAll ? ' (All — ' + rows.length + ')' : '');
-  panel.innerHTML = '<div class="tm-manage-title">'+esc(title)+'</div>' + rows.map(renderManageCard).join('');
+  var title = 'Teams You Manage' + (isAll ? ' (All)' : '') + ' — ' + rows.length;
+  panel.innerHTML = ''
+    + '<div class="tm-manage-hdr">'
+      + '<div class="tm-manage-title" style="margin:0">'+esc(title)+'</div>'
+      + (rows.length > 5
+          ? '<input class="tm-manage-search" id="tmTeamSearch" type="search" placeholder="Search team…" autocomplete="off" oninput="filterManageTeams()">'
+          : '')
+    + '</div>'
+    + '<div id="tmManageRows">' + rows.map(renderManageRow).join('') + '</div>'
+    + '<div class="tm-manage-nomatch" id="tmManageNoMatch" style="display:none">No team matches that search.</div>';
 }
-function renderManageCard(sa) {
+
+/* Collapsed one-liner. data-team-search carries name + username so the filter can match either. */
+function renderManageRow(sa) {
+  var name  = sa.team_name || sa.display_name || sa.username;
+  var used  = _users.filter(function(u){ return u.created_by === sa.username; }).length;
+  var scope = Array.isArray(sa.scope_linked_to) ? sa.scope_linked_to : [];
+  var tags  = scope.length
+    ? scope.map(function(v){ return '<span class="tm-mini-tag">'+esc(v)+'</span>'; }).join('')
+    : '<span class="tm-mini-none">no scope</span>';
+  return '<div class="tm-manage-card" data-username="'+esc(sa.username)+'" data-team-search="'+esc((name+' '+sa.username).toLowerCase())+'">'
+    + '<div class="tm-manage-summary" onclick="toggleManageTeam(\''+esc(sa.username)+'\')">'
+      + '<span class="tm-mini-caret" id="tmCaret_'+esc(sa.username)+'">&#9656;</span>'
+      + '<span class="tm-mini-name">'+esc(name)+'</span>'
+      + '<span class="tm-mini-user">@'+esc(sa.username)+'</span>'
+      + '<span class="tm-mini-tags">'+tags+'</span>'
+      + '<span class="tm-mini-quota">'+used+' / '+(sa.max_normal_users||0)+'</span>'
+    + '</div>'
+    + '<div class="tm-manage-body" id="tmBody_'+esc(sa.username)+'" style="display:none"></div>'
+  + '</div>';
+}
+
+/* Built on first open and then kept, so collapsing and reopening never discards an unsaved edit. */
+function toggleManageTeam(username) {
+  var body  = document.getElementById('tmBody_'+username);
+  var caret = document.getElementById('tmCaret_'+username);
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  if (open) { body.style.display = 'none'; if (caret) caret.innerHTML = '&#9656;'; return; }
+  if (!body.innerHTML) {
+    var sa = _users.find(function(u){ return u.username===username; }) || {};
+    body.innerHTML = renderManageEditor(sa);
+  }
+  body.style.display = '';
+  if (caret) caret.innerHTML = '&#9662;';
+}
+
+function renderManageEditor(sa) {
   var scopeHtml = _allLinkedTo.length
     ? _allLinkedTo.map(function(v){
         var isChecked = Array.isArray(sa.scope_linked_to) && sa.scope_linked_to.indexOf(v)!==-1;
         return '<label class="tm-scope-chk-label"><input type="checkbox" class="tm_scope_chk_'+esc(sa.username)+'" value="'+esc(v)+'"'+(isChecked?' checked':'')+'> '+esc(v)+'</label>';
       }).join('')
     : '<span class="tm-manage-label" style="text-transform:none">No "Linked To" entries defined yet.</span>';
-  return '<div class="tm-manage-card" data-username="'+esc(sa.username)+'">'
+  return ''
     + '<div class="tm-manage-head">'
       + '<input class="tm-manage-name-input" id="tmTeamName_'+esc(sa.username)+'" value="'+esc(sa.team_name||sa.display_name||sa.username)+'" placeholder="Team name">'
-      + '<span class="tm-manage-label">@'+esc(sa.username)+'</span>'
     + '</div>'
     + '<div class="tm-manage-row"><span class="tm-manage-label">Linked To Scope</span></div>'
     + '<div class="tm-scope-tags">'+scopeHtml+'</div>'
@@ -527,8 +593,25 @@ function renderManageCard(sa) {
       + '<span class="tm-manage-label">Max Normal Users</span>'
       + '<input class="tm-manage-quota" id="tmQuota_'+esc(sa.username)+'" type="number" min="0" step="1" value="'+(sa.max_normal_users||0)+'">'
       + '<button class="tm-manage-save" id="tmManageSaveBtn_'+esc(sa.username)+'" onclick="saveManageTeam(\''+esc(sa.username)+'\')">Save Changes</button>'
-    + '</div>'
-  + '</div>';
+    + '</div>';
+}
+
+/* Filters by hiding rows rather than re-rendering, so a team you have open with unsaved edits
+   keeps its DOM (and those edits) even while you search. */
+function filterManageTeams() {
+  var input = document.getElementById('tmTeamSearch');
+  var wrap  = document.getElementById('tmManageRows');
+  if (!input || !wrap) return;
+  var q = input.value.trim().toLowerCase();
+  var cards = wrap.querySelectorAll('.tm-manage-card[data-team-search]');
+  var shown = 0;
+  Array.prototype.forEach.call(cards, function(c){
+    var match = !q || c.getAttribute('data-team-search').indexOf(q) !== -1;
+    c.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  var nm = document.getElementById('tmManageNoMatch');
+  if (nm) nm.style.display = (cards.length && !shown) ? '' : 'none';
 }
 async function saveManageTeam(username) {
   var saRow    = _users.find(function(u){ return u.username===username; }) || {};
