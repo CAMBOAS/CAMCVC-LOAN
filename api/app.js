@@ -376,18 +376,24 @@ function managesTeam(_bv, subAdminUsername) {
   return _bv.manages_teams.indexOf(subAdminUsername) !== -1;
 }
 
-/* ── Per-user "focus mode" flag, stored in the same ui_prefs bag as tab/card ordering.
-     Read fresh per request rather than carried on the session so toggling takes effect on the
-     next load without re-login. ── */
-async function isFocusOwnEnabled(username) {
-  if (!username) return false;
+/* ── Per-user data-focus mode, stored in the same ui_prefs bag as tab/card ordering.
+     'all'   — every row (default)
+     'mine'  — hide rows whose Linked To a Sub Admin team claims, ie. only our own work
+     'teams' — the inverse: only the Sub Admin teams' rows
+     Read fresh per request rather than carried on the session so a change applies on the next
+     load without re-login. Still honours the older boolean pref so anyone who set it keeps
+     their choice. ── */
+async function getDataFocusMode(username) {
+  if (!username) return 'all';
   try {
     await ensureUiPrefsCol();
     const [rows] = await db().query('SELECT ui_prefs FROM users WHERE username=?', [username]);
-    if (!rows.length) return false;
-    const prefs = JSON.parse(rows[0].ui_prefs || '{}');
-    return prefs && prefs.focus_own_data === true;
-  } catch(e) { return false; }
+    if (!rows.length) return 'all';
+    const prefs = JSON.parse(rows[0].ui_prefs || '{}') || {};
+    if (prefs.data_focus === 'mine' || prefs.data_focus === 'teams') return prefs.data_focus;
+    if (prefs.data_focus === 'all') return 'all';
+    return prefs.focus_own_data === true ? 'mine' : 'all';   /* legacy boolean */
+  } catch(e) { return 'all'; }
 }
 
 /* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_linked_to
@@ -545,21 +551,34 @@ async function handler(req, res) {
       await ensureSettingsTeamCol();
       const _sf = scopeFilterSQL(_bv, 'l.linked_to');
 
-      /* "Focus mode": an unscoped viewer (Super Admin, or an assistant acting for them) sees
-         every team's rows, which buries their own operation. When they switch it on in My
-         Profile we drop rows whose Linked To is claimed by some Sub Admin team's scope, leaving
-         the values nobody else owns — ie. Super Admin's own work. Off by default, per-user, and
-         it can only ever narrow what they already had, so it grants nothing. */
+      /* Data focus: an unscoped viewer (Super Admin, or an assistant acting for them) sees every
+         team's rows, which buries whichever side they actually want. My Profile lets them narrow
+         to their own work or, inversely, to the Sub Admin teams' work. Per-user, default 'all',
+         and either way it only ever narrows what they already had, so it grants nothing. */
       let _focus = { clause: '', params: [] };
-      if (!_sf.clause && await isFocusOwnEnabled(_bu)) {
+      const _focusMode = _sf.clause ? 'all' : await getDataFocusMode(_bu);
+      if (_focusMode !== 'all') {
         const [teamRows] = await db().query("SELECT scope_linked_to FROM users WHERE role='Sub Admin'");
         const claimed = [];
         teamRows.forEach(r => {
           try { (JSON.parse(r.scope_linked_to || '[]') || []).forEach(v => { if (v && claimed.indexOf(v) === -1) claimed.push(v); }); } catch(e) {}
         });
-        if (claimed.length) {
-          _focus.clause = ` AND (l.linked_to IS NULL OR l.linked_to NOT IN (${claimed.map(()=>'?').join(',')}))`;
-          _focus.params = claimed;
+        const ph = claimed.map(()=>'?').join(',');
+        if (_focusMode === 'mine') {
+          /* No team claims anything yet => every row already is ours, so no filter needed. */
+          if (claimed.length) {
+            _focus.clause = ` AND (l.linked_to IS NULL OR l.linked_to NOT IN (${ph}))`;
+            _focus.params = claimed;
+          }
+        } else { /* 'teams' */
+          /* Inverse. With nothing claimed there is no team data at all — show none rather than
+             falling through to everything. */
+          if (claimed.length) {
+            _focus.clause = ` AND l.linked_to IN (${ph})`;
+            _focus.params = claimed;
+          } else {
+            _focus.clause = ' AND 1=0';
+          }
         }
       }
 

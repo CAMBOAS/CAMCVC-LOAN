@@ -90,6 +90,13 @@
     .mp-btn-signout { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.25); color:#ef4444; padding:8px 16px; border-radius:11px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:7px; transition:.18s; white-space:nowrap }
     .mp-btn-signout:hover { background:rgba(239,68,68,.18); border-color:rgba(239,68,68,.45); transform:translateY(-1px) }
 
+    /* ── Data focus segmented control ── */
+    .mp-focus-seg { display:flex; gap:6px; flex-wrap:wrap }
+    .mp-focus-opt { flex:1; min-width:92px; padding:8px 10px; border-radius:10px; border:1.5px solid var(--border,rgba(148,163,184,.25)); background:transparent; color:var(--muted,#94a3b8); font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; transition:.15s }
+    .mp-focus-opt:hover { border-color:rgba(6,182,212,.45); color:var(--text) }
+    .mp-focus-opt.active { background:linear-gradient(135deg,#7c5cff,#06b6d4); border-color:transparent; color:#fff }
+    .mp-focus-opt:disabled { opacity:.55; cursor:default }
+
     /* ── Theme toggle ── */
     .mp-theme-row { display:flex; align-items:center; justify-content:space-between; gap:12px }
     .mp-theme-label { font-size:13.5px; font-weight:600; color:var(--text) }
@@ -282,15 +289,14 @@
           <div class="mp-card-title">Data Focus</div>
         </div>
         <div class="mp-info-list">
-          <div class="mp-theme-row" style="padding:4px 0">
-            <div>
-              <div class="mp-theme-label">Show only my own data</div>
-              <div class="mp-theme-sub" id="mpFocusSub">Hide loans belonging to Sub Admin teams</div>
+          <div style="padding:4px 0">
+            <div class="mp-theme-label" style="margin-bottom:3px">Which loans to show</div>
+            <div class="mp-theme-sub" style="margin-bottom:10px">Filters the Loan List, Customers and Reports for you only</div>
+            <div class="mp-focus-seg" id="mpFocusSeg">
+              <button type="button" class="mp-focus-opt" data-mode="all"   onclick="setDataFocus('all')">All teams</button>
+              <button type="button" class="mp-focus-opt" data-mode="mine"  onclick="setDataFocus('mine')">My data</button>
+              <button type="button" class="mp-focus-opt" data-mode="teams" onclick="setDataFocus('teams')">Sub Admin teams</button>
             </div>
-            <label class="mp-toggle">
-              <input type="checkbox" id="mpFocusToggle" onchange="setFocusOwn(this.checked)">
-              <span class="mp-toggle-slider"></span>
-            </label>
           </div>
         </div>
         <div class="mp-info-list" style="margin-top:-4px">
@@ -640,13 +646,18 @@ function _focusEligible() {
   if (a.role === 'Admin') return true;
   return Array.isArray(a.manages_teams) && a.manages_teams.length > 0;
 }
-function _paintFocus(on) {
-  var t = document.getElementById('mpFocusToggle');
+var _FOCUS_LABEL = { all:'All teams', mine:'My data only', teams:'Sub Admin teams only' };
+var _focusMode = 'all';
+
+function _paintFocus(mode) {
+  _focusMode = _FOCUS_LABEL[mode] ? mode : 'all';
+  document.querySelectorAll('#mpFocusSeg .mp-focus-opt').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-mode') === _focusMode);
+  });
   var s = document.getElementById('mpFocusStatus');
-  if (t) t.checked = !!on;
   if (s) {
-    s.textContent = on ? 'My own data only' : 'All teams';
-    s.style.color = on ? '#06b6d4' : '';
+    s.textContent = _FOCUS_LABEL[_focusMode];
+    s.style.color = _focusMode === 'all' ? '' : '#06b6d4';
   }
 }
 async function loadFocusPref() {
@@ -655,23 +666,24 @@ async function loadFocusPref() {
   if (card) card.style.display = '';
   try {
     var r = await CamboAPI.post({ action:'ui_prefs_get' });
-    _paintFocus(!!(r && r.ok && r.prefs && r.prefs.focus_own_data));
-  } catch(e) { _paintFocus(false); }
+    var p = (r && r.ok && r.prefs) ? r.prefs : {};
+    /* fall back to the older boolean pref so an earlier choice is not silently reset */
+    _paintFocus(p.data_focus || (p.focus_own_data === true ? 'mine' : 'all'));
+  } catch(e) { _paintFocus('all'); }
 }
-async function setFocusOwn(on) {
-  var t = document.getElementById('mpFocusToggle');
-  if (t) t.disabled = true;
+async function setDataFocus(mode) {
+  if (mode === _focusMode) return;
+  var prev = _focusMode;
+  var btns = document.querySelectorAll('#mpFocusSeg .mp-focus-opt');
+  btns.forEach(function(b){ b.disabled = true; });
+  _paintFocus(mode);                       /* optimistic, reverted below on failure */
   try {
-    var r = await CamboAPI.post({ action:'ui_prefs_set', prefs:{ focus_own_data: !!on } });
-    if (r && r.ok) {
-      _paintFocus(on);
-      mpToast(on ? 'Showing your own data only' : 'Showing all teams');
-    } else {
-      _paintFocus(!on);
-      mpToast((r && r.message) || 'Could not save', true);
-    }
-  } catch(e) { _paintFocus(!on); mpToast('Network error', true); }
-  if (t) t.disabled = false;
+    /* clear the legacy flag at the same time so the two can never disagree */
+    var r = await CamboAPI.post({ action:'ui_prefs_set', prefs:{ data_focus: mode, focus_own_data: false } });
+    if (r && r.ok) mpToast('Now showing: ' + _FOCUS_LABEL[mode]);
+    else { _paintFocus(prev); mpToast((r && r.message) || 'Could not save', true); }
+  } catch(e) { _paintFocus(prev); mpToast('Network error', true); }
+  btns.forEach(function(b){ b.disabled = false; });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
