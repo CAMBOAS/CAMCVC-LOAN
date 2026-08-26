@@ -953,10 +953,14 @@
       <div class="um-field" id="uf_manages_teams_wrap" style="margin-top:14px">
         <label class="um-label">Manages Teams (Assistant access)</label>
         <div class="um-hint" style="margin-bottom:6px">Grant this user full Admin-level control (scope, quota, rename, add/delete Normal Users) over the Sub Admin team(s) checked below.</div>
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:1.5px solid rgba(245,158,11,.5);background:rgba(245,158,11,.08);cursor:pointer;font-size:12px;font-weight:700;margin-bottom:8px">
-          <input type="checkbox" id="uf_manages_all" onchange="toggleManagesAll()"> All Teams (current &amp; future)
-        </label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:1.5px solid rgba(245,158,11,.5);background:rgba(245,158,11,.08);cursor:pointer;font-size:12px;font-weight:700">
+            <input type="checkbox" id="uf_manages_all" onchange="toggleManagesAll()"> All Teams (current &amp; future)
+          </label>
+          <input class="um-input" id="uf_manages_search" type="search" placeholder="Search team…" autocomplete="off" oninput="filterManagesTeams()" style="flex:1;min-width:150px;max-width:240px;padding:6px 10px;font-size:12px">
+        </div>
         <div id="uf_manages_teams" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div class="um-hint" id="uf_manages_nomatch" style="display:none;margin-top:6px">No team matches that search.</div>
       </div>
     </div>
     <div class="um-modal-footer">
@@ -1049,17 +1053,49 @@ function renderManagesTeams() {
     list.innerHTML = teams.map(function(t){
       var isChecked = isAll || checked.indexOf(t.username) !== -1;
       var label = t.team_name ? (t.team_name+' ('+t.username+')') : t.username;
-      return '<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;font-size:12px">'
+      /* data-team-search carries the same text the label shows, lowercased, so the search box
+         can filter by either the team name or the underlying username. */
+      return '<label data-team-search="'+esc(label.toLowerCase())+'" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;font-size:12px">'
         + '<input type="checkbox" class="uf_manages_chk" value="'+esc(t.username)+'"'+(isChecked?' checked':'')+(isAll?' disabled':'')+'> '+esc(label)
         + '</label>';
     }).join('');
   }
-  list.style.display = isAll ? 'none' : '';
+  /* Fresh render = fresh search, so reopening the modal never starts filtered. */
+  var search = document.getElementById('uf_manages_search');
+  if (search) search.value = '';
+  _setManagesTeamsVisibility(isAll, teams.length);
+}
+/* Shared by render and the All-Teams toggle: when every team is granted, the per-team list and
+   its search box are irrelevant, so both are hidden. */
+function _setManagesTeamsVisibility(isAll, teamCount) {
+  var list    = document.getElementById('uf_manages_teams');
+  var search  = document.getElementById('uf_manages_search');
+  var nomatch = document.getElementById('uf_manages_nomatch');
+  if (list)   list.style.display = isAll ? 'none' : '';
+  if (search) search.style.display = (isAll || !teamCount) ? 'none' : '';
+  if (nomatch) nomatch.style.display = 'none';
+}
+function filterManagesTeams() {
+  var search = document.getElementById('uf_manages_search');
+  var list   = document.getElementById('uf_manages_teams');
+  if (!search || !list) return;
+  var q = search.value.trim().toLowerCase();
+  var labels = list.querySelectorAll('label[data-team-search]');
+  var shown = 0;
+  /* Filtering only toggles visibility — a checked-but-hidden team stays checked and is still
+     picked up by saveUser's '.uf_manages_chk:checked' query, so searching never drops a grant. */
+  Array.prototype.forEach.call(labels, function(el){
+    var match = !q || el.getAttribute('data-team-search').indexOf(q) !== -1;
+    el.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  var nomatch = document.getElementById('uf_manages_nomatch');
+  if (nomatch) nomatch.style.display = (labels.length && !shown) ? '' : 'none';
 }
 function toggleManagesAll() {
   var isAll = document.getElementById('uf_manages_all').checked;
   var list  = document.getElementById('uf_manages_teams');
-  list.style.display = isAll ? 'none' : '';
+  _setManagesTeamsVisibility(isAll, list ? list.querySelectorAll('label[data-team-search]').length : 0);
   Array.from(document.querySelectorAll('.uf_manages_chk')).forEach(function(el){
     el.disabled = isAll;
     if (isAll) el.checked = true;
