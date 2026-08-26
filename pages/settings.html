@@ -105,7 +105,9 @@
     .um-del-no  { padding:4px 9px; border-radius:7px; border:1px solid rgba(148,163,184,.3); background:transparent; color:var(--muted); font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit }
 
     /* ── Modal backdrop ── */
-    .um-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); z-index:2000; display:none; align-items:center; justify-content:center; padding:16px }
+    /* Above the shared topbar (9998) and sidebar (10001): at phone width the modal is full-screen,
+       so a lower layer would let the topbar cover its header and make the close button dead. */
+    .um-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); z-index:10050; display:none; align-items:center; justify-content:center; padding:16px }
     .um-modal-bg.open { display:flex }
     .um-modal { background:var(--card); border:1px solid rgba(124,92,255,.2); border-radius:20px; width:min(440px,100%); max-height:90vh; overflow-y:auto; box-shadow:0 28px 70px rgba(0,0,0,.5) }
     .um-modal-hdr { display:flex; align-items:center; gap:12px; padding:20px 22px 0 }
@@ -136,8 +138,24 @@
     .um-btn-save:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(124,92,255,.4) }
     .um-btn-save:disabled { opacity:.6; cursor:not-allowed; transform:none }
 
+    /* ── Phone: the user form is long (scope tick-list, team picker), so give it the whole
+         screen instead of a short card floating in a blurred backdrop. Header and footer are
+         pinned and only the body scrolls, so Save/Cancel stay reachable without scrolling. ── */
+    @media (max-width:640px) {
+      .um-modal-bg { padding:0 }
+      .um-modal {
+        width:100%; max-width:none;
+        height:100%; max-height:100dvh;
+        border:none; border-radius:0;
+        display:flex; flex-direction:column; overflow:hidden;
+      }
+      .um-modal-hdr    { flex-shrink:0; padding:calc(16px + env(safe-area-inset-top,0px)) 16px 0 }
+      .um-modal-body   { flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px }
+      .um-modal-footer { flex-shrink:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px)); border-top:1px solid rgba(148,163,184,.18); background:var(--card) }
+    }
+
     /* ── Toast ── */
-    .um-toast { position:fixed; bottom:24px; right:20px; z-index:9999; padding:12px 18px; border-radius:12px; font-size:13px; font-weight:600; color:#fff; background:#1e293b; box-shadow:0 8px 24px rgba(0,0,0,.35); display:none; align-items:center; gap:8px; max-width:320px }
+    .um-toast { position:fixed; bottom:24px; right:20px; z-index:10060; padding:12px 18px; border-radius:12px; font-size:13px; font-weight:600; color:#fff; background:#1e293b; box-shadow:0 8px 24px rgba(0,0,0,.35); display:none; align-items:center; gap:8px; max-width:320px }
     .um-toast.show { display:flex }
 
     /* ── Access denied overlay ── */
