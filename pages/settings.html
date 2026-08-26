@@ -309,7 +309,10 @@
     .org-scroll { overflow-x:auto; padding-bottom:4px }
     .org-wrap { position:relative; display:flex; flex-direction:column; align-items:center; padding:10px 4px 20px; width:100%; box-sizing:border-box }
     .org-lines { position:absolute; top:0; left:0; pointer-events:none; z-index:0; overflow:visible }
-    .org-lines path.org-line { stroke:rgba(148,163,184,.5); stroke-width:1.5; stroke-linecap:round }
+    .org-lines path.org-line { stroke:rgba(148,163,184,.5); stroke-width:1.5; stroke-linecap:round; transition:opacity .15s,stroke-width .15s }
+    .org-lines.org-filtering path { opacity:.1 !important }
+    .org-lines path.org-line-hl { opacity:1 !important; stroke-width:2.4 }
+    .org-lines path.org-line-assist.org-line-hl { stroke-width:2 }
     .org-root { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center }
     .org-root-label { display:flex; align-items:center; gap:5px; font-size:9.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px }
     .org-admin-row { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-bottom:16px }
@@ -327,10 +330,14 @@
     .org-teams.org-drag-mode .org-team-card { cursor:grab; border-style:dashed; border-color:rgba(124,92,255,.35) }
     .org-teams.org-drag-mode .org-team-card:active { cursor:grabbing }
     .org-team { display:flex; flex-direction:column; align-items:center; width:220px; flex-shrink:0 }
-    .org-team-card { width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,.06); transition:opacity .15s,border-color .15s }
+    .org-team-card { width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(0,0,0,.06); transition:opacity .15s,border-color .15s,box-shadow .15s; cursor:pointer }
     .org-team-card.org-dragging { opacity:.35 }
     .org-team-card.org-drag-over { border-color:#7c5cff; box-shadow:0 0 0 3px rgba(124,92,255,.15) }
     .org-team-card.org-lp-active { border-color:#7c5cff }
+    .org-team-card.org-node-selected { border-color:#7c5cff; box-shadow:0 0 0 3px rgba(124,92,255,.18) }
+    .org-assistant-chip { cursor:pointer; border-radius:12px; padding:3px 2px; transition:background .15s }
+    .org-assistant-chip:hover { background:rgba(245,158,11,.08) }
+    .org-assistant-chip.org-node-selected { background:rgba(245,158,11,.14); box-shadow:0 0 0 2px rgba(245,158,11,.35) }
     .org-team-name-row { display:flex; align-items:center; gap:8px; margin-bottom:8px }
     .org-avatar { width:36px; height:36px; border-radius:50%; flex-shrink:0; overflow:hidden; background:rgba(124,92,255,.14); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#a78bfa; border:1.5px solid rgba(124,92,255,.3) }
     .org-avatar img { width:100%; height:100%; object-fit:cover; display:block }
@@ -1252,7 +1259,7 @@ function renderOrgChart() {
     var teamName = sa.team_name || sa.display_name || sa.username;
     return ''
       + '<div class="org-team" data-username="'+esc(sa.username)+'">'
-        + '<div class="org-team-card" data-username="'+esc(sa.username)+'">'
+        + '<div class="org-team-card" data-username="'+esc(sa.username)+'" onclick="event.stopPropagation();orgToggleTeamHighlight(\''+esc(sa.username)+'\')" title="Click to highlight this team\'s connector line(s)">'
           + '<div class="org-team-name-row">'
             + '<div class="org-avatar">'+_orgAvatarHtml(sa)+'</div>'
             + '<div class="org-team-name-col">'
@@ -1282,7 +1289,7 @@ function renderOrgChart() {
         var isAll = u.manages_teams.indexOf('*') !== -1;
         var tag   = isAll ? 'All Teams' : 'Assistant';
         var titleTxt = isAll ? 'Assistant for: ALL teams (current & future)' : 'Assistant for: '+u.manages_teams.join(', ');
-        return '<div class="org-assistant-chip" data-username="'+esc(u.username)+'" data-manages="'+esc(isAll?'':u.manages_teams.join(','))+'" title="'+esc(u.display_name||u.username)+' — '+esc(titleTxt)+'">'
+        return '<div class="org-assistant-chip" data-username="'+esc(u.username)+'" data-manages="'+esc(isAll?'':u.manages_teams.join(','))+'" onclick="event.stopPropagation();orgToggleAssistantHighlight(\''+esc(u.username)+'\')" title="'+esc(u.display_name||u.username)+' — '+esc(titleTxt)+' (click to highlight)">'
           + '<div class="org-assistant-avatar">'+_orgAvatarHtml(u)+'</div>'
           + '<div class="org-assistant-name">'+esc(u.display_name||u.username)+'</div>'
           + '<div class="org-assistant-tag">'+esc(tag)+'</div>'
@@ -1291,6 +1298,7 @@ function renderOrgChart() {
     + '</div>');
 
   wrap.className = 'org-wrap';
+  wrap.onclick = function(e){ if (e.target === wrap) orgClearHighlight(); };
   wrap.innerHTML = ''
     + '<svg class="org-lines" id="orgLinesSvg"></svg>'
     + '<div class="org-root">'
@@ -1332,24 +1340,35 @@ function _orgGroupByRow(pts) {
   });
   return rows;
 }
-function _orgDrawTree(paths, sourceX, sourceY, targets, cls, gap, R) {
+/* Each path carries data-source (which node it originates from — 'root' for the Super Admin
+   tree, or an assistant's username) and data-teams (space-separated usernames it actually
+   serves) so a click can highlight exactly the branch belonging to one team or one assistant,
+   even though shared trunk/spine segments serve several targets at once. laneOffset shifts this
+   tree's vertical "spine" further left than the previous one, so multiple trees sharing the same
+   region (the solid Super Admin tree and each assistant's dashed tree) never trace the same
+   pixels and become indistinguishable. */
+function _orgDrawTree(paths, sourceX, sourceY, targets, cls, gap, R, sourceKey, laneOffset) {
   if (!targets.length) return;
   var rows = _orgGroupByRow(targets);
   var busY = rows.map(function(rowPts){ return rowPts[0].y - gap; });
   var carryX = null;
   if (rows.length > 1) {
     var allX = targets.map(function(p){ return p.x; }).concat([sourceX]);
-    carryX = Math.max(6, Math.min.apply(null, allX) - 16);
-    paths.push('<path class="'+cls+'" d="M '+sourceX+' '+busY[0]+' L '+carryX+' '+busY[0]+'" fill="none"/>');
+    carryX = Math.max(6, Math.min.apply(null, allX) - 16 - (laneOffset||0));
+    var hopTeams = [];
+    for (var r = 1; r < rows.length; r++) rows[r].forEach(function(p){ hopTeams.push(p.username); });
+    paths.push('<path class="'+cls+'" data-source="'+sourceKey+'" data-teams="'+hopTeams.join(' ')+'" d="M '+sourceX+' '+busY[0]+' L '+carryX+' '+busY[0]+'" fill="none"/>');
     for (var i = 1; i < rows.length; i++) {
-      paths.push('<path class="'+cls+'" d="M '+carryX+' '+busY[i-1]+' L '+carryX+' '+busY[i]+'" fill="none"/>');
+      var segTeams = [];
+      for (var r2 = i; r2 < rows.length; r2++) rows[r2].forEach(function(p){ segTeams.push(p.username); });
+      paths.push('<path class="'+cls+'" data-source="'+sourceKey+'" data-teams="'+segTeams.join(' ')+'" d="M '+carryX+' '+busY[i-1]+' L '+carryX+' '+busY[i]+'" fill="none"/>');
     }
   }
   rows.forEach(function(rowPts, i){
     var ex = i === 0 ? sourceX : carryX;
     var ey = i === 0 ? sourceY : busY[i];
     rowPts.forEach(function(p){
-      paths.push('<path class="'+cls+'" d="'+_orgElbowPath(ex, ey, p.x, p.y, busY[i], R)+'" fill="none"/>');
+      paths.push('<path class="'+cls+'" data-source="'+sourceKey+'" data-teams="'+p.username+'" d="'+_orgElbowPath(ex, ey, p.x, p.y, busY[i], R)+'" fill="none"/>');
     });
   });
 }
@@ -1373,23 +1392,90 @@ function drawOrgLines() {
     return { x: r.left + r.width/2 - wRect.left, y: r.top - wRect.top, username: c.getAttribute('data-username') };
   });
   var paths = [];
-  _orgDrawTree(paths, rootX, rootY, pts, 'org-line', 16, R);
+  _orgDrawTree(paths, rootX, rootY, pts, 'org-line', 16, R, 'root', 0);
 
   /* Dashed "matrix management" lines: assistant chip -> each Sub Admin team card it manages,
-     same row-aware trunk/bus/spine/drop routing so they never cross diagonally through cards. */
+     same row-aware trunk/bus/spine/drop routing so they never cross diagonally through cards.
+     Each assistant gets its own lane (offset further left than the last) so several dashed
+     trees, and the solid tree, never overlap into one indistinguishable line. */
   var assistChips = Array.prototype.slice.call(wrap.querySelectorAll('.org-assistant-chip'));
   var cardByUser = {};
   pts.forEach(function(p){ cardByUser[p.username] = p; });
-  assistChips.forEach(function(chip){
+  assistChips.forEach(function(chip, idx){
     var aRect = chip.getBoundingClientRect();
     var ax = aRect.left + aRect.width/2 - wRect.left;
     var ay = aRect.bottom - wRect.top;
     var managed = (chip.getAttribute('data-manages')||'').split(',').filter(Boolean);
     var targets = managed.map(function(u){ return cardByUser[u]; }).filter(Boolean);
-    _orgDrawTree(paths, ax, ay, targets, 'org-line-assist', 14, R);
+    _orgDrawTree(paths, ax, ay, targets, 'org-line-assist', 14, R, chip.getAttribute('data-username'), (idx + 1) * 16);
   });
 
   svg.innerHTML = paths.join('');
+  if (_orgSelectedKey) _orgReapplyHighlight();
+}
+
+/* ── Click-to-highlight: click a team card or an assistant chip to spotlight exactly the
+   connector(s) that reach it (and dim everything else); click again (or the same node) to
+   clear. Rebuilt line elements after every redraw, so selection is reapplied via
+   _orgReapplyHighlight() rather than assumed to survive. ── */
+var _orgSelectedKey = null;
+function _orgPathServesTeam(p, username) {
+  return (p.getAttribute('data-teams')||'').split(' ').indexOf(username) !== -1;
+}
+function _orgApplyHighlight(matchFn) {
+  var svg = document.getElementById('orgLinesSvg');
+  if (!svg) return;
+  svg.classList.add('org-filtering');
+  Array.prototype.forEach.call(svg.querySelectorAll('path'), function(p){
+    p.classList.toggle('org-line-hl', matchFn(p));
+  });
+}
+function _orgReapplyHighlight() {
+  if (!_orgSelectedKey) return;
+  var parts = _orgSelectedKey.split(':');
+  if (parts[0] === 'team') _orgHighlightTeam(parts[1]);
+  else if (parts[0] === 'asst') _orgHighlightAssistant(parts[1]);
+}
+function orgClearHighlight() {
+  var svg = document.getElementById('orgLinesSvg');
+  if (svg) {
+    svg.classList.remove('org-filtering');
+    Array.prototype.forEach.call(svg.querySelectorAll('path'), function(p){ p.classList.remove('org-line-hl'); });
+  }
+  _orgSelectedKey = null;
+  document.querySelectorAll('.org-team-card.org-node-selected, .org-assistant-chip.org-node-selected')
+    .forEach(function(el){ el.classList.remove('org-node-selected'); });
+}
+function _orgHighlightTeam(username) {
+  var managers = (typeof _users !== 'undefined' ? _users : []).filter(function(u){
+    return Array.isArray(u.manages_teams) && (u.manages_teams.indexOf('*') !== -1 || u.manages_teams.indexOf(username) !== -1);
+  }).map(function(u){ return u.username; });
+  _orgApplyHighlight(function(p){
+    var src = p.getAttribute('data-source');
+    if (src === 'root') return _orgPathServesTeam(p, username);
+    return managers.indexOf(src) !== -1 && _orgPathServesTeam(p, username);
+  });
+  document.querySelectorAll('.org-team-card.org-node-selected, .org-assistant-chip.org-node-selected').forEach(function(el){ el.classList.remove('org-node-selected'); });
+  var card = document.querySelector('.org-team-card[data-username="'+CSS.escape(username)+'"]');
+  if (card) card.classList.add('org-node-selected');
+}
+function _orgHighlightAssistant(username) {
+  _orgApplyHighlight(function(p){ return p.getAttribute('data-source') === username; });
+  document.querySelectorAll('.org-team-card.org-node-selected, .org-assistant-chip.org-node-selected').forEach(function(el){ el.classList.remove('org-node-selected'); });
+  var chip = document.querySelector('.org-assistant-chip[data-username="'+CSS.escape(username)+'"]');
+  if (chip) chip.classList.add('org-node-selected');
+}
+function orgToggleTeamHighlight(username) {
+  var key = 'team:'+username;
+  if (_orgSelectedKey === key) { orgClearHighlight(); return; }
+  _orgSelectedKey = key;
+  _orgHighlightTeam(username);
+}
+function orgToggleAssistantHighlight(username) {
+  var key = 'asst:'+username;
+  if (_orgSelectedKey === key) { orgClearHighlight(); return; }
+  _orgSelectedKey = key;
+  _orgHighlightAssistant(username);
 }
 var _orgResizeTimer = null;
 window.addEventListener('resize', function(){
