@@ -365,11 +365,15 @@ function teamOwnerOf(_bv) {
 
 /* ── Can this requester administer the given Sub Admin's team with full Admin-level power
    (edit their scope/quota/team_name, add/delete their Normal Users)? Admin always can; anyone
-   else needs subAdminUsername in their own manages_teams grant list. ── */
+   else needs subAdminUsername in their own manages_teams grant list — or the '*' wildcard,
+   granting every team (current and future), so a Super Admin doesn't have to re-check a huge
+   team list by hand as it grows. ── */
 function managesTeam(_bv, subAdminUsername) {
   if (!_bv || !subAdminUsername) return false;
   if (_bv.role === 'Admin') return true;
-  return Array.isArray(_bv.manages_teams) && _bv.manages_teams.indexOf(subAdminUsername) !== -1;
+  if (!Array.isArray(_bv.manages_teams)) return false;
+  if (_bv.manages_teams.indexOf('*') !== -1) return true;
+  return _bv.manages_teams.indexOf(subAdminUsername) !== -1;
 }
 
 /* ── Returns a SQL fragment + params to restrict a loans query to the requester's scope_linked_to
@@ -1045,9 +1049,13 @@ async function handler(req, res) {
       let teamWhere = '';
       let teamParams = [];
       const managedTeams = Array.isArray(_bv.manages_teams) ? _bv.manages_teams : [];
-      if (_bv.role === 'Sub Admin') {
+      const managesAll   = managedTeams.indexOf('*') !== -1;
+      if (_bv.role === 'Sub Admin' && !managesAll) {
         teamWhere = 'WHERE u.created_by=? OR u.username=?';
         teamParams = [_bu, _bu];
+      } else if (managesAll) {
+        /* '*' wildcard: assistant manages every team — see everyone, same as Admin's own view */
+        teamWhere = '';
       } else if (managedTeams.length) {
         /* Assistant: see every managed team's own row (for the manage panel) plus their members */
         const ph = managedTeams.map(()=>'?').join(',');

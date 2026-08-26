@@ -955,6 +955,9 @@
       <div class="um-field" id="uf_manages_teams_wrap" style="margin-top:14px">
         <label class="um-label">Manages Teams (Assistant access)</label>
         <div class="um-hint" style="margin-bottom:6px">Grant this user full Admin-level control (scope, quota, rename, add/delete Normal Users) over the Sub Admin team(s) checked below.</div>
+        <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:1.5px solid rgba(245,158,11,.5);background:rgba(245,158,11,.08);cursor:pointer;font-size:12px;font-weight:700;margin-bottom:8px">
+          <input type="checkbox" id="uf_manages_all" onchange="toggleManagesAll()"> All Teams (current &amp; future)
+        </label>
         <div id="uf_manages_teams" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
     </div>
@@ -1032,6 +1035,7 @@ async function toggleSubAdminFields() {
 function renderManagesTeams() {
   var wrap = document.getElementById('uf_manages_teams_wrap');
   var list = document.getElementById('uf_manages_teams');
+  var allChk = document.getElementById('uf_manages_all');
   if (!wrap || !list) return;
   var role = document.getElementById('uf_role').value;
   /* A Sub Admin's own delegated authority is implicit over their own team; this grant is for
@@ -1039,15 +1043,29 @@ function renderManagesTeams() {
   if (role === 'Sub Admin') { wrap.style.display = 'none'; return; }
   wrap.style.display = '';
   var teams = _users.filter(function(u){ return u.role === 'Sub Admin' && (!_editingUser || u.username !== _editingUser.username); });
-  if (!teams.length) { list.innerHTML = '<span class="um-hint">No Sub Admin teams exist yet.</span>'; return; }
   var checked = (_editingUser && Array.isArray(_editingUser.manages_teams)) ? _editingUser.manages_teams : [];
-  list.innerHTML = teams.map(function(t){
-    var isChecked = checked.indexOf(t.username) !== -1;
-    var label = t.team_name ? (t.team_name+' ('+t.username+')') : t.username;
-    return '<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;font-size:12px">'
-      + '<input type="checkbox" class="uf_manages_chk" value="'+esc(t.username)+'"'+(isChecked?' checked':'')+'> '+esc(label)
-      + '</label>';
-  }).join('');
+  var isAll = checked.indexOf('*') !== -1;
+  allChk.checked = isAll;
+  if (!teams.length) { list.innerHTML = '<span class="um-hint">No Sub Admin teams exist yet.</span>'; }
+  else {
+    list.innerHTML = teams.map(function(t){
+      var isChecked = isAll || checked.indexOf(t.username) !== -1;
+      var label = t.team_name ? (t.team_name+' ('+t.username+')') : t.username;
+      return '<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;font-size:12px">'
+        + '<input type="checkbox" class="uf_manages_chk" value="'+esc(t.username)+'"'+(isChecked?' checked':'')+(isAll?' disabled':'')+'> '+esc(label)
+        + '</label>';
+    }).join('');
+  }
+  list.style.display = isAll ? 'none' : '';
+}
+function toggleManagesAll() {
+  var isAll = document.getElementById('uf_manages_all').checked;
+  var list  = document.getElementById('uf_manages_teams');
+  list.style.display = isAll ? 'none' : '';
+  Array.from(document.querySelectorAll('.uf_manages_chk')).forEach(function(el){
+    el.disabled = isAll;
+    if (isAll) el.checked = true;
+  });
 }
 
 /* ── Toast ── */
@@ -1270,10 +1288,13 @@ function renderOrgChart() {
   var assistantsHtml = !assistants.length ? '' : (''
     + '<div class="org-assistants-row" id="orgAssistantsRow">'
     + assistants.map(function(u){
-        return '<div class="org-assistant-chip" data-username="'+esc(u.username)+'" data-manages="'+esc(u.manages_teams.join(','))+'" title="'+esc(u.display_name||u.username)+' — Assistant for: '+esc(u.manages_teams.join(', '))+'">'
+        var isAll = u.manages_teams.indexOf('*') !== -1;
+        var tag   = isAll ? 'All Teams' : 'Assistant';
+        var titleTxt = isAll ? 'Assistant for: ALL teams (current & future)' : 'Assistant for: '+u.manages_teams.join(', ');
+        return '<div class="org-assistant-chip" data-username="'+esc(u.username)+'" data-manages="'+esc(isAll?'':u.manages_teams.join(','))+'" title="'+esc(u.display_name||u.username)+' — '+esc(titleTxt)+'">'
           + '<div class="org-assistant-avatar">'+_orgAvatarHtml(u)+'</div>'
           + '<div class="org-assistant-name">'+esc(u.display_name||u.username)+'</div>'
-          + '<div class="org-assistant-tag">Assistant</div>'
+          + '<div class="org-assistant-tag">'+esc(tag)+'</div>'
         + '</div>';
       }).join('')
     + '</div>');
@@ -1616,7 +1637,9 @@ async function saveUser() {
       payload.scope_linked_to  = Array.from(document.querySelectorAll('.uf_scope_chk:checked')).map(function(el){ return el.value; });
       payload.max_normal_users = parseInt(document.getElementById('uf_max_normal_users').value)||0;
     } else {
-      payload.manages_teams = Array.from(document.querySelectorAll('.uf_manages_chk:checked')).map(function(el){ return el.value; });
+      payload.manages_teams = document.getElementById('uf_manages_all').checked
+        ? ['*']
+        : Array.from(document.querySelectorAll('.uf_manages_chk:checked')).map(function(el){ return el.value; });
     }
     var res = await CamboAPI.post(payload);
     if (res && res.ok) {

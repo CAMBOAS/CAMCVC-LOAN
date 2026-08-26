@@ -379,6 +379,15 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function getMyUsername(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return a?(a.u||''):''; }catch(e){return '';} }
 function getMyRole(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return a?(a.role||''):''; }catch(e){return '';} }
 function getMyManagesTeams(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return (a&&Array.isArray(a.manages_teams))?a.manages_teams:[]; }catch(e){return [];} }
+/* '*' means "every Sub Admin team, current and future" — expand it against whatever Sub Admin
+   rows team_list actually returned (already unrestricted server-side for a '*' grant). */
+function getMyManagedSubAdminUsernames() {
+  var mine = getMyManagesTeams();
+  if (mine.indexOf('*') !== -1) {
+    return _users.filter(function(u){ return u.role==='Sub Admin'; }).map(function(u){ return u.username; });
+  }
+  return mine;
+}
 
 /* ── Sub Admin (own team) + Assistant (delegated teams): which team(s) may I add/see quota for ── */
 function getManageableTeams() {
@@ -389,7 +398,7 @@ function getManageableTeams() {
     var me = _users.find(function(u){ return u.username===mine; });
     out.push({ username: mine, label: (me&&me.team_name)||mine, quota: me?Number(me.max_normal_users||0):0 });
   }
-  getMyManagesTeams().forEach(function(t){
+  getMyManagedSubAdminUsernames().forEach(function(t){
     if (out.some(function(o){ return o.username===t; })) return;
     var row = _users.find(function(u){ return u.username===t && u.role==='Sub Admin'; });
     if (!row) return;
@@ -467,7 +476,7 @@ async function saveNormalUser() {
 function canManageMember(u) {
   if (u.username === getMyUsername() || u.role === 'Sub Admin') return false;
   if (getMyRole() === 'Sub Admin' && u.created_by === getMyUsername()) return true;
-  return getMyManagesTeams().indexOf(u.created_by) !== -1;
+  return getMyManagedSubAdminUsernames().indexOf(u.created_by) !== -1;
 }
 async function requestDeleteMember(username) {
   var u = _users.find(function(x){ return x.username===username; });
@@ -491,12 +500,14 @@ async function loadLinkedToForManage() {
 function renderManageTeamsPanel() {
   var panel = document.getElementById('tmManagePanel');
   if (!panel) return;
-  var rows = getMyManagesTeams()
+  var rows = getMyManagedSubAdminUsernames()
     .map(function(t){ return _users.find(function(u){ return u.username===t && u.role==='Sub Admin'; }); })
     .filter(Boolean);
   if (!rows.length) { panel.style.display='none'; panel.innerHTML=''; return; }
   panel.style.display = '';
-  panel.innerHTML = '<div class="tm-manage-title">Teams You Manage</div>' + rows.map(renderManageCard).join('');
+  var isAll = getMyManagesTeams().indexOf('*') !== -1;
+  var title = 'Teams You Manage' + (isAll ? ' (All — ' + rows.length + ')' : '');
+  panel.innerHTML = '<div class="tm-manage-title">'+esc(title)+'</div>' + rows.map(renderManageCard).join('');
 }
 function renderManageCard(sa) {
   var scopeHtml = _allLinkedTo.length
