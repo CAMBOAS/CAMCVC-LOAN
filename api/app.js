@@ -548,10 +548,11 @@ async function handler(req, res) {
          could no longer pick the very value they are assigned to. */
       const _visibleLinked = r => !_scoped || r.created_by_team === _team || _granted.indexOf(r.value) !== -1;
 
-      /* Groups have no per-user grant to fall back on and every existing one is ownerless, so
-         locking them to the owning team would strip all groups from every Sub Admin at once.
-         Left shared until each group has an owner. */
-      const _visibleGroup = r => !_scoped || !r.created_by_team || r.created_by_team === _team;
+      /* Groups follow the same boundary, minus the grant fallback (groups are never granted).
+         An ownerless group therefore reads as "Super Admin's own": Admin and assistants are
+         unscoped so they still see it, while a Sub Admin sees only what their own team created.
+         That matches how the existing groups came about without needing to rewrite any rows. */
+      const _visibleGroup = r => !_scoped || r.created_by_team === _team;
 
       return res.json({
         ok:          true,
