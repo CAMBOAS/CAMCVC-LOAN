@@ -838,8 +838,8 @@
                   <th onclick="sortTable('Status')">Status</th>
                   <th onclick="sortTable('Paid')" style="text-align:center">Paid</th>
                   <th onclick="sortTable('_date')">Date</th>
-                  <th onclick="sortTable('_by')">By</th>
                   <th>Note</th>
+                  <th onclick="sortTable('_by')">By</th>
                   <th id="lrActionTh" style="text-align:center;width:60px;display:none">Action</th>
                 </tr>
               </thead>
@@ -1273,7 +1273,7 @@ function sortTable(col) {
   else { _sortCol = col; _sortAsc = true; }
   document.querySelectorAll('.lr-tbl thead th').forEach(function(th){ th.className=''; });
   var ths = document.querySelectorAll('.lr-tbl thead th');
-  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','Paid','_date','_by','_note'];
+  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','Paid','_date','_note','_by'];
   var idx = colMap.indexOf(col);
   if (idx >= 0 && ths[idx]) ths[idx].className = _sortAsc ? 'sort-asc' : 'sort-desc';
   renderTable();
@@ -1281,7 +1281,7 @@ function sortTable(col) {
 
 function sortAndRender() {
   var ths = document.querySelectorAll('.lr-tbl thead th');
-  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','Paid','_date','_by','_note'];
+  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','Paid','_date','_note','_by'];
   var idx = colMap.indexOf(_sortCol);
   if (idx >= 0 && ths[idx]) ths[idx].className = _sortAsc ? 'sort-asc' : 'sort-desc';
   renderTable();
@@ -1328,8 +1328,8 @@ function renderTable() {
       + '<td>'+statusTag(l.Status)+'</td>'
       + '<td style="text-align:center"><button class="lr-paid-btn'+(l.Paid?' lr-paid-yes':'')+'" data-dt="'+esc(l.DateTime||'')+'" title="'+(l.Paid?'Paid — click to unmark':'Not paid — click to mark paid')+'">'+(l.Paid?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>')+'</button></td>'
       + '<td style="font-size:11px;color:var(--muted)">'+fmtDate(l.DateTime)+'</td>'
-      + '<td style="font-size:11px;color:#a78bfa;white-space:nowrap">'+esc(l.created_by||'—')+'</td>'
       + '<td style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(l.Note||'')+'">'+esc(l.Note||'—')+'</td>'
+      + '<td style="font-size:11px;color:#a78bfa;white-space:nowrap">'+esc(l.created_by||'—')+'</td>'
       + (_trashMode
           ? '<td style="text-align:center;white-space:nowrap"><button class="lr-trash-recover-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="Recover">↩</button> <button class="lr-trash-pdel-btn" data-dt="'+esc(l.DateTime||'')+'" data-name="'+esc(l.FullName||'—')+'" title="លុបជាស្ថាពរ">✕</button></td>'
           : '')
