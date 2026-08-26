@@ -603,7 +603,8 @@
         } else {
           _failCount = 0;
           localStorage.setItem('appAuth', JSON.stringify({
-            u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || ''
+            u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || '',
+            manages_teams: res.manages_teams || []
           }));
           if (res.photo_url) localStorage.setItem('user_photo', res.photo_url);
           else localStorage.removeItem('user_photo');

@@ -420,7 +420,7 @@ async function handler(req, res) {
       db().query('UPDATE users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
       if (await isNotifEnabled('login')) { try { await sendTelegramEvent('login', { name:v.name, role:v.role, username:v.username }); } catch(e) {} }
       logActivity('user_login', v.name, v.username, null, { role: v.role }).catch(()=>{});
-      return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate, photo_url:v.photo_url||'' });
+      return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate, photo_url:v.photo_url||'', manages_teams:v.manages_teams||[] });
     }
 
     if (action === 'login_alert') {
@@ -1041,13 +1041,25 @@ async function handler(req, res) {
     if (action === 'team_list') {
       await ensureUserPhotoCol();
       await ensureUserScopeCols();
+      await ensureTeamNameCol();
       let teamWhere = '';
       let teamParams = [];
-      if (_bv.role === 'Sub Admin') { teamWhere = 'WHERE u.created_by=? OR u.username=?'; teamParams = [_bu, _bu]; }
-      else if (_bv.role !== 'Admin') { teamWhere = 'WHERE u.username=?'; teamParams = [_bu]; }
+      const managedTeams = Array.isArray(_bv.manages_teams) ? _bv.manages_teams : [];
+      if (_bv.role === 'Sub Admin') {
+        teamWhere = 'WHERE u.created_by=? OR u.username=?';
+        teamParams = [_bu, _bu];
+      } else if (managedTeams.length) {
+        /* Assistant: see every managed team's own row (for the manage panel) plus their members */
+        const ph = managedTeams.map(()=>'?').join(',');
+        teamWhere = `WHERE u.created_by IN (${ph}) OR u.username IN (${ph}) OR u.username=?`;
+        teamParams = [...managedTeams, ...managedTeams, _bu];
+      } else if (_bv.role !== 'Admin') {
+        teamWhere = 'WHERE u.username=?';
+        teamParams = [_bu];
+      }
       const [users] = await db().query(`
         SELECT u.username, u.display_name, u.role, u.photo_url, u.exp_date, u.status, u.last_seen,
-          u.created_by, u.max_normal_users,
+          u.created_by, u.max_normal_users, u.scope_linked_to, u.team_name,
           COALESCE(s.loans_added, 0)  AS loans_added,
           COALESCE(s.loans_edited, 0) AS loans_edited,
           s.last_login
@@ -1063,6 +1075,7 @@ async function handler(req, res) {
         ${teamWhere}
         ORDER BY u.display_name
       `, teamParams);
+      users.forEach(u => { try { u.scope_linked_to = u.scope_linked_to ? JSON.parse(u.scope_linked_to) : []; } catch(e) { u.scope_linked_to = []; } });
       return res.json({ ok: true, users });
     }
 

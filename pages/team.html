@@ -105,6 +105,28 @@
     .tm-add-btn:hover { opacity:.9 }
     .tm-add-btn:disabled { opacity:.5; cursor:not-allowed }
 
+    /* -- Manage Teams panel (Assistant access) -- */
+    .tm-manage-panel { margin-bottom:18px; display:flex; flex-direction:column; gap:10px }
+    .tm-manage-title { font-size:11px; font-weight:800; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px }
+    .tm-manage-card { background:var(--tm-card); border:1.5px solid rgba(245,158,11,.35); border-radius:14px; padding:14px 16px; box-shadow:var(--tm-shadow) }
+    .tm-manage-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap }
+    .tm-manage-name-input { font-size:14px; font-weight:800; color:var(--tm-text); background:transparent; border:1.5px solid var(--tm-border); border-radius:8px; padding:5px 9px; font-family:inherit; flex:1; min-width:140px }
+    .tm-manage-name-input:focus { border-color:#7c5cff; outline:none }
+    .tm-manage-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px }
+    .tm-manage-label { font-size:10.5px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.04em }
+    .tm-scope-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px }
+    .tm-scope-chk-label { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:8px; border:1.5px solid var(--tm-border); cursor:pointer; font-size:12px; color:var(--tm-text) }
+    .tm-manage-quota { width:90px; padding:6px 9px; border-radius:8px; border:1.5px solid var(--tm-border); background:transparent; color:var(--tm-text); font-size:13px; font-family:inherit }
+    .tm-manage-save { padding:7px 14px; border-radius:9px; border:1.5px solid #7c5cff; background:#7c5cff; color:#fff; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit }
+    .tm-manage-save:disabled { opacity:.5; cursor:default }
+
+    /* -- Remove-from-team button -- */
+    .tm-card-del { position:absolute; top:8px; left:8px; width:22px; height:22px; border-radius:50%; border:1px solid var(--tm-border); background:var(--tm-card); color:var(--tm-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; line-height:1; padding:0; z-index:2 }
+    .tm-card-del:hover { background:rgba(239,68,68,.15); color:#dc2626; border-color:rgba(239,68,68,.4) }
+    .tm-row-del { width:20px; height:20px; border-radius:50%; border:1px solid var(--tm-border); background:transparent; color:var(--tm-muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-size:13px; line-height:1; padding:0; margin-left:8px; flex-shrink:0 }
+    .tm-row-del:hover { background:rgba(239,68,68,.15); color:#dc2626; border-color:rgba(239,68,68,.4) }
+    .tm-row-last { display:flex; align-items:center; justify-content:flex-end }
+
     /* -- Add/Edit Normal User modal -- */
     .au-backdrop { position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; pointer-events:none; transition:opacity .2s }
     .au-backdrop.au-open { opacity:1; pointer-events:auto }
@@ -242,6 +264,7 @@
   <main class="main-content" id="mainContent">
     <div class="shared-topbar" id="sharedHeader"></div>
     <div class="tm-wrap">
+      <div class="tm-manage-panel" id="tmManagePanel" style="display:none"></div>
       <div class="tm-toolbar" id="tmToolbar" style="display:none">
         <span class="tm-quota" id="tmQuota" style="display:none"></span>
         <button class="tm-add-btn" id="tmAddBtn" style="display:none" onclick="openAddUserModal()">
@@ -266,6 +289,10 @@
 <div class="au-backdrop" id="auBackdrop" onclick="if(event.target===this)closeAddUserModal()">
   <div class="au-box">
     <div class="au-title" id="auTitle">Add User</div>
+    <div class="au-field" id="au_team_field" style="display:none">
+      <label class="au-label">Team</label>
+      <select class="au-input" id="au_team"></select>
+    </div>
     <div class="au-field">
       <label class="au-label">Username *</label>
       <input class="au-input" id="au_username" autocomplete="off">
@@ -351,21 +378,53 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 function getMyUsername(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return a?(a.u||''):''; }catch(e){return '';} }
 function getMyRole(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return a?(a.role||''):''; }catch(e){return '';} }
+function getMyManagesTeams(){ try{ var a=JSON.parse(localStorage.getItem('appAuth')||'null'); return (a&&Array.isArray(a.manages_teams))?a.manages_teams:[]; }catch(e){return [];} }
 
-/* ── Sub Admin: Add Normal User ── */
-function updateSubAdminToolbar() {
-  if (getMyRole() !== 'Sub Admin') return;
-  var me = _users.find(function(u){ return u.username===getMyUsername(); });
-  var quota = me ? Number(me.max_normal_users||0) : 0;
-  var used  = _users.filter(function(u){ return u.created_by===getMyUsername(); }).length;
+/* ── Sub Admin (own team) + Assistant (delegated teams): which team(s) may I add/see quota for ── */
+function getManageableTeams() {
+  var mine   = getMyUsername();
+  var role   = getMyRole();
+  var out    = [];
+  if (role === 'Sub Admin') {
+    var me = _users.find(function(u){ return u.username===mine; });
+    out.push({ username: mine, label: (me&&me.team_name)||mine, quota: me?Number(me.max_normal_users||0):0 });
+  }
+  getMyManagesTeams().forEach(function(t){
+    if (out.some(function(o){ return o.username===t; })) return;
+    var row = _users.find(function(u){ return u.username===t && u.role==='Sub Admin'; });
+    if (!row) return;
+    out.push({ username: t, label: row.team_name||row.display_name||t, quota: Number(row.max_normal_users||0) });
+  });
+  out.forEach(function(t){ t.used = _users.filter(function(u){ return u.created_by===t.username; }).length; });
+  return out;
+}
+
+/* ── Add Normal User toolbar (Sub Admin's own team, and/or any Assistant-managed team) ── */
+function updateTeamToolbar() {
+  var teams   = getManageableTeams();
   var quotaEl = document.getElementById('tmQuota');
   var btnEl   = document.getElementById('tmAddBtn');
+  if (!teams.length) return;
+  var used  = teams.reduce(function(s,t){ return s+t.used;  }, 0);
+  var quota = teams.reduce(function(s,t){ return s+t.quota; }, 0);
   quotaEl.textContent = used+' / '+quota+' Normal Users created';
   quotaEl.style.display = '';
   btnEl.style.display = '';
-  btnEl.disabled = used >= quota;
+  btnEl.disabled = teams.every(function(t){ return t.used >= t.quota; });
 }
 function openAddUserModal() {
+  var teams = getManageableTeams();
+  var teamField = document.getElementById('au_team_field');
+  var teamSel   = document.getElementById('au_team');
+  if (teams.length > 1) {
+    teamField.style.display = '';
+    teamSel.innerHTML = teams.map(function(t){
+      var full = t.used >= t.quota;
+      return '<option value="'+esc(t.username)+'"'+(full?' disabled':'')+'>'+esc(t.label)+' ('+t.used+'/'+t.quota+')'+(full?' — Full':'')+'</option>';
+    }).join('');
+  } else {
+    teamField.style.display = 'none';
+  }
   document.getElementById('auTitle').textContent = 'Add Normal User';
   document.getElementById('au_username').value = '';
   document.getElementById('au_username').readOnly = false;
@@ -386,10 +445,12 @@ async function saveNormalUser() {
   if (!username) return toast('Please enter a Username');
   if (!display_name) return toast('Please enter a Display Name');
   if (!pin) return toast('Please enter a PIN');
+  var teams = getManageableTeams();
+  var team  = teams.length > 1 ? document.getElementById('au_team').value : (teams[0] && teams[0].username);
   var btn = document.getElementById('auSaveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    var res = await CamboAPI.post({ action:'user_add', username:username, display_name:display_name, pin:pin, role:role, status:'active' });
+    var res = await CamboAPI.post({ action:'user_add', username:username, display_name:display_name, pin:pin, role:role, status:'active', team:team });
     if (res && res.ok) {
       toast('User added!');
       closeAddUserModal();
@@ -399,6 +460,83 @@ async function saveNormalUser() {
     }
   } catch(e) { toast('Network error', true); }
   btn.disabled = false; btn.textContent = 'Save';
+}
+
+/* ── Remove a Normal User from the team (Sub Admin over their own creations, Assistant over a
+     managed team's creations). Team leads (Sub Admin accounts) can't be removed from here. ── */
+function canManageMember(u) {
+  if (u.username === getMyUsername() || u.role === 'Sub Admin') return false;
+  if (getMyRole() === 'Sub Admin' && u.created_by === getMyUsername()) return true;
+  return getMyManagesTeams().indexOf(u.created_by) !== -1;
+}
+async function requestDeleteMember(username) {
+  var u = _users.find(function(x){ return x.username===username; });
+  if (!u) return;
+  if (!confirm('Remove "'+(u.display_name||u.username)+'" from the team? This cannot be undone.')) return;
+  try {
+    var res = await CamboAPI.post({ action:'user_delete', username: username });
+    if (res && res.ok) { toast('User removed'); location.reload(); }
+    else toast((res&&res.message)||'Failed to remove user', true);
+  } catch(e) { toast('Network error', true); }
+}
+
+/* ── Assistant "Manage Teams" panel: rename / scope / quota for each delegated Sub Admin team ── */
+var _allLinkedTo = [];
+async function loadLinkedToForManage() {
+  try {
+    var res = await CamboAPI.post({ action:'get_all' });
+    if (res && res.ok) _allLinkedTo = (res.linkedTo||[]).filter(function(v){ return v && v.toLowerCase()!=='linked to'; });
+  } catch(e) {}
+}
+function renderManageTeamsPanel() {
+  var panel = document.getElementById('tmManagePanel');
+  if (!panel) return;
+  var rows = getMyManagesTeams()
+    .map(function(t){ return _users.find(function(u){ return u.username===t && u.role==='Sub Admin'; }); })
+    .filter(Boolean);
+  if (!rows.length) { panel.style.display='none'; panel.innerHTML=''; return; }
+  panel.style.display = '';
+  panel.innerHTML = '<div class="tm-manage-title">Teams You Manage</div>' + rows.map(renderManageCard).join('');
+}
+function renderManageCard(sa) {
+  var scopeHtml = _allLinkedTo.length
+    ? _allLinkedTo.map(function(v){
+        var isChecked = Array.isArray(sa.scope_linked_to) && sa.scope_linked_to.indexOf(v)!==-1;
+        return '<label class="tm-scope-chk-label"><input type="checkbox" class="tm_scope_chk_'+esc(sa.username)+'" value="'+esc(v)+'"'+(isChecked?' checked':'')+'> '+esc(v)+'</label>';
+      }).join('')
+    : '<span class="tm-manage-label" style="text-transform:none">No "Linked To" entries defined yet.</span>';
+  return '<div class="tm-manage-card" data-username="'+esc(sa.username)+'">'
+    + '<div class="tm-manage-head">'
+      + '<input class="tm-manage-name-input" id="tmTeamName_'+esc(sa.username)+'" value="'+esc(sa.team_name||sa.display_name||sa.username)+'" placeholder="Team name">'
+      + '<span class="tm-manage-label">@'+esc(sa.username)+'</span>'
+    + '</div>'
+    + '<div class="tm-manage-row"><span class="tm-manage-label">Linked To Scope</span></div>'
+    + '<div class="tm-scope-tags">'+scopeHtml+'</div>'
+    + '<div class="tm-manage-row">'
+      + '<span class="tm-manage-label">Max Normal Users</span>'
+      + '<input class="tm-manage-quota" id="tmQuota_'+esc(sa.username)+'" type="number" min="0" step="1" value="'+(sa.max_normal_users||0)+'">'
+      + '<button class="tm-manage-save" id="tmManageSaveBtn_'+esc(sa.username)+'" onclick="saveManageTeam(\''+esc(sa.username)+'\')">Save Changes</button>'
+    + '</div>'
+  + '</div>';
+}
+async function saveManageTeam(username) {
+  var saRow    = _users.find(function(u){ return u.username===username; }) || {};
+  var teamName = document.getElementById('tmTeamName_'+username).value.trim();
+  var quota    = parseInt(document.getElementById('tmQuota_'+username).value)||0;
+  var scope    = Array.from(document.querySelectorAll('.tm_scope_chk_'+username+':checked')).map(function(el){ return el.value; });
+  var btn = document.getElementById('tmManageSaveBtn_'+username);
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    var r1 = await CamboAPI.post({ action:'user_set_team_name', username: username, team_name: teamName });
+    var r2 = await CamboAPI.post({
+      action:'user_update', username: username, display_name: saRow.display_name||username,
+      role:'Sub Admin', status: saRow.status||'active',
+      exp_date: saRow.exp_date ? String(saRow.exp_date).substring(0,10) : null,
+      scope_linked_to: scope, max_normal_users: quota
+    });
+    if ((r1&&r1.ok) && (r2&&r2.ok)) { toast('Team updated!'); location.reload(); }
+    else { toast(((r1&&r1.message)||(r2&&r2.message))||'Failed to save', true); btn.disabled=false; btn.textContent='Save Changes'; }
+  } catch(e) { toast('Network error', true); btn.disabled=false; btn.textContent='Save Changes'; }
 }
 function toast(msg, isErr) {
   var el = document.createElement('div');
@@ -471,6 +609,7 @@ function renderCard(u, idx) {
     :esc(init);
   var online=isOnline(u.last_seen);
   return '<div class="tm-card" data-username="'+esc(u.username)+'" onclick="openCard('+idx+')">'
+    +(canManageMember(u)?'<button class="tm-card-del" title="Remove from team" onclick="event.stopPropagation();requestDeleteMember(\''+esc(u.username)+'\')">&times;</button>':'')
     +'<div class="tm-av-wrap">'
       +'<div class="tm-av">'+avInner+'</div>'
       +'<span class="tm-status-dot '+(online?'online':'offline')+'" title="'+(online?'Online':'Offline')+'"></span>'
@@ -589,7 +728,7 @@ function renderRow(u, idx) {
     +'<div class="tm-row-role-col"><span class="tm-role '+rc+'">'+esc(u.role||'Staff')+'</span></div>'
     +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_added||0)+'</div><div class="tm-row-stat-lbl">Added</div></div>'
     +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_edited||0)+'</div><div class="tm-row-stat-lbl">Edited</div></div>'
-    +'<div class="tm-row-last">'+esc(fmtLastActive(u.last_login||''))+'</div>'
+    +'<div class="tm-row-last">'+esc(fmtLastActive(u.last_login||''))+(canManageMember(u)?'<button class="tm-row-del" title="Remove from team" onclick="event.stopPropagation();requestDeleteMember(\''+esc(u.username)+'\')">&times;</button>':'')+'</div>'
     +'</div>';
 }
 
@@ -621,13 +760,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!res||!res.ok){ stateEl.textContent=(res&&res.message)||'Error loading team'; return; }
     if (!res.users||!res.users.length){ stateEl.textContent='No team members found'; return; }
     _users=res.users;
+    if (getMyManagesTeams().length) { await loadLinkedToForManage(); renderManageTeamsPanel(); }
     var gridEl=document.getElementById('tmGrid');
     var listEl=document.getElementById('tmList');
     gridEl.innerHTML=_users.map(renderCard).join('');
     listEl.innerHTML=listHeader()+_users.map(renderRow).join('');
     stateEl.style.display='none';
     document.getElementById('tmToolbar').style.display='';
-    updateSubAdminToolbar();
+    updateTeamToolbar();
     setView(_curView);
   } catch(e){ document.getElementById('tmState').textContent='Error loading team'; }
 });
