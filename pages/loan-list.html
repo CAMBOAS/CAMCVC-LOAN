@@ -1293,6 +1293,7 @@ function renderTable() {
     if (_sortCol === 'Money') { av = Number(a[_sortCol]||0); bv = Number(b[_sortCol]||0); }
     else if (_sortCol === '_idx') { av = Number(a[_sortCol]||0); bv = Number(b[_sortCol]||0); }
     else if (_sortCol === '_date') { av = dateTs(a.DateTime); bv = dateTs(b.DateTime); }
+    else if (_sortCol === '_by')   { av = a.created_by||''; bv = b.created_by||''; }
     else { av = a[_sortCol]||''; bv = b[_sortCol]||''; }
     var r = (av > bv ? 1 : av < bv ? -1 : 0);
     return _sortAsc ? r : -r;
