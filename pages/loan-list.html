@@ -1792,6 +1792,7 @@ function lrexBuildTableHTML(data, cols) {
   var hdrBg   = dark ? '#1e293b' : '#f1f5f9';
   var text    = dark ? '#e2e8f0' : '#1e293b';
   var border  = dark ? '#334155' : '#e2e8f0';
+  var muted   = dark ? '#94a3b8' : '#64748b';
   var h = '<table style="width:100%;border-collapse:collapse;font-family:system-ui,sans-serif;font-size:12px;background:'+bg+';color:'+text+'">'
     + '<thead><tr>';
   cols.forEach(function(col) {
@@ -1804,7 +1805,7 @@ function lrexBuildTableHTML(data, cols) {
       var v = col.key === '_rowNum'  ? String(idx + 1) :
               col.key === 'DateTime' ? fmtDate(loan.DateTime) :
               String(loan[col.key]||'');
-      var extra = col.key === '_rowNum' ? 'text-align:center;color:'+MUTED+';' : '';
+      var extra = col.key === '_rowNum' ? 'text-align:center;color:'+muted+';' : '';
       h += '<td style="padding:7px 12px;border-bottom:1px solid '+border+';white-space:nowrap;'+extra+'">'+v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</td>';
     });
     h += '</tr>';
