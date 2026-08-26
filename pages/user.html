@@ -191,6 +191,15 @@
       max-width: 260px;
       line-height: 1.6;
     }
+    /* Portal-closed thank-you panel */
+    .done-card { text-align:center }
+    .done-badge { width:62px; height:62px; margin:2px auto 14px; border-radius:50%; background:rgba(16,185,129,.12); color:#059669; display:flex; align-items:center; justify-content:center }
+    .done-title { font-size:18px; font-weight:800; color:#059669; margin-bottom:4px }
+    .done-name { font-size:14px; font-weight:700; color:var(--text,#0f172a); margin-bottom:12px }
+    .done-msg { font-size:13.5px; line-height:1.9; color:var(--text,#334155); margin-bottom:12px }
+    .done-note { font-size:12px; line-height:1.8; color:var(--muted,#64748b); margin-bottom:18px }
+    .done-back { background:#64748b !important }
+
     .login-card {
       width: 100%;
       max-width: 380px;
@@ -657,6 +666,21 @@
 
     <div class="login-error" id="loginErr"></div>
   </div>
+
+  <!-- Shown instead of the form when staff have closed this borrower's portal -->
+  <div class="login-card done-card" id="doneCard" style="display:none">
+    <div class="done-badge">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="done-title">សងប្រាក់រួចរាល់ហើយ!</div>
+    <div class="done-name" id="doneName"></div>
+    <div class="done-msg">
+      សូមអរគុណយ៉ាងជ្រាលជ្រៅចំពោះការទូទាត់ប្រាក់បានពេញលេញ និងទាន់ពេលវេលា។<br>
+      កំណត់ត្រាកម្ចីរបស់លោកអ្នកត្រូវបានបិទបញ្ចប់ដោយជោគជ័យ។
+    </div>
+    <div class="done-note">បើមានសំណួរបន្ថែម សូមទាក់ទងមកកាន់បុគ្គលិករបស់យើងខ្ញុំ។</div>
+    <button class="btn-login done-back" onclick="backToLogin()">ត្រឡប់ក្រោយ</button>
+  </div>
 </div>
 
 <!-- DASHBOARD SCREEN -->
@@ -724,6 +748,14 @@ window.addEventListener('load', async function() {
       return;
     } else {
       clearSession();
+      /* Closed while they still had a session open — thank them instead of dropping them back
+         on the form with no explanation. */
+      if (r && r.message === 'completed') {
+        showDone(r.name || '');
+        ol.classList.add('hide');
+        setTimeout(function(){ ol.style.display='none'; }, 350);
+        return;
+      }
     }
   }
 
@@ -745,6 +777,24 @@ function setMethod(m) {
 }
 
 /* ── Error display ── */
+/* Swap the login form for the thank-you panel, and back. */
+function showDone(name) {
+  var card = document.querySelector('#loginScreen .login-card:not(.done-card)');
+  var done = document.getElementById('doneCard');
+  if (card) card.style.display = 'none';
+  if (done) done.style.display = '';
+  var n = document.getElementById('doneName');
+  if (n) n.textContent = name || '';
+  clearSession();
+}
+function backToLogin() {
+  var card = document.querySelector('#loginScreen .login-card:not(.done-card)');
+  var done = document.getElementById('doneCard');
+  if (done) done.style.display = 'none';
+  if (card) card.style.display = '';
+  clearErr();
+}
+
 function showErr(msg) {
   var el = document.getElementById('loginErr');
   el.textContent = msg;
@@ -801,6 +851,9 @@ async function doLogin() {
   btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> ចូល';
 
   if (!r || !r.ok) {
+    /* Their details were right — staff have simply closed the portal because they finished
+       repaying. Thank them rather than showing an error that reads like a wrong entry. */
+    if (r && r.message === 'completed') { showDone(r.name || ''); return; }
     var msgs = {
       not_found:      'រកមិនឃើញ — ព័ត៌មានមិនត្រូវ · សូមពិនិត្យម្ដងទៀត',
       phone_required: 'សូមបញ្ចូលលេខទូរស័ព្ទ',

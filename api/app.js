@@ -110,6 +110,16 @@ async function ensureRestrictedCol() {
   _restrictedColReady = true;
 }
 
+/* ── One-time migration: add portal_closed column to loans if absent. Staff close a borrower's
+     self-service portal once they have finished repaying, so the portal shows a thank-you
+     instead of their history. Defaults to 0 = open, so existing borrowers are unaffected. ── */
+let _portalClosedColReady = false;
+async function ensurePortalClosedCol() {
+  if (_portalClosedColReady) return;
+  try { await db().query('ALTER TABLE loans ADD COLUMN portal_closed TINYINT(1) NOT NULL DEFAULT 0'); } catch(e) {}
+  _portalClosedColReady = true;
+}
+
 /* ── One-time migration: add created_by_team column to settings if absent
      (tracks which Sub Admin's team created a Group/Linked To entry; NULL = shared/global) ── */
 let _settingsTeamColReady = false;
@@ -177,6 +187,7 @@ function rowToLoan(r) {
     FBID:        r.fbid         || '',
     LinkedTo:    r.linked_to    || '',
     Restricted:  !!r.restricted,
+    PortalClosed: !!r.portal_closed,
     Paid:        r.paid ? 1 : 0,
     created_by:  r.creator_display_name || r.created_by || '',
     photo_url:   r.photo_url    || '',
@@ -463,18 +474,21 @@ async function handler(req, res) {
       const nid    = String(body.nid    || '').trim().replace(/[\s\-]/g, '');
       if (!phone) return res.json({ ok: false, message: 'phone_required' });
       await ensureLoanTabsCol();
+      /* The SELECT below reads portal_closed, so the column has to exist even on a deployment
+         where no admin has saved a loan yet — otherwise the first borrower login errors out. */
+      await ensurePortalClosedCol();
       let loanRows = [];
       try {
         if (method === 'nid') {
           if (!nid) return res.json({ ok: false, message: 'nid_required' });
           [loanRows] = await db().query(
-            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs FROM loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND REPLACE(REPLACE(national_id,\' \',\'\'),\'-\',\'\')=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs,portal_closed FROM loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND REPLACE(REPLACE(national_id,\' \',\'\'),\'-\',\'\')=? AND deleted_at IS NULL ORDER BY loan_key DESC',
             [phone, nid]
           );
         } else {
           if (!name) return res.json({ ok: false, message: 'name_required' });
           [loanRows] = await db().query(
-            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs FROM loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
+            'SELECT loan_key,full_name,national_id,dob,phone,gender,loan_group,money,loan_status,note,paid,photo_url,loan_tabs,portal_closed FROM loans WHERE REPLACE(REPLACE(phone,\' \',\'\'),\'-\',\'\')=? AND full_name=? AND deleted_at IS NULL ORDER BY loan_key DESC',
             [phone, name]
           );
         }
@@ -482,6 +496,16 @@ async function handler(req, res) {
         return res.json({ ok: false, message: 'server_error' });
       }
       if (!loanRows.length) return res.json({ ok: false, message: 'not_found' });
+
+      /* Staff close the portal per loan once a borrower has finished repaying. If every loan we
+         matched is closed, they are done — answer with 'completed' so the portal can thank them
+         rather than a "not found" that would read as their details being wrong. If only some are
+         closed, the open ones are still shown. */
+      const openRows = loanRows.filter(r => !r.portal_closed);
+      if (!openRows.length) {
+        return res.json({ ok: false, message: 'completed', name: loanRows[0].full_name || '' });
+      }
+      loanRows = openRows;
 
       /* parse loan_tabs JSON for each row */
       loanRows.forEach(r => {
@@ -831,16 +855,23 @@ async function handler(req, res) {
       const sl0u = (l.social_links||[])[0] || {};
       /* Only Admin can change the restricted flag; everyone else preserves whatever it already was */
       const restrictedU = _bv.role === 'Admin' ? (l.Restricted ? 1 : 0) : (old[0].restricted ? 1 : 0);
+      /* Portal access is an operational call any editor can make, but only when the caller
+         actually sent the field — otherwise a save from a screen that doesn't show the toggle
+         (eg. the customers form) would silently reopen a portal staff had closed. */
+      await ensurePortalClosedCol();
+      const portalClosedU = (l.PortalClosed === undefined || l.PortalClosed === null)
+        ? (old[0].portal_closed ? 1 : 0)
+        : (l.PortalClosed ? 1 : 0);
       await db().query(
         `UPDATE loans SET
            loan_key=?,full_name=?,national_id=?,dob=?,phone=?,gender=?,loan_group=?,
            money=?,loan_status=?,note=?,fb_name=?,fb_url=?,social_media=?,social_id=?,fbid=?,
-           photo_url=?,photos=?,social_links=?,paid=?,linked_to=?,loan_tabs=?,restricted=?
+           photo_url=?,photos=?,social_links=?,paid=?,linked_to=?,loan_tabs=?,restricted=?,portal_closed=?
          WHERE loan_key=? AND deleted_at IS NULL`,
         [newKey, l.FullName||'', l.NationalID||'', l.DOB||'', l.Phone||'',
          l.Gender||'', l.Groups||'', l.Money||0, l.Status||'Normal',
          l.Note||'', sl0u.name||l.FBName||'', sl0u.url||l.URL||'', sl0u.platform||l.FacebookCom||'', sl0u.id||l.ID||'', sl0u.fbid||l.FBID||'',
-         l.photo_url||null, photosJsonU, slJsonU, l.Paid ? 1 : 0, l.LinkedTo||null, loanTabsJsonU, restrictedU, key]
+         l.photo_url||null, photosJsonU, slJsonU, l.Paid ? 1 : 0, l.LinkedTo||null, loanTabsJsonU, restrictedU, portalClosedU, key]
       );
       const [updated] = await db().query('SELECT * FROM loans WHERE loan_key=?', [newKey]);
       if ((await isWatched(_bu)) && (await isNotifEnabled('edit'))) { try { await sendTelegram(updated[0], 'edit', actor, old[0]); } catch(e) {} }
