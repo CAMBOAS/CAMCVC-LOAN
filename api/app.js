@@ -532,19 +532,34 @@ async function handler(req, res) {
       const _sf = scopeFilterSQL(_bv, 'l.linked_to');
       const [loans] = await db().query(`SELECT l.*, u.display_name AS creator_display_name FROM loans l LEFT JOIN users u ON l.created_by_user = u.username WHERE l.deleted_at IS NULL${_sf.clause} ORDER BY l.loan_key DESC`, _sf.params);
       const [infor] = await db().query('SELECT type, value, created_by_team FROM settings ORDER BY id');
-      /* Group & Linked To option lists are team-owned: a scoped user only sees entries their
-         own team created (or shared/global ones with no owner). Status stays a shared default
-         list for everyone regardless of scope. Admin/unscoped sees everything. */
-      const _team = teamOwnerOf(_bv);
-      const _scoped = _team !== null;
-      const _visible = r => !_scoped || !r.created_by_team || r.created_by_team === _team;
+      /* Option lists. Status/socialMedia stay a shared default list for everyone.
+         Admin sees everything; so does an assistant (manages_teams), who is Super Admin's proxy —
+         note that check is local to these lists so loan scoping is untouched. */
+      const _team        = teamOwnerOf(_bv);
+      const _isAssistant = Array.isArray(_bv.manages_teams) && _bv.manages_teams.length > 0;
+      const _scoped      = _team !== null && !_isAssistant;
+      const _granted     = Array.isArray(_bv.scope_linked_to) ? _bv.scope_linked_to : [];
+
+      /* Linked To is the team-privacy boundary: a scoped user sees ONLY what their own team
+         created plus what an Admin explicitly granted into their scope. Ownerless entries are
+         deliberately NOT shared here — that escape hatch is what let every team read every other
+         team's names. The "granted" half is load-bearing, not a nicety: today every Sub Admin's
+         scope points at an ownerless entry (juubee→AMD, HI→Testing 003, …), so without it they
+         could no longer pick the very value they are assigned to. */
+      const _visibleLinked = r => !_scoped || r.created_by_team === _team || _granted.indexOf(r.value) !== -1;
+
+      /* Groups have no per-user grant to fall back on and every existing one is ownerless, so
+         locking them to the owning team would strip all groups from every Sub Admin at once.
+         Left shared until each group has an owner. */
+      const _visibleGroup = r => !_scoped || !r.created_by_team || r.created_by_team === _team;
+
       return res.json({
         ok:          true,
         loans:       loans.map(rowToLoan),
-        groups:      infor.filter(r=>r.type==='groups' && _visible(r)).map(r=>r.value),
+        groups:      infor.filter(r=>r.type==='groups' && _visibleGroup(r)).map(r=>r.value),
         statuses:    infor.filter(r=>r.type==='statuses').map(r=>r.value),
         socialMedia: infor.filter(r=>r.type==='socialMedia').map(r=>r.value),
-        linkedTo:    infor.filter(r=>r.type==='linkedTo' && _visible(r)).map(r=>r.value),
+        linkedTo:    infor.filter(r=>r.type==='linkedTo' && _visibleLinked(r)).map(r=>r.value),
       });
     }
 
