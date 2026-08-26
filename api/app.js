@@ -554,11 +554,16 @@ async function handler(req, res) {
          That matches how the existing groups came about without needing to rewrite any rows. */
       const _visibleGroup = r => !_scoped || r.created_by_team === _team;
 
+      /* Status is deliberately looser: the ownerless ones are the shared defaults every team
+         works from, so they stay visible to all (and settings_delete stops a team removing them).
+         On top of that a team sees the statuses it added itself, and nobody else's. */
+      const _visibleStatus = r => !_scoped || !r.created_by_team || r.created_by_team === _team;
+
       return res.json({
         ok:          true,
         loans:       loans.map(rowToLoan),
         groups:      infor.filter(r=>r.type==='groups' && _visibleGroup(r)).map(r=>r.value),
-        statuses:    infor.filter(r=>r.type==='statuses').map(r=>r.value),
+        statuses:    infor.filter(r=>r.type==='statuses' && _visibleStatus(r)).map(r=>r.value),
         socialMedia: infor.filter(r=>r.type==='socialMedia').map(r=>r.value),
         linkedTo:    infor.filter(r=>r.type==='linkedTo' && _visibleLinked(r)).map(r=>r.value),
       });
@@ -666,13 +671,14 @@ async function handler(req, res) {
       return res.json({ ok:true, loans: loans.map(rowToLoan) });
     }
 
-    /* ── Add infor (Group/Linked To entries are owned by the creating team, if scoped) ── */
+    /* ── Add infor (Group/Linked To/Status entries are owned by the creating team, if scoped) ── */
     if (action === 'settings_add') {
       const type  = String(body.type ||'').trim();
       const value = String(body.value||'').trim();
       if (!type || !value) return res.json({ ok:false, message:'Missing type or value' });
       await ensureSettingsTeamCol();
-      const team = (type === 'groups' || type === 'linkedTo') ? teamOwnerOf(_bv) : null;
+      /* An Admin is unscoped, so anything they add stays ownerless = shared with every team. */
+      const team = ['groups','linkedTo','statuses'].includes(type) ? teamOwnerOf(_bv) : null;
       const [r] = await db().query('INSERT IGNORE INTO settings (type, value, created_by_team) VALUES (?,?,?)', [type, value, team]);
       /* If this Linked To tag is brand new and team-owned, auto-grant it into that team's own scope
          so the Sub Admin doesn't have to ask an Admin to grant what they just created themselves. */
@@ -691,13 +697,14 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
-    /* ── Delete infor (a scoped user may only delete Group/Linked To entries their own team created) ── */
+    /* ── Delete infor (a scoped user may only delete Group/Linked To/Status entries their own
+         team created — notably this stops a team deleting the shared default statuses) ── */
     if (action === 'settings_delete') {
       const type  = String(body.type||'').trim();
       const value = String(body.value||'').trim();
       await ensureSettingsTeamCol();
       const team = teamOwnerOf(_bv);
-      if (team && (type === 'groups' || type === 'linkedTo')) {
+      if (team && ['groups','linkedTo','statuses'].includes(type)) {
         const [rows] = await db().query('SELECT created_by_team FROM settings WHERE type=? AND value=?', [type, value]);
         if (rows.length && rows[0].created_by_team !== team) {
           return res.json({ ok:false, message:'អ្នកអាចលុបបានតែឈ្មោះដែលក្រុមអ្នកបានបង្កើត', code:403 });
