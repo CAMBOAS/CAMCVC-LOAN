@@ -556,26 +556,26 @@ async function handler(req, res) {
          to their own work or, inversely, to the Sub Admin teams' work. Per-user, default 'all',
          and either way it only ever narrows what they already had, so it grants nothing. */
       let _focus = { clause: '', params: [] };
+      let _claimed = [];
       const _focusMode = _sf.clause ? 'all' : await getDataFocusMode(_bu);
       if (_focusMode !== 'all') {
         const [teamRows] = await db().query("SELECT scope_linked_to FROM users WHERE role='Sub Admin'");
-        const claimed = [];
         teamRows.forEach(r => {
-          try { (JSON.parse(r.scope_linked_to || '[]') || []).forEach(v => { if (v && claimed.indexOf(v) === -1) claimed.push(v); }); } catch(e) {}
+          try { (JSON.parse(r.scope_linked_to || '[]') || []).forEach(v => { if (v && _claimed.indexOf(v) === -1) _claimed.push(v); }); } catch(e) {}
         });
-        const ph = claimed.map(()=>'?').join(',');
+        const ph = _claimed.map(()=>'?').join(',');
         if (_focusMode === 'mine') {
           /* No team claims anything yet => every row already is ours, so no filter needed. */
-          if (claimed.length) {
+          if (_claimed.length) {
             _focus.clause = ` AND (l.linked_to IS NULL OR l.linked_to NOT IN (${ph}))`;
-            _focus.params = claimed;
+            _focus.params = _claimed;
           }
         } else { /* 'teams' */
           /* Inverse. With nothing claimed there is no team data at all — show none rather than
              falling through to everything. */
-          if (claimed.length) {
+          if (_claimed.length) {
             _focus.clause = ` AND l.linked_to IN (${ph})`;
-            _focus.params = claimed;
+            _focus.params = _claimed;
           } else {
             _focus.clause = ' AND 1=0';
           }
@@ -611,13 +611,28 @@ async function handler(req, res) {
          On top of that a team sees the statuses it added itself, and nobody else's. */
       const _visibleStatus = r => !_scoped || !r.created_by_team || r.created_by_team === _team;
 
+      /* Data focus narrows the dropdowns the same way it narrows the rows, so the two agree —
+         picking "My data" and then still being offered every team's Linked To was the mismatch.
+         Linked To keys off the same claimed-by-a-team set the loan filter uses; Group has no
+         claim concept, so ownerless there means "Super Admin's own", matching _visibleGroup.
+         Status is left alone on purpose: it is a required field and the shared defaults are the
+         only ones most teams have, so filtering it could leave the picker empty. */
+      const _focusLinked = r =>
+        _focusMode === 'all'  ? true :
+        _focusMode === 'mine' ? _claimed.indexOf(r.value) === -1
+                              : _claimed.indexOf(r.value) !== -1;
+      const _focusGroup = r =>
+        _focusMode === 'all'  ? true :
+        _focusMode === 'mine' ? !r.created_by_team
+                              : !!r.created_by_team;
+
       return res.json({
         ok:          true,
         loans:       loans.map(rowToLoan),
-        groups:      infor.filter(r=>r.type==='groups' && _visibleGroup(r)).map(r=>r.value),
+        groups:      infor.filter(r=>r.type==='groups'   && _visibleGroup(r)  && _focusGroup(r)).map(r=>r.value),
         statuses:    infor.filter(r=>r.type==='statuses' && _visibleStatus(r)).map(r=>r.value),
         socialMedia: infor.filter(r=>r.type==='socialMedia').map(r=>r.value),
-        linkedTo:    infor.filter(r=>r.type==='linkedTo' && _visibleLinked(r)).map(r=>r.value),
+        linkedTo:    infor.filter(r=>r.type==='linkedTo' && _visibleLinked(r) && _focusLinked(r)).map(r=>r.value),
       });
     }
 
