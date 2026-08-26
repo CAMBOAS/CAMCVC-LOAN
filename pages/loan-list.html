@@ -632,21 +632,21 @@
         background-attachment:local,local,scroll,scroll;
       }
 
-      /* ── Keep: # Name NID Group Status Paid; hide the rest ── */
+      /* ── Keep: # Name NID Group Status; hide the rest ── */
       .lr-tbl thead th:nth-child(4),
       .lr-tbl thead th:nth-child(5),
       .lr-tbl thead th:nth-child(6),
       .lr-tbl thead th:nth-child(8),
+      .lr-tbl thead th:nth-child(10),
       .lr-tbl thead th:nth-child(11),
       .lr-tbl thead th:nth-child(12),
-      .lr-tbl thead th:nth-child(13),
       .lr-tbl tbody td:nth-child(4),
       .lr-tbl tbody td:nth-child(5),
       .lr-tbl tbody td:nth-child(6),
       .lr-tbl tbody td:nth-child(8),
+      .lr-tbl tbody td:nth-child(10),
       .lr-tbl tbody td:nth-child(11),
-      .lr-tbl tbody td:nth-child(12),
-      .lr-tbl tbody td:nth-child(13) { display:none }
+      .lr-tbl tbody td:nth-child(12) { display:none }
       /* Let table size to content so scroll works */
       .lr-tbl { min-width:0; width:100% }
 
@@ -835,7 +835,6 @@
                   <th onclick="sortTable('Groups')">Group</th>
                   <th onclick="sortTable('Money')" style="text-align:right">Amount ($)</th>
                   <th onclick="sortTable('Status')">Status</th>
-                  <th onclick="sortTable('Paid')" style="text-align:center">Paid</th>
                   <th onclick="sortTable('_date')">Date</th>
                   <th>Note</th>
                   <th onclick="sortTable('_by')">By</th>
@@ -843,7 +842,7 @@
                 </tr>
               </thead>
               <tbody id="lrTbody">
-                <tr><td colspan="13" class="lr-loading">កំពុងផ្ទុក...</td></tr>
+                <tr><td colspan="12" class="lr-loading">កំពុងផ្ទុក...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1124,7 +1123,7 @@ async function loadData(opts) {
   if (_refreshBtn) _refreshBtn.classList.add('spinning');
 
   document.getElementById('lrTbody').innerHTML =
-    '<tr><td colspan="'+ (_trashMode ? 14 : 13) +'" class="lr-loading">កំពុងផ្ទុកទិន្នន័យ...</td></tr>';
+    '<tr><td colspan="'+ (_trashMode ? 13 : 12) +'" class="lr-loading">កំពុងផ្ទុកទិន្នន័យ...</td></tr>';
 
   var fetchedData = null;
   for (var attempt = 0; attempt < 2; attempt++) {
@@ -1272,7 +1271,7 @@ function sortTable(col) {
   else { _sortCol = col; _sortAsc = true; }
   document.querySelectorAll('.lr-tbl thead th').forEach(function(th){ th.className=''; });
   var ths = document.querySelectorAll('.lr-tbl thead th');
-  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','Paid','_date','_note','_by'];
+  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','_date','_note','_by'];
   var idx = colMap.indexOf(col);
   if (idx >= 0 && ths[idx]) ths[idx].className = _sortAsc ? 'sort-asc' : 'sort-desc';
   renderTable();
@@ -1280,7 +1279,7 @@ function sortTable(col) {
 
 function sortAndRender() {
   var ths = document.querySelectorAll('.lr-tbl thead th');
-  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','Paid','_date','_note','_by'];
+  var colMap = ['_idx','FullName','NationalID','DOB','Phone','Gender','Groups','Money','Status','_date','_note','_by'];
   var idx = colMap.indexOf(_sortCol);
   if (idx >= 0 && ths[idx]) ths[idx].className = _sortAsc ? 'sort-asc' : 'sort-desc';
   renderTable();
@@ -1300,7 +1299,7 @@ function renderTable() {
   });
 
   if (!arr.length) {
-    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="'+ (_trashMode ? 14 : 13) +'" class="lr-loading">មិនមានទិន្នន័យ</td></tr>';
+    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="'+ (_trashMode ? 13 : 12) +'" class="lr-loading">មិនមានទិន្នន័យ</td></tr>';
     document.getElementById('lrFootInfo').textContent = '0 borrowers';
     document.getElementById('lrFootCount').textContent = '';
     return;
@@ -1325,7 +1324,6 @@ function renderTable() {
       + '<td style="font-size:12px">'+esc(l.Groups||'—')+'</td>'
       + '<td style="text-align:right">'+moneyHtml+'</td>'
       + '<td>'+statusTag(l.Status)+'</td>'
-      + '<td style="text-align:center"><button class="lr-paid-btn'+(l.Paid?' lr-paid-yes':'')+'" data-dt="'+esc(l.DateTime||'')+'" title="'+(l.Paid?'Paid — click to unmark':'Not paid — click to mark paid')+'">'+(l.Paid?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>')+'</button></td>'
       + '<td style="font-size:11px;color:var(--muted)">'+fmtDate(l.DateTime)+'</td>'
       + '<td style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(l.Note||'')+'">'+esc(l.Note||'—')+'</td>'
       + '<td style="font-size:11px;color:#a78bfa;white-space:nowrap">'+esc(l.created_by||'—')+'</td>'
@@ -2287,7 +2285,7 @@ async function toggleTrashMode() {
   _trashMode = true;
   document.getElementById('lrTrashBanner').style.display = 'flex';
   document.getElementById('lrActionTh').style.display = '';
-  document.getElementById('lrTbody').innerHTML = '<tr><td colspan="14" class="lr-loading">កំពុងផ្ទុក Trash...</td></tr>';
+  document.getElementById('lrTbody').innerHTML = '<tr><td colspan="13" class="lr-loading">កំពុងផ្ទុក Trash...</td></tr>';
   try {
     var data = await Promise.race([
       CamboAPI.post({ action: 'loan_list_trash' }),
@@ -2297,7 +2295,7 @@ async function toggleTrashMode() {
     _trashLoans.forEach(function(l,i){ l._idx = i+1; });
     applyFilter();
   } catch(e) {
-    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="13" class="lr-loading">មិនអាចភ្ជាប់ Server</td></tr>';
+    document.getElementById('lrTbody').innerHTML = '<tr><td colspan="12" class="lr-loading">មិនអាចភ្ជាប់ Server</td></tr>';
   }
 }
 
