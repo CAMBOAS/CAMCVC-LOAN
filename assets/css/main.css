@@ -3152,19 +3152,47 @@ body.apptb-on.apptb-tucked { padding-top: 0; }
   .apptb-search input { width: 132px; }
 }
 
-/* Mobile: sits under the 48px hamburger bar, and only when opted in */
+/* Menu button — phones only, where this bar takes over from the hamburger bar */
+.apptb-menu { display: none; }
+
+/* Mobile: with "Show on phone" on, this bar REPLACES the 48px hamburger bar rather than
+   stacking under it (the two used to overlap in the same 54–102px band) and carries the
+   menu button itself, so the sidebar drawer stays one tap away. */
 @media (max-width: 979px) {
   .apptb { display: none; }
   body.apptb-on { padding-top: 0; }
+
   body.apptb-on.apptb-mob { padding-top: var(--apptb-h); }
-  body.apptb-on.apptb-mob .apptb { display: flex; left: 0; top: 48px; padding: 0 10px; }
+  body.apptb-on.apptb-mob .shared-topbar { display: none !important; }
+  body.apptb-on.apptb-mob .apptb {
+    display: flex; left: 0; right: 0; top: 0;
+    padding: 0 6px; z-index: 9998;
+  }
+  body.apptb-on.apptb-mob .main-content { padding-top: 14px !important; }
+  body.apptb-on.apptb-mob.sidebar-open .apptb { opacity: 0; pointer-events: none; }
+
+  body.apptb-on.apptb-mob .apptb-menu {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex-shrink: 0;
+    border: none; background: none; padding: 0;
+    color: var(--text); cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body.apptb-on.apptb-mob .apptb-menu svg { width: 20px; height: 20px; }
+
   body.apptb-on.apptb-mob .apptb .apptb-left,
   body.apptb-on.apptb-mob .apptb .apptb-clock,
   body.apptb-on.apptb-mob .apptb .apptb-user-nm { display: none; }
-  body.apptb-on.apptb-mob .apptb .apptb-mid { margin: 0; overflow-x: auto; scrollbar-width: none; }
+  body.apptb-on.apptb-mob .apptb .apptb-in { gap: 6px; }
+  body.apptb-on.apptb-mob .apptb .apptb-mid {
+    margin: 0; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
   body.apptb-on.apptb-mob .apptb .apptb-mid::-webkit-scrollbar { display: none; }
-  body.apptb-on.apptb-mob .apptb-search input { width: 108px; }
-  body.apptb-on.apptb-mob .apptb-search input:focus { width: 140px; }
+  body.apptb-on.apptb-mob .apptb .apptb-nav { width: 36px; }
+  body.apptb-on.apptb-mob .apptb-right { gap: 4px; }
+  body.apptb-on.apptb-mob .apptb-search input { width: 96px; }
+  body.apptb-on.apptb-mob .apptb-search input:focus { width: 128px; }
 }
 
 /* ================================================================

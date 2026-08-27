@@ -1102,7 +1102,11 @@
     }
     if (right) right = '<div class="apptb-right">' + right + '</div>';
 
-    return '<div class="apptb-in">' + left + mid + right + '</div>';
+    /* On phones this bar replaces the 48px hamburger bar, so it carries the menu button. */
+    var menuBtn = '<button type="button" class="apptb-menu" id="apptbMenuBtn" title="' + t('ម៉ឺនុយ','Menu') + '">'
+                + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'
+                + '</button>';
+    return '<div class="apptb-in">' + menuBtn + left + mid + right + '</div>';
   }
   window.appBuildTopbarHTML = buildAppTopBar;
   window.appTopbarClass = function(cfg) {
@@ -1156,6 +1160,13 @@
         th.innerHTML = now === 'light' ? ic.moon : ic.sun;
       });
     }
+
+    /* Menu button (phones) — opens the same sidebar drawer as the hamburger bar did */
+    var mBtn = document.getElementById('apptbMenuBtn');
+    if (mBtn) mBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      document.body.classList.toggle('sidebar-open');
+    });
 
     /* Chat dropdown */
     tbChatClose();
