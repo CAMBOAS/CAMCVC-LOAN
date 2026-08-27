@@ -3223,9 +3223,11 @@ body[data-sbw="lg"] { --sb-w: 288px; }
 
 /* Collapsed rail shows bare icons — no plate behind them and no box on the row.
    State is carried by colour instead, so nothing angular is left on screen. */
-.sidebar.sb-collapsed .sb-icon {
+.sidebar.sb-collapsed .sb-icon,
+[data-theme="light"] .sidebar.sb-collapsed .sb-icon {
   background: none !important;
   border: none !important;
+  border-color: transparent !important;
   border-radius: 0 !important;
 }
 .sidebar.sb-collapsed .sb-link,
@@ -3248,6 +3250,14 @@ body[data-sbw="lg"] { --sb-w: 288px; }
 [data-theme="light"] .sidebar.sb-collapsed .sb-link.sb-active .sb-icon { color: #4f46e5 !important; }
 [data-theme="light"] .sidebar.sb-collapsed .sb-link:hover .sb-icon { color: #4f46e5 !important; }
 .sidebar.sb-collapsed .sb-icon svg { width: 20px !important; height: 20px !important; }
+/* Idle icons are the normal foreground colour, not the washed-out grey the expanded
+   list uses — with no plate behind them the faded version was hard to read. */
+.sidebar.sb-collapsed .sb-link .sb-icon,
+[data-theme="light"] .sidebar.sb-collapsed .sb-link .sb-icon { color: var(--text) !important; }
+.sidebar.sb-collapsed .sb-link:hover .sb-icon { color: #a78bfa !important; }
+.sidebar.sb-collapsed .sb-link.sb-active .sb-icon { color: #a78bfa !important; }
+[data-theme="light"] .sidebar.sb-collapsed .sb-link:hover .sb-icon,
+[data-theme="light"] .sidebar.sb-collapsed .sb-link.sb-active .sb-icon { color: #4f46e5 !important; }
 
 /* Hover tooltips off */
 body.sbcfg-notips .sidebar.sb-collapsed .sb-link::after { display: none !important; }
