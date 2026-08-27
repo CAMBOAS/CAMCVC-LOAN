@@ -748,6 +748,14 @@ async function handler(req, res) {
           show:  one('tb_show')  || '',
           links: one('tb_links') || '',
         },
+        sidebar: {
+          on:    one('sb_on')    || '',
+          width: one('sb_width') || '',
+          mode:  one('sb_mode')  || '',
+          style: one('sb_style') || '',
+          show:  one('sb_show')  || '',
+          links: one('sb_links') || '',
+        },
       });
     }
 
@@ -774,6 +782,25 @@ async function handler(req, res) {
         tb_style: String(tb.style || 'glass').slice(0,20),
         tb_show:  (String(tb.show  || '').trim() || '-').slice(0,180),
         tb_links: (String(tb.links || '').trim() || '-').slice(0,180),
+      };
+      for (const k of Object.keys(fields)) {
+        await db().query('DELETE FROM settings WHERE type=?', [k]);
+        await db().query('INSERT INTO settings (type,value) VALUES (?,?)', [k, fields[k]]);
+      }
+      return res.json({ ok:true });
+    }
+
+    /* ── Save Left Navigation (sidebar) config (app-wide, Admin only) ── */
+    if (action === 'sidebar_save') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const sb = body.sidebar || {};
+      const fields = {
+        sb_on:    String(sb.on === 0 || sb.on === '0' || sb.on === false ? '0' : '1'),
+        sb_width: String(sb.width || 'md').slice(0,20),
+        sb_mode:  String(sb.mode  || 'full').slice(0,20),
+        sb_style: String(sb.style || 'solid').slice(0,20),
+        sb_show:  (String(sb.show  || '').trim() || '-').slice(0,180),
+        sb_links: (String(sb.links || '').trim() || '-').slice(0,180),
       };
       for (const k of Object.keys(fields)) {
         await db().query('DELETE FROM settings WHERE type=?', [k]);

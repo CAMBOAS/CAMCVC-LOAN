@@ -3162,3 +3162,100 @@ body.apptb-on.apptb-tucked { padding-top: 0; }
   body.apptb-on.apptb-mob .apptb-search input { width: 108px; }
   body.apptb-on.apptb-mob .apptb-search input:focus { width: 140px; }
 }
+
+/* ================================================================
+   LEFT NAVIGATION options — configured in Settings › App Config
+   ================================================================ */
+
+/* Width presets (the sidebar, the content offset and the top bar all read --sb-w) */
+body[data-sbw="sm"] { --sb-w: 200px; }
+body[data-sbw="md"] { --sb-w: 240px; }
+body[data-sbw="lg"] { --sb-w: 288px; }
+
+/* Skins */
+.sidebar.sbs-solid  { background: #13141f; backdrop-filter: none; }
+.sidebar.sbs-glass  { background: rgba(19,20,31,.72); backdrop-filter: blur(16px) saturate(150%); -webkit-backdrop-filter: blur(16px) saturate(150%); }
+.sidebar.sbs-accent { background: linear-gradient(180deg, rgba(6,182,212,.16), rgba(124,92,255,.16)), #13141f; border-right-color: rgba(124,92,255,.3); }
+[data-theme="light"] .sidebar.sbs-solid  { background: #f8fafc !important; }
+[data-theme="light"] .sidebar.sbs-glass  { background: rgba(255,255,255,.72) !important; backdrop-filter: blur(16px) saturate(150%); -webkit-backdrop-filter: blur(16px) saturate(150%); }
+[data-theme="light"] .sidebar.sbs-accent { background: linear-gradient(180deg, rgba(6,182,212,.10), rgba(124,92,255,.10)), #f8fafc !important; }
+
+/* Collapse button — hidden by default (see the rule above), shown when enabled.
+   Desktop only: on phones the sidebar is a slide-in drawer, so collapsing means nothing. */
+@media (min-width: 981px) {
+  body.sbcfg-collapsible .sidebar .sb-collapse-btn { display: flex !important; }
+}
+.sb-collapse-btn {
+  align-items: center; justify-content: center;
+  width: 24px; height: 24px; flex-shrink: 0;
+  border-radius: 7px; padding: 0;
+  border: 1px solid rgba(148,163,200,.16);
+  background: rgba(148,163,184,.08);
+  color: var(--muted); cursor: pointer;
+  transition: background .14s, color .14s;
+}
+.sb-collapse-btn::before {
+  content: ''; width: 9px; height: 9px;
+  border-left: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(1px,-1px);
+  transition: transform .18s;
+}
+.sidebar.sb-collapsed .sb-collapse-btn::before { transform: rotate(-135deg) translate(1px,-1px); }
+.sb-collapse-btn:hover { background: rgba(124,92,255,.16); color: #a78bfa; }
+[data-theme="light"] .sb-collapse-btn { background: rgba(0,0,0,.04); border-color: rgba(148,163,184,.22); }
+
+/* Collapsed: the sidebar's own 24px side padding would leave only 16px of the 64px rail,
+   so drop it — the inner .sb-nav padding is what spaces the icons. */
+.sidebar.sb-collapsed { padding-left: 0 !important; padding-right: 0 !important; }
+.sidebar.sb-collapsed .sb-nav { padding: 0 6px !important; }
+
+/* Stack logo over chevron on the rail. The older rule floated the button to
+   `bottom:-30px`, which dropped it underneath the first nav icon — collapsing
+   worked but expanding again did not. */
+.sidebar.sb-collapsed .sb-head { flex-direction: column !important; gap: 7px !important; }
+.sidebar.sb-collapsed .sb-collapse-btn {
+  position: static !important;
+  bottom: auto !important; right: auto !important;
+  margin: 0 auto !important;
+}
+
+/* Hover tooltips off */
+body.sbcfg-notips .sidebar.sb-collapsed .sb-link::after { display: none !important; }
+
+/* ── Sidebar hidden ── */
+body.sbcfg-off .sidebar {
+  transform: translateX(-101%);
+  transition: transform .26s cubic-bezier(.4,0,.2,1);
+  box-shadow: none;
+}
+body.sbcfg-off .main-content { margin-left: 0 !important; width: 100% !important; }
+body.sbcfg-off .apptb { left: 0; }
+body.sbcfg-off.sidebar-open .sidebar {
+  transform: translateX(0);
+  box-shadow: 8px 0 32px rgba(0,0,0,.28);
+}
+body.sbcfg-off.sidebar-open .sidebar-overlay { display: block; opacity: 1; }
+
+/* Floating opener shown only while the sidebar is hidden */
+.sb-float-btn {
+  position: fixed; left: 14px; top: 14px; z-index: 210;
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.2);
+  background: rgba(19,20,31,.9); color: #cbd5e1;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  cursor: pointer; padding: 0;
+  box-shadow: 0 4px 14px rgba(2,6,23,.22);
+  transition: background .15s, color .15s;
+}
+.sb-float-btn:hover { background: rgba(124,92,255,.24); color: #fff; }
+[data-theme="light"] .sb-float-btn { background: rgba(255,255,255,.94); color: #475569; border-color: rgba(0,0,0,.1); }
+body.sidebar-open .sb-float-btn { opacity: 0; pointer-events: none; }
+/* Clear the top bar when both are on */
+body.apptb-on:not(.apptb-tucked) .sb-float-btn { top: calc(var(--apptb-h) + 10px); }
+
+@media (max-width: 979px) {
+  /* Phones already have the hamburger bar — the config must not double up */
+  .sb-float-btn { display: none !important; }
+  body.sbcfg-off .main-content { margin-left: 0 !important; }
+}

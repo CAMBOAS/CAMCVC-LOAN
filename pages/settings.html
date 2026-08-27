@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
-  <link rel="stylesheet" href="../assets/css/main.css?v=24">
+  <link rel="stylesheet" href="../assets/css/main.css?v=27">
   <style>
     .orb { display:none !important }
     .background { background:#0c0e1a !important }
@@ -304,6 +304,26 @@
     }
     .tb-chip-dot { width:6px; height:6px; border-radius:50%; background:rgba(148,163,184,.4); flex-shrink:0 }
     .tb-chip-on .tb-chip-dot { background:linear-gradient(135deg,#06b6d4,#7c5cff) }
+
+    /* ── Left Navigation preview ── */
+    .sbp-frame {
+      border:1px solid rgba(148,163,184,.16); border-radius:12px; overflow:hidden;
+      background:rgba(148,163,184,.05);
+    }
+    .sbp-scale { width:900px; transform-origin:0 0 }   /* width is overwritten by sbFitPreview() */
+    .sbp-stage { display:flex; align-items:stretch; min-height:210px }
+    .sbp-bar {
+      position:relative !important; top:auto !important; left:auto !important; bottom:auto !important;
+      z-index:1 !important; transform:none !important; height:auto !important;
+      flex-shrink:0; pointer-events:none;
+    }
+    .sbp-bar .sb-nav { overflow:hidden }
+    .sbp-body { flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:9px; min-width:0 }
+
+    .tb-chip-lock { opacity:.85; cursor:default }
+    .tb-chip-lock:hover { border-color:rgba(148,163,184,.18); color:var(--muted) }
+    .tb-chip-lock.tb-chip-on:hover { color:var(--text) }
+    .tb-chip-na { opacity:.45 }
 
     /* Live preview frame */
     .tbp-frame {
@@ -783,6 +803,95 @@
 
           </div>
         </div><!-- /glass-card -->
+
+        <div class="glass-card" style="padding:0;overflow:hidden;margin-top:14px">
+          <div style="padding:16px 18px 14px;border-bottom:1px solid rgba(148,163,184,.08);display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:9px;background:rgba(34,197,94,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="5.5" y1="9" x2="6.5" y2="9"/><line x1="5.5" y1="13" x2="6.5" y2="13"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:800;color:var(--text)">Left Navigation</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Width, look and menu items of the sidebar</div>
+            </div>
+            <label class="nt-toggle" title="Show / hide the sidebar">
+              <input type="checkbox" id="sbOn" onchange="sbSet('on', this.checked ? 1 : 0)">
+              <span class="nt-slider"></span>
+            </label>
+          </div>
+
+          <div id="sbBody" style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:15px">
+
+            <!-- Live preview -->
+            <div>
+              <div class="tb-lbl">Live preview <span class="tb-hint" id="sbPrevNote"></span></div>
+              <div class="sbp-frame" id="sbPrevFrame">
+                <div class="sbp-scale" id="sbPrevScale">
+                  <div class="sbp-stage">
+                    <div id="sbPreview" class="sidebar sbp-bar"></div>
+                    <div class="sbp-body">
+                      <span class="tbp-line" style="width:58%"></span>
+                      <span class="tbp-line" style="width:82%"></span>
+                      <span class="tbp-line" style="width:40%"></span>
+                      <span class="tbp-line" style="width:70%"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Width + Mode -->
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:150px">
+                <div class="tb-lbl">Width</div>
+                <div class="tb-seg" id="sbWidthSeg">
+                  <button type="button" data-v="sm" onclick="sbSet('width','sm')">Compact</button>
+                  <button type="button" data-v="md" onclick="sbSet('width','md')">Normal</button>
+                  <button type="button" data-v="lg" onclick="sbSet('width','lg')">Wide</button>
+                </div>
+              </div>
+              <div style="flex:1;min-width:150px">
+                <div class="tb-lbl">Mode</div>
+                <div class="tb-seg" id="sbModeSeg">
+                  <button type="button" data-v="full"  onclick="sbSet('mode','full')">Labels</button>
+                  <button type="button" data-v="icons" onclick="sbSet('mode','icons')">Icons only</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style -->
+            <div>
+              <div class="tb-lbl">Style</div>
+              <div class="tb-seg" id="sbStyleSeg">
+                <button type="button" data-v="solid"  onclick="sbSet('style','solid')">Solid</button>
+                <button type="button" data-v="glass"  onclick="sbSet('style','glass')">Glass</button>
+                <button type="button" data-v="accent" onclick="sbSet('style','accent')">Accent</button>
+              </div>
+            </div>
+
+            <!-- Elements -->
+            <div>
+              <div class="tb-lbl">Elements <span class="tb-hint">tap to show / hide</span></div>
+              <div class="tb-chips" id="sbModuleChips"></div>
+            </div>
+
+            <!-- Menu items -->
+            <div>
+              <div class="tb-lbl">Menu items <span class="tb-hint" id="sbLinkCount"></span></div>
+              <div class="tb-chips" id="sbLinkChips"></div>
+            </div>
+
+            <!-- Save row -->
+            <div style="display:flex;align-items:center;gap:12px;padding-top:2px;flex-wrap:wrap">
+              <button onclick="saveSidebar()" id="sbSaveBtn" style="display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:11px;border:none;background:linear-gradient(135deg,#06b6d4,#7c5cff);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(6,182,212,.28);transition:.15s">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Navigation
+              </button>
+              <button onclick="sbReset()" type="button" style="padding:10px 16px;border-radius:11px;border:1px solid rgba(148,163,184,.18);background:transparent;color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
+              <span id="sbStatus" style="font-size:12px;color:var(--muted)"></span>
+            </div>
+
+          </div>
+        </div><!-- /glass-card -->
         </div><!-- /ac-col-right -->
         </div><!-- /ac-wrap -->
       </div><!-- /Panel 2 -->
@@ -1152,7 +1261,7 @@
 
 <script src="../assets/js/api.js"></script>
 <script src="../assets/js/auth.js"></script>
-<script src="../assets/js/layout.js?v=23"></script>
+<script src="../assets/js/layout.js?v=24"></script>
 <script>
 'use strict';
 
@@ -2154,7 +2263,10 @@ function switchTab(panelIdx, btn) {
      is hidden (display:none) those measure as zero, so redraw once it's actually visible. */
   if (panelIdx === 5 && typeof drawOrgLines === 'function') requestAnimationFrame(drawOrgLines);
   /* Same reason: the Top Bar preview is scaled from its measured width. */
-  if (panelIdx === 2 && typeof tbFitPreview === 'function') requestAnimationFrame(tbFitPreview);
+  if (panelIdx === 2 && typeof tbFitPreview === 'function') requestAnimationFrame(function(){
+    tbFitPreview();
+    if (typeof sbFitPreview === 'function') sbFitPreview();
+  });
 }
 
 /* ── Tab reorder (per-user, localStorage) ── */
@@ -2619,6 +2731,7 @@ async function loadBrand() {
     }
     _brandPreviewUpdate();
     tbLoadCfg(r);
+    sbLoadCfg(r);
   } catch(e) {}
 }
 
@@ -2842,6 +2955,181 @@ async function saveTopbar() {
       status.style.color = '#4ade80';
       if (window.appSetTopbar)   window.appSetTopbar(c);
       if (window.appApplyTopbar) window.appApplyTopbar();
+    } else {
+      status.textContent = r && r.message ? r.message : 'Error';
+      status.style.color = '#f87171';
+    }
+  } catch(e) {
+    status.textContent = 'Error: ' + e.message;
+    status.style.color = '#f87171';
+  }
+  btn.disabled = false;
+  setTimeout(function(){ status.textContent = ''; }, 3000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LEFT NAVIGATION CONFIG (App Config panel)
+   ══════════════════════════════════════════════════════════════ */
+var _sbCfg = null;
+
+var SB_MODULE_META = {
+  brand:    { label:'Logo & name',   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-6 6"/></svg>' },
+  status:   { label:'Status strip',  ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg>' },
+  label:    { label:'Section title', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="14" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>' },
+  portal:   { label:'Portal link',   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' },
+  collapse: { label:'Collapse button',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>' },
+  tips:     { label:'Hover tooltips',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' }
+};
+
+function sbCfgSafe() {
+  if (!_sbCfg) {
+    _sbCfg = window.appGetSidebar ? window.appGetSidebar()
+           : { on:1, width:'md', mode:'full', style:'solid',
+               show:['brand','status','label','portal','collapse','tips'],
+               links:['dash','cust','loans','rpt','rep','fb','act','team','set','jr','prof'] };
+  }
+  return _sbCfg;
+}
+
+function sbSet(key, val) { sbCfgSafe()[key] = val; sbPaint(); }
+
+function sbToggleIn(listKey, key) {
+  var locked = window.appSbLocked || ['set'];
+  if (listKey === 'links' && locked.indexOf(key) !== -1) {
+    var st = document.getElementById('sbStatus');
+    if (st) {
+      st.textContent = 'Settings stays in the menu so you cannot lock yourself out.';
+      st.style.color = 'var(--muted)';
+      setTimeout(function(){ st.textContent = ''; }, 3500);
+    }
+    return;
+  }
+  var c = sbCfgSafe();
+  var arr = c[listKey] || [];
+  var i = arr.indexOf(key);
+  if (i === -1) arr.push(key); else arr.splice(i, 1);
+  c[listKey] = arr;
+  sbPaint();
+}
+
+function sbRenderChips() {
+  var c = sbCfgSafe();
+
+  var mods = (window.appSbModules || Object.keys(SB_MODULE_META));
+  document.getElementById('sbModuleChips').innerHTML = mods.map(function(m) {
+    var meta = SB_MODULE_META[m] || { label:m, ic:'' };
+    var on = c.show.indexOf(m) !== -1;
+    var dim = (m === 'collapse' && c.mode === 'icons') || (m === 'tips' && c.mode !== 'icons' && c.show.indexOf('collapse') === -1);
+    return '<button type="button" class="tb-chip' + (on ? ' tb-chip-on' : '') + (dim ? ' tb-chip-na' : '') + '" '
+         + 'onclick="sbToggleIn(\'show\',\'' + m + '\')">' + meta.ic
+         + '<span>' + meta.label + '</span></button>';
+  }).join('');
+
+  var locked = window.appSbLocked || ['set'];
+  var pages  = window.appTbPages || {};
+  document.getElementById('sbLinkChips').innerHTML = Object.keys(pages).map(function(k) {
+    var on  = c.links.indexOf(k) !== -1;
+    var lck = locked.indexOf(k) !== -1;
+    return '<button type="button" class="tb-chip' + (on ? ' tb-chip-on' : '') + (lck ? ' tb-chip-lock' : '') + '" '
+         + (lck ? 'title="Always kept so Settings stays reachable" ' : '')
+         + 'onclick="sbToggleIn(\'links\',\'' + k + '\')">'
+         + (lck ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+                : '<span class="tb-chip-dot"></span>')
+         + '<span>' + pages[k].en + '</span></button>';
+  }).join('');
+  document.getElementById('sbLinkCount').textContent = c.links.length + ' shown';
+}
+
+function sbPaint() {
+  var c = sbCfgSafe();
+  document.getElementById('sbOn').checked = !!c.on;
+  document.getElementById('sbBody').classList.toggle('tb-dim', !c.on);
+  tbPaintSeg('sbWidthSeg', c.width);
+  tbPaintSeg('sbModeSeg',  c.mode);
+  tbPaintSeg('sbStyleSeg', c.style);
+  sbRenderChips();
+
+  var pv = document.getElementById('sbPreview');
+  if (pv && window.appBuildSidebarHTML) {
+    pv.className = (window.appSidebarClass ? window.appSidebarClass(c) : 'sidebar') + ' sbp-bar';
+    pv.style.width = (window.appSidebarWidth ? window.appSidebarWidth(c) : 240) + 'px';
+    pv.innerHTML = window.appBuildSidebarHTML(c);
+  }
+  sbFitPreview();
+}
+
+/* Same idea as the top bar preview: draw at the real on-screen size, then shrink to fit. */
+function sbFitPreview() {
+  var frame = document.getElementById('sbPrevFrame');
+  var sc    = document.getElementById('sbPrevScale');
+  if (!frame || !sc) return;
+  var avail = frame.clientWidth;
+  if (!avail) return;                      /* panel hidden — retry when shown */
+  var real  = Math.max(640, Math.round(window.innerWidth));
+  sc.style.transform = 'none';
+  sc.style.width     = real + 'px';
+  var s = Math.min(1, avail / real);
+  sc.style.transform = 'scale(' + s + ')';
+  frame.style.height = Math.ceil(sc.offsetHeight * s) + 'px';
+  var note = document.getElementById('sbPrevNote');
+  if (note) note.textContent = 'mirroring ' + real + 'px · shown at ' + Math.round(s * 100) + '%';
+}
+var _sbFitRaf = null;
+window.addEventListener('resize', function() {
+  if (_sbFitRaf) cancelAnimationFrame(_sbFitRaf);
+  _sbFitRaf = requestAnimationFrame(function(){ _sbFitRaf = null; sbFitPreview(); });
+});
+
+function sbReset() {
+  var d = window.appSbDefault || { on:1, width:'md', mode:'full', style:'solid',
+    show:['brand','status','label','portal','collapse','tips'],
+    links:['dash','cust','loans','rpt','rep','fb','act','team','set','jr','prof'] };
+  _sbCfg = { on:d.on, width:d.width, mode:d.mode, style:d.style, show:d.show.slice(), links:d.links.slice() };
+  sbPaint();
+}
+
+function sbLoadCfg(r) {
+  if (r && r.sidebar && (r.sidebar.on !== '' || r.sidebar.width)) {
+    var raw = {
+      on:    r.sidebar.on    === '' ? 1 : r.sidebar.on,
+      width: r.sidebar.width || undefined,
+      mode:  r.sidebar.mode  || undefined,
+      style: r.sidebar.style || undefined,
+      show:  r.sidebar.show  === '' ? undefined : r.sidebar.show,
+      links: r.sidebar.links === '' ? undefined : r.sidebar.links
+    };
+    _sbCfg = window.appSbNormalize ? window.appSbNormalize(raw) : raw;
+  } else {
+    _sbCfg = window.appGetSidebar ? window.appGetSidebar() : null;
+  }
+  sbPaint();
+}
+
+async function saveSidebar() {
+  var c = sbCfgSafe();
+  var btn = document.getElementById('sbSaveBtn');
+  var status = document.getElementById('sbStatus');
+  btn.disabled = true;
+  status.textContent = 'Saving…';
+  status.style.color = 'var(--muted)';
+  try {
+    var r = await CamboAPI.post({
+      action: 'sidebar_save',
+      sidebar: {
+        on:    c.on ? 1 : 0,
+        width: c.width,
+        mode:  c.mode,
+        style: c.style,
+        show:  c.show.join(','),
+        links: c.links.join(',')
+      }
+    });
+    if (r && r.ok) {
+      status.textContent = 'Saved!';
+      status.style.color = '#4ade80';
+      if (window.appSetSidebar)      window.appSetSidebar(c);
+      if (window.appRerenderSidebar) window.appRerenderSidebar();
+      if (window.appApplyTopbar)     window.appApplyTopbar();
     } else {
       status.textContent = r && r.message ? r.message : 'Error';
       status.style.color = '#f87171';

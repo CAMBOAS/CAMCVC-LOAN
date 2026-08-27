@@ -33,6 +33,18 @@
           });
           if (JSON.stringify(window.appGetTopbar()) !== _tbBefore) window.appApplyTopbar();
         }
+        if (r.sidebar) {
+          var _sbBefore = JSON.stringify(window.appGetSidebar());
+          window.appSetSidebar({
+            on:    r.sidebar.on    === '' ? undefined : r.sidebar.on,
+            width: r.sidebar.width || undefined,
+            mode:  r.sidebar.mode  || undefined,
+            style: r.sidebar.style || undefined,
+            show:  r.sidebar.show  === '' ? undefined : r.sidebar.show,
+            links: r.sidebar.links === '' ? undefined : r.sidebar.links
+          });
+          if (JSON.stringify(window.appGetSidebar()) !== _sbBefore) window.appRerenderSidebar();
+        }
       }
     } catch(e) {}
   };
@@ -171,7 +183,8 @@
     } catch(e){}
   };
 
-  function buildSidebar() {
+  /* `cfgOverride` lets the Settings preview render a draft config without saving it. */
+  function buildSidebar(cfgOverride) {
     const cur  = getCurrentPage();
     const base = getBase();
     const role = getAuthRole();
@@ -187,8 +200,14 @@
     const _bName = _brand.name || 'CAMBO';
     const _bSub  = _brand.sub  || 'Loan Management';
     const _bLogo = _brand.logoUrl ? _brand.logoUrl : `${base}images/logo/LOGO.png`;
+
+    const _sb  = cfgOverride ? sbNorm(cfgOverride) : getSbCfg();
+    const _has = m => _sb.show.indexOf(m) !== -1;
+    /* A page shows in the menu when the config lists it AND the account may open it. */
+    const _pick = key => _sb.links.indexOf(key) !== -1;
+
     return `
-      <div class="sb-head">
+      ${_has('brand') ? `<div class="sb-head">
         <button class="sb-brand-btn" id="sbBrandBtn" onclick="location.href=location.pathname.includes('/pages/')? '../index.html':'index.html'" title="Dashboard">
           <div class="sb-logo-wrap">
             <img class="sb-logo-img" src="${_bLogo}" alt="${_bName}" onerror="this.style.display='none'">
@@ -199,31 +218,32 @@
           </div>
         </button>
         <button class="sb-collapse-btn" id="sbToggleBtn" title="Toggle sidebar"></button>
-      </div>
+      </div>` : ''}
 
-      <div class="sb-status-strip">
+      ${_has('status') ? `<div class="sb-status-strip">
         <span class="sb-live-dot"></span>
         <span class="sb-live-txt">${t('ប្រព័ន្ធដំណើរការ','System Online')}</span>
-      </div>
+      </div>` : ''}
 
       <div class="sb-divider"></div>
 
       <nav class="sb-nav">
-        <div class="sb-section-label">${t('ម៉ឺនុយចំបង','Main Menu')}</div>
+        ${_has('label') ? `<div class="sb-section-label">${t('ម៉ឺនុយចំបង','Main Menu')}</div>` : ''}
         <ul class="sb-list">
-          ${appCanPage('dashboard') ? link('index.html', ic.dashboard, t('Dashboard','Dashboard')) : ''}
-          ${appCanPage('customers') ? link('pages/customers.html', ic.customers, t('អតិថិជន','Customers')) : ''}
-          ${appCanPage('loanlist') ? link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List')) : ''}
-          ${(appCan('reports') && appCanPage('reports')) ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
-          ${appCanPage('repayment') ? link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment')) : ''}
-          ${appCanPage('fbid') ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder')) : ''}
-          ${appCanPage('activitylog') ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
-          ${appCanPage('team') ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
-          ${role === 'Admin' ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
-          ${appCanPage('journal') ? link('pages/journal.html', ic.journal, t('កំណត់ត្រា','Journal')) : ''}
-          ${link('pages/my-profile.html', ic.profile, t('Profile','My Profile'))}
-          <li class="sb-divider sb-divider-sm"></li>
-          <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('User','User')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('User','User')}</span><span class="sb-active-dot"></span></a></li>
+          ${(_pick('dash') && appCanPage('dashboard')) ? link('index.html', ic.dashboard, t('Dashboard','Dashboard')) : ''}
+          ${(_pick('cust') && appCanPage('customers')) ? link('pages/customers.html', ic.customers, t('អតិថិជន','Customers')) : ''}
+          ${(_pick('add')  && appCanPage('customers')) ? link('pages/add-customer.html', ic.profile, t('បន្ថែមអតិថិជន','Add Customer')) : ''}
+          ${(_pick('loans') && appCanPage('loanlist')) ? link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List')) : ''}
+          ${(_pick('rpt') && appCan('reports') && appCanPage('reports')) ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
+          ${(_pick('rep') && appCanPage('repayment')) ? link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment')) : ''}
+          ${(_pick('fb') && appCanPage('fbid')) ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder')) : ''}
+          ${(_pick('act') && appCanPage('activitylog')) ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
+          ${(_pick('team') && appCanPage('team')) ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
+          ${(_pick('set') && role === 'Admin') ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
+          ${(_pick('jr') && appCanPage('journal')) ? link('pages/journal.html', ic.journal, t('កំណត់ត្រា','Journal')) : ''}
+          ${_pick('prof') ? link('pages/my-profile.html', ic.profile, t('Profile','My Profile')) : ''}
+          ${_has('portal') ? `<li class="sb-divider sb-divider-sm"></li>
+          <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('User','User')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('User','User')}</span><span class="sb-active-dot"></span></a></li>` : ''}
         </ul>
       </nav>
 
@@ -633,9 +653,13 @@
     var sb  = document.querySelector('.sidebar');
     var dashboard = document.querySelector('.dashboard');
 
-    /* Clear any stale collapsed state — sidebar is always expanded */
-    localStorage.removeItem('sb_collapsed');
-    if (sb) { sb.classList.remove('sb-collapsed'); document.body.classList.remove('sb-collapsed'); }
+    /* Collapse to icons — offered only while the config enables the button */
+    if (btn) btn.addEventListener('click', function() {
+      var cfg = getSbCfg();
+      if (cfg.mode === 'icons' || cfg.show.indexOf('collapse') === -1) return;
+      localStorage.setItem('sb_collapsed', sbUserCollapsed() ? '0' : '1');
+      applySidebarCfg();
+    });
 
     /* Mobile overlay close */
     var overlay = document.querySelector('.sidebar-overlay');
@@ -920,6 +944,138 @@
   }
   window.appApplyTopbar = applyAppTopBar;
 
+  /* ══════════════════════════════════════════════════════════════
+     LEFT NAVIGATION (sidebar) — configurable from Settings › App Config
+     Shares the page table with the top bar (TB_PAGES).
+     ══════════════════════════════════════════════════════════════ */
+
+  var SB_MODULES = ['brand','status','label','portal','collapse','tips'];
+  window.appSbModules = SB_MODULES;
+
+  var SB_DEFAULT = {
+    on:    1,
+    width: 'md',                     /* sm 200 | md 240 | lg 288 */
+    mode:  'full',                   /* full | icons */
+    style: 'solid',                  /* solid | glass | accent */
+    show:  ['brand','status','label','portal','collapse','tips'],
+    links: ['dash','cust','loans','rpt','rep','fb','act','team','set','jr','prof']
+  };
+  window.appSbDefault = SB_DEFAULT;
+
+  /* Settings must stay reachable for an Admin, so it is never dropped from the menu. */
+  var SB_LOCKED = ['set'];
+  window.appSbLocked = SB_LOCKED;
+
+  function sbNorm(raw) {
+    var c = {};
+    raw = raw || {};
+    c.on    = (raw.on === 0 || raw.on === '0' || raw.on === false) ? 0 : 1;
+    c.width = ['sm','md','lg'].indexOf(raw.width) !== -1 ? raw.width : 'md';
+    c.mode  = (raw.mode === 'icons') ? 'icons' : 'full';
+    c.style = ['solid','glass','accent'].indexOf(raw.style) !== -1 ? raw.style : 'solid';
+    function list(v, fallback, valid) {
+      if (v === '-' || v === '') return [];
+      var a = Array.isArray(v) ? v : (typeof v === 'string' ? v.split(',') : null);
+      if (!a) return fallback.slice();
+      return a.map(function(x){ return String(x).trim(); })
+              .filter(function(x){ return valid.indexOf(x) !== -1; });
+    }
+    c.show  = list(raw.show,  SB_DEFAULT.show,  SB_MODULES);
+    c.links = list(raw.links, SB_DEFAULT.links, Object.keys(TB_PAGES));
+    for (var i = 0; i < SB_LOCKED.length; i++) {
+      if (c.links.indexOf(SB_LOCKED[i]) === -1) c.links.push(SB_LOCKED[i]);
+    }
+    return c;
+  }
+  window.appSbNormalize = sbNorm;
+
+  function getSbCfg() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem('appSidebar') || 'null'); } catch(e) {}
+    return sbNorm(raw || SB_DEFAULT);
+  }
+  window.appGetSidebar = getSbCfg;
+  window.appSetSidebar = function(c) {
+    try { localStorage.setItem('appSidebar', JSON.stringify(sbNorm(c))); } catch(e) {}
+  };
+
+  function sbHas(cfg, m) { return cfg.show.indexOf(m) !== -1; }
+
+  /* Per-user collapse, only offered when the config allows it */
+  function sbUserCollapsed() {
+    return localStorage.getItem('sb_collapsed') === '1';
+  }
+
+  function sbEffectiveIcons(cfg) {
+    if (cfg.mode === 'icons') return true;
+    return sbHas(cfg, 'collapse') && sbUserCollapsed();
+  }
+
+  function applySidebarCfg() {
+    var cfg = getSbCfg();
+    var sb  = document.querySelector('.sidebar');
+    var b   = document.body;
+
+    b.classList.toggle('sbcfg-off', !cfg.on);
+    b.classList.toggle('sbcfg-collapsible', !!cfg.on && sbHas(cfg, 'collapse') && cfg.mode !== 'icons');
+    b.classList.toggle('sbcfg-notips', !sbHas(cfg, 'tips'));
+    b.setAttribute('data-sbw', cfg.width);
+
+    if (sb) {
+      sb.classList.remove('sbs-solid', 'sbs-glass', 'sbs-accent');
+      sb.classList.add('sbs-' + cfg.style);
+    }
+
+    var icons = !!cfg.on && sbEffectiveIcons(cfg);
+    if (sb) sb.classList.toggle('sb-collapsed', icons);
+    b.classList.toggle('sb-collapsed', icons);
+
+    /* Floating opener while the sidebar is hidden — never leave the menu unreachable */
+    var fab = document.getElementById('sbFloatBtn');
+    if (!cfg.on) {
+      if (!fab) {
+        fab = document.createElement('button');
+        fab.id = 'sbFloatBtn';
+        fab.className = 'sb-float-btn';
+        fab.type = 'button';
+        fab.title = t('បើកម៉ឺនុយ', 'Open menu');
+        fab.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+        fab.addEventListener('click', function(e) {
+          e.stopPropagation();
+          document.body.classList.toggle('sidebar-open');
+        });
+        document.body.appendChild(fab);
+      }
+    } else if (fab) {
+      fab.remove();
+      b.classList.remove('sidebar-open');
+    }
+  }
+  window.appApplySidebar = applySidebarCfg;
+
+  /* Rebuild the sidebar markup and re-apply the config (used after a config change) */
+  function rerenderSidebar() {
+    var host = document.getElementById('sharedSidebar');
+    if (!host) return;
+    host.innerHTML = buildSidebar();
+    initSidebarToggle(host);
+    initThemeBtn();
+    initLogoutBtn();
+    applySidebarCfg();
+    window.appApplyBrand && window.appApplyBrand();
+  }
+  window.appRerenderSidebar = rerenderSidebar;
+  window.appBuildSidebarHTML = buildSidebar;
+  window.appSidebarClass = function(cfg) {
+    cfg = sbNorm(cfg || getSbCfg());
+    return 'sidebar sbs-' + cfg.style + (cfg.mode === 'icons' ? ' sb-collapsed' : '');
+  };
+  window.appSidebarWidth = function(cfg) {
+    cfg = sbNorm(cfg || getSbCfg());
+    if (cfg.mode === 'icons') return 64;
+    return cfg.width === 'sm' ? 200 : cfg.width === 'lg' ? 288 : 240;
+  };
+
   function renderLayout() {
     var sidebar = document.getElementById('sharedSidebar');
     var header  = document.getElementById('sharedHeader');
@@ -939,8 +1095,9 @@
     tmp.innerHTML = buildBottomNav();
     document.body.appendChild(tmp.firstElementChild);
 
-    /* Configurable app top bar */
+    /* Configurable app top bar + left navigation */
     applyAppTopBar();
+    applySidebarCfg();
   }
 
   function applyLogoAnimation() {
