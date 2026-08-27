@@ -3412,3 +3412,22 @@ body.apptb-on:not(.apptb-tucked) .sb-float-btn { top: calc(var(--apptb-h) + 10px
 @media (max-width: 480px) {
   .apptb-chatpop { width: calc(100vw - 16px); }
 }
+
+/* ── Expanded sidebar: no plate behind the row either ──
+   Only colour (plus the active dot) marks hover and the current page, matching the
+   collapsed rail. Scoped to .sidebar and repeated under [data-theme="light"] so it
+   outranks the light-theme rules that set these with !important. */
+.sidebar .sb-link:hover,
+.sidebar .sb-link.sb-active,
+[data-theme="light"] .sidebar .sb-link:hover,
+[data-theme="light"] .sidebar .sb-link.sb-active {
+  background: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.sidebar .sb-link.sb-active { color: #a78bfa !important; font-weight: 700 !important; }
+.sidebar .sb-link.sb-active .sb-icon { color: #a78bfa !important; }
+.sidebar .sb-link:hover { color: var(--text) !important; }
+[data-theme="light"] .sidebar .sb-link.sb-active,
+[data-theme="light"] .sidebar .sb-link.sb-active .sb-icon { color: #4f46e5 !important; }
+[data-theme="light"] .sidebar .sb-link:hover { color: #1e293b !important; }
