@@ -310,7 +310,7 @@
       border:1px solid rgba(148,163,184,.16); border-radius:12px; overflow:hidden;
       background:rgba(148,163,184,.05);
     }
-    .tbp-scale { width:700px; transform-origin:0 0 }
+    .tbp-scale { width:700px; transform-origin:0 0 }   /* width is overwritten by tbFitPreview() */
     .tbp-bar {
       position:relative !important; top:auto !important; left:auto !important; right:auto !important;
       width:100%; z-index:1 !important; transform:none !important; opacity:1 !important;
@@ -717,7 +717,7 @@
 
             <!-- Live preview -->
             <div>
-              <div class="tb-lbl">Live preview</div>
+              <div class="tb-lbl">Live preview <span class="tb-hint" id="tbPrevNote"></span></div>
               <div class="tbp-frame" id="tbPrevFrame">
                 <div class="tbp-scale" id="tbPrevScale">
                   <div id="tbPreview" class="apptb apptb-md apptb-glass tbp-bar"></div>
@@ -2759,18 +2759,40 @@ function tbPaint() {
   }
 }
 
+/* The real bar spans exactly the same strip as .main-content (sidebar edge → right edge),
+   so render the preview at that width and shrink it to fit the card. What you see in the
+   card is then a true miniature of this screen, and it re-fits as the window changes. */
+function tbRealBarWidth() {
+  var mc = document.querySelector('.main-content');
+  var w  = mc ? mc.getBoundingClientRect().width : 0;
+  if (!w) {
+    var sb = document.querySelector('.sidebar');
+    var sbw = (sb && window.innerWidth > 979) ? sb.getBoundingClientRect().width : 0;
+    w = window.innerWidth - sbw;
+  }
+  return Math.max(320, Math.round(w));
+}
+
 function tbFitPreview() {
   var frame = document.getElementById('tbPrevFrame');
   var sc    = document.getElementById('tbPrevScale');
   if (!frame || !sc) return;
-  sc.style.transform = 'none';
   var avail = frame.clientWidth;
   if (!avail) return;                       /* panel hidden — retry when shown */
-  var s = Math.min(1, avail / 700);
+  var real  = tbRealBarWidth();
+  sc.style.transform = 'none';
+  sc.style.width     = real + 'px';
+  var s = Math.min(1, avail / real);
   sc.style.transform = 'scale(' + s + ')';
   frame.style.height = Math.ceil(sc.offsetHeight * s) + 'px';
+  var note = document.getElementById('tbPrevNote');
+  if (note) note.textContent = 'mirroring ' + real + 'px · shown at ' + Math.round(s * 100) + '%';
 }
-window.addEventListener('resize', function(){ tbFitPreview(); });
+var _tbFitRaf = null;
+window.addEventListener('resize', function() {
+  if (_tbFitRaf) cancelAnimationFrame(_tbFitRaf);
+  _tbFitRaf = requestAnimationFrame(function(){ _tbFitRaf = null; tbFitPreview(); });
+});
 
 function tbReset() {
   var d = window.appTbDefault || { on:1, mode:'always', size:'md', style:'glass',
