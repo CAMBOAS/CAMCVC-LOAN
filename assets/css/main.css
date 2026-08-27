@@ -3067,8 +3067,10 @@ body.sb-collapsed .apptb { left: var(--sb-w-col); }
 .apptb-sm .apptb-nav { width: 34px; height: 24px; }
 .apptb-nav svg { width: 17px; height: 17px; }
 .apptb-sm .apptb-nav svg { width: 15px; height: 15px; }
-.apptb-nav:hover { background: rgba(148,163,184,.12); color: var(--text); }
-.apptb-nav-active { color: #22d3ee; background: rgba(6,182,212,.12); }
+/* Bare icons — no plate behind them; colour and the underline mark hover/current page,
+   matching the sidebar. */
+.apptb-nav:hover { background: none; color: var(--text); }
+.apptb-nav-active { color: #22d3ee; background: none; }
 .apptb-nav-active::after {
   content: ''; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%);
   width: 20px; height: 2.5px; border-radius: 2px; background: linear-gradient(90deg,#06b6d4,#7c5cff);
