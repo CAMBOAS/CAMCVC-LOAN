@@ -578,7 +578,9 @@ async function _bpQrCard() {
   var cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
   var ctx = cv.getContext('2d');
-  var brand = (window.appGetBrand && appGetBrand().name) || 'CAMBO';
+  /* The card is what the customer receives, so it carries the public-facing name
+     rather than whatever the sidebar branding happens to be set to. */
+  var brand = 'CHECK CVC';
 
   /* page */
   ctx.fillStyle = '#eef2f7';
