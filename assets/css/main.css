@@ -3461,3 +3461,34 @@ body.apptb-on:not(.apptb-tucked) .sb-float-btn { top: calc(var(--apptb-h) + 10px
 [data-theme="light"] .sidebar .sb-link.sb-active,
 [data-theme="light"] .sidebar .sb-link.sb-active .sb-icon { color: #4f46e5 !important; }
 [data-theme="light"] .sidebar .sb-link:hover { color: #1e293b !important; }
+
+/* ================================================================
+   PHONE ICON RAIL — sidebar stays on screen as a 56px icon strip
+   instead of the hamburger drawer (Left Navigation › "Rail on phone")
+   ================================================================ */
+@media (max-width: 979px) {
+  body.sbcfg-mobrail .sidebar {
+    transform: none !important;
+    width: 56px !important;
+    box-shadow: none !important;
+    z-index: 200 !important;
+  }
+  body.sbcfg-mobrail .main-content {
+    margin-left: 56px !important;
+    width: calc(100% - 56px) !important;
+  }
+  /* The rail is always there, so the drawer and its opener are pointless */
+  body.sbcfg-mobrail .sidebar-overlay { display: none !important; }
+  body.sbcfg-mobrail #topbarMenuBtn,
+  body.sbcfg-mobrail .apptb-menu { display: none !important; }
+  body.sbcfg-mobrail.sidebar-open { overflow: auto; touch-action: auto; }
+
+  /* Bars start after the rail */
+  body.sbcfg-mobrail .shared-topbar { left: 56px !important; width: auto !important; padding-left: 14px !important; }
+  body.sbcfg-mobrail.apptb-on.apptb-mob .apptb { left: 56px; }
+
+  /* Narrower rail than the desktop 64px, and the icons follow it */
+  body.sbcfg-mobrail .sidebar.sb-collapsed .sb-link::after { display: none !important; }  /* tooltips need hover */
+  body.sbcfg-mobrail .sidebar .sb-nav { padding: 0 4px !important; }
+  body.sbcfg-mobrail .sidebar .sb-icon { width: 48px !important; }
+}

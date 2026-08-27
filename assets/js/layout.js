@@ -1251,7 +1251,7 @@
      Shares the page table with the top bar (TB_PAGES).
      ══════════════════════════════════════════════════════════════ */
 
-  var SB_MODULES = ['brand','status','label','portal','collapse','tips'];
+  var SB_MODULES = ['brand','status','label','portal','collapse','tips','mob'];
   window.appSbModules = SB_MODULES;
 
   var SB_DEFAULT = {
@@ -1308,8 +1308,14 @@
     return localStorage.getItem('sb_collapsed') === '1';
   }
 
+  /* Phones: with the rail option on, the sidebar stays on screen as an icon rail
+     instead of hiding behind the hamburger drawer. */
+  var _sbPhoneMq = window.matchMedia('(max-width: 979px)');
+  function sbPhoneRail(cfg) { return sbHas(cfg, 'mob') && _sbPhoneMq.matches; }
+
   function sbEffectiveIcons(cfg) {
     if (cfg.mode === 'icons') return true;
+    if (sbPhoneRail(cfg)) return true;
     return sbHas(cfg, 'collapse') && sbUserCollapsed();
   }
 
@@ -1319,6 +1325,7 @@
     var b   = document.body;
 
     b.classList.toggle('sbcfg-off', !cfg.on);
+    b.classList.toggle('sbcfg-mobrail', !!cfg.on && sbHas(cfg, 'mob'));
     b.classList.toggle('sbcfg-collapsible', !!cfg.on && sbHas(cfg, 'collapse') && cfg.mode !== 'icons');
     b.classList.toggle('sbcfg-notips', !sbHas(cfg, 'tips'));
     b.setAttribute('data-sbw', cfg.width);
@@ -1354,6 +1361,13 @@
     }
   }
   window.appApplySidebar = applySidebarCfg;
+
+  /* Crossing the phone breakpoint flips the rail on or off */
+  (function(){
+    var reapply = function(){ if (document.querySelector('.sidebar')) applySidebarCfg(); };
+    if (_sbPhoneMq.addEventListener) _sbPhoneMq.addEventListener('change', reapply);
+    else if (_sbPhoneMq.addListener) _sbPhoneMq.addListener(reapply);
+  })();
 
   /* Rebuild the sidebar markup and re-apply the config (used after a config change) */
   function rerenderSidebar() {
