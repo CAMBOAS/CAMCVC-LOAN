@@ -119,6 +119,31 @@
 
     /* Cards used to sit in a 1fr 1fr grid; without a cap a lone card stretches the
        full width of a wide monitor and the inputs go with it. */
+    /* reorder mode */
+    .mp-tab-hold { opacity:.55; transform:scale(.96); transition:.12s }
+    .mp-tabs-drag .mp-tab { cursor:grab }
+    .mp-tabs-drag .mp-tab:active { cursor:grabbing }
+    .mp-tab-dragging { opacity:.4 }
+    .mp-tab-over { box-shadow:inset 2px 0 0 #7c5cff }
+    .mp-drag-bar {
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      margin-top:10px; padding:8px 12px; border-radius:10px;
+      background:rgba(124,92,255,.08); border:1px solid rgba(124,92,255,.22);
+    }
+    .mp-drag-tip { display:inline-flex; align-items:center; gap:6px; flex:1; font-size:11.5px; font-weight:700; color:var(--muted) }
+    .mp-drag-tip svg { width:13px; height:13px }
+    .mp-drag-save {
+      padding:6px 16px; border:none; border-radius:9px; cursor:pointer;
+      background:linear-gradient(135deg,#7c5cff,#06b6d4); color:#fff;
+      font-family:inherit; font-size:12px; font-weight:700;
+    }
+    .mp-drag-save:disabled { opacity:.45; cursor:default }
+    .mp-drag-cancel {
+      padding:6px 14px; border:1px solid rgba(148,163,184,.25); border-radius:9px;
+      background:transparent; color:var(--muted); cursor:pointer;
+      font-family:inherit; font-size:12px; font-weight:700;
+    }
+
     .mp-tool-panel { display:none; padding:14px 2px 0; max-width:1000px }
     .mp-tool-panel.on { display:block }
 
@@ -306,6 +331,17 @@
           <span>Activity</span>
         </button>
       </div>
+
+      <!-- appears only while a tab is being dragged -->
+      <div class="mp-drag-bar" id="mpDragBar" style="display:none">
+        <span class="mp-drag-tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/><polyline points="9 18 15 12 9 6"/></svg>
+          Drag the tabs left or right
+        </span>
+        <button type="button" class="mp-drag-save" id="mpDragSaveBtn" onclick="mpSaveTabOrder()" disabled>Save order</button>
+        <button type="button" class="mp-drag-cancel" onclick="mpCancelTabOrder()">Cancel</button>
+      </div>
+
       <div class="mp-tool-panel" id="mpToolProfile">
         <div class="mp-grid">
       <div class="mp-card">
@@ -858,6 +894,206 @@ function mpToolsEligible() {
   return Array.isArray(a.manages_teams) && a.manages_teams.length > 0;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   TAB REORDER — press and hold a tab, drag it, then Save
+   Order is stored per user as tool keys (not indices), so hiding a
+   tab for a role can never shift someone else's arrangement.
+   ══════════════════════════════════════════════════════════════ */
+var MP_TOOLS_DEFAULT = ['profile','qr','appearance','focus','account','activity'];
+var _mpOrder   = MP_TOOLS_DEFAULT.slice();
+var _mpDragOn  = false;
+var _mpDirty   = false;
+var _mpLpTimer = null;
+var _mpLpTab   = null;
+var _mpDragKey = null;
+
+function _mpOrderKey() {
+  var u = '';
+  try { u = (JSON.parse(localStorage.getItem('appAuth') || 'null') || {}).u || ''; } catch(e) {}
+  return 'mp_tab_order_' + (u || 'default');
+}
+
+function _mpNormOrder(arr) {
+  if (!Array.isArray(arr)) return MP_TOOLS_DEFAULT.slice();
+  var seen = {}, out = [];
+  arr.forEach(function(k) {
+    if (MP_TOOLS_DEFAULT.indexOf(k) !== -1 && !seen[k]) { seen[k] = 1; out.push(k); }
+  });
+  /* anything new the code added since this order was saved goes on the end */
+  MP_TOOLS_DEFAULT.forEach(function(k) { if (!seen[k]) out.push(k); });
+  return out;
+}
+
+function _mpLoadOrder() {
+  try {
+    var raw = JSON.parse(localStorage.getItem(_mpOrderKey()) || 'null');
+    if (raw) _mpOrder = _mpNormOrder(raw);
+  } catch(e) {}
+}
+
+function _mpApplyOrder() {
+  var bar = document.getElementById('mpToolTabs');
+  if (!bar) return;
+  _mpOrder.forEach(function(k) {
+    var t = document.getElementById('mpTab' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (t) bar.appendChild(t);            /* appending in order re-sorts them */
+  });
+}
+
+/* ── press and hold ── */
+function _mpLpStart() {
+  if (_mpDragOn) return;
+  var tab = this;
+  _mpLpTab = tab;
+  tab.classList.add('mp-tab-hold');
+  clearTimeout(_mpLpTimer);
+  _mpLpTimer = setTimeout(function() {
+    if (_mpLpTab === tab) { tab.classList.remove('mp-tab-hold'); _mpLpTab = null; }
+    _mpDragStartMode();
+  }, 600);
+}
+function _mpLpCancel() {
+  clearTimeout(_mpLpTimer);
+  if (_mpLpTab) { _mpLpTab.classList.remove('mp-tab-hold'); _mpLpTab = null; }
+}
+
+function _mpDragStartMode() {
+  _mpDragOn = true;
+  _mpDirty  = false;
+  var bar = document.getElementById('mpToolTabs');
+  if (bar) bar.classList.add('mp-tabs-drag');
+  document.querySelectorAll('#mpToolTabs .mp-tab').forEach(function(t) { t.setAttribute('draggable', 'true'); });
+  var hint = document.getElementById('mpDragBar');
+  if (hint) hint.style.display = 'flex';
+  _mpPaintSave();
+}
+
+function _mpDragEndMode() {
+  _mpDragOn = false;
+  var bar = document.getElementById('mpToolTabs');
+  if (bar) bar.classList.remove('mp-tabs-drag');
+  document.querySelectorAll('#mpToolTabs .mp-tab').forEach(function(t) {
+    t.setAttribute('draggable', 'false');
+    t.classList.remove('mp-tab-dragging', 'mp-tab-over');
+  });
+  var hint = document.getElementById('mpDragBar');
+  if (hint) hint.style.display = 'none';
+}
+
+function _mpPaintSave() {
+  var b = document.getElementById('mpDragSaveBtn');
+  if (b) b.disabled = !_mpDirty;
+}
+
+/* move `src` so it sits where `tgt` is */
+function _mpMove(srcKey, tgtKey) {
+  if (!srcKey || !tgtKey || srcKey === tgtKey) return false;
+  var s = _mpOrder.indexOf(srcKey), t = _mpOrder.indexOf(tgtKey);
+  if (s < 0 || t < 0) return false;
+  _mpOrder.splice(s, 1);
+  _mpOrder.splice(_mpOrder.indexOf(tgtKey) + (t > s ? 1 : 0), 0, srcKey);
+  _mpApplyOrder();
+  _mpDirty = true;
+  _mpPaintSave();
+  return true;
+}
+
+function _mpOnDragStart(e) {
+  if (!_mpDragOn) { e.preventDefault(); return; }
+  _mpDragKey = this.getAttribute('data-tool');
+  this.classList.add('mp-tab-dragging');
+  try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', _mpDragKey); } catch(err) {}
+}
+function _mpOnDragOver(e) {
+  if (!_mpDragOn) return;
+  e.preventDefault();
+  try { e.dataTransfer.dropEffect = 'move'; } catch(err) {}
+  document.querySelectorAll('#mpToolTabs .mp-tab').forEach(function(t){ t.classList.remove('mp-tab-over'); });
+  this.classList.add('mp-tab-over');
+}
+function _mpOnDrop(e) {
+  if (!_mpDragOn) return;
+  e.preventDefault();
+  _mpMove(_mpDragKey, this.getAttribute('data-tool'));
+}
+function _mpOnDragEnd() {
+  document.querySelectorAll('#mpToolTabs .mp-tab').forEach(function(t){ t.classList.remove('mp-tab-dragging','mp-tab-over'); });
+}
+
+/* Touch: HTML5 drag-and-drop does not fire on phones, so track the finger instead */
+function _mpOnTouchMove(e) {
+  if (!_mpDragOn) return;
+  var t = e.touches && e.touches[0];
+  if (!t) return;
+  if (!_mpDragKey) {
+    _mpDragKey = this.getAttribute('data-tool');
+    this.classList.add('mp-tab-dragging');
+  }
+  e.preventDefault();
+  var el = document.elementFromPoint(t.clientX, t.clientY);
+  var over = el && el.closest ? el.closest('#mpToolTabs .mp-tab') : null;
+  if (over) _mpMove(_mpDragKey, over.getAttribute('data-tool'));
+}
+function _mpOnTouchEnd() {
+  if (!_mpDragOn) return;
+  _mpDragKey = null;
+  document.querySelectorAll('#mpToolTabs .mp-tab').forEach(function(t){ t.classList.remove('mp-tab-dragging','mp-tab-over'); });
+}
+
+function _mpInitDrag() {
+  document.querySelectorAll('#mpToolTabs .mp-tab').forEach(function(tab) {
+    tab.addEventListener('mousedown',   _mpLpStart);
+    tab.addEventListener('touchstart',  _mpLpStart, { passive: true });
+    tab.addEventListener('mouseup',     _mpLpCancel);
+    tab.addEventListener('mouseleave',  _mpLpCancel);
+    tab.addEventListener('touchend',    _mpLpCancel);
+    tab.addEventListener('touchcancel', _mpLpCancel);
+    tab.addEventListener('dragstart',   _mpOnDragStart);
+    tab.addEventListener('dragover',    _mpOnDragOver);
+    tab.addEventListener('drop',        _mpOnDrop);
+    tab.addEventListener('dragend',     _mpOnDragEnd);
+    tab.addEventListener('touchmove',   _mpOnTouchMove, { passive: false });
+    tab.addEventListener('touchend',    _mpOnTouchEnd);
+  });
+}
+
+async function mpSaveTabOrder() {
+  var btn = document.getElementById('mpDragSaveBtn');
+  if (btn) btn.disabled = true;
+  try { localStorage.setItem(_mpOrderKey(), JSON.stringify(_mpOrder)); } catch(e) {}
+  try {
+    await CamboAPI.post({ action: 'ui_prefs_set', prefs: { profile_tab_order: _mpOrder } });
+    mpToast('Tab order saved');
+  } catch(e) {
+    mpToast('Saved on this device only', true);
+  }
+  _mpDirty = false;
+  _mpDragEndMode();
+}
+
+function mpCancelTabOrder() {
+  _mpLoadOrder();          /* back to the last saved arrangement */
+  _mpApplyOrder();
+  _mpDirty = false;
+  _mpDragEndMode();
+}
+
+async function mpSyncTabOrder() {
+  try {
+    var r = await CamboAPI.post({ action: 'ui_prefs_get' });
+    if (r && r.ok && r.prefs && Array.isArray(r.prefs.profile_tab_order)) {
+      _mpOrder = _mpNormOrder(r.prefs.profile_tab_order);
+      try { localStorage.setItem(_mpOrderKey(), JSON.stringify(_mpOrder)); } catch(e) {}
+      _mpApplyOrder();
+    }
+  } catch(e) {}
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && _mpDragOn) mpCancelTabOrder();
+});
+
 /* Which tabs this account may use. Appearance and Account are for everyone —
    they were plain cards before and must not disappear for ordinary staff. */
 function mpToolsInit() {
@@ -877,14 +1113,18 @@ function mpToolsInit() {
   if (allowed.focus)    { var fc = document.getElementById('mpFocusCard');    if (fc) fc.style.display = ''; }
   if (allowed.activity) { var ad = document.getElementById('mpAdminSection'); if (ad) ad.style.display = ''; }
 
+  _mpLoadOrder();
+  _mpApplyOrder();
+
   var first = null;
-  Object.keys(allowed).forEach(function(k) {
+  _mpOrder.forEach(function(k) {
     var tab = document.getElementById('mpTab' + k.charAt(0).toUpperCase() + k.slice(1));
     if (!tab) return;
     tab.style.display = allowed[k] ? '' : 'none';
     if (allowed[k] && !first) first = k;
   });
   if (first) mpTool(first);
+  _mpInitDrag();
 }
 
 function mpTool(name) {
@@ -1041,6 +1281,7 @@ document.addEventListener('DOMContentLoaded', function() {
   syncThemePref();
   loadFocusPref();
   mpToolsInit();
+  mpSyncTabOrder();
 });
 </script>
 </body>
