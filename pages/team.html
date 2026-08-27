@@ -175,7 +175,7 @@
     /* Header row */
     .tm-list-header {
       display:grid;
-      grid-template-columns: 40px 1fr 90px 64px 64px 130px;
+      grid-template-columns: 40px 1fr 90px 64px 64px 104px 130px;
       align-items:center; padding:7px 14px 7px 10px;
       font-size:9.5px; font-weight:800; color:var(--tm-muted);
       text-transform:uppercase; letter-spacing:.07em;
@@ -189,7 +189,7 @@
       background:var(--tm-card); border-radius:12px; border:1px solid var(--tm-border);
       box-shadow:var(--tm-shadow); padding:9px 14px 9px 10px;
       display:grid;
-      grid-template-columns: 40px 1fr 90px 64px 64px 130px;
+      grid-template-columns: 40px 1fr 90px 64px 64px 104px 130px;
       align-items:center; gap:0;
       cursor:pointer; transition:.15s; margin-bottom:5px;
     }
@@ -222,22 +222,35 @@
     .tm-row-stat-val { font-size:15px; font-weight:800; color:var(--tm-text); font-variant-numeric:tabular-nums; line-height:1 }
     .tm-row-stat-lbl { font-size:8.5px; font-weight:700; color:var(--tm-muted); text-transform:uppercase; letter-spacing:.04em }
 
-    /* Col 6 – last active */
+    /* Col 6 – online/offline + duration */
+    .tm-live-col { display:flex; flex-direction:column; align-items:center; gap:2px }
+    .tm-live { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; white-space:nowrap }
+    .tm-live-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0 }
+    .tm-live-on  { color:#16a34a }
+    .tm-live-on  .tm-live-dot { background:#22c55e; animation:tmPulse 1.8s ease-in-out infinite }
+    .tm-live-off { color:var(--tm-muted) }
+    .tm-live-off .tm-live-dot { background:#94a3b8 }
+    .tm-live-sub { font-size:9px; color:var(--tm-muted); white-space:nowrap }
+
+    /* Col 7 – last active */
     .tm-row-last { font-size:10.5px; color:var(--tm-muted); white-space:nowrap; text-align:right }
 
+    /* Narrow: drop Last Active but keep Status — it is the more useful of the two here. */
     @media(max-width:700px){
       .tm-list-header,
-      .tm-row { grid-template-columns: 40px 1fr 78px 54px 54px }
+      .tm-row { grid-template-columns: 40px 1fr 78px 54px 54px 96px }
       .tm-row-last { display:none }
       .tm-list-header > span:last-child { display:none }
     }
+    /* Phone: keep avatar / member / role / status only. Added(4) and Edited(5) go too — Last
+       Active is already hidden by the rule above, which still applies at this width. */
     @media(max-width:460px){
       .tm-list-header,
-      .tm-row { grid-template-columns: 40px 1fr 70px 52px }
-      .tm-row > *:nth-child(5),
-      .tm-row > *:nth-child(6) { display:none }
-      .tm-list-header > span:nth-child(5),
-      .tm-list-header > span:nth-child(6) { display:none }
+      .tm-row { grid-template-columns: 40px 1fr 70px 92px }
+      .tm-row > *:nth-child(4),
+      .tm-row > *:nth-child(5) { display:none }
+      .tm-list-header > span:nth-child(4),
+      .tm-list-header > span:nth-child(5) { display:none }
     }
 
     /* ------------------------------
@@ -845,8 +858,48 @@ function listHeader() {
     +'<span>ROLE</span>'
     +'<span>ADDED</span>'
     +'<span>EDITED</span>'
+    +'<span>STATUS</span>'
     +'<span>LAST ACTIVE</span>'
     +'</div>';
+}
+
+/* Whole minutes since a timestamp, or null when it is missing/unparseable.
+   Same UTC-suffix handling as isOnline/fmtLastActive — the server sends naive datetimes. */
+function minsSince(dtStr) {
+  if (!dtStr) return null;
+  try {
+    var s = String(dtStr).trim().replace(' ', 'T');
+    if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+    var ms = new Date(s).getTime();
+    if (isNaN(ms)) return null;
+    return Math.max(0, Math.floor((Date.now() - ms) / 60000));
+  } catch(e) { return null; }
+}
+function durText(mins) {
+  if (mins == null) return '';
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return mins + ' min';
+  var h = Math.floor(mins / 60);
+  if (h < 24)    return h + ' hr';
+  var d = Math.floor(h / 24);
+  return d + ' day' + (d > 1 ? 's' : '');
+}
+
+/* Online/Offline plus how long. The two durations mean different things, so they are worded
+   differently: online shows the current session ("for 25 min", measured from their last login),
+   offline shows how long they have been away ("3 hr ago", measured from last_seen). */
+function statusCell(u) {
+  var online = isOnline(u.last_seen);
+  var mins   = online ? minsSince(u.last_login) : minsSince(u.last_seen);
+  var sub    = '';
+  if (mins != null) {
+    if (online) sub = mins < 1 ? 'just signed in' : 'for ' + durText(mins);
+    else        sub = durText(mins) + (mins < 1 ? '' : ' ago');
+  }
+  return '<div class="tm-live-col">'
+    + '<span class="tm-live '+(online ? 'tm-live-on' : 'tm-live-off')+'"><span class="tm-live-dot"></span>'+(online ? 'Online' : 'Offline')+'</span>'
+    + (sub ? '<span class="tm-live-sub">'+esc(sub)+'</span>' : '')
+    + '</div>';
 }
 
 function renderRow(u, idx) {
@@ -870,6 +923,7 @@ function renderRow(u, idx) {
     +'<div class="tm-row-role-col"><span class="tm-role '+rc+'">'+esc(u.role||'Staff')+'</span></div>'
     +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_added||0)+'</div><div class="tm-row-stat-lbl">Added</div></div>'
     +'<div class="tm-row-stat"><div class="tm-row-stat-val">'+Number(u.loans_edited||0)+'</div><div class="tm-row-stat-lbl">Edited</div></div>'
+    +statusCell(u)
     +'<div class="tm-row-last">'+esc(fmtLastActive(u.last_login||''))+(canManageMember(u)?'<button class="tm-row-del" title="Remove from team" onclick="event.stopPropagation();requestDeleteMember(\''+esc(u.username)+'\')">&times;</button>':'')+'</div>'
     +'</div>';
 }
