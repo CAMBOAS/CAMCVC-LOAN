@@ -97,6 +97,84 @@
     .mp-focus-opt.active { background:linear-gradient(135deg,#7c5cff,#06b6d4); border-color:transparent; color:#fff }
     .mp-focus-opt:disabled { opacity:.55; cursor:default }
 
+    /* ── Admin tools tab bar (QR, and whatever comes next) ── */
+    .mp-tools { margin: 0 0 14px }
+    .mp-tabs {
+      display:flex; gap:4px; align-items:center;
+      border-bottom:1px solid rgba(148,163,184,.16); padding:0 2px;
+    }
+    .mp-tab {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:8px 13px; border:none; background:none; cursor:pointer;
+      font-family:inherit; font-size:12.5px; font-weight:700; color:var(--muted);
+      border-bottom:2px solid transparent; margin-bottom:-1px; transition:.14s;
+    }
+    .mp-tab svg { width:14px; height:14px }
+    .mp-tab:hover { color:var(--text) }
+    .mp-tab-on { color:#7c5cff; border-bottom-color:#7c5cff }
+    [data-theme="light"] .mp-tab-on { color:#4f46e5; border-bottom-color:#4f46e5 }
+
+    .mp-tool-panel { display:none; padding:14px 2px 0 }
+    .mp-tool-panel.on { display:block }
+
+    .mp-qr-grid { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start }
+    .mp-qr-side { flex:1 1 260px; min-width:240px }
+    .mp-qr-title { font-size:13.5px; font-weight:800; color:var(--text) }
+    .mp-qr-sub   { font-size:11.5px; color:var(--muted); margin:3px 0 12px; line-height:1.5 }
+    .mp-qr-lbl {
+      font-size:10.5px; font-weight:800; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.06em; margin-bottom:7px;
+    }
+    .mp-qr-seg {
+      display:flex; border:1px solid rgba(148,163,184,.18); border-radius:10px;
+      overflow:hidden; background:rgba(148,163,184,.06);
+    }
+    .mp-qr-seg button {
+      flex:1; padding:7px 4px; border:none; background:transparent; cursor:pointer;
+      font-family:inherit; font-size:11.5px; font-weight:700; color:var(--muted);
+      white-space:nowrap; transition:.14s;
+    }
+    .mp-qr-seg button + button { border-left:1px solid rgba(148,163,184,.16) }
+    .mp-qr-seg button:hover { color:var(--text); background:rgba(148,163,184,.08) }
+    .mp-qr-seg button.on {
+      background:linear-gradient(135deg,rgba(124,92,255,.22),rgba(6,182,212,.22)); color:var(--text);
+    }
+    .mp-qr-hint { font-size:11px; color:var(--muted); margin-top:7px; line-height:1.5 }
+
+    .mp-qr-gen {
+      margin-top:13px; display:inline-flex; align-items:center; gap:7px;
+      padding:10px 20px; border:none; border-radius:11px;
+      background:linear-gradient(135deg,#7c5cff,#06b6d4); color:#fff;
+      font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
+      box-shadow:0 4px 14px rgba(124,92,255,.28);
+    }
+    .mp-qr-gen:disabled { opacity:.6; cursor:default }
+    .mp-qr-status { font-size:11.5px; margin-top:9px; min-height:16px; color:var(--muted) }
+
+    .mp-qr-out { flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:10px }
+    .mp-qr-canvas-wrap {
+      padding:12px; border-radius:14px; background:#fff;
+      border:1px solid rgba(148,163,184,.2); line-height:0;
+    }
+    .mp-qr-canvas-wrap canvas { width:190px; height:190px; display:block }
+    .mp-qr-exp { font-size:11.5px; font-weight:700; color:var(--muted); text-align:center }
+    .mp-qr-exp.dead { color:#ef4444 }
+    .mp-qr-actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:center }
+    .mp-qr-act {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:7px 12px; border-radius:9px;
+      border:1px solid rgba(148,163,184,.2); background:rgba(148,163,184,.08);
+      color:var(--text); font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer;
+      transition:.14s;
+    }
+    .mp-qr-act svg { width:13px; height:13px }
+    .mp-qr-act:hover { background:rgba(124,92,255,.14); border-color:rgba(124,92,255,.3) }
+
+    @media (max-width:620px) {
+      .mp-qr-out { width:100%; }
+      .mp-qr-side { min-width:0 }
+    }
+
     /* ── Theme toggle ── */
     .mp-theme-row { display:flex; align-items:center; justify-content:space-between; gap:12px }
     .mp-theme-label { font-size:13.5px; font-weight:600; color:var(--text) }
@@ -249,6 +327,60 @@
 
     </div><!-- /.mp-grid -->
 
+    <!-- ══ Admin tools tab bar — Super Admin and their assistants only ══ -->
+    <div class="mp-tools" id="mpTools" style="display:none">
+      <div class="mp-tabs" id="mpToolTabs">
+        <button type="button" class="mp-tab mp-tab-on" data-tool="qr" onclick="mpTool('qr')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>
+          <span>QR Code</span>
+        </button>
+      </div>
+
+      <!-- QR panel -->
+      <div class="mp-tool-panel on" id="mpToolQr">
+        <div class="mp-qr-grid">
+          <div class="mp-qr-side">
+            <div class="mp-qr-title">Customer portal link</div>
+            <div class="mp-qr-sub">Generate a QR the customer scans to open the portal and check their repayment history.</div>
+
+            <div class="mp-qr-lbl">Valid for</div>
+            <div class="mp-qr-seg" id="mpQrSeg">
+              <button type="button" data-min="5"  class="on" onclick="mpQrPick(5)">5 min</button>
+              <button type="button" data-min="10" onclick="mpQrPick(10)">10 min</button>
+              <button type="button" data-min="15" onclick="mpQrPick(15)">15 min</button>
+              <button type="button" data-min="0"  onclick="mpQrPick(0)">No limit</button>
+            </div>
+            <div class="mp-qr-hint">Defaults to 5 minutes. After it runs out the link stops working.</div>
+
+            <button type="button" class="mp-qr-gen" id="mpQrGenBtn" onclick="mpQrGenerate()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+              Generate
+            </button>
+            <div class="mp-qr-status" id="mpQrStatus"></div>
+          </div>
+
+          <div class="mp-qr-out" id="mpQrOut" style="display:none">
+            <div class="mp-qr-canvas-wrap"><canvas id="mpQrCanvas" width="360" height="360"></canvas></div>
+            <div class="mp-qr-exp" id="mpQrExp"></div>
+            <div class="mp-qr-actions">
+              <button type="button" class="mp-qr-act" onclick="mpQrSave()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Save image
+              </button>
+              <button type="button" class="mp-qr-act" id="mpQrShareBtn" onclick="mpQrShare()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+                Share
+              </button>
+              <button type="button" class="mp-qr-act" onclick="mpQrCopy()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy link
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Theme + Account info row -->
     <div class="mp-grid">
 
@@ -387,6 +519,7 @@
 
 <div id="mpToast"></div>
 
+<script src="../assets/js/qrcode.js?v=1"></script>
 <script src="../assets/js/layout.js?v=31"></script>
 <script src="../assets/js/dashboard-layout.js?v=31"></script>
 <script src="../assets/js/auth.js?v=2"></script>
@@ -695,10 +828,172 @@ async function setDataFocus(mode) {
   btns.forEach(function(b){ b.disabled = false; });
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN TOOLS — Super Admin and their assistants only
+   ══════════════════════════════════════════════════════════════ */
+function mpToolsEligible() {
+  var a = null;
+  try { a = JSON.parse(localStorage.getItem('appAuth') || 'null'); } catch(e) {}
+  if (!a) return false;
+  if (a.role === 'Admin') return true;
+  return Array.isArray(a.manages_teams) && a.manages_teams.length > 0;
+}
+
+function mpTool(name) {
+  document.querySelectorAll('#mpToolTabs .mp-tab').forEach(function(b) {
+    b.classList.toggle('mp-tab-on', b.getAttribute('data-tool') === name);
+  });
+  document.querySelectorAll('.mp-tool-panel').forEach(function(p) { p.classList.remove('on'); });
+  var panel = document.getElementById('mpTool' + name.charAt(0).toUpperCase() + name.slice(1));
+  if (panel) panel.classList.add('on');
+}
+
+/* ── QR: portal share link ── */
+var _mpQrMinutes = 5;          /* the default the user gets without choosing */
+var _mpQrUrl     = '';
+var _mpQrExpTimer = null;
+
+function mpQrPick(min) {
+  _mpQrMinutes = min;
+  document.querySelectorAll('#mpQrSeg button').forEach(function(b) {
+    b.classList.toggle('on', Number(b.getAttribute('data-min')) === min);
+  });
+}
+
+function mpQrPortalBase() {
+  /* my-profile.html lives in /pages/, so the portal is a sibling */
+  return location.origin + location.pathname.replace(/[^/]*$/, 'user.html');
+}
+
+function mpQrDrawCountdown(expiresAt) {
+  var el = document.getElementById('mpQrExp');
+  if (_mpQrExpTimer) { clearInterval(_mpQrExpTimer); _mpQrExpTimer = null; }
+  if (!expiresAt) {
+    el.textContent = 'Never expires';
+    el.classList.remove('dead');
+    return;
+  }
+  /* the server sends UTC without a zone suffix */
+  var s = String(expiresAt).trim().replace(' ', 'T');
+  if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+  var end = new Date(s).getTime();
+  var tick = function() {
+    var left = Math.max(0, end - Date.now());
+    if (left <= 0) {
+      el.textContent = 'Expired — generate a new one';
+      el.classList.add('dead');
+      clearInterval(_mpQrExpTimer); _mpQrExpTimer = null;
+      return;
+    }
+    var m = Math.floor(left / 60000), sec = Math.floor((left % 60000) / 1000);
+    el.textContent = 'Expires in ' + m + ':' + (sec < 10 ? '0' : '') + sec;
+    el.classList.remove('dead');
+  };
+  tick();
+  _mpQrExpTimer = setInterval(tick, 1000);
+}
+
+async function mpQrGenerate() {
+  var btn = document.getElementById('mpQrGenBtn');
+  var st  = document.getElementById('mpQrStatus');
+  if (typeof qrcode === 'undefined') {
+    st.textContent = 'QR library did not load — refresh the page.';
+    st.style.color = '#f87171';
+    return;
+  }
+  btn.disabled = true;
+  st.textContent = 'Generating…';
+  st.style.color = 'var(--muted)';
+  try {
+    var r = await CamboAPI.post({ action: 'qr_token_create', minutes: _mpQrMinutes });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
+
+    _mpQrUrl = mpQrPortalBase() + '?t=' + encodeURIComponent(r.token);
+
+    var q = qrcode(0, 'M');           /* 0 = pick the smallest version that fits */
+    q.addData(_mpQrUrl);
+    q.make();
+
+    var cv  = document.getElementById('mpQrCanvas');
+    var ctx = cv.getContext('2d');
+    var n   = q.getModuleCount();
+    var quiet = 4;                     /* quiet zone, in modules — scanners need it */
+    var cell  = Math.floor(cv.width / (n + quiet * 2));
+    var off   = Math.floor((cv.width - cell * n) / 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#0f172a';
+    for (var row = 0; row < n; row++) {
+      for (var col = 0; col < n; col++) {
+        if (q.isDark(row, col)) ctx.fillRect(off + col * cell, off + row * cell, cell, cell);
+      }
+    }
+
+    document.getElementById('mpQrOut').style.display = 'flex';
+    mpQrDrawCountdown(r.expires_at);
+    st.textContent = r.minutes === 0 ? 'Link created — no time limit.'
+                                     : 'Link created — valid for ' + r.minutes + ' minutes.';
+    st.style.color = '#4ade80';
+  } catch(e) {
+    st.textContent = e.message || 'Error';
+    st.style.color = '#f87171';
+  }
+  btn.disabled = false;
+}
+
+function mpQrBlob() {
+  return new Promise(function(resolve) {
+    document.getElementById('mpQrCanvas').toBlob(function(b){ resolve(b); }, 'image/png');
+  });
+}
+
+async function mpQrSave() {
+  var b = await mpQrBlob();
+  if (!b) return mpToast('Could not build the image', true);
+  var url = URL.createObjectURL(b);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'camcvc-portal-qr.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  mpToast('Image saved');
+}
+
+async function mpQrShare() {
+  var b = await mpQrBlob();
+  if (!b) return mpToast('Could not build the image', true);
+  var file = new File([b], 'camcvc-portal-qr.png', { type: 'image/png' });
+  /* Web Share with a file is phone/Safari territory; fall back to a download elsewhere */
+  if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+    try {
+      await navigator.share({ files: [file], title: 'CAMCVC portal', text: _mpQrUrl });
+      return;
+    } catch(e) {
+      if (e && e.name === 'AbortError') return;   /* user cancelled — not an error */
+    }
+  }
+  mpQrSave();
+}
+
+async function mpQrCopy() {
+  if (!_mpQrUrl) return;
+  try {
+    await navigator.clipboard.writeText(_mpQrUrl);
+    mpToast('Link copied');
+  } catch(e) {
+    /* clipboard needs a secure context; fall back to a selectable prompt */
+    window.prompt('Copy this link:', _mpQrUrl);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   initPage();
   syncThemePref();
   loadFocusPref();
+  if (mpToolsEligible()) document.getElementById('mpTools').style.display = '';
 });
 </script>
 </body>

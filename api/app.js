@@ -465,6 +465,46 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
+    /* ── Portal share links (QR) ── */
+    let _qrTokTableReady = false;
+    async function ensurePortalTokensTable() {
+      if (_qrTokTableReady) return;
+      await db().query(`CREATE TABLE IF NOT EXISTS portal_tokens (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        token       VARCHAR(64) NOT NULL,
+        created_by  VARCHAR(100) NOT NULL,
+        expires_at  DATETIME NULL,
+        created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_token (token)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+      _qrTokTableReady = true;
+    }
+
+    /* Public — a borrower opening a shared QR link has no account to authenticate with.
+       NULL expires_at means the link never expires. */
+    if (action === 'portal_token_check') {
+      await ensurePortalTokensTable();
+      const tok = String(body.token || '').trim();
+      if (!tok) return res.json({ ok:true, valid:false, reason:'missing' });
+      /* The pool runs with dateStrings:true, so DATETIME arrives as "YYYY-MM-DD HH:MM:SS"
+         with no zone and Node would parse it as local time — 7h off from the UTC we store.
+         Let MySQL do the comparison instead, and hand the client an explicit UTC stamp. */
+      const [rows] = await db().query(
+        `SELECT expires_at,
+                (expires_at IS NOT NULL AND expires_at <= UTC_TIMESTAMP()) AS expired,
+                DATE_FORMAT(expires_at, '%Y-%m-%dT%H:%i:%sZ') AS expires_utc
+         FROM portal_tokens WHERE token=? LIMIT 1`, [tok]
+      );
+      if (!rows.length) return res.json({ ok:true, valid:false, reason:'unknown' });
+      const expired = Number(rows[0].expired) === 1;
+      return res.json({
+        ok:true,
+        valid: !expired,
+        reason: expired ? 'expired' : '',
+        expires_at: rows[0].expires_utc || null,
+      });
+    }
+
     /* ── Public: Borrower self-service portal login ── */
     if (action === 'portal_login') {
       const method = String(body.method || 'name').trim();
@@ -1214,6 +1254,39 @@ async function handler(req, res) {
         return { sender: r.sender, count: Number(r.cnt), display_name: r.display_name || r.sender, photo_url: r.photo_url || '' };
       });
       return res.json({ ok:true, counts, unread });
+    }
+
+    /* ── Create a portal share link (Super Admin and their assistants only) ── */
+    if (action === 'qr_token_create') {
+      const _isAssistant = Array.isArray(_bv.manages_teams) && _bv.manages_teams.length > 0;
+      if (_bv.role !== 'Admin' && !_isAssistant) {
+        return res.json({ ok:false, message:'Not allowed', code:403 });
+      }
+      await ensurePortalTokensTable();
+
+      /* Anything that is not one of the offered choices falls back to 5 minutes.
+         0 is the explicit "never expires" option. */
+      const allowed = [5, 10, 15, 0];
+      let mins = Number(body.minutes);
+      if (allowed.indexOf(mins) === -1) mins = 5;
+
+      const token = crypto.randomBytes(18).toString('base64url');
+      if (mins === 0) {
+        await db().query(
+          'INSERT INTO portal_tokens (token, created_by, expires_at) VALUES (?,?,NULL)',
+          [token, _bu]
+        );
+        return res.json({ ok:true, token, minutes:0, expires_at:null });
+      }
+      await db().query(
+        'INSERT INTO portal_tokens (token, created_by, expires_at) VALUES (?,?,DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? MINUTE))',
+        [token, _bu, mins]
+      );
+      const [row] = await db().query(
+        "SELECT DATE_FORMAT(expires_at, '%Y-%m-%dT%H:%i:%sZ') AS expires_utc FROM portal_tokens WHERE token=?",
+        [token]
+      );
+      return res.json({ ok:true, token, minutes:mins, expires_at:(row[0]||{}).expires_utc || null });
     }
 
     /* ── Conversation list — one row per person, newest conversation first ── */

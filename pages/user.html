@@ -668,6 +668,18 @@
   </div>
 
   <!-- Shown instead of the form when staff have closed this borrower's portal -->
+  <!-- Shown when the QR link that brought them here has run out -->
+  <div class="login-card done-card" id="expiredCard" style="display:none">
+    <div class="done-badge" style="background:rgba(239,68,68,.12);color:#ef4444">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.51"/></svg>
+    </div>
+    <div class="done-title">តំណនេះផុតកំណត់ហើយ</div>
+    <div class="done-msg">
+      កូដ QR ដែលលោកអ្នកបានស្កេនមានរយៈពេលកំណត់ ហើយឥឡូវនេះលែងប្រើប្រាស់បានទៀតហើយ។
+    </div>
+    <div class="done-note">សូមទាក់ទងបុគ្គលិករបស់យើងខ្ញុំ ដើម្បីសុំកូដ QR ថ្មី។</div>
+  </div>
+
   <div class="login-card done-card" id="doneCard" style="display:none">
     <div class="done-badge">
       <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -728,9 +740,38 @@ function clearSession() {
   try { sessionStorage.removeItem('p_method'); sessionStorage.removeItem('p_phone'); sessionStorage.removeItem('p_cred'); } catch(e) {}
 }
 
+/* A QR link carries ?t=<token>. Only links that carry one are time-limited — the plain
+   portal URL keeps working as before, so existing borrowers are not locked out. */
+function portalToken() {
+  try { return new URLSearchParams(location.search).get('t') || ''; } catch(e) { return ''; }
+}
+function showExpired() {
+  var card = document.querySelector('#loginScreen .login-card:not(.done-card)');
+  var exp  = document.getElementById('expiredCard');
+  if (card) card.style.display = 'none';
+  if (exp)  exp.style.display  = '';
+  clearSession();
+}
+async function tokenBlocks() {
+  var t = portalToken();
+  if (!t) return false;
+  var r = await portalAPI({ action: 'portal_token_check', token: t });
+  /* A network failure must not lock a borrower out of a link that may be fine */
+  if (!r || !r.ok) return false;
+  return !r.valid;
+}
+
 /* ── Auto-restore session on page load ── */
 window.addEventListener('load', async function() {
   var ol  = document.getElementById('loadingOverlay');
+
+  if (await tokenBlocks()) {
+    showExpired();
+    ol.classList.add('hide');
+    setTimeout(function(){ ol.style.display='none'; }, 350);
+    return;
+  }
+
   var sm  = '', sp = '', sc = '';
   try { sm = sessionStorage.getItem('p_method') || ''; sp = sessionStorage.getItem('p_phone') || ''; sc = sessionStorage.getItem('p_cred') || ''; } catch(e) {}
 
@@ -829,6 +870,9 @@ async function portalAPI(body) {
 
 /* ── Login ── */
 async function doLogin() {
+  /* Re-check on submit: the page may have sat open until after the link expired */
+  if (await tokenBlocks()) { showExpired(); return; }
+
   clearErr();
   var phone = document.getElementById('inpPhone').value.trim();
   var name  = document.getElementById('inpName').value.trim();
