@@ -64,6 +64,45 @@
     .bp-back-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; border:1.5px solid var(--bp-border); background:var(--bp-card); color:var(--bp-muted); font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; transition:.15s; font-family:inherit }
     .bp-back-btn:hover { color:var(--bp-text); border-color:#7c5cff; background:rgba(124,92,255,.06) }
     .bp-actions { display:flex; gap:8px }
+    .bp-btn-qr { background:rgba(6,182,212,.12); color:#0891b2; border:1px solid rgba(6,182,212,.28) }
+    .bp-btn-qr:hover { background:rgba(6,182,212,.2) }
+
+    .bp-qr-panel {
+      margin:0 0 16px; padding:16px 18px; border-radius:16px;
+      background:var(--bp-card, rgba(255,255,255,.9)); border:1px solid rgba(148,163,184,.18);
+    }
+    .bp-qr-in { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start }
+    .bp-qr-side { flex:1 1 260px; min-width:230px }
+    .bp-qr-title { font-size:13.5px; font-weight:800; color:var(--bp-text, #0f172a) }
+    .bp-qr-sub { font-size:11.5px; color:var(--bp-muted, #64748b); margin:3px 0 12px; line-height:1.55 }
+    .bp-qr-lbl { font-size:10.5px; font-weight:800; color:var(--bp-muted, #64748b); text-transform:uppercase; letter-spacing:.06em; margin-bottom:7px }
+    .bp-qr-seg { display:flex; border:1px solid rgba(148,163,184,.2); border-radius:10px; overflow:hidden; background:rgba(148,163,184,.07) }
+    .bp-qr-seg button {
+      flex:1; padding:7px 4px; border:none; background:transparent; cursor:pointer;
+      font-family:inherit; font-size:11.5px; font-weight:700; color:var(--bp-muted, #64748b); white-space:nowrap;
+    }
+    .bp-qr-seg button + button { border-left:1px solid rgba(148,163,184,.18) }
+    .bp-qr-seg button.on { background:linear-gradient(135deg,rgba(6,182,212,.24),rgba(124,92,255,.24)); color:var(--bp-text, #0f172a) }
+    .bp-qr-hint { font-size:11px; color:var(--bp-muted, #64748b); margin-top:7px }
+    .bp-qr-gen {
+      margin-top:12px; padding:9px 20px; border:none; border-radius:11px; cursor:pointer;
+      background:linear-gradient(135deg,#06b6d4,#7c5cff); color:#fff;
+      font-family:inherit; font-size:12.5px; font-weight:700;
+    }
+    .bp-qr-gen:disabled { opacity:.6; cursor:default }
+    .bp-qr-status { font-size:11.5px; margin-top:8px; min-height:15px; color:var(--bp-muted, #64748b) }
+    .bp-qr-out { display:flex; flex-direction:column; align-items:center; gap:9px }
+    .bp-qr-canvas-wrap { padding:11px; border-radius:14px; background:#fff; border:1px solid rgba(148,163,184,.2); line-height:0 }
+    .bp-qr-canvas-wrap canvas { width:180px; height:180px; display:block }
+    .bp-qr-exp { font-size:11.5px; font-weight:700; color:var(--bp-muted, #64748b) }
+    .bp-qr-exp.dead { color:#ef4444 }
+    .bp-qr-acts { display:flex; gap:6px; flex-wrap:wrap; justify-content:center }
+    .bp-qr-act {
+      padding:6px 12px; border-radius:9px; cursor:pointer;
+      border:1px solid rgba(148,163,184,.22); background:rgba(148,163,184,.08);
+      color:var(--bp-text, #0f172a); font-family:inherit; font-size:11.5px; font-weight:700;
+    }
+    .bp-qr-act:hover { background:rgba(6,182,212,.14); border-color:rgba(6,182,212,.32) }
     .bp-action-btn { display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:10px; border:none; font-size:13px; font-weight:600; cursor:pointer; transition:.15s; font-family:inherit }
     .bp-btn-edit { background:rgba(124,92,255,.12); color:#7c5cff }
     .bp-btn-edit:hover { background:rgba(124,92,255,.22) }
@@ -170,6 +209,7 @@
   </main>
 </div>
 
+<script src="../assets/js/qrcode.js?v=1"></script>
 <script src="../assets/js/layout.js?v=32"></script>
 <script src="../assets/js/dashboard-layout.js?v=32"></script>
 <script src="../assets/js/auth.js?v=2"></script>
@@ -267,9 +307,41 @@ function renderProfile(loan, history, key) {
     + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>'
     + 'Back to Loan List</a>'
     + '<div class="bp-actions">'
+    + '<button class="bp-action-btn bp-btn-qr" onclick="bpQrToggle()">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>'
+    + 'QR</button>'
     + '<button class="bp-action-btn bp-btn-edit" onclick="openEdit()">'
     + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
     + 'Edit</button>'
+    + '</div>'
+    + '</div>';
+
+  /* ── Share QR (hidden until asked for) ── */
+  html += '<div class="bp-qr-panel" id="bpQrPanel" style="display:none">'
+    + '<div class="bp-qr-in">'
+    +   '<div class="bp-qr-side">'
+    +     '<div class="bp-qr-title">Repayment history link</div>'
+    +     '<div class="bp-qr-sub">A QR for <b>' + esc(loan.Name || '') + '</b> only. Whoever scans it opens this borrower&#39;s repayment history straight away.</div>'
+    +     '<div class="bp-qr-lbl">Valid for</div>'
+    +     '<div class="bp-qr-seg" id="bpQrSeg">'
+    +       '<button type="button" data-min="5" class="on" onclick="bpQrPick(5)">5 min</button>'
+    +       '<button type="button" data-min="10" onclick="bpQrPick(10)">10 min</button>'
+    +       '<button type="button" data-min="15" onclick="bpQrPick(15)">15 min</button>'
+    +       '<button type="button" data-min="0" onclick="bpQrPick(0)">No limit</button>'
+    +     '</div>'
+    +     '<div class="bp-qr-hint">Defaults to 5 minutes. After it runs out the link stops working.</div>'
+    +     '<button type="button" class="bp-qr-gen" id="bpQrGenBtn" onclick="bpQrGenerate()">Generate</button>'
+    +     '<div class="bp-qr-status" id="bpQrStatus"></div>'
+    +   '</div>'
+    +   '<div class="bp-qr-out" id="bpQrOut" style="display:none">'
+    +     '<div class="bp-qr-canvas-wrap"><canvas id="bpQrCanvas" width="360" height="360"></canvas></div>'
+    +     '<div class="bp-qr-exp" id="bpQrExp"></div>'
+    +     '<div class="bp-qr-acts">'
+    +       '<button type="button" class="bp-qr-act" onclick="bpQrSave()">Save image</button>'
+    +       '<button type="button" class="bp-qr-act" onclick="bpQrShare()">Share</button>'
+    +       '<button type="button" class="bp-qr-act" onclick="bpQrCopy()">Copy link</button>'
+    +     '</div>'
+    +   '</div>'
     + '</div>'
     + '</div>';
 
@@ -396,6 +468,113 @@ function renderProfile(loan, history, key) {
 
   /* store loan for edit action */
   window._bpLoan = loan;
+  window._bpKey  = key;
+}
+
+/* ── Share this borrower's repayment history by QR ── */
+var _bpQrMin = 5, _bpQrUrl = '', _bpQrTimer = null;
+
+function bpQrToggle() {
+  var el = document.getElementById('bpQrPanel');
+  if (!el) return;
+  el.style.display = (el.style.display === 'none') ? '' : 'none';
+}
+
+function bpQrPick(m) {
+  _bpQrMin = m;
+  document.querySelectorAll('#bpQrSeg button').forEach(function(b) {
+    b.classList.toggle('on', Number(b.getAttribute('data-min')) === m);
+  });
+}
+
+function _bpQrCountdown(iso) {
+  var el = document.getElementById('bpQrExp');
+  if (_bpQrTimer) { clearInterval(_bpQrTimer); _bpQrTimer = null; }
+  if (!iso) { el.textContent = 'Never expires'; el.classList.remove('dead'); return; }
+  var end = new Date(iso).getTime();
+  var tick = function() {
+    var left = Math.max(0, end - Date.now());
+    if (left <= 0) {
+      el.textContent = 'Expired — generate a new one';
+      el.classList.add('dead');
+      clearInterval(_bpQrTimer); _bpQrTimer = null;
+      return;
+    }
+    var m = Math.floor(left / 60000), sec = Math.floor((left % 60000) / 1000);
+    el.textContent = 'Expires in ' + m + ':' + (sec < 10 ? '0' : '') + sec;
+    el.classList.remove('dead');
+  };
+  tick();
+  _bpQrTimer = setInterval(tick, 1000);
+}
+
+async function bpQrGenerate() {
+  var btn = document.getElementById('bpQrGenBtn');
+  var st  = document.getElementById('bpQrStatus');
+  if (typeof qrcode === 'undefined') {
+    st.textContent = 'QR library did not load — refresh the page.'; st.style.color = '#ef4444'; return;
+  }
+  btn.disabled = true;
+  st.textContent = 'Generating…'; st.style.color = '';
+  try {
+    var r = await CamboAPI.post({ action: 'qr_token_create', minutes: _bpQrMin, key: window._bpKey || '' });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
+
+    _bpQrUrl = location.origin + location.pathname.replace(/[^/]*$/, 'user.html')
+             + '?t=' + encodeURIComponent(r.token);
+
+    var q = qrcode(0, 'M'); q.addData(_bpQrUrl); q.make();
+    var cv = document.getElementById('bpQrCanvas'), ctx = cv.getContext('2d');
+    var n = q.getModuleCount(), quiet = 4;
+    var cell = Math.floor(cv.width / (n + quiet * 2));
+    var off  = Math.floor((cv.width - cell * n) / 2);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#0f172a';
+    for (var row = 0; row < n; row++)
+      for (var col = 0; col < n; col++)
+        if (q.isDark(row, col)) ctx.fillRect(off + col * cell, off + row * cell, cell, cell);
+
+    document.getElementById('bpQrOut').style.display = 'flex';
+    _bpQrCountdown(r.expires_at);
+    st.textContent = r.minutes === 0 ? 'Link created — no time limit.'
+                                     : 'Link created — valid for ' + r.minutes + ' minutes.';
+    st.style.color = '#16a34a';
+  } catch(e) {
+    st.textContent = e.message || 'Error'; st.style.color = '#ef4444';
+  }
+  btn.disabled = false;
+}
+
+function _bpQrBlob() {
+  return new Promise(function(res) {
+    document.getElementById('bpQrCanvas').toBlob(function(b){ res(b); }, 'image/png');
+  });
+}
+
+async function bpQrSave() {
+  var b = await _bpQrBlob(); if (!b) return;
+  var url = URL.createObjectURL(b);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'repayment-qr.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
+
+async function bpQrShare() {
+  var b = await _bpQrBlob(); if (!b) return;
+  var f = new File([b], 'repayment-qr.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [f] }) && navigator.share) {
+    try { await navigator.share({ files: [f], text: _bpQrUrl }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
+  bpQrSave();
+}
+
+async function bpQrCopy() {
+  if (!_bpQrUrl) return;
+  try { await navigator.clipboard.writeText(_bpQrUrl); }
+  catch(e) { window.prompt('Copy this link:', _bpQrUrl); }
 }
 
 function openEdit() {

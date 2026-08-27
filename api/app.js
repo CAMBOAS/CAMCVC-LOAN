@@ -644,8 +644,16 @@ async function handler(req, res) {
         created_by  VARCHAR(100) NOT NULL,
         expires_at  DATETIME NULL,
         created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+        b_method    VARCHAR(10)  NULL,
+        b_phone     VARCHAR(60)  NULL,
+        b_cred      VARCHAR(190) NULL,
+        b_name      VARCHAR(190) NULL,
         UNIQUE KEY uniq_token (token)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+      /* deployments created before per-borrower links existed */
+      for (const col of ['b_method VARCHAR(10)','b_phone VARCHAR(60)','b_cred VARCHAR(190)','b_name VARCHAR(190)']) {
+        try { await db().query('ALTER TABLE portal_tokens ADD COLUMN ' + col + ' NULL'); } catch(e) {}
+      }
       _qrTokTableReady = true;
     }
 
@@ -659,18 +667,25 @@ async function handler(req, res) {
          with no zone and Node would parse it as local time — 7h off from the UTC we store.
          Let MySQL do the comparison instead, and hand the client an explicit UTC stamp. */
       const [rows] = await db().query(
-        `SELECT expires_at,
+        `SELECT expires_at, b_method, b_phone, b_cred, b_name,
                 (expires_at IS NOT NULL AND expires_at <= UTC_TIMESTAMP()) AS expired,
                 DATE_FORMAT(expires_at, '%Y-%m-%dT%H:%i:%sZ') AS expires_utc
          FROM portal_tokens WHERE token=? LIMIT 1`, [tok]
       );
       if (!rows.length) return res.json({ ok:true, valid:false, reason:'unknown' });
       const expired = Number(rows[0].expired) === 1;
+      /* A link made from one borrower's profile carries that borrower, so the portal can
+         open their history directly instead of asking them to identify themselves. */
+      const borrower = rows[0].b_phone
+        ? { method: rows[0].b_method || 'name', phone: rows[0].b_phone,
+            cred: rows[0].b_cred || '', name: rows[0].b_name || '' }
+        : null;
       return res.json({
         ok:true,
         valid: !expired,
         reason: expired ? 'expired' : '',
         expires_at: rows[0].expires_utc || null,
+        borrower: expired ? null : borrower,
       });
     }
 
@@ -1461,13 +1476,35 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
-    /* ── Create a portal share link (Super Admin and their assistants only) ── */
+    /* ── Create a portal share link ──
+       A blank link (the whole portal) stays with the Super Admin and their assistants.
+       A link tied to one borrower is open to anyone who can already open that borrower's
+       profile — it shows them nothing they cannot already see, and sharing it with the
+       customer is the point. */
     if (action === 'qr_token_create') {
-      const _isAssistant = Array.isArray(_bv.manages_teams) && _bv.manages_teams.length > 0;
-      if (_bv.role !== 'Admin' && !_isAssistant) {
-        return res.json({ ok:false, message:'Not allowed', code:403 });
+      const _forKey = String(body.key || '').trim();
+      if (!_forKey) {
+        const _isAssistant = Array.isArray(_bv.manages_teams) && _bv.manages_teams.length > 0;
+        if (_bv.role !== 'Admin' && !_isAssistant) {
+          return res.json({ ok:false, message:'Not allowed', code:403 });
+        }
       }
       await ensurePortalTokensTable();
+
+      let _b = { method:null, phone:null, cred:null, name:null };
+      if (_forKey) {
+        const [lr] = await db().query(
+          'SELECT full_name, national_id, phone FROM loans WHERE loan_key=? AND deleted_at IS NULL LIMIT 1',
+          [_forKey]
+        );
+        if (!lr.length)   return res.json({ ok:false, message:'Borrower not found' });
+        const _ph = String(lr[0].phone || '').replace(/[\s\-]/g, '');
+        if (!_ph)         return res.json({ ok:false, message:'គ្មានលេខទូរស័ព្ទ — មិនអាចបង្កើត QR បាន' });
+        const _nid = String(lr[0].national_id || '').replace(/[\s\-]/g, '');
+        _b = _nid
+          ? { method:'nid',  phone:_ph, cred:_nid, name:lr[0].full_name || '' }
+          : { method:'name', phone:_ph, cred:lr[0].full_name || '', name:lr[0].full_name || '' };
+      }
 
       /* Anything that is not one of the offered choices falls back to 5 minutes.
          0 is the explicit "never expires" option. */
@@ -1478,20 +1515,20 @@ async function handler(req, res) {
       const token = crypto.randomBytes(18).toString('base64url');
       if (mins === 0) {
         await db().query(
-          'INSERT INTO portal_tokens (token, created_by, expires_at) VALUES (?,?,NULL)',
-          [token, _bu]
+          'INSERT INTO portal_tokens (token, created_by, expires_at, b_method, b_phone, b_cred, b_name) VALUES (?,?,NULL,?,?,?,?)',
+          [token, _bu, _b.method, _b.phone, _b.cred, _b.name]
         );
-        return res.json({ ok:true, token, minutes:0, expires_at:null });
+        return res.json({ ok:true, token, minutes:0, expires_at:null, borrower:_b.name || null });
       }
       await db().query(
-        'INSERT INTO portal_tokens (token, created_by, expires_at) VALUES (?,?,DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? MINUTE))',
-        [token, _bu, mins]
+        'INSERT INTO portal_tokens (token, created_by, expires_at, b_method, b_phone, b_cred, b_name) VALUES (?,?,DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? MINUTE),?,?,?,?)',
+        [token, _bu, mins, _b.method, _b.phone, _b.cred, _b.name]
       );
       const [row] = await db().query(
         "SELECT DATE_FORMAT(expires_at, '%Y-%m-%dT%H:%i:%sZ') AS expires_utc FROM portal_tokens WHERE token=?",
         [token]
       );
-      return res.json({ ok:true, token, minutes:mins, expires_at:(row[0]||{}).expires_utc || null });
+      return res.json({ ok:true, token, minutes:mins, expires_at:(row[0]||{}).expires_utc || null, borrower:_b.name || null });
     }
 
     /* ── Conversation list — one row per person, newest conversation first ── */
