@@ -321,7 +321,7 @@ function renderProfile(loan, history, key) {
     + '<div class="bp-qr-in">'
     +   '<div class="bp-qr-side">'
     +     '<div class="bp-qr-title">Repayment history link</div>'
-    +     '<div class="bp-qr-sub">A QR for <b>' + esc(loan.Name || '') + '</b> only. Whoever scans it opens this borrower&#39;s repayment history straight away.</div>'
+    +     '<div class="bp-qr-sub">A QR for <b>' + esc(loan.FullName || '') + '</b> only. Whoever scans it opens this borrower&#39;s repayment history straight away.</div>'
     +     '<div class="bp-qr-lbl">Valid for</div>'
     +     '<div class="bp-qr-seg" id="bpQrSeg">'
     +       '<button type="button" data-min="5" class="on" onclick="bpQrPick(5)">5 min</button>'
@@ -469,6 +469,8 @@ function renderProfile(loan, history, key) {
   /* store loan for edit action */
   window._bpLoan = loan;
   window._bpKey  = key;
+  window._bpName = loan.FullName || '';
+  window._bpPhone = loan.Phone || '';
 }
 
 /* ── Share this borrower's repayment history by QR ── */
@@ -545,10 +547,126 @@ async function bpQrGenerate() {
   btn.disabled = false;
 }
 
-function _bpQrBlob() {
-  return new Promise(function(res) {
-    document.getElementById('bpQrCanvas').toBlob(function(b){ res(b); }, 'image/png');
-  });
+/* ── Exported image ──
+   On screen the plain QR is enough, but the file that gets saved or sent is a card:
+   the customer receives it on its own, with no page around it to explain what it is. */
+function _bpRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y,     x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x,     y + h, r);
+  ctx.arcTo(x,     y + h, x,     y,     r);
+  ctx.arcTo(x,     y,     x + w, y,     r);
+  ctx.closePath();
+}
+
+/* Shrink until it fits — Khmer names get long and must not run off the card */
+function _bpFitText(ctx, text, maxW, weight, startPx, minPx) {
+  var px = startPx;
+  do {
+    ctx.font = weight + ' ' + px + 'px "Noto Sans Khmer", system-ui, sans-serif';
+    if (ctx.measureText(text).width <= maxW) break;
+    px -= 2;
+  } while (px > minPx);
+  return px;
+}
+
+async function _bpQrCard() {
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e) {}
+
+  var W = 900, H = 1260;
+  var cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  var ctx = cv.getContext('2d');
+  var brand = (window.appGetBrand && appGetBrand().name) || 'CAMBO';
+
+  /* page */
+  ctx.fillStyle = '#eef2f7';
+  ctx.fillRect(0, 0, W, H);
+
+  /* header band */
+  var g = ctx.createLinearGradient(0, 0, W, 210);
+  g.addColorStop(0, '#0f2f43'); g.addColorStop(1, '#12506b');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, 210);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  _bpFitText(ctx, brand, W - 120, '800', 62, 30);
+  ctx.fillText(brand, W / 2, 108);
+  ctx.font = '500 26px "Noto Sans Khmer", system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.72)';
+  ctx.fillText('\u1794\u17d2\u179a\u179c\u178f\u17d2\u178f\u17b7\u1780\u17b6\u179a\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb', W / 2, 152);
+
+  /* card */
+  var cx = 90, cy = 260, cw = W - 180, ch = 760;
+  ctx.save();
+  ctx.shadowColor = 'rgba(15,23,42,.18)'; ctx.shadowBlur = 34; ctx.shadowOffsetY = 12;
+  ctx.fillStyle = '#ffffff';
+  _bpRoundRect(ctx, cx, cy, cw, ch, 30); ctx.fill();
+  ctx.restore();
+
+  /* name strip */
+  ctx.save();
+  _bpRoundRect(ctx, cx, cy, cw, 128, 30); ctx.clip();
+  var g2 = ctx.createLinearGradient(cx, cy, cx + cw, cy + 128);
+  g2.addColorStop(0, '#0891b2'); g2.addColorStop(1, '#6d5cff');
+  ctx.fillStyle = g2; ctx.fillRect(cx, cy, cw, 128);
+  ctx.restore();
+
+  var name = window._bpName || '';
+  ctx.fillStyle = '#ffffff';
+  var np = _bpFitText(ctx, name, cw - 90, '800', 44, 22);
+  ctx.fillText(name, W / 2, cy + 68 + np * 0.18);
+  if (window._bpPhone) {
+    ctx.font = '600 24px "Noto Sans Khmer", system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,.82)';
+    ctx.fillText(window._bpPhone, W / 2, cy + 108);
+  }
+
+  /* the QR itself, redrawn large and crisp rather than scaled up */
+  var q = qrcode(0, 'M'); q.addData(_bpQrUrl); q.make();
+  var n = q.getModuleCount();
+  var box = 470;
+  var cell = Math.floor(box / n);
+  var qw = cell * n;
+  var qx = Math.round(cx + (cw - qw) / 2);
+  var qy = cy + 128 + 62;
+  ctx.fillStyle = '#ffffff';
+  _bpRoundRect(ctx, qx - 26, qy - 26, qw + 52, qw + 52, 20); ctx.fill();
+  ctx.fillStyle = '#0f172a';
+  for (var r = 0; r < n; r++)
+    for (var c = 0; c < n; c++)
+      if (q.isDark(r, c)) ctx.fillRect(qx + c * cell, qy + r * cell, cell, cell);
+
+  /* instruction under the QR */
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '800 34px "Noto Sans Khmer", system-ui, sans-serif';
+  ctx.fillText('\u179f\u17d2\u1780\u17c1\u1793\u1780\u17bc\u178a\u1793\u17c1\u17c7\u178a\u17be\u1798\u17d2\u1794\u17b8\u1798\u17be\u179b\u1794\u17d2\u179a\u179c\u178f\u17d2\u178f\u17b7', W / 2, qy + qw + 92);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '500 25px "Noto Sans Khmer", system-ui, sans-serif';
+  ctx.fillText('\u1794\u17b6\u1793\u1794\u1784\u17cb\u179a\u17bd\u1785 \u1793\u17b7\u1784\u1785\u17c6\u1793\u17bd\u1793\u1793\u17c5\u179f\u179b\u17cb\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780', W / 2, qy + qw + 136);
+
+  /* validity note */
+  var note = (_bpQrMin === 0)
+    ? 'តំណនេះមិនមានកំណត់ពេលទេ'
+    : 'តំណនេះមានរយៈពេល ' + _bpQrMin + ' នាទី';
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '600 23px "Noto Sans Khmer", system-ui, sans-serif';
+  ctx.fillText(note, W / 2, cy + ch + 62);
+
+  /* footer band */
+  ctx.fillStyle = '#0f2f43';
+  ctx.fillRect(0, H - 96, W, 96);
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  ctx.font = '700 26px "Noto Sans Khmer", system-ui, sans-serif';
+  ctx.fillText(brand + '  \u00b7  \u1785\u17d2\u179a\u1780\u179a\u1794\u179f\u17cb\u17a2\u178f\u17b7\u1790\u17b7\u1787\u1793', W / 2, H - 38);
+
+  return cv;
+}
+
+async function _bpQrBlob() {
+  var cv = await _bpQrCard();
+  return new Promise(function(res) { cv.toBlob(function(b){ res(b); }, 'image/png'); });
 }
 
 async function bpQrSave() {
@@ -556,14 +674,14 @@ async function bpQrSave() {
   var url = URL.createObjectURL(b);
   var a = document.createElement('a');
   a.href = url;
-  a.download = 'repayment-qr.png';
+  a.download = 'QR-' + (window._bpName || 'borrower').replace(/[^\w\u1780-\u17ff]+/g, '-') + '.png';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
 }
 
 async function bpQrShare() {
   var b = await _bpQrBlob(); if (!b) return;
-  var f = new File([b], 'repayment-qr.png', { type: 'image/png' });
+  var f = new File([b], 'QR-' + (window._bpName || 'borrower').replace(/[^\w\u1780-\u17ff]+/g, '-') + '.png', { type: 'image/png' });
   if (navigator.canShare && navigator.canShare({ files: [f] }) && navigator.share) {
     try { await navigator.share({ files: [f], text: _bpQrUrl }); return; }
     catch(e) { if (e && e.name === 'AbortError') return; }
