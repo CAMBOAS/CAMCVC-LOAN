@@ -574,33 +574,48 @@ function _bpFitText(ctx, text, maxW, weight, startPx, minPx) {
 async function _bpQrCard() {
   try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e) {}
 
-  var W = 900, H = 1260;
+  var W = 900;
+  var brand = 'CHECK CVC';
+
+  /* Encode first: the module count decides how tall the card has to be, so every
+     piece below is measured from the finished QR rather than guessed. */
+  var q = qrcode(0, 'M'); q.addData(_bpQrUrl); q.make();
+  var n = q.getModuleCount();
+  var cell = Math.floor(470 / n);
+  var qw = cell * n;
+
+  var HEAD = 210, PAD = 90, STRIP = 128;
+  var QGAP = 58;            /* strip → QR */
+  var L1 = 78, L2 = 46;     /* the two instruction lines */
+  var TAIL = 42;            /* breathing room before the card ends */
+  var cy = 260;
+  var ch = STRIP + QGAP + qw + L1 + L2 + TAIL;
+  var NOTE = 76, FOOT = 96;
+  var H = cy + ch + NOTE + FOOT;
+
   var cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
   var ctx = cv.getContext('2d');
-  /* The card is what the customer receives, so it carries the public-facing name
-     rather than whatever the sidebar branding happens to be set to. */
-  var brand = 'CHECK CVC';
 
   /* page */
   ctx.fillStyle = '#eef2f7';
   ctx.fillRect(0, 0, W, H);
 
   /* header band */
-  var g = ctx.createLinearGradient(0, 0, W, 210);
+  var g = ctx.createLinearGradient(0, 0, W, HEAD);
   g.addColorStop(0, '#0f2f43'); g.addColorStop(1, '#12506b');
   ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, 210);
+  ctx.fillRect(0, 0, W, HEAD);
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffffff';
   _bpFitText(ctx, brand, W - 120, '800', 62, 30);
   ctx.fillText(brand, W / 2, 108);
   ctx.font = '500 26px "Noto Sans Khmer", system-ui, sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,.72)';
-  ctx.fillText('\u1794\u17d2\u179a\u179c\u178f\u17d2\u178f\u17b7\u1780\u17b6\u179a\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb', W / 2, 152);
+  ctx.fillText('ប្រវត្តិការបង់ប្រាក់', W / 2, 152);
 
   /* card */
-  var cx = 90, cy = 260, cw = W - 180, ch = 760;
+  var cx = PAD, cw = W - PAD * 2;
   ctx.save();
   ctx.shadowColor = 'rgba(15,23,42,.18)'; ctx.shadowBlur = 34; ctx.shadowOffsetY = 12;
   ctx.fillStyle = '#ffffff';
@@ -609,10 +624,10 @@ async function _bpQrCard() {
 
   /* name strip */
   ctx.save();
-  _bpRoundRect(ctx, cx, cy, cw, 128, 30); ctx.clip();
-  var g2 = ctx.createLinearGradient(cx, cy, cx + cw, cy + 128);
+  _bpRoundRect(ctx, cx, cy, cw, STRIP, 30); ctx.clip();
+  var g2 = ctx.createLinearGradient(cx, cy, cx + cw, cy + STRIP);
   g2.addColorStop(0, '#0891b2'); g2.addColorStop(1, '#6d5cff');
-  ctx.fillStyle = g2; ctx.fillRect(cx, cy, cw, 128);
+  ctx.fillStyle = g2; ctx.fillRect(cx, cy, cw, STRIP);
   ctx.restore();
 
   var name = window._bpName || '';
@@ -625,43 +640,36 @@ async function _bpQrCard() {
     ctx.fillText(window._bpPhone, W / 2, cy + 108);
   }
 
-  /* the QR itself, redrawn large and crisp rather than scaled up */
-  var q = qrcode(0, 'M'); q.addData(_bpQrUrl); q.make();
-  var n = q.getModuleCount();
-  var box = 470;
-  var cell = Math.floor(box / n);
-  var qw = cell * n;
+  /* QR */
   var qx = Math.round(cx + (cw - qw) / 2);
-  var qy = cy + 128 + 62;
-  ctx.fillStyle = '#ffffff';
-  _bpRoundRect(ctx, qx - 26, qy - 26, qw + 52, qw + 52, 20); ctx.fill();
+  var qy = cy + STRIP + QGAP;
   ctx.fillStyle = '#0f172a';
   for (var r = 0; r < n; r++)
     for (var c = 0; c < n; c++)
       if (q.isDark(r, c)) ctx.fillRect(qx + c * cell, qy + r * cell, cell, cell);
 
-  /* instruction under the QR */
+  /* instructions, both comfortably inside the card */
   ctx.fillStyle = '#0f172a';
   ctx.font = '800 34px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillText('\u179f\u17d2\u1780\u17c1\u1793\u1780\u17bc\u178a\u1793\u17c1\u17c7\u178a\u17be\u1798\u17d2\u1794\u17b8\u1798\u17be\u179b\u1794\u17d2\u179a\u179c\u178f\u17d2\u178f\u17b7', W / 2, qy + qw + 92);
+  ctx.fillText('ស្កេនកូដនេះដើម្បីមើលប្រវត្តិ', W / 2, qy + qw + L1 - 20);
   ctx.fillStyle = '#64748b';
   ctx.font = '500 25px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillText('\u1794\u17b6\u1793\u1794\u1784\u17cb\u179a\u17bd\u1785 \u1793\u17b7\u1784\u1785\u17c6\u1793\u17bd\u1793\u1793\u17c5\u179f\u179b\u17cb\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780', W / 2, qy + qw + 136);
+  ctx.fillText('បានបង់រួច និងចំនួននៅសល់របស់អ្នក', W / 2, qy + qw + L1 + L2 - 18);
 
-  /* validity note */
+  /* how long it lasts, on the page below the card */
   var note = (_bpQrMin === 0)
     ? 'តំណនេះមិនមានកំណត់ពេលទេ'
     : 'តំណនេះមានរយៈពេល ' + _bpQrMin + ' នាទី';
   ctx.fillStyle = '#94a3b8';
   ctx.font = '600 23px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillText(note, W / 2, cy + ch + 62);
+  ctx.fillText(note, W / 2, cy + ch + 46);
 
   /* footer band */
   ctx.fillStyle = '#0f2f43';
-  ctx.fillRect(0, H - 96, W, 96);
+  ctx.fillRect(0, H - FOOT, W, FOOT);
   ctx.fillStyle = 'rgba(255,255,255,.9)';
   ctx.font = '700 26px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillText(brand + '  \u00b7  \u1785\u17d2\u179a\u1780\u179a\u1794\u179f\u17cb\u17a2\u178f\u17b7\u1790\u17b7\u1787\u1793', W / 2, H - 38);
+  ctx.fillText(brand + '  ·  សេវាពិនិត្យប្រវត្តិបង់ប្រាក់', W / 2, H - 38);
 
   return cv;
 }
