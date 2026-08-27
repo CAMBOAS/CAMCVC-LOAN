@@ -470,6 +470,7 @@
           var r2 = await api.post({ action:'user_self_update', auth:auth, type:'photo', photo_url: r.url });
           if (!r2 || !r2.ok) { statusEl.textContent = 'Failed: '+(r2&&r2.message||'Error'); return; }
           localStorage.setItem('user_photo', r.url);
+          window.appApplyTopbar && window.appApplyTopbar();
           var circle = document.getElementById('hlProfAvatarCircle');
           if (circle) {
             circle.innerHTML = '<img src="'+r.url+'" alt="photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
@@ -815,10 +816,13 @@
       try { a = JSON.parse(localStorage.getItem('appAuth') || 'null'); } catch(e) {}
       var nm  = (a && (a.name || a.u)) || 'User';
       var ini = String(nm).charAt(0).toUpperCase();
-      var pic = a && a.photo;
-      var av  = pic
-        ? '<img class="apptb-user-av" src="' + pic + '" alt="" onerror="this.outerHTML=\'<div class=&quot;apptb-user-av&quot;>' + ini + '</div>\'">'
-        : '<div class="apptb-user-av">' + ini + '</div>';
+      /* The profile photo lives in `user_photo` — login.html stores it there and the
+         uploader keeps it fresh; appAuth is only a fallback. */
+      var pic = '';
+      try { pic = localStorage.getItem('user_photo') || ''; } catch(e) {}
+      if (!pic && a) pic = a.photo || a.photo_url || '';
+      var av  = '<span class="apptb-user-av" data-ini="' + ini + '">'
+              + (pic ? '<img src="' + pic + '" alt="">' : ini) + '</span>';
       right += '<a class="apptb-user" href="' + base + 'pages/my-profile.html">' + av
             +  '<span class="apptb-user-nm">' + nm + '</span></a>';
     }
@@ -880,6 +884,13 @@
         th.innerHTML = now === 'light' ? ic.moon : ic.sun;
       });
     }
+
+    /* Avatar photo → fall back to the initial if the image fails to load */
+    var avImg = bar.querySelector('.apptb-user-av img');
+    if (avImg) avImg.addEventListener('error', function() {
+      var sp = avImg.parentElement;
+      if (sp) sp.textContent = sp.getAttribute('data-ini') || '?';
+    });
 
     /* Logout */
     var lo = document.getElementById('apptbLogoutBtn');
