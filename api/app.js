@@ -321,6 +321,99 @@ async function isWatched(username) {
 }
 
 /* ── Auth ── */
+/* ══════════════════════════════════════════════════════════════
+   DEVICE SESSIONS, QR SIGN-IN AND LOCKOUT COUNTERS
+   ══════════════════════════════════════════════════════════════ */
+const MAX_DEVICES   = 2;   /* an account may be signed in on this many devices */
+const MAX_STRIKES   = 3;   /* wrong PINs, or device evictions, before the account is disabled */
+const QR_LOGIN_SECS = 50;  /* how long a sign-in QR stays valid */
+
+let _authGuardReady = false;
+async function ensureAuthGuardCols() {
+  if (_authGuardReady) return;
+  try { await db().query('ALTER TABLE users ADD COLUMN fail_pin INT NOT NULL DEFAULT 0'); } catch(e) {}
+  try { await db().query('ALTER TABLE users ADD COLUMN fail_device INT NOT NULL DEFAULT 0'); } catch(e) {}
+  _authGuardReady = true;
+}
+
+let _sessionsReady = false;
+async function ensureSessionsTable() {
+  if (_sessionsReady) return;
+  await db().query(`CREATE TABLE IF NOT EXISTS user_sessions (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    username   VARCHAR(100) NOT NULL,
+    device_id  VARCHAR(64)  NOT NULL,
+    label      VARCHAR(160),
+    revoked    TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_seen  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_user_device (username, device_id),
+    INDEX idx_user (username)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  _sessionsReady = true;
+}
+
+let _loginQrReady = false;
+async function ensureLoginQrTable() {
+  if (_loginQrReady) return;
+  await db().query(`CREATE TABLE IF NOT EXISTS login_qr (
+    token      VARCHAR(64) PRIMARY KEY,
+    username   VARCHAR(100) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used_at    DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  _loginQrReady = true;
+}
+
+/* Disable the account once a counter reaches the limit. Returns true when it just tripped. */
+async function bumpStrike(username, column) {
+  await ensureAuthGuardCols();
+  await db().query(`UPDATE users SET ${column} = ${column} + 1 WHERE username=?`, [username]);
+  const [rows] = await db().query(`SELECT ${column} AS n FROM users WHERE username=?`, [username]);
+  const n = Number((rows[0] || {}).n || 0);
+  if (n >= MAX_STRIKES) {
+    await db().query('UPDATE users SET status="inactive" WHERE username=?', [username]);
+    return { tripped: true, count: n };
+  }
+  return { tripped: false, count: n };
+}
+
+async function clearStrikes(username) {
+  await ensureAuthGuardCols();
+  await db().query('UPDATE users SET fail_pin=0 WHERE username=?', [username]);
+}
+
+/* Record this device against the account. When the cap is passed, the least recently
+   used device is revoked — it discovers that on its next session_check and signs out. */
+async function registerDevice(username, deviceId, label) {
+  await ensureSessionsTable();
+  if (!deviceId) return { ok: true, evicted: null };
+
+  await db().query(
+    `INSERT INTO user_sessions (username, device_id, label, revoked, last_seen)
+     VALUES (?,?,?,0,UTC_TIMESTAMP())
+     ON DUPLICATE KEY UPDATE label=VALUES(label), revoked=0, last_seen=UTC_TIMESTAMP()`,
+    [username, deviceId, String(label || '').slice(0, 160)]
+  );
+
+  const [live] = await db().query(
+    'SELECT device_id FROM user_sessions WHERE username=? AND revoked=0 ORDER BY last_seen DESC',
+    [username]
+  );
+  if (live.length <= MAX_DEVICES) return { ok: true, evicted: null };
+
+  /* everything past the cap is the older end of that list */
+  const evict = live.slice(MAX_DEVICES).map(r => r.device_id);
+  await db().query(
+    `UPDATE user_sessions SET revoked=1 WHERE username=? AND device_id IN (${evict.map(() => '?').join(',')})`,
+    [username, ...evict]
+  );
+  const strike = await bumpStrike(username, 'fail_device');
+  return { ok: true, evicted: evict, disabled: strike.tripped, strikes: strike.count };
+}
+
+
 async function validateAuth(u, p) {
   if (!u || !p) return null;
   await ensureUserPhotoCol();
@@ -449,13 +542,31 @@ async function handler(req, res) {
 
     /* ── Public: login ── */
     if (action === 'api_login') {
-      const v = await validateAuth(String(body.username||'').trim(), String(body.pin||'').trim());
-      if (!v)          return res.json({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
+      const _lu = String(body.username||'').trim();
+      const _lp = String(body.pin||'').trim();
+      const v = await validateAuth(_lu, _lp);
+      if (!v) {
+        /* Only an existing, still-active account can collect strikes — a typo in the
+           username would otherwise count against nobody, and a disabled account would
+           keep counting for ever. */
+        await ensureAuthGuardCols();
+        const [_who] = await db().query('SELECT username, status FROM users WHERE username=? LIMIT 1', [_lu]);
+        if (_who.length && String(_who[0].status).toLowerCase() === 'active') {
+          const _st = await bumpStrike(_who[0].username, 'fail_pin');
+          if (_st.tripped) return res.json({ ok:false, code:'locked', message:'គណនីត្រូវបានបិទ — ព្យាយាមចូលខុស 3 ដង។ សូមទំនាក់ទំនង Admin' });
+          return res.json({ ok:false, code:'bad_pin', left: MAX_STRIKES - _st.count, message:'ឈ្មោះ ឬ PIN មិនត្រូវ (សល់ ' + (MAX_STRIKES - _st.count) + ' ដង)' });
+        }
+        return res.json({ ok:false, message:'ឈ្មោះ ឬ PIN មិនត្រូវ' });
+      }
       if (v.expired)   return res.json({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
+      await clearStrikes(v.username);
+      const _reg = await registerDevice(v.username, String(body.device_id||'').trim(), String(body.device_label||''));
       db().query('UPDATE users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
       if (await isNotifEnabled('login')) { try { await sendTelegramEvent('login', { name:v.name, role:v.role, username:v.username }); } catch(e) {} }
       logActivity('user_login', v.name, v.username, null, { role: v.role }).catch(()=>{});
-      return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate, photo_url:v.photo_url||'', manages_teams:v.manages_teams||[] });
+      return res.json({ ok:true, name:v.name, role:v.role, username:v.username, expDate:v.expDate,
+                        photo_url:v.photo_url||'', manages_teams:v.manages_teams||[],
+                        evicted:_reg.evicted||null, device_disabled:!!_reg.disabled });
     }
 
     if (action === 'login_alert') {
@@ -464,6 +575,64 @@ async function handler(req, res) {
       }
       return res.json({ ok:true });
     }
+
+    /* ── Public: is this device still allowed to stay signed in? ── */
+    if (action === 'session_check') {
+      await ensureSessionsTable();
+      const u   = String(body.u || '').trim();
+      const dev = String(body.device_id || '').trim();
+      if (!u || !dev) return res.json({ ok:true, valid:true });   /* nothing to judge */
+      const [rows] = await db().query(
+        'SELECT revoked FROM user_sessions WHERE username=? AND device_id=? LIMIT 1', [u, dev]
+      );
+      if (!rows.length) return res.json({ ok:true, valid:true }); /* pre-dates the feature */
+      if (Number(rows[0].revoked) === 1) return res.json({ ok:true, valid:false, reason:'revoked' });
+      const [st] = await db().query('SELECT status FROM users WHERE username=? LIMIT 1', [u]);
+      if (st.length && String(st[0].status).toLowerCase() !== 'active') {
+        return res.json({ ok:true, valid:false, reason:'inactive' });
+      }
+      db().query('UPDATE user_sessions SET last_seen=UTC_TIMESTAMP() WHERE username=? AND device_id=?',
+                 [u, dev]).catch(()=>{});
+      return res.json({ ok:true, valid:true });
+    }
+
+    /* ── Public: redeem a sign-in QR (the phone scanning it has no credentials yet) ── */
+    if (action === 'qr_login_consume') {
+      await ensureLoginQrTable();
+      const tok = String(body.token || '').trim();
+      const dev = String(body.device_id || '').trim();
+      if (!tok) return res.json({ ok:false, message:'missing_token' });
+
+      const [rows] = await db().query(
+        `SELECT username, used_at, (expires_at <= UTC_TIMESTAMP()) AS expired
+         FROM login_qr WHERE token=? LIMIT 1`, [tok]
+      );
+      if (!rows.length)               return res.json({ ok:false, message:'invalid' });
+      if (rows[0].used_at)            return res.json({ ok:false, message:'used' });
+      if (Number(rows[0].expired)===1) return res.json({ ok:false, message:'expired' });
+
+      const uname = rows[0].username;
+      const [ur] = await db().query(
+        'SELECT username, pin, status, display_name, role FROM users WHERE username=? LIMIT 1', [uname]
+      );
+      if (!ur.length) return res.json({ ok:false, message:'invalid' });
+      if (String(ur[0].status).toLowerCase() !== 'active') return res.json({ ok:false, message:'inactive' });
+
+      /* one scan only */
+      await db().query('UPDATE login_qr SET used_at=UTC_TIMESTAMP() WHERE token=?', [tok]);
+
+      const reg = await registerDevice(uname, dev, String(body.label || '').slice(0,160));
+      await clearStrikes(uname);
+      logActivity('user_login', ur[0].display_name || uname, uname, null, { role: ur[0].role, via: 'qr' }).catch(()=>{});
+      return res.json({
+        ok: true,
+        username: uname,
+        pin: ur[0].pin,
+        evicted: reg.evicted || null,
+        disabled: !!reg.disabled,
+      });
+    }
+
 
     /* ── Portal share links (QR) ── */
     let _qrTokTableReady = false;
@@ -1256,6 +1425,42 @@ async function handler(req, res) {
       return res.json({ ok:true, counts, unread });
     }
 
+    /* ── Mint a sign-in QR for my own account (any signed-in user) ── */
+    if (action === 'qr_login_create') {
+      await ensureLoginQrTable();
+      /* one live code at a time — asking for a new one retires the old */
+      await db().query('UPDATE login_qr SET used_at=UTC_TIMESTAMP() WHERE username=? AND used_at IS NULL', [_bu]);
+      const token = crypto.randomBytes(18).toString('base64url');
+      await db().query(
+        'INSERT INTO login_qr (token, username, expires_at) VALUES (?,?,DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? SECOND))',
+        [token, _bu, QR_LOGIN_SECS]
+      );
+      const [row] = await db().query(
+        "SELECT DATE_FORMAT(expires_at, '%Y-%m-%dT%H:%i:%sZ') AS exp FROM login_qr WHERE token=?", [token]
+      );
+      return res.json({ ok:true, token, seconds: QR_LOGIN_SECS, expires_at:(row[0]||{}).exp || null });
+    }
+
+    /* ── My signed-in devices ── */
+    if (action === 'sessions_list') {
+      await ensureSessionsTable();
+      const [rows] = await db().query(
+        `SELECT device_id, label, revoked,
+                DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_utc,
+                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS seen_utc
+         FROM user_sessions WHERE username=? ORDER BY revoked ASC, last_seen DESC LIMIT 20`, [_bu]
+      );
+      return res.json({ ok:true, max: MAX_DEVICES, sessions: rows });
+    }
+
+    if (action === 'session_revoke') {
+      await ensureSessionsTable();
+      const dev = String(body.device_id || '').trim();
+      if (!dev) return res.json({ ok:false, message:'missing device' });
+      await db().query('UPDATE user_sessions SET revoked=1 WHERE username=? AND device_id=?', [_bu, dev]);
+      return res.json({ ok:true });
+    }
+
     /* ── Create a portal share link (Super Admin and their assistants only) ── */
     if (action === 'qr_token_create') {
       const _isAssistant = Array.isArray(_bv.manages_teams) && _bv.manages_teams.length > 0;
@@ -1534,6 +1739,12 @@ async function handler(req, res) {
         return res.json({ ok:false, message:'អាចកំណត់បានតែ role Normal User' });
       }
       const p = String(body.pin||'').trim();
+      /* Switching an account back to active clears the lockout counters — otherwise the very
+         next slip would disable it again, since it was already sitting on 3 strikes. */
+      if (String(body.status||'active').toLowerCase() === 'active') {
+        await ensureAuthGuardCols();
+        await db().query('UPDATE users SET fail_pin=0, fail_device=0 WHERE username=?', [u]);
+      }
       if (p) {
         await db().query(
           'UPDATE users SET pin=?,role=?,display_name=?,exp_date=?,status=? WHERE username=?',

@@ -119,6 +119,27 @@
 
     /* Cards used to sit in a 1fr 1fr grid; without a cap a lone card stretches the
        full width of a wide monitor and the inputs go with it. */
+    .mp-dev-wrap { margin-top:18px; padding-top:14px; border-top:1px solid rgba(148,163,184,.14) }
+    .mp-dev-list { display:flex; flex-direction:column; gap:6px }
+    .mp-dev {
+      display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:10px;
+      background:rgba(148,163,184,.07); border:1px solid rgba(148,163,184,.14);
+    }
+    .mp-dev-dot { width:7px; height:7px; border-radius:50%; background:#22c55e; flex-shrink:0 }
+    .mp-dev.is-out .mp-dev-dot { background:#94a3b8 }
+    .mp-dev-txt { flex:1; min-width:0 }
+    .mp-dev-name { font-size:12px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .mp-dev-sub  { font-size:10.5px; color:var(--muted) }
+    .mp-dev-you  { font-size:9.5px; font-weight:800; color:#4f46e5; white-space:nowrap }
+    .mp-dev-out  { font-size:9.5px; font-weight:800; color:#94a3b8; white-space:nowrap }
+    .mp-dev-kick {
+      border:none; background:transparent; color:#94a3b8; cursor:pointer; padding:3px;
+      border-radius:6px; display:flex;
+    }
+    .mp-dev-kick:hover { color:#ef4444; background:rgba(239,68,68,.1) }
+    .mp-dev-kick svg { width:13px; height:13px }
+    .mp-dev-empty { font-size:11.5px; color:var(--muted); padding:4px 2px }
+
     /* reorder mode */
     .mp-tab-hold { opacity:.55; transform:scale(.96); transition:.12s }
     .mp-tabs-drag .mp-tab { cursor:grab }
@@ -310,6 +331,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
           <span>Profile &amp; PIN</span>
         </button>
+        <button type="button" class="mp-tab" data-tool="signin" id="mpTabSignin" onclick="mpTool('signin')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          <span>Sign-in QR</span>
+        </button>
         <button type="button" class="mp-tab" data-tool="qr" id="mpTabQr" onclick="mpTool('qr')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>
           <span>QR Code</span>
@@ -340,6 +365,33 @@
         </span>
         <button type="button" class="mp-drag-save" id="mpDragSaveBtn" onclick="mpSaveTabOrder()" disabled>Save order</button>
         <button type="button" class="mp-drag-cancel" onclick="mpCancelTabOrder()">Cancel</button>
+      </div>
+
+      <div class="mp-tool-panel" id="mpToolSignin">
+        <div class="mp-qr-grid">
+          <div class="mp-qr-side">
+            <div class="mp-qr-title">Sign in on another device</div>
+            <div class="mp-qr-sub">
+              Scan this from your phone to sign in as yourself — no username or PIN needed.
+              The code lasts 50 seconds and works once.
+            </div>
+            <button type="button" class="mp-qr-gen" id="mpSiGenBtn" onclick="mpSiGenerate()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+              Show my code
+            </button>
+            <div class="mp-qr-status" id="mpSiStatus"></div>
+
+            <div class="mp-dev-wrap">
+              <div class="mp-qr-lbl">My devices <span class="tb-hint" id="mpDevCap"></span></div>
+              <div id="mpDevList" class="mp-dev-list"></div>
+            </div>
+          </div>
+
+          <div class="mp-qr-out" id="mpSiOut" style="display:none">
+            <div class="mp-qr-canvas-wrap"><canvas id="mpSiCanvas" width="360" height="360"></canvas></div>
+            <div class="mp-qr-exp" id="mpSiExp"></div>
+          </div>
+        </div>
       </div>
 
       <div class="mp-tool-panel" id="mpToolProfile">
@@ -574,10 +626,10 @@
 <div id="mpToast"></div>
 
 <script src="../assets/js/qrcode.js?v=1"></script>
-<script src="../assets/js/layout.js?v=31"></script>
-<script src="../assets/js/dashboard-layout.js?v=31"></script>
+<script src="../assets/js/layout.js?v=32"></script>
+<script src="../assets/js/dashboard-layout.js?v=32"></script>
 <script src="../assets/js/auth.js?v=2"></script>
-<script src="../assets/js/api.js?v=8"></script>
+<script src="../assets/js/api.js?v=9"></script>
 <script>
 /* ── Helpers ── */
 function mpToast(msg, isErr) {
@@ -900,7 +952,7 @@ function mpToolsEligible() {
    Order is stored per user as tool keys (not indices), so hiding a
    tab for a role can never shift someone else's arrangement.
    ══════════════════════════════════════════════════════════════ */
-var MP_TOOLS_DEFAULT = ['profile','qr','appearance','focus','account','activity'];
+var MP_TOOLS_DEFAULT = ['profile','signin','qr','appearance','focus','account','activity'];
 var _mpOrder   = MP_TOOLS_DEFAULT.slice();
 var _mpDragOn  = false;
 var _mpDirty   = false;
@@ -1102,6 +1154,7 @@ function mpToolsInit() {
 
   var allowed = {
     profile:    true,
+    signin:     true,
     qr:         mpToolsEligible(),
     appearance: true,
     focus:      (typeof _focusEligible === 'function') ? _focusEligible() : false,
@@ -1125,6 +1178,7 @@ function mpToolsInit() {
   });
   if (first) mpTool(first);
   _mpInitDrag();
+  mpLoadDevices();
 }
 
 function mpTool(name) {
@@ -1134,6 +1188,124 @@ function mpTool(name) {
   document.querySelectorAll('.mp-tool-panel').forEach(function(p) { p.classList.remove('on'); });
   var panel = document.getElementById('mpTool' + name.charAt(0).toUpperCase() + name.slice(1));
   if (panel) panel.classList.add('on');
+}
+
+/* ── Sign-in QR: let my phone sign in as me ── */
+var _mpSiTimer = null;
+
+async function mpSiGenerate() {
+  var btn = document.getElementById('mpSiGenBtn');
+  var st  = document.getElementById('mpSiStatus');
+  if (typeof qrcode === 'undefined') {
+    st.textContent = 'QR library did not load — refresh the page.';
+    st.style.color = '#f87171';
+    return;
+  }
+  btn.disabled = true;
+  st.textContent = 'Creating…';
+  st.style.color = 'var(--muted)';
+  try {
+    var r = await CamboAPI.post({ action: 'qr_login_create' });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
+
+    var base = location.origin + location.pathname.replace(/pages\/[^/]*$/, 'login.html');
+    var url  = base + '?lt=' + encodeURIComponent(r.token);
+
+    var q = qrcode(0, 'M');
+    q.addData(url);
+    q.make();
+    var cv = document.getElementById('mpSiCanvas');
+    var ctx = cv.getContext('2d');
+    var n = q.getModuleCount(), quiet = 4;
+    var cell = Math.floor(cv.width / (n + quiet * 2));
+    var off  = Math.floor((cv.width - cell * n) / 2);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#0f172a';
+    for (var row = 0; row < n; row++)
+      for (var col = 0; col < n; col++)
+        if (q.isDark(row, col)) ctx.fillRect(off + col * cell, off + row * cell, cell, cell);
+
+    document.getElementById('mpSiOut').style.display = 'flex';
+    st.textContent = 'Scan it within ' + r.seconds + ' seconds.';
+    st.style.color = '#4ade80';
+    _mpSiCountdown(r.seconds);
+  } catch(e) {
+    st.textContent = e.message || 'Error';
+    st.style.color = '#f87171';
+  }
+  btn.disabled = false;
+}
+
+function _mpSiCountdown(secs) {
+  var el = document.getElementById('mpSiExp');
+  if (_mpSiTimer) { clearInterval(_mpSiTimer); _mpSiTimer = null; }
+  var left = secs;
+  var tick = function() {
+    if (left <= 0) {
+      el.textContent = 'Expired — show a new code';
+      el.classList.add('dead');
+      clearInterval(_mpSiTimer); _mpSiTimer = null;
+      /* an expired code must not stay on screen looking usable */
+      document.getElementById('mpSiOut').style.display = 'none';
+      return;
+    }
+    el.textContent = 'Expires in ' + left + 's';
+    el.classList.remove('dead');
+    left--;
+  };
+  tick();
+  _mpSiTimer = setInterval(tick, 1000);
+}
+
+function _mpAgo(iso) {
+  if (!iso) return '';
+  var ms = new Date(iso).getTime();
+  if (isNaN(ms)) return '';
+  var m = Math.floor((Date.now() - ms) / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return m + ' min ago';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + ' hr ago';
+  return Math.floor(h / 24) + ' day' + (h >= 48 ? 's' : '') + ' ago';
+}
+
+async function mpLoadDevices() {
+  var box = document.getElementById('mpDevList');
+  if (!box) return;
+  try {
+    var r = await CamboAPI.post({ action: 'sessions_list' });
+    if (!r || !r.ok) throw new Error('x');
+    var mine = window.CamboDevice ? CamboDevice.id() : '';
+    document.getElementById('mpDevCap').textContent = 'max ' + r.max;
+    var live = (r.sessions || []).filter(function(d){ return !Number(d.revoked); });
+    if (!live.length) { box.innerHTML = '<div class="mp-dev-empty">No devices recorded yet.</div>'; return; }
+    box.innerHTML = live.map(function(d) {
+      var isMe = d.device_id === mine;
+      return '<div class="mp-dev">'
+        + '<span class="mp-dev-dot"></span>'
+        + '<span class="mp-dev-txt"><span class="mp-dev-name">' + _esc(d.label || 'Device') + '</span>'
+        + '<span class="mp-dev-sub">' + _esc(_mpAgo(d.seen_utc)) + '</span></span>'
+        + (isMe ? '<span class="mp-dev-you">THIS DEVICE</span>'
+                : '<button type="button" class="mp-dev-kick" title="Sign out" onclick="mpKickDevice(\'' + _esc(d.device_id) + '\')">'
+                  + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>')
+        + '</div>';
+    }).join('');
+  } catch(e) {
+    box.innerHTML = '<div class="mp-dev-empty">Could not load devices.</div>';
+  }
+}
+
+function _esc(v) {
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+async function mpKickDevice(id) {
+  try {
+    var r = await CamboAPI.post({ action: 'session_revoke', device_id: id });
+    if (r && r.ok) { mpToast('Device signed out'); mpLoadDevices(); }
+    else mpToast('Could not sign it out', true);
+  } catch(e) { mpToast('Network error', true); }
 }
 
 /* ── QR: portal share link ── */

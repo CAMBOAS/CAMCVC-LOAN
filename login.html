@@ -377,6 +377,48 @@
     @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
 
     /* ── Footer ── */
+    /* ── Sign in by QR ── */
+    .lq-or { display:flex; align-items:center; gap:10px; margin:16px 0 12px; color:#94a3b8; font-size:12px }
+    .lq-or::before, .lq-or::after { content:''; flex:1; height:1px; background:rgba(148,163,184,.28) }
+    .lq-scan-btn {
+      width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+      padding:12px; border-radius:12px; cursor:pointer;
+      border:1.5px solid rgba(99,102,241,.35); background:rgba(99,102,241,.06);
+      color:#4f46e5; font-family:inherit; font-size:13.5px; font-weight:700;
+      transition:.15s;
+    }
+    .lq-scan-btn svg { width:16px; height:16px }
+    .lq-scan-btn:hover { background:rgba(99,102,241,.12); border-color:rgba(99,102,241,.55) }
+
+    .lq-scan {
+      position:fixed; inset:0; z-index:10000;
+      display:flex; align-items:center; justify-content:center; padding:16px;
+      background:rgba(2,6,23,.72); backdrop-filter:blur(6px);
+    }
+    .lq-scan-card {
+      width:100%; max-width:380px; border-radius:18px; overflow:hidden;
+      background:#fff; box-shadow:0 24px 60px rgba(2,6,23,.35);
+    }
+    [data-theme="dark"] .lq-scan-card { background:#111827 }
+    .lq-scan-hd {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px; font-size:14px; font-weight:800; color:#0f172a;
+      border-bottom:1px solid rgba(148,163,184,.18);
+    }
+    [data-theme="dark"] .lq-scan-hd { color:#e2e8f0 }
+    .lq-scan-x {
+      width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+      border:none; background:transparent; color:#64748b; cursor:pointer; border-radius:8px;
+    }
+    .lq-scan-x svg { width:16px; height:16px }
+    .lq-scan-view { position:relative; background:#000; aspect-ratio:1/1 }
+    .lq-scan-view video { width:100%; height:100%; object-fit:cover; display:block }
+    .lq-scan-frame {
+      position:absolute; inset:14%; border-radius:14px;
+      border:2.5px solid rgba(255,255,255,.9); box-shadow:0 0 0 9999px rgba(0,0,0,.28);
+    }
+    .lq-scan-msg { padding:12px 16px; text-align:center; font-size:12.5px; font-weight:600; color:#64748b }
+
     .login-footer {
       display: flex;
       align-items: center;
@@ -494,6 +536,30 @@
         <span class="spin" id="btnSpin"></span>
       </button>
 
+      <div class="lq-or"><span>ឬ</span></div>
+      <button type="button" class="lq-scan-btn" onclick="lqOpenScanner()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>
+        ស្កេន QR ដើម្បីចូល
+      </button>
+
+    </div>
+
+    <!-- camera overlay -->
+    <div class="lq-scan" id="lqScan" style="display:none">
+      <div class="lq-scan-card">
+        <div class="lq-scan-hd">
+          <span>ស្កេនកូដ QR</span>
+          <button type="button" class="lq-scan-x" onclick="lqCloseScanner()" aria-label="close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="lq-scan-view">
+          <video id="lqVideo" playsinline muted></video>
+          <div class="lq-scan-frame"></div>
+        </div>
+        <div class="lq-scan-msg" id="lqScanMsg"></div>
+        <canvas id="lqCanvas" style="display:none"></canvas>
+      </div>
     </div>
 
     <footer class="login-footer">
@@ -508,8 +574,159 @@
     </footer>
   </div>
 
-<script src="assets/js/api.js?v=8"></script>
+<script src="assets/js/api.js?v=9"></script>
 <script>
+
+/* ══════════════════════════════════════════════════════════════
+   SIGN IN BY QR
+   The code shown on an already signed-in device carries a one-time
+   token. Either the phone's own camera opens the link (?lt=…), or the
+   scanner below reads the code from this page.
+   ══════════════════════════════════════════════════════════════ */
+function _lqStoreAndGo(res, uname, pin) {
+  var exp = res.expDate ? new Date(res.expDate + 'T23:59:59').getTime()
+                        : Date.now() + 7 * 24 * 60 * 60 * 1000;
+  localStorage.setItem('appAuth', JSON.stringify({
+    u: uname, p: pin, name: res.name || uname, role: res.role || '',
+    exp: exp, expDate: res.expDate || '', manages_teams: res.manages_teams || []
+  }));
+  if (res.photo_url) { try { localStorage.setItem('user_photo', res.photo_url); } catch(e) {} }
+  var next = new URLSearchParams(location.search).get('next') || 'pages/loan-list.html';
+  location.replace(next);
+}
+
+var _LQ_MSG = {
+  used:    'កូដនេះត្រូវបានប្រើរួចហើយ — សូមបង្កើតកូដថ្មី',
+  expired: 'កូដនេះផុតកំណត់ហើយ — សូមបង្កើតកូដថ្មី',
+  invalid: 'កូដមិនត្រឹមត្រូវ',
+  inactive:'គណនីនេះត្រូវបានបិទ — សូមទំនាក់ទំនង Admin'
+};
+
+async function lqRedeem(token) {
+  var r = await CamboAPI.post({
+    action: 'qr_login_consume', token: token,
+    device_id: window.CamboDevice ? CamboDevice.id() : '',
+    label: window.CamboDevice ? CamboDevice.label() : ''
+  });
+  if (!r || !r.ok) {
+    showErr(_LQ_MSG[(r && r.message) || 'invalid'] || 'កូដមិនត្រឹមត្រូវ', true);
+    return false;
+  }
+  /* the token hands back the account's own credentials, so finish as a normal sign-in */
+  var login = await CamboAPI.post({
+    action: 'api_login', username: r.username, pin: r.pin,
+    device_id: window.CamboDevice ? CamboDevice.id() : '',
+    device_label: window.CamboDevice ? CamboDevice.label() : ''
+  });
+  if (!login || !login.ok) {
+    showErr((login && login.message) || 'ចូលមិនបាន', true);
+    return false;
+  }
+  _lqStoreAndGo(login, r.username, r.pin);
+  return true;
+}
+
+/* A link opened by the phone's own camera app */
+(function () {
+  var t = null;
+  try { t = new URLSearchParams(location.search).get('lt'); } catch(e) {}
+  if (!t) return;
+  window.addEventListener('load', function () { lqRedeem(t); });
+})();
+
+/* ── In-page scanner ── */
+var _lqStream = null, _lqRaf = null, _lqBusy = false;
+
+function _lqLoadJsQR() {
+  if (window.jsQR) return Promise.resolve();
+  return new Promise(function (resolve, reject) {
+    var s = document.createElement('script');
+    s.src = 'assets/js/jsqr.js?v=1';
+    s.onload = resolve;
+    s.onerror = function(){ reject(new Error('scanner_load')); };
+    document.head.appendChild(s);
+  });
+}
+
+async function lqOpenScanner() {
+  var box = document.getElementById('lqScan');
+  var msg = document.getElementById('lqScanMsg');
+  box.style.display = 'flex';
+  msg.textContent = 'កំពុងបើកកាមេរ៉ា…';
+
+  try { await _lqLoadJsQR(); }
+  catch (e) { msg.textContent = 'មិនអាចផ្ទុកកម្មវិធីស្កេនបាន'; return; }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    msg.textContent = 'ឧបករណ៍នេះមិនអាចប្រើកាមេរ៉ាបានទេ';
+    return;
+  }
+  try {
+    _lqStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }, audio: false
+    });
+  } catch (e) {
+    /* the browser blocks the camera outside a secure context, and the user can refuse */
+    msg.textContent = (e && e.name === 'NotAllowedError')
+      ? 'សូមអនុញ្ញាតឲ្យប្រើកាមេរ៉ា'
+      : (location.protocol === 'https:' || location.hostname === 'localhost')
+        ? 'មិនអាចបើកកាមេរ៉ាបាន'
+        : 'កាមេរ៉ាដំណើរការតែលើ HTTPS ប៉ុណ្ណោះ';
+    return;
+  }
+
+  var video = document.getElementById('lqVideo');
+  video.srcObject = _lqStream;
+  video.setAttribute('playsinline', 'true');
+  await video.play();
+  msg.textContent = 'តម្រង់កាមេរ៉ាទៅកាន់កូដ QR';
+
+  var cv  = document.getElementById('lqCanvas');
+  var ctx = cv.getContext('2d', { willReadFrequently: true });
+
+  var tick = function () {
+    if (!_lqStream) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA && !_lqBusy) {
+      cv.width  = video.videoWidth;
+      cv.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, cv.width, cv.height);
+      var img = ctx.getImageData(0, 0, cv.width, cv.height);
+      var code = window.jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (code && code.data) {
+        _lqBusy = true;
+        msg.textContent = 'កំពុងចូល…';
+        var tok = code.data;
+        try {
+          var u = new URL(code.data, location.href);
+          tok = u.searchParams.get('lt') || code.data;
+        } catch (e) {}
+        lqCloseScanner();
+        lqRedeem(tok).then(function (ok) { if (!ok) _lqBusy = false; });
+        return;
+      }
+    }
+    _lqRaf = requestAnimationFrame(tick);
+  };
+  _lqRaf = requestAnimationFrame(tick);
+}
+
+function lqCloseScanner() {
+  if (_lqRaf) { cancelAnimationFrame(_lqRaf); _lqRaf = null; }
+  if (_lqStream) {
+    _lqStream.getTracks().forEach(function (t) { t.stop(); });
+    _lqStream = null;
+  }
+  var box = document.getElementById('lqScan');
+  if (box) box.style.display = 'none';
+}
+
+  /* Explain a forced sign-out, if that is why we are here */
+  (function() {
+    var why = '';
+    try { why = sessionStorage.getItem('signout_reason') || ''; sessionStorage.removeItem('signout_reason'); } catch(e) {}
+    if (why) window.addEventListener('load', function(){ showErr(why, true); });
+  })();
+
   /* Redirect if already logged in */
   (function() {
     try {
@@ -560,7 +777,11 @@
     document.getElementById('btnSpin').style.display = 'block';
 
     try {
-      var res = await CamboAPI.post({ action: 'api_login', username: u, pin: p });
+      var res = await CamboAPI.post({
+        action: 'api_login', username: u, pin: p,
+        device_id: window.CamboDevice ? CamboDevice.id() : '',
+        device_label: window.CamboDevice ? CamboDevice.label() : ''
+      });
       if (res && res.ok) {
         var _exp = res.expDate
           ? new Date(res.expDate + 'T23:59:59').getTime()
@@ -572,15 +793,17 @@
         } else {
           _failCount = 0;
           localStorage.setItem('appAuth', JSON.stringify({
-            u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || ''
+            u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || '',
+            manages_teams: res.manages_teams || []
           }));
+          if (res.photo_url) { try { localStorage.setItem('user_photo', res.photo_url); } catch(e) {} }
           var next = new URLSearchParams(location.search).get('next') || 'pages/loan-list.html';
           location.replace(next);
         }
       } else {
         _failCount++;
-        showErr('Incorrect username or PIN', true);
-        if (_failCount >= 2) sendLoginFailAlert('wrong', u, _failCount);
+        showErr((res && res.message) || 'Incorrect username or PIN', true);
+        if (_failCount >= 2) sendLoginFailAlert(res && res.code === 'locked' ? 'locked' : 'wrong', u, _failCount);
       }
     } catch(err) {
       showErr('Unable to connect to server — please check your internet', false);

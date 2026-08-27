@@ -1548,6 +1548,35 @@
     setTimeout(tick, 2800);
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     SESSION WATCHDOG
+     An account may only be signed in on a limited number of devices. When a
+     newer device pushes this one out, the server marks it revoked and this
+     check sends it back to the login screen. Also catches an account that
+     was disabled while it was open.
+     ══════════════════════════════════════════════════════════════ */
+  async function checkSession() {
+    var a = null;
+    try { a = JSON.parse(localStorage.getItem('appAuth') || 'null'); } catch(e) {}
+    if (!a || !a.u) return;
+    if (typeof CamboAPI === 'undefined' || !window.CamboDevice) return;
+    var r;
+    try {
+      r = await CamboAPI.post({ action: 'session_check', u: a.u, device_id: CamboDevice.id() });
+    } catch(e) { return; }                    /* offline — never sign out on a network blip */
+    if (!r || !r.ok || r.valid !== false) return;
+
+    try { localStorage.removeItem('appAuth'); localStorage.removeItem('user_photo'); } catch(e) {}
+    var why = r.reason === 'inactive'
+      ? t('គណនីរបស់អ្នកត្រូវបានបិទ។', 'Your account has been disabled.')
+      : t('អ្នកបានចាកចេញ ដោយសារមានការចូលប្រើពីឧបករណ៍ថ្មី។',
+          'You were signed out because this account signed in on another device.');
+    try { sessionStorage.setItem('signout_reason', why); } catch(e) {}
+    location.replace(getBase() + 'login.html?bumped=1');
+  }
+
+  window.appCheckSession = checkSession;
+
   document.addEventListener('DOMContentLoaded', function () {
     renderLayout();
     /* Apply cached brand immediately (no flash) */
@@ -1563,5 +1592,10 @@
     }
     /* Sync role permissions and page access from DB (non-blocking) */
     if (_pg !== 'login.html') setTimeout(function(){ window.appSyncPerms && window.appSyncPerms(); window.appSyncPageAccess && window.appSyncPageAccess(); window.appSyncBrand && window.appSyncBrand(); }, 500);
+    /* Watch for this device being pushed out by a newer sign-in */
+    if (_pg !== 'login.html' && _pg !== 'user.html') {
+      setTimeout(checkSession, 1500);
+      setInterval(checkSession, 30000);
+    }
   });
 })();
