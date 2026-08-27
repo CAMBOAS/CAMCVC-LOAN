@@ -3180,6 +3180,13 @@ body.apptb-on.apptb-tucked { padding-top: 0; }
   }
   body.apptb-on.apptb-mob .apptb-menu svg { width: 20px; height: 20px; }
 
+}
+
+/* Phones only. Tablets (700–979px) keep the desktop distribution — title on the left,
+   links centred, tools on the right — and just gain the menu button, because packing
+   everything against the left edge wastes most of an iPad's width. */
+@media (max-width: 699px) {
+  body.apptb-on.apptb-mob .apptb { padding: 0 6px; }
   body.apptb-on.apptb-mob .apptb .apptb-left,
   body.apptb-on.apptb-mob .apptb .apptb-clock,
   body.apptb-on.apptb-mob .apptb .apptb-user-nm { display: none; }
@@ -3193,6 +3200,13 @@ body.apptb-on.apptb-tucked { padding-top: 0; }
   body.apptb-on.apptb-mob .apptb-right { gap: 4px; }
   body.apptb-on.apptb-mob .apptb-search input { width: 96px; }
   body.apptb-on.apptb-mob .apptb-search input:focus { width: 128px; }
+}
+
+/* Tablet: the page subtitle is the first thing to go when width gets tight */
+@media (max-width: 979px) and (min-width: 700px) {
+  body.apptb-on.apptb-mob .apptb .apptb-sub { display: none; }
+  body.apptb-on.apptb-mob .apptb .apptb-mid { margin: 0 auto; }
+  body.apptb-on.apptb-mob .apptb .apptb-title { max-width: 180px; }
 }
 
 /* ================================================================
