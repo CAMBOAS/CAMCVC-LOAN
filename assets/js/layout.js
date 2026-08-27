@@ -21,6 +21,18 @@
         var b = { name: r.app_name||'', sub: r.app_sub||'', logoUrl: r.app_logo_url||'' };
         window.appSetBrand(b);
         window.appApplyBrand();
+        if (r.topbar) {
+          var _tbBefore = JSON.stringify(window.appGetTopbar());
+          window.appSetTopbar({
+            on:    r.topbar.on    === '' ? undefined : r.topbar.on,
+            mode:  r.topbar.mode  || undefined,
+            size:  r.topbar.size  || undefined,
+            style: r.topbar.style || undefined,
+            show:  r.topbar.show  === '' ? undefined : r.topbar.show,
+            links: r.topbar.links === '' ? undefined : r.topbar.links
+          });
+          if (JSON.stringify(window.appGetTopbar()) !== _tbBefore) window.appApplyTopbar();
+        }
       }
     } catch(e) {}
   };
@@ -59,6 +71,8 @@
       'repayment-tracker.html': { title: t('Repayment Tracker','Repayment Tracker'), subtitle: t('តាមដានការសងប្រាក់','Track loan repayments and paid status') },
       'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
       'journal.html':   { title: t('កំណត់ត្រា','Journal'), subtitle: t('ទម្លាប់ និងកំណត់ចំណាំផ្ទាល់ខ្លួន','Personal habits and notes') },
+      'reports.html':   { title: t('របាយការណ៍','Reports'), subtitle: t('សង្ខេប និងស្ថិតិ','Summaries and statistics') },
+      'my-profile.html':{ title: t('Profile','My Profile'), subtitle: t('គណនី និងចំណូលចិត្ត','Account and preferences') },
       'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },
     };
@@ -653,6 +667,259 @@
     btn.addEventListener('click', function() { showLogoutModal(); });
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     APP TOP BAR — slim, configurable (Settings › App Config)
+     ══════════════════════════════════════════════════════════════ */
+
+  /* Every page that can appear as a quick link: key → page, icon, perm, label */
+  var TB_PAGES = {
+    dash:  { page:'index.html',                    ic:'dashboard', perm:'dashboard',   kh:'Dashboard',   en:'Dashboard'    },
+    cust:  { page:'pages/customers.html',          ic:'customers', perm:'customers',   kh:'អតិថិជន',      en:'Customers'    },
+    add:   { page:'pages/add-customer.html',       ic:'profile',   perm:'customers',   kh:'បន្ថែមអតិថិជន', en:'Add Customer' },
+    loans: { page:'pages/loan-list.html',          ic:'loanlist',  perm:'loanlist',    kh:'បញ្ជីកម្ចី',     en:'Loan List'    },
+    rpt:   { page:'pages/reports.html',            ic:'report',    perm:'reports',     kh:'របាយការណ៍',    en:'Reports'      },
+    rep:   { page:'pages/repayment-tracker.html',  ic:'repayment', perm:'repayment',   kh:'ការសង',        en:'Repayment'    },
+    fb:    { page:'pages/fb-id-finder.html',       ic:'facebook',  perm:'fbid',        kh:'FB ID',        en:'FB ID Finder' },
+    act:   { page:'pages/activity-log.html',       ic:'activity',  perm:'activitylog', kh:'កំណត់ហេតុ',     en:'Activity Log' },
+    team:  { page:'pages/team.html',               ic:'users',     perm:'team',        kh:'ក្រុម',         en:'Team'         },
+    jr:    { page:'pages/journal.html',            ic:'journal',   perm:'journal',     kh:'កំណត់ត្រា',     en:'Journal'      },
+    set:   { page:'pages/settings.html',           ic:'settings',  perm:'__admin',     kh:'ការកំណត់',     en:'Settings'     },
+    prof:  { page:'pages/my-profile.html',         ic:'profile',   perm:'__all',       kh:'Profile',      en:'My Profile'   }
+  };
+  window.appTbPages = TB_PAGES;
+
+  var TB_MODULES = ['title','links','search','clock','theme','user','logout','mob'];
+  window.appTbModules = TB_MODULES;
+
+  var TB_DEFAULT = {
+    on:    1,
+    mode:  'always',                 /* always | auto (hide while scrolling down) */
+    size:  'md',                     /* sm | md | lg */
+    style: 'glass',                  /* glass | solid | accent */
+    show:  ['title','links','search','theme','user'],
+    links: ['dash','cust','loans','rep','team']
+  };
+  window.appTbDefault = TB_DEFAULT;
+
+  function tbNorm(raw) {
+    var c = {};
+    raw = raw || {};
+    c.on    = (raw.on === 0 || raw.on === '0' || raw.on === false) ? 0 : 1;
+    c.mode  = (raw.mode === 'auto') ? 'auto' : 'always';
+    c.size  = ['sm','md','lg'].indexOf(raw.size) !== -1 ? raw.size : 'md';
+    c.style = ['glass','solid','accent'].indexOf(raw.style) !== -1 ? raw.style : 'glass';
+    function list(v, fallback, valid) {
+      if (v === '-' || v === '') return [];
+      var a = Array.isArray(v) ? v : (typeof v === 'string' ? v.split(',') : null);
+      if (!a) return fallback.slice();
+      return a.map(function(x){ return String(x).trim(); })
+              .filter(function(x){ return valid.indexOf(x) !== -1; });
+    }
+    c.show  = list(raw.show,  TB_DEFAULT.show,  TB_MODULES);
+    c.links = list(raw.links, TB_DEFAULT.links, Object.keys(TB_PAGES));
+    return c;
+  }
+  window.appTbNormalize = tbNorm;
+
+  function getTbCfg() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem('appTopbar') || 'null'); } catch(e) {}
+    return tbNorm(raw || TB_DEFAULT);
+  }
+  window.appGetTopbar = getTbCfg;
+  window.appSetTopbar = function(c) {
+    try { localStorage.setItem('appTopbar', JSON.stringify(tbNorm(c))); } catch(e) {}
+  };
+
+  function tbHas(cfg, m) { return cfg.show.indexOf(m) !== -1; }
+
+  var tbIcons = {
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+  };
+
+  function tbAllowed(key) {
+    var d = TB_PAGES[key];
+    if (!d) return false;
+    if (d.perm === '__all')   return true;
+    if (d.perm === '__admin') return getAuthRole() === 'Admin';
+    if (d.perm === 'reports') return appCan('reports') && appCanPage('reports');
+    return appCanPage(d.perm);
+  }
+
+  /* Build the bar markup for a config (also used by the Settings live preview) */
+  function buildAppTopBar(cfg) {
+    cfg = cfg || getTbCfg();
+    var base = getBase();
+    var cur  = getCurrentPage();
+    var meta = (getPageMeta() || {})[cur] || { title: '', subtitle: '' };
+
+    var left = '';
+    if (tbHas(cfg, 'title')) {
+      left = '<div class="apptb-left">'
+           + '<div class="apptb-title">' + (meta.title || getBrand().name || 'CAMBO') + '</div>'
+           + (meta.subtitle ? '<div class="apptb-sub">' + meta.subtitle + '</div>' : '')
+           + '</div>';
+    }
+
+    var mid = '';
+    if (tbHas(cfg, 'links') && cfg.links.length) {
+      var items = cfg.links.filter(tbAllowed).map(function(k) {
+        var d = TB_PAGES[k];
+        var pageName = d.page.split('/').pop();
+        var active = (cur === pageName) ? ' apptb-nav-active' : '';
+        var label = t(d.kh, d.en);
+        return '<a class="apptb-nav' + active + '" href="' + base + d.page + '" data-tbkey="' + k + '">'
+             + (ic[d.ic] || '') + '<span class="apptb-tip">' + label + '</span></a>';
+      }).join('');
+      if (items) mid = '<div class="apptb-mid">' + items + '</div>';
+    }
+
+    var right = '';
+    if (tbHas(cfg, 'search')) {
+      right += '<form class="apptb-search" id="apptbSearchForm" autocomplete="off">' + tbIcons.search
+            +  '<input type="text" id="apptbSearchInput" placeholder="' + t('ស្វែងរកអ្នកខ្ចី…','Search borrower…') + '"></form>';
+    }
+    if (tbHas(cfg, 'clock')) {
+      right += '<div class="apptb-clock" id="apptbClock"></div>';
+    }
+    if (tbHas(cfg, 'theme')) {
+      right += '<button type="button" class="apptb-ico" id="apptbThemeBtn" title="' + t('ប្ដូររចនាបថ','Toggle theme') + '"></button>';
+    }
+    if (tbHas(cfg, 'user')) {
+      var a = null;
+      try { a = JSON.parse(localStorage.getItem('appAuth') || 'null'); } catch(e) {}
+      var nm  = (a && (a.name || a.u)) || 'User';
+      var ini = String(nm).charAt(0).toUpperCase();
+      var pic = a && a.photo;
+      var av  = pic
+        ? '<img class="apptb-user-av" src="' + pic + '" alt="" onerror="this.outerHTML=\'<div class=&quot;apptb-user-av&quot;>' + ini + '</div>\'">'
+        : '<div class="apptb-user-av">' + ini + '</div>';
+      right += '<a class="apptb-user" href="' + base + 'pages/my-profile.html">' + av
+            +  '<span class="apptb-user-nm">' + nm + '</span></a>';
+    }
+    if (tbHas(cfg, 'logout')) {
+      right += '<button type="button" class="apptb-ico apptb-ico-danger" id="apptbLogoutBtn" title="' + t('ចាកចេញ','Log out') + '">' + tbIcons.logout + '</button>';
+    }
+    if (right) right = '<div class="apptb-right">' + right + '</div>';
+
+    return '<div class="apptb-in">' + left + mid + right + '</div>';
+  }
+  window.appBuildTopbarHTML = buildAppTopBar;
+  window.appTopbarClass = function(cfg) {
+    cfg = cfg || getTbCfg();
+    return 'apptb apptb-' + cfg.size + ' apptb-' + cfg.style;
+  };
+
+  var _tbScrollBound = false, _tbLastY = 0, _tbLastTgt = null, _tbClockTimer = null;
+
+  /* Slide the bar away AND release the space it reserved, so nothing is left behind. */
+  function tbTuck(bar, hide) {
+    if (!bar) return;
+    bar.classList.toggle('apptb-off', !!hide);
+    document.body.classList.toggle('apptb-tucked', !!hide);
+  }
+
+  function applyAppTopBar() {
+    var cfg = getTbCfg();
+    var bar = document.getElementById('appTopBar');
+    var pg  = getCurrentPage();
+
+    if (!cfg.on || pg === 'login.html' || pg === 'user.html') {
+      if (bar) bar.remove();
+      document.body.classList.remove('apptb-on', 'apptb-mob', 'apptb-tucked');
+      document.body.removeAttribute('data-apptb-size');
+      if (_tbClockTimer) { clearInterval(_tbClockTimer); _tbClockTimer = null; }
+      return;
+    }
+
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'appTopBar';
+      document.body.appendChild(bar);
+    }
+    bar.className = window.appTopbarClass(cfg);
+    bar.innerHTML = buildAppTopBar(cfg);
+    document.body.classList.add('apptb-on');
+    document.body.classList.toggle('apptb-mob', tbHas(cfg, 'mob'));
+    document.body.setAttribute('data-apptb-size', cfg.size);
+
+    /* Theme button */
+    var th = document.getElementById('apptbThemeBtn');
+    if (th) {
+      var curTh = document.documentElement.getAttribute('data-theme') || 'light';
+      th.innerHTML = curTh === 'light' ? ic.moon : ic.sun;
+      th.addEventListener('click', function() {
+        var now = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        if (window._hlApplyTheme) window._hlApplyTheme(now);
+        else { document.documentElement.setAttribute('data-theme', now); localStorage.setItem('theme', now); }
+        th.innerHTML = now === 'light' ? ic.moon : ic.sun;
+      });
+    }
+
+    /* Logout */
+    var lo = document.getElementById('apptbLogoutBtn');
+    if (lo) lo.addEventListener('click', function() { showLogoutModal(); });
+
+    /* Search → Loan List filtered by ?q= */
+    var sf = document.getElementById('apptbSearchForm');
+    if (sf) sf.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var el = document.getElementById('apptbSearchInput');
+      var v  = (el && el.value ? el.value : '').trim();
+      if (!v) return;
+      location.href = getBase() + 'pages/loan-list.html?q=' + encodeURIComponent(v);
+    });
+
+    /* Clock */
+    if (_tbClockTimer) { clearInterval(_tbClockTimer); _tbClockTimer = null; }
+    if (document.getElementById('apptbClock')) {
+      var paint = function() {
+        var el = document.getElementById('apptbClock');
+        if (!el) { clearInterval(_tbClockTimer); _tbClockTimer = null; return; }
+        var d = new Date();
+        var hh = d.getHours(), mm = String(d.getMinutes());
+        if (mm.length < 2) mm = '0' + mm;
+        var ap = hh >= 12 ? 'PM' : 'AM';
+        var h12 = hh % 12 || 12;
+        el.innerHTML = '<b>' + h12 + ':' + mm + '</b> ' + ap
+                     + ' · ' + d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      };
+      paint();
+      _tbClockTimer = setInterval(paint, 20000);
+    }
+
+    /* Auto-hide while scrolling down.
+       Most pages here scroll an inner panel (#stWrap, .lr-tbl-wrap, …) rather than the window,
+       so listen in the capture phase — `scroll` does not bubble — and accept any tall scroller
+       outside the sidebar. */
+    if (!_tbScrollBound) {
+      _tbScrollBound = true;
+      document.addEventListener('scroll', function(e) {
+        var b = document.getElementById('appTopBar');
+        if (!b) return;
+        if (getTbCfg().mode !== 'auto') { tbTuck(b, false); return; }
+
+        var tgt = e.target, y;
+        if (!tgt || tgt === document || tgt === document.documentElement || tgt === document.body) {
+          tgt = null;
+          y = window.scrollY || document.documentElement.scrollTop || 0;
+        } else {
+          if (tgt.clientHeight < 240) return;                    /* small list / dropdown */
+          if (tgt.closest && tgt.closest('.sidebar, #appTopBar')) return;
+          y = tgt.scrollTop;
+        }
+        if (tgt !== _tbLastTgt) { _tbLastTgt = tgt; _tbLastY = y; return; }
+
+        if (y > _tbLastY + 6 && y > 80) tbTuck(b, true);
+        else if (y < _tbLastY - 6)      tbTuck(b, false);
+        _tbLastY = y;
+      }, { passive: true, capture: true });
+    }
+    if (cfg.mode !== 'auto') tbTuck(bar, false);
+  }
+  window.appApplyTopbar = applyAppTopBar;
+
   function renderLayout() {
     var sidebar = document.getElementById('sharedSidebar');
     var header  = document.getElementById('sharedHeader');
@@ -671,6 +938,9 @@
     var tmp = document.createElement('div');
     tmp.innerHTML = buildBottomNav();
     document.body.appendChild(tmp.firstElementChild);
+
+    /* Configurable app top bar */
+    applyAppTopBar();
   }
 
   function applyLogoAnimation() {

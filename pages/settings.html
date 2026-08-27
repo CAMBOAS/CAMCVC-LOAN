@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
-  <link rel="stylesheet" href="../assets/css/main.css?v=21">
+  <link rel="stylesheet" href="../assets/css/main.css?v=24">
   <style>
     .orb { display:none !important }
     .background { background:#0c0e1a !important }
@@ -269,6 +269,58 @@
     .st-cs-badge { display:inline-block; margin-top:14px; padding:4px 12px; border-radius:20px; background:rgba(124,92,255,.12); color:#a78bfa; font-size:11.5px; font-weight:700 }
 
     /* ── Notification settings ── */
+    /* ── App Config: two-column layout ── */
+    .ac-wrap { display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap }
+    .ac-col-left  { flex:1 1 360px; min-width:290px; max-width:540px }
+    .ac-col-right { flex:1 1 380px; min-width:290px }
+    @media (max-width:900px) {
+      .ac-col-left, .ac-col-right { max-width:none; flex:1 1 100%; width:100% }
+    }
+
+    /* ── Top Bar config controls ── */
+    .tb-lbl { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px }
+    .tb-hint { font-weight:500; text-transform:none; letter-spacing:0; opacity:.7; margin-left:6px }
+    #tbBody.tb-dim { opacity:.4; pointer-events:none; filter:saturate(.4) }
+
+    .tb-seg { display:flex; gap:0; border:1px solid rgba(148,163,184,.16); border-radius:10px; overflow:hidden; background:rgba(148,163,184,.06) }
+    .tb-seg button {
+      flex:1; padding:7px 8px; border:none; background:transparent; cursor:pointer;
+      font-family:inherit; font-size:11.5px; font-weight:700; color:var(--muted); transition:.15s; white-space:nowrap;
+    }
+    .tb-seg button + button { border-left:1px solid rgba(148,163,184,.14) }
+    .tb-seg button:hover { color:var(--text); background:rgba(148,163,184,.08) }
+    .tb-seg button.tb-seg-on { background:linear-gradient(135deg,rgba(6,182,212,.22),rgba(124,92,255,.22)); color:var(--text) }
+
+    .tb-chips { display:flex; flex-wrap:wrap; gap:6px }
+    .tb-chip {
+      display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:999px;
+      border:1px solid rgba(148,163,184,.18); background:rgba(148,163,184,.07);
+      color:var(--muted); font-size:11.5px; font-weight:700; font-family:inherit; cursor:pointer; transition:.15s;
+    }
+    .tb-chip:hover { border-color:rgba(148,163,184,.32); color:var(--text) }
+    .tb-chip svg { width:12px; height:12px; flex-shrink:0 }
+    .tb-chip-on {
+      border-color:rgba(6,182,212,.45); background:rgba(6,182,212,.12); color:var(--text);
+    }
+    .tb-chip-dot { width:6px; height:6px; border-radius:50%; background:rgba(148,163,184,.4); flex-shrink:0 }
+    .tb-chip-on .tb-chip-dot { background:linear-gradient(135deg,#06b6d4,#7c5cff) }
+
+    /* Live preview frame */
+    .tbp-frame {
+      border:1px solid rgba(148,163,184,.16); border-radius:12px; overflow:hidden;
+      background:rgba(148,163,184,.05);
+    }
+    .tbp-scale { width:700px; transform-origin:0 0 }
+    .tbp-bar {
+      position:relative !important; top:auto !important; left:auto !important; right:auto !important;
+      width:100%; z-index:1 !important; transform:none !important; opacity:1 !important;
+    }
+    .tbp-body { padding:12px 14px; display:flex; flex-direction:column; gap:7px }
+    .tbp-line { height:7px; border-radius:4px; background:rgba(148,163,184,.16) }
+    .tbp-frame .apptb-search input:focus { width:168px }
+    .tbp-frame .apptb-nav { pointer-events:none }
+    .tbp-frame .apptb-user, .tbp-frame .apptb-ico, .tbp-frame .apptb-search { pointer-events:none }
+
     .nt-wrap { display:flex; gap:14px; align-items:flex-start }
     .nt-col-left { flex:1; display:flex; flex-direction:column; gap:12px; min-width:300px; max-width:600px }
     .nt-col-right { width:290px; flex-shrink:0; display:flex; flex-direction:column; gap:12px }
@@ -536,9 +588,11 @@
       <!-- ══ Panel 2: App Config ══ -->
       <div class="st-panel" id="stPanel2">
         <div class="st-panel-toolbar">
-          <div class="st-panel-title">Customize the app name and logo shown in the sidebar</div>
+          <div class="st-panel-title">Customize the app name, logo and top bar</div>
         </div>
 
+        <div class="ac-wrap">
+        <div class="ac-col-left">
         <div class="glass-card" style="padding:0;overflow:hidden">
           <div style="padding:16px 18px 14px;border-bottom:1px solid rgba(148,163,184,.08);display:flex;align-items:center;gap:10px">
             <div style="width:32px;height:32px;border-radius:9px;background:rgba(6,182,212,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -641,6 +695,96 @@
 
           </div>
         </div><!-- /glass-card -->
+        </div><!-- /ac-col-left -->
+
+        <div class="ac-col-right">
+        <div class="glass-card" style="padding:0;overflow:hidden">
+          <div style="padding:16px 18px 14px;border-bottom:1px solid rgba(148,163,184,.08);display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:9px;background:rgba(124,92,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><circle cx="6.5" cy="6.5" r=".6" fill="#a78bfa"/><circle cx="9" cy="6.5" r=".6" fill="#a78bfa"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:800;color:var(--text)">Top Bar</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">A slim bar above the content — works alongside the sidebar</div>
+            </div>
+            <label class="nt-toggle" title="Show / hide the top bar">
+              <input type="checkbox" id="tbOn" onchange="tbSet('on', this.checked ? 1 : 0)">
+              <span class="nt-slider"></span>
+            </label>
+          </div>
+
+          <div id="tbBody" style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:15px">
+
+            <!-- Live preview -->
+            <div>
+              <div class="tb-lbl">Live preview</div>
+              <div class="tbp-frame" id="tbPrevFrame">
+                <div class="tbp-scale" id="tbPrevScale">
+                  <div id="tbPreview" class="apptb apptb-md apptb-glass tbp-bar"></div>
+                  <div class="tbp-body">
+                    <span class="tbp-line" style="width:52%"></span>
+                    <span class="tbp-line" style="width:78%"></span>
+                    <span class="tbp-line" style="width:34%"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Behaviour -->
+            <div>
+              <div class="tb-lbl">Behaviour</div>
+              <div class="tb-seg" id="tbModeSeg">
+                <button type="button" data-v="always" onclick="tbSet('mode','always')">Always visible</button>
+                <button type="button" data-v="auto"   onclick="tbSet('mode','auto')">Hide on scroll</button>
+              </div>
+            </div>
+
+            <!-- Height + Style -->
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:150px">
+                <div class="tb-lbl">Height</div>
+                <div class="tb-seg" id="tbSizeSeg">
+                  <button type="button" data-v="sm" onclick="tbSet('size','sm')">Slim</button>
+                  <button type="button" data-v="md" onclick="tbSet('size','md')">Normal</button>
+                  <button type="button" data-v="lg" onclick="tbSet('size','lg')">Tall</button>
+                </div>
+              </div>
+              <div style="flex:1;min-width:150px">
+                <div class="tb-lbl">Style</div>
+                <div class="tb-seg" id="tbStyleSeg">
+                  <button type="button" data-v="glass"  onclick="tbSet('style','glass')">Glass</button>
+                  <button type="button" data-v="solid"  onclick="tbSet('style','solid')">Solid</button>
+                  <button type="button" data-v="accent" onclick="tbSet('style','accent')">Accent</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Elements -->
+            <div>
+              <div class="tb-lbl">Elements <span class="tb-hint">tap to show / hide</span></div>
+              <div class="tb-chips" id="tbModuleChips"></div>
+            </div>
+
+            <!-- Quick links -->
+            <div>
+              <div class="tb-lbl">Quick links <span class="tb-hint" id="tbLinkCount"></span></div>
+              <div class="tb-chips" id="tbLinkChips"></div>
+            </div>
+
+            <!-- Save row -->
+            <div style="display:flex;align-items:center;gap:12px;padding-top:2px;flex-wrap:wrap">
+              <button onclick="saveTopbar()" id="tbSaveBtn" style="display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:11px;border:none;background:linear-gradient(135deg,#06b6d4,#7c5cff);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(6,182,212,.28);transition:.15s">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Top Bar
+              </button>
+              <button onclick="tbReset()" type="button" style="padding:10px 16px;border-radius:11px;border:1px solid rgba(148,163,184,.18);background:transparent;color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
+              <span id="tbStatus" style="font-size:12px;color:var(--muted)"></span>
+            </div>
+
+          </div>
+        </div><!-- /glass-card -->
+        </div><!-- /ac-col-right -->
+        </div><!-- /ac-wrap -->
       </div><!-- /Panel 2 -->
 
       <!-- ══ Panel 3: Notifications ══ -->
@@ -1008,7 +1152,7 @@
 
 <script src="../assets/js/api.js"></script>
 <script src="../assets/js/auth.js"></script>
-<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/layout.js?v=23"></script>
 <script>
 'use strict';
 
@@ -2009,6 +2153,8 @@ function switchTab(panelIdx, btn) {
   /* The org-chart's SVG connector lines are measured from real DOM positions — while Panel 5
      is hidden (display:none) those measure as zero, so redraw once it's actually visible. */
   if (panelIdx === 5 && typeof drawOrgLines === 'function') requestAnimationFrame(drawOrgLines);
+  /* Same reason: the Top Bar preview is scaled from its measured width. */
+  if (panelIdx === 2 && typeof tbFitPreview === 'function') requestAnimationFrame(tbFitPreview);
 }
 
 /* ── Tab reorder (per-user, localStorage) ── */
@@ -2472,6 +2618,7 @@ async function loadBrand() {
       document.getElementById('brandLogoPrompt').style.display = 'none';
     }
     _brandPreviewUpdate();
+    tbLoadCfg(r);
   } catch(e) {}
 }
 
@@ -2498,6 +2645,181 @@ async function saveBrand() {
         logoUrl: (document.getElementById('brandLogoUrl').value || '').trim(),
       });
       if (window.appApplyBrand) window.appApplyBrand();
+    } else {
+      status.textContent = r && r.message ? r.message : 'Error';
+      status.style.color = '#f87171';
+    }
+  } catch(e) {
+    status.textContent = 'Error: ' + e.message;
+    status.style.color = '#f87171';
+  }
+  btn.disabled = false;
+  setTimeout(function(){ status.textContent = ''; }, 3000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOP BAR CONFIG (App Config panel)
+   ══════════════════════════════════════════════════════════════ */
+var _tbCfg = null;
+
+var TB_MODULE_META = {
+  title:  { label:'Page title',   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="13" x2="14" y2="13"/></svg>' },
+  links:  { label:'Quick links',  ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="9" width="4" height="6" rx="1"/><rect x="10" y="9" width="4" height="6" rx="1"/><rect x="17" y="9" width="4" height="6" rx="1"/></svg>' },
+  search: { label:'Search box',   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' },
+  clock:  { label:'Clock & date', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>' },
+  theme:  { label:'Theme button', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' },
+  user:   { label:'User chip',    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>' },
+  logout: { label:'Logout button',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' },
+  mob:    { label:'Show on phone',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>' }
+};
+
+function tbCfgSafe() {
+  if (!_tbCfg) {
+    _tbCfg = (window.appGetTopbar ? window.appGetTopbar()
+                                  : { on:1, mode:'always', size:'md', style:'glass',
+                                      show:['title','links','search','theme','user'],
+                                      links:['dash','cust','loans','rep','team'] });
+  }
+  return _tbCfg;
+}
+
+function tbSet(key, val) {
+  var c = tbCfgSafe();
+  c[key] = val;
+  tbPaint();
+}
+
+function tbToggleIn(listKey, key) {
+  var c = tbCfgSafe();
+  var arr = c[listKey] || [];
+  var i = arr.indexOf(key);
+  if (i === -1) arr.push(key); else arr.splice(i, 1);
+  c[listKey] = arr;
+  tbPaint();
+}
+
+function tbRenderChips() {
+  var c = tbCfgSafe();
+
+  var mods = (window.appTbModules || Object.keys(TB_MODULE_META));
+  var mh = mods.map(function(m) {
+    var meta = TB_MODULE_META[m] || { label:m, ic:'' };
+    var on = c.show.indexOf(m) !== -1;
+    return '<button type="button" class="tb-chip' + (on ? ' tb-chip-on' : '') + '" '
+         + 'onclick="tbToggleIn(\'show\',\'' + m + '\')">' + meta.ic
+         + '<span>' + meta.label + '</span></button>';
+  }).join('');
+  document.getElementById('tbModuleChips').innerHTML = mh;
+
+  var pages = window.appTbPages || {};
+  var lh = Object.keys(pages).map(function(k) {
+    var on = c.links.indexOf(k) !== -1;
+    return '<button type="button" class="tb-chip' + (on ? ' tb-chip-on' : '') + '" '
+         + 'onclick="tbToggleIn(\'links\',\'' + k + '\')">'
+         + '<span class="tb-chip-dot"></span><span>' + pages[k].en + '</span></button>';
+  }).join('');
+  document.getElementById('tbLinkChips').innerHTML = lh;
+  document.getElementById('tbLinkCount').textContent = c.links.length + ' selected';
+}
+
+function tbPaintSeg(id, val) {
+  var wrap = document.getElementById(id);
+  if (!wrap) return;
+  wrap.querySelectorAll('button').forEach(function(b) {
+    b.classList.toggle('tb-seg-on', b.getAttribute('data-v') === val);
+  });
+}
+
+function tbPaint() {
+  var c = tbCfgSafe();
+  document.getElementById('tbOn').checked = !!c.on;
+  document.getElementById('tbBody').classList.toggle('tb-dim', !c.on);
+  tbPaintSeg('tbModeSeg',  c.mode);
+  tbPaintSeg('tbSizeSeg',  c.size);
+  tbPaintSeg('tbStyleSeg', c.style);
+  tbRenderChips();
+
+  var pv = document.getElementById('tbPreview');
+  if (pv && window.appBuildTopbarHTML) {
+    pv.className = (window.appTopbarClass ? window.appTopbarClass(c)
+                                          : 'apptb apptb-' + c.size + ' apptb-' + c.style) + ' tbp-bar';
+    pv.innerHTML = window.appBuildTopbarHTML(c);
+    var tbtn = pv.querySelector('#apptbThemeBtn');
+    if (tbtn) tbtn.innerHTML = (document.documentElement.getAttribute('data-theme') === 'light')
+      ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>';
+    var ck = pv.querySelector('#apptbClock');
+    if (ck) {
+      var d = new Date(), hh = d.getHours(), mm = String(d.getMinutes());
+      if (mm.length < 2) mm = '0' + mm;
+      ck.innerHTML = '<b>' + (hh % 12 || 12) + ':' + mm + '</b> ' + (hh >= 12 ? 'PM' : 'AM')
+                   + ' · ' + d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+    }
+    tbFitPreview();
+  }
+}
+
+function tbFitPreview() {
+  var frame = document.getElementById('tbPrevFrame');
+  var sc    = document.getElementById('tbPrevScale');
+  if (!frame || !sc) return;
+  sc.style.transform = 'none';
+  var avail = frame.clientWidth;
+  if (!avail) return;                       /* panel hidden — retry when shown */
+  var s = Math.min(1, avail / 700);
+  sc.style.transform = 'scale(' + s + ')';
+  frame.style.height = Math.ceil(sc.offsetHeight * s) + 'px';
+}
+window.addEventListener('resize', function(){ tbFitPreview(); });
+
+function tbReset() {
+  var d = window.appTbDefault || { on:1, mode:'always', size:'md', style:'glass',
+    show:['title','links','search','theme','user'], links:['dash','cust','loans','rep','team'] };
+  _tbCfg = { on:d.on, mode:d.mode, size:d.size, style:d.style, show:d.show.slice(), links:d.links.slice() };
+  tbPaint();
+}
+
+function tbLoadCfg(r) {
+  if (r && r.topbar && (r.topbar.on !== '' || r.topbar.mode)) {
+    var raw = {
+      on:    r.topbar.on    === '' ? 1 : r.topbar.on,
+      mode:  r.topbar.mode  || undefined,
+      size:  r.topbar.size  || undefined,
+      style: r.topbar.style || undefined,
+      show:  r.topbar.show  === '' ? undefined : r.topbar.show,
+      links: r.topbar.links === '' ? undefined : r.topbar.links
+    };
+    _tbCfg = window.appTbNormalize ? window.appTbNormalize(raw) : raw;
+  } else {
+    _tbCfg = window.appGetTopbar ? window.appGetTopbar() : null;
+  }
+  tbPaint();
+}
+
+async function saveTopbar() {
+  var c = tbCfgSafe();
+  var btn = document.getElementById('tbSaveBtn');
+  var status = document.getElementById('tbStatus');
+  btn.disabled = true;
+  status.textContent = 'Saving…';
+  status.style.color = 'var(--muted)';
+  try {
+    var r = await CamboAPI.post({
+      action: 'topbar_save',
+      topbar: {
+        on:    c.on ? 1 : 0,
+        mode:  c.mode,
+        size:  c.size,
+        style: c.style,
+        show:  c.show.join(','),
+        links: c.links.join(',')
+      }
+    });
+    if (r && r.ok) {
+      status.textContent = 'Saved!';
+      status.style.color = '#4ade80';
+      if (window.appSetTopbar)   window.appSetTopbar(c);
+      if (window.appApplyTopbar) window.appApplyTopbar();
     } else {
       status.textContent = r && r.message ? r.message : 'Error';
       status.style.color = '#f87171';

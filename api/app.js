@@ -740,6 +740,14 @@ async function handler(req, res) {
         app_name:     one('app_name'),
         app_sub:      one('app_sub'),
         app_logo_url: one('app_logo_url'),
+        topbar: {
+          on:    one('tb_on')    || '',
+          mode:  one('tb_mode')  || '',
+          size:  one('tb_size')  || '',
+          style: one('tb_style') || '',
+          show:  one('tb_show')  || '',
+          links: one('tb_links') || '',
+        },
       });
     }
 
@@ -751,6 +759,25 @@ async function handler(req, res) {
         await db().query('DELETE FROM settings WHERE type=?', [f]);
         const val = String(body[f]||'').trim();
         if (val) await db().query('INSERT INTO settings (type,value) VALUES (?,?)', [f, val]);
+      }
+      return res.json({ ok:true });
+    }
+
+    /* ── Save Top Bar config (app-wide, Admin only) ── */
+    if (action === 'topbar_save') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const tb = body.topbar || {};
+      const fields = {
+        tb_on:    String(tb.on    === 0 || tb.on === '0' || tb.on === false ? '0' : '1'),
+        tb_mode:  String(tb.mode  || 'always').slice(0,20),
+        tb_size:  String(tb.size  || 'md').slice(0,20),
+        tb_style: String(tb.style || 'glass').slice(0,20),
+        tb_show:  (String(tb.show  || '').trim() || '-').slice(0,180),
+        tb_links: (String(tb.links || '').trim() || '-').slice(0,180),
+      };
+      for (const k of Object.keys(fields)) {
+        await db().query('DELETE FROM settings WHERE type=?', [k]);
+        await db().query('INSERT INTO settings (type,value) VALUES (?,?)', [k, fields[k]]);
       }
       return res.json({ ok:true });
     }
