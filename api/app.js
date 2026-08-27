@@ -1216,6 +1216,64 @@ async function handler(req, res) {
       return res.json({ ok:true, counts, unread });
     }
 
+    /* ── Conversation list — one row per person, newest conversation first ── */
+    if (action === 'msg_threads') {
+      await ensureMessagesTable();
+      await ensureUserPhotoCol();
+      const [peers] = await db().query(
+        `SELECT CASE WHEN sender=? THEN recipient ELSE sender END AS peer, MAX(id) AS last_id
+         FROM messages
+         WHERE sender=? OR recipient=?
+         GROUP BY peer
+         ORDER BY last_id DESC
+         LIMIT 40`,
+        [_bu, _bu, _bu]
+      );
+      if (!peers.length) return res.json({ ok:true, threads: [] });
+
+      const ids = peers.map(p => p.last_id);
+      const [lastRows] = await db().query(
+        `SELECT id, sender, body, image_url, created_at FROM messages WHERE id IN (${ids.map(()=>'?').join(',')})`,
+        ids
+      );
+      const byId = {};
+      lastRows.forEach(m => { byId[m.id] = m; });
+
+      const names = peers.map(p => p.peer);
+      const [userRows] = await db().query(
+        `SELECT username, COALESCE(display_name, username) AS display_name,
+                COALESCE(photo_url, '') AS photo_url, last_seen
+         FROM users WHERE username IN (${names.map(()=>'?').join(',')})`,
+        names
+      );
+      const byUser = {};
+      userRows.forEach(u => { byUser[u.username] = u; });
+
+      const [unRows] = await db().query(
+        'SELECT sender, COUNT(*) AS cnt FROM messages WHERE recipient=? AND is_read=0 GROUP BY sender',
+        [_bu]
+      );
+      const unread = {};
+      unRows.forEach(r => { unread[r.sender] = Number(r.cnt); });
+
+      const threads = peers.map(p => {
+        const m = byId[p.last_id] || {};
+        const u = byUser[p.peer]  || {};
+        return {
+          peer:         p.peer,
+          display_name: u.display_name || p.peer,
+          photo_url:    u.photo_url    || '',
+          last_seen:    u.last_seen    || null,
+          body:         m.body      || '',
+          image_url:    m.image_url || '',
+          from_me:      m.sender === _bu ? 1 : 0,
+          created_at:   m.created_at,
+          unread:       unread[p.peer] || 0,
+        };
+      });
+      return res.json({ ok:true, threads });
+    }
+
     /* ── Team list (scoped: Admin sees all; Sub Admin sees self + users they created; everyone else sees only self) ── */
     if (action === 'team_list') {
       await ensureUserPhotoCol();

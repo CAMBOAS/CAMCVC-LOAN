@@ -713,7 +713,7 @@
   };
   window.appTbPages = TB_PAGES;
 
-  var TB_MODULES = ['title','links','search','clock','theme','user','logout','mob'];
+  var TB_MODULES = ['title','links','search','chat','clock','theme','user','logout','mob'];
   window.appTbModules = TB_MODULES;
 
   var TB_DEFAULT = {
@@ -721,7 +721,7 @@
     mode:  'always',                 /* always | auto (hide while scrolling down) */
     size:  'md',                     /* sm | md | lg */
     style: 'glass',                  /* glass | solid | accent */
-    show:  ['title','links','search','theme','user'],
+    show:  ['title','links','search','chat','theme','user'],
     links: ['dash','cust','loans','rep','team']
   };
   window.appTbDefault = TB_DEFAULT;
@@ -760,7 +760,8 @@
 
   var tbIcons = {
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
-    logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+    logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+    chat:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.1 9.1 0 0 1-3.3-.6L3 21l1.8-4.6A8.2 8.2 0 0 1 3.6 11.5 8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z"/></svg>'
   };
 
   function tbAllowed(key) {
@@ -770,6 +771,259 @@
     if (d.perm === '__admin') return getAuthRole() === 'Admin';
     if (d.perm === 'reports') return appCan('reports') && appCanPage('reports');
     return appCanPage(d.perm);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     TOP BAR CHAT — icon + Messenger-style dropdown of conversations
+     ══════════════════════════════════════════════════════════════ */
+  var _tbChatThreads = null;   /* last loaded conversation list */
+  var _tbChatTeam    = null;   /* team_list cache, for starting a new chat */
+  var _tbChatCounts  = {};     /* unread per peer, kept fresh by chat-global's poll */
+
+  function tbChatEsc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* messages store UTC without a suffix — same normalisation chat-global uses */
+  function tbChatMs(dt) {
+    if (!dt) return NaN;
+    var s = String(dt).trim().replace(' ', 'T');
+    if (!/Z$|[+-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+    var ms = new Date(s).getTime();
+    return isNaN(ms) ? NaN : ms;
+  }
+
+  function tbChatAgo(dt) {
+    var ms = tbChatMs(dt);
+    if (isNaN(ms)) return '';
+    var mins = Math.floor((Date.now() - ms) / 60000);
+    if (mins < 1)    return 'now';
+    if (mins < 60)   return mins + 'm';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24)    return hrs + 'h';
+    var days = Math.floor(hrs / 24);
+    if (days < 7)    return days + 'd';
+    return new Date(ms).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  }
+
+  function tbChatOnline(dt) {
+    var ms = tbChatMs(dt);
+    return !isNaN(ms) && (Date.now() - ms) < 10 * 60 * 1000;
+  }
+
+  function tbChatAvatar(name, photo, online) {
+    var ini = String(name || '?').charAt(0).toUpperCase();
+    return '<span class="apptb-cav' + (online ? ' is-on' : '') + '">'
+         + (photo ? '<img src="' + tbChatEsc(photo) + '" alt="">' : tbChatEsc(ini))
+         + '</span>';
+  }
+
+  function tbChatPreview(t) {
+    if (t.body)      return (t.from_me ? 'You: ' : '') + t.body;
+    if (t.image_url) return (t.from_me ? 'You: ' : '') + '📷 Photo';
+    return '';
+  }
+
+  function tbChatBadgeTotal() {
+    var n = 0;
+    Object.keys(_tbChatCounts).forEach(function(k){ n += Number(_tbChatCounts[k]) || 0; });
+    return n;
+  }
+
+  function tbChatPaintBadge() {
+    var b = document.getElementById('apptbChatBadge');
+    if (!b) return;
+    var n = tbChatBadgeTotal();
+    b.textContent = n > 99 ? '99+' : String(n);
+    b.hidden = n === 0;
+    var btn = document.getElementById('apptbChatBtn');
+    if (btn) btn.classList.toggle('has-unread', n > 0);
+  }
+
+  function tbChatRowHTML(t, isNew) {
+    var online = tbChatOnline(t.last_seen);
+    var un     = Number(t.unread) || 0;
+    var prev   = tbChatPreview(t);
+    return '<button type="button" class="apptb-crow' + (un ? ' is-unread' : '') + '"'
+         + ' data-peer="'  + tbChatEsc(t.peer) + '"'
+         + ' data-name="'  + tbChatEsc(t.display_name) + '"'
+         + ' data-photo="' + tbChatEsc(t.photo_url) + '"'
+         + ' data-online="' + (online ? '1' : '0') + '">'
+         + tbChatAvatar(t.display_name, t.photo_url, online)
+         + '<span class="apptb-ctxt">'
+         +   '<span class="apptb-cname">' + tbChatEsc(t.display_name) + '</span>'
+         +   '<span class="apptb-cprev">' + (isNew ? '<i>Start a new chat</i>' : tbChatEsc(prev)) + '</span>'
+         + '</span>'
+         + '<span class="apptb-cmeta">'
+         +   '<span class="apptb-ctime">' + (isNew ? '' : tbChatEsc(tbChatAgo(t.created_at))) + '</span>'
+         +   (un ? '<span class="apptb-cpill">' + (un > 9 ? '9+' : un) + '</span>' : '')
+         + '</span>'
+         + '</button>';
+  }
+
+  function tbChatRender(query) {
+    var list = document.getElementById('apptbChatList');
+    if (!list) return;
+    query = String(query || '').trim().toLowerCase();
+
+    if (_tbChatThreads === null) {
+      list.innerHTML = '<div class="apptb-cempty">' + t('កំពុងផ្ទុក…','Loading…') + '</div>';
+      return;
+    }
+
+    var threads = _tbChatThreads.map(function(t2) {
+      var c = _tbChatCounts[t2.peer];
+      return c === undefined ? t2 : Object.assign({}, t2, { unread: c });
+    });
+    if (query) {
+      threads = threads.filter(function(t2) {
+        return (t2.display_name || '').toLowerCase().indexOf(query) !== -1
+            || (t2.peer || '').toLowerCase().indexOf(query) !== -1;
+      });
+    }
+
+    var html = threads.map(function(t2){ return tbChatRowHTML(t2, false); }).join('');
+
+    /* While searching, offer teammates you have never messaged yet */
+    if (query && Array.isArray(_tbChatTeam)) {
+      var known = {};
+      (_tbChatThreads || []).forEach(function(t2){ known[t2.peer] = 1; });
+      var me = (function(){ try { return (JSON.parse(localStorage.getItem('appAuth')||'null')||{}).u || ''; } catch(e) { return ''; } })();
+      var fresh = _tbChatTeam.filter(function(u) {
+        if (known[u.username] || u.username === me) return false;
+        var nm = (u.display_name || u.username || '').toLowerCase();
+        return nm.indexOf(query) !== -1 || String(u.username).toLowerCase().indexOf(query) !== -1;
+      }).slice(0, 12);
+      if (fresh.length) {
+        html += '<div class="apptb-csep">' + t('សមាជិកផ្សេងទៀត','Other people') + '</div>'
+              + fresh.map(function(u) {
+                  return tbChatRowHTML({
+                    peer: u.username, display_name: u.display_name || u.username,
+                    photo_url: u.photo_url || '', last_seen: u.last_seen,
+                    body: '', image_url: '', from_me: 0, created_at: null, unread: 0
+                  }, true);
+                }).join('');
+      }
+    }
+
+    list.innerHTML = html || '<div class="apptb-cempty">'
+      + (query ? t('រកមិនឃើញ','No matches') : t('មិនទាន់មានការឆាតនៅឡើយទេ','No conversations yet'))
+      + '</div>';
+  }
+
+  async function tbChatLoad() {
+    var ok = false;
+    try {
+      if (typeof CamboAPI !== 'undefined') {
+        var r = await CamboAPI.post({ action: 'msg_threads' });
+        if (r && r.ok) { _tbChatThreads = r.threads || []; ok = true; }
+      }
+    } catch(e) {}
+    /* Never leave the list stuck on "Loading…" — show the empty state instead. */
+    if (!ok && _tbChatThreads === null) _tbChatThreads = [];
+    var q = (document.getElementById('apptbChatSearch') || {}).value || '';
+    tbChatRender(q);
+  }
+
+  async function tbChatLoadTeam() {
+    if (_tbChatTeam !== null) return;
+    _tbChatTeam = [];
+    try {
+      if (typeof CamboAPI === 'undefined') return;
+      var r = await CamboAPI.post({ action: 'team_list' });
+      if (r && r.ok) _tbChatTeam = r.users || r.team || [];
+    } catch(e) {}
+  }
+
+  function tbChatClose() {
+    var pop = document.getElementById('apptbChatPop');
+    if (pop) pop.remove();
+    var btn = document.getElementById('apptbChatBtn');
+    if (btn) btn.classList.remove('is-open');
+    document.removeEventListener('mousedown', tbChatOutside, true);
+  }
+
+  function tbChatOutside(e) {
+    var pop = document.getElementById('apptbChatPop');
+    var btn = document.getElementById('apptbChatBtn');
+    if (!pop) return;
+    if (pop.contains(e.target) || (btn && btn.contains(e.target))) return;
+    tbChatClose();
+  }
+
+  function tbChatPosition(pop, btn) {
+    var r = btn.getBoundingClientRect();
+    var w = pop.offsetWidth || 320;
+    var left = Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8);
+    pop.style.left = left + 'px';
+    pop.style.top  = (r.bottom + 8) + 'px';
+  }
+
+  function tbChatOpen() {
+    var btn = document.getElementById('apptbChatBtn');
+    if (!btn) return;
+    if (document.getElementById('apptbChatPop')) { tbChatClose(); return; }
+
+    var pop = document.createElement('div');
+    pop.id = 'apptbChatPop';
+    pop.className = 'apptb-chatpop';
+    pop.innerHTML =
+        '<div class="apptb-chatpop-hd">' + t('ការឆាត','Chats') + '</div>'
+      + '<div class="apptb-chatpop-search">'
+      +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      +   '<input type="text" id="apptbChatSearch" autocomplete="off" placeholder="' + t('ស្វែងរកឈ្មោះ…','Search people…') + '">'
+      + '</div>'
+      + '<div class="apptb-chatpop-list" id="apptbChatList"></div>';
+    document.body.appendChild(pop);
+    btn.classList.add('is-open');
+    tbChatPosition(pop, btn);
+    tbChatRender('');
+    tbChatLoad();
+
+    pop.addEventListener('click', function(e) {
+      var row = e.target.closest && e.target.closest('.apptb-crow');
+      if (!row) return;
+      var peer = row.getAttribute('data-peer');
+      tbChatClose();
+      if (window.openGlobalChat) {
+        window.openGlobalChat(peer, row.getAttribute('data-name'),
+                              row.getAttribute('data-photo'),
+                              row.getAttribute('data-online') === '1');
+      }
+      delete _tbChatCounts[peer];
+      tbChatPaintBadge();
+    });
+
+    var si = document.getElementById('apptbChatSearch');
+    if (si) {
+      si.addEventListener('input', function() {
+        if (si.value.trim()) tbChatLoadTeam().then(function(){ tbChatRender(si.value); });
+        else tbChatRender('');
+      });
+      setTimeout(function(){ si.focus(); }, 60);
+    }
+
+    setTimeout(function(){ document.addEventListener('mousedown', tbChatOutside, true); }, 0);
+  }
+
+  /* chat-global.js already polls unread every 5s — reuse its broadcast, no extra requests */
+  if (!window._tbChatBound) {
+    window._tbChatBound = true;
+    document.addEventListener('app-unread-update', function(e) {
+      _tbChatCounts = (e.detail && e.detail.counts) || {};
+      tbChatPaintBadge();
+      if (document.getElementById('apptbChatPop')) {
+        var q = (document.getElementById('apptbChatSearch') || {}).value || '';
+        tbChatLoad();
+        tbChatRender(q);
+      }
+    });
+    window.addEventListener('resize', function() {
+      var pop = document.getElementById('apptbChatPop');
+      var btn = document.getElementById('apptbChatBtn');
+      if (pop && btn) tbChatPosition(pop, btn);
+    });
   }
 
   /* Build the bar markup for a config (also used by the Settings live preview) */
@@ -804,6 +1058,10 @@
     if (tbHas(cfg, 'search')) {
       right += '<form class="apptb-search" id="apptbSearchForm" autocomplete="off">' + tbIcons.search
             +  '<input type="text" id="apptbSearchInput" placeholder="' + t('ស្វែងរកអ្នកខ្ចី…','Search borrower…') + '"></form>';
+    }
+    if (tbHas(cfg, 'chat')) {
+      right += '<button type="button" class="apptb-ico apptb-chatbtn" id="apptbChatBtn" title="' + t('ការឆាត','Chats') + '">'
+            +  tbIcons.chat + '<span class="apptb-badge" id="apptbChatBadge" hidden></span></button>';
     }
     if (tbHas(cfg, 'clock')) {
       right += '<div class="apptb-clock" id="apptbClock"></div>';
@@ -855,6 +1113,7 @@
 
     if (!cfg.on || pg === 'login.html' || pg === 'user.html') {
       if (bar) bar.remove();
+      tbChatClose();
       document.body.classList.remove('apptb-on', 'apptb-mob', 'apptb-tucked');
       document.body.removeAttribute('data-apptb-size');
       if (_tbClockTimer) { clearInterval(_tbClockTimer); _tbClockTimer = null; }
@@ -883,6 +1142,14 @@
         else { document.documentElement.setAttribute('data-theme', now); localStorage.setItem('theme', now); }
         th.innerHTML = now === 'light' ? ic.moon : ic.sun;
       });
+    }
+
+    /* Chat dropdown */
+    tbChatClose();
+    var chatBtn = document.getElementById('apptbChatBtn');
+    if (chatBtn) {
+      chatBtn.addEventListener('click', function(e) { e.stopPropagation(); tbChatOpen(); });
+      tbChatPaintBadge();
     }
 
     /* Avatar photo → fall back to the initial if the image fails to load */
