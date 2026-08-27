@@ -102,9 +102,12 @@
     .mp-tabs {
       display:flex; gap:4px; align-items:center;
       border-bottom:1px solid rgba(148,163,184,.16); padding:0 2px;
+      /* five tabs do not fit a phone — scroll the strip rather than the page */
+      overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
     }
+    .mp-tabs::-webkit-scrollbar { display:none }
     .mp-tab {
-      display:inline-flex; align-items:center; gap:7px;
+      display:inline-flex; align-items:center; gap:7px; flex-shrink:0;
       padding:8px 13px; border:none; background:none; cursor:pointer;
       font-family:inherit; font-size:12.5px; font-weight:700; color:var(--muted);
       border-bottom:2px solid transparent; margin-bottom:-1px; transition:.14s;
@@ -328,16 +331,32 @@
     </div><!-- /.mp-grid -->
 
     <!-- ══ Admin tools tab bar — Super Admin and their assistants only ══ -->
-    <div class="mp-tools" id="mpTools" style="display:none">
+    <div class="mp-tools" id="mpTools">
       <div class="mp-tabs" id="mpToolTabs">
-        <button type="button" class="mp-tab mp-tab-on" data-tool="qr" onclick="mpTool('qr')">
+        <button type="button" class="mp-tab" data-tool="qr" id="mpTabQr" onclick="mpTool('qr')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>
           <span>QR Code</span>
+        </button>
+        <button type="button" class="mp-tab" data-tool="appearance" id="mpTabAppearance" onclick="mpTool('appearance')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+          <span>Appearance</span>
+        </button>
+        <button type="button" class="mp-tab" data-tool="focus" id="mpTabFocus" onclick="mpTool('focus')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Data Focus</span>
+        </button>
+        <button type="button" class="mp-tab" data-tool="account" id="mpTabAccount" onclick="mpTool('account')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Account</span>
+        </button>
+        <button type="button" class="mp-tab" data-tool="activity" id="mpTabActivity" onclick="mpTool('activity')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Activity</span>
         </button>
       </div>
 
       <!-- QR panel -->
-      <div class="mp-tool-panel on" id="mpToolQr">
+      <div class="mp-tool-panel" id="mpToolQr">
         <div class="mp-qr-grid">
           <div class="mp-qr-side">
             <div class="mp-qr-title">Customer portal link</div>
@@ -379,12 +398,7 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Theme + Account info row -->
-    <div class="mp-grid">
-
-      <!-- Appearance -->
+      <div class="mp-tool-panel" id="mpToolAppearance">
       <div class="mp-card">
         <div class="mp-card-hdr">
           <div class="mp-card-icon" style="background:rgba(245,158,11,.1)">
@@ -411,8 +425,8 @@
           </div>
         </div>
       </div>
-
-      <!-- Data focus (Super Admin / assistants only — everyone else is already scoped) -->
+      </div>
+      <div class="mp-tool-panel" id="mpToolFocus">
       <div class="mp-card" id="mpFocusCard" style="display:none">
         <div class="mp-card-hdr">
           <div class="mp-card-icon" style="background:rgba(6,182,212,.1)">
@@ -438,8 +452,8 @@
           </div>
         </div>
       </div>
-
-      <!-- Account info -->
+      </div>
+      <div class="mp-tool-panel" id="mpToolAccount">
       <div class="mp-card">
         <div class="mp-card-hdr">
           <div class="mp-card-icon" style="background:rgba(16,185,129,.1)">
@@ -466,10 +480,8 @@
           </div>
         </div>
       </div>
-
-    </div><!-- /.mp-grid -->
-
-    <!-- Admin-only section -->
+      </div>
+      <div class="mp-tool-panel" id="mpToolActivity">
     <div class="mp-card-full" id="mpAdminSection" style="display:none">
       <div class="mp-card-hdr">
         <div class="mp-card-icon" style="background:rgba(124,92,255,.12)">
@@ -512,6 +524,10 @@
         </div>
       </a>
     </div>
+      </div>
+    </div>
+
+
 
   </div><!-- /.mp-wrap -->
   </main><!-- /.main-content -->
@@ -840,6 +856,34 @@ function mpToolsEligible() {
   return Array.isArray(a.manages_teams) && a.manages_teams.length > 0;
 }
 
+/* Which tabs this account may use. Appearance and Account are for everyone —
+   they were plain cards before and must not disappear for ordinary staff. */
+function mpToolsInit() {
+  var role = '';
+  try { role = (JSON.parse(localStorage.getItem('appAuth') || 'null') || {}).role || ''; } catch(e) {}
+
+  var allowed = {
+    qr:         mpToolsEligible(),
+    appearance: true,
+    focus:      (typeof _focusEligible === 'function') ? _focusEligible() : false,
+    account:    true,
+    activity:   role === 'Admin'
+  };
+
+  /* the two cards that used to hide themselves now live inside their own tab */
+  if (allowed.focus)    { var fc = document.getElementById('mpFocusCard');    if (fc) fc.style.display = ''; }
+  if (allowed.activity) { var ad = document.getElementById('mpAdminSection'); if (ad) ad.style.display = ''; }
+
+  var first = null;
+  Object.keys(allowed).forEach(function(k) {
+    var tab = document.getElementById('mpTab' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (!tab) return;
+    tab.style.display = allowed[k] ? '' : 'none';
+    if (allowed[k] && !first) first = k;
+  });
+  if (first) mpTool(first);
+}
+
 function mpTool(name) {
   document.querySelectorAll('#mpToolTabs .mp-tab').forEach(function(b) {
     b.classList.toggle('mp-tab-on', b.getAttribute('data-tool') === name);
@@ -993,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initPage();
   syncThemePref();
   loadFocusPref();
-  if (mpToolsEligible()) document.getElementById('mpTools').style.display = '';
+  mpToolsInit();
 });
 </script>
 </body>
