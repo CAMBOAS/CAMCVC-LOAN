@@ -608,109 +608,97 @@
       <!-- ══ Panel 2: App Config ══ -->
       <div class="st-panel" id="stPanel2">
         <div class="st-panel-toolbar">
-          <div class="st-panel-title">Customize the app name, logo and top bar</div>
+          <div class="st-panel-title">Customize the sidebar, top bar and app branding</div>
         </div>
 
         <div class="ac-wrap">
         <div class="ac-col-left">
         <div class="glass-card" style="padding:0;overflow:hidden">
           <div style="padding:16px 18px 14px;border-bottom:1px solid rgba(148,163,184,.08);display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:9px;background:rgba(6,182,212,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <div style="width:32px;height:32px;border-radius:9px;background:rgba(34,197,94,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="5.5" y1="9" x2="6.5" y2="9"/><line x1="5.5" y1="13" x2="6.5" y2="13"/></svg>
             </div>
-            <div>
-              <div style="font-size:14px;font-weight:800;color:var(--text)">App Branding</div>
-              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Change the name and logo displayed in the sidebar</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:800;color:var(--text)">Left Navigation</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Width, look and menu items of the sidebar</div>
             </div>
+            <label class="nt-toggle" title="Show / hide the sidebar">
+              <input type="checkbox" id="sbOn" onchange="sbSet('on', this.checked ? 1 : 0)">
+              <span class="nt-slider"></span>
+            </label>
           </div>
 
-          <div style="padding:20px 18px;display:flex;flex-direction:column;gap:16px">
+          <div id="sbBody" style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:15px">
+            <div id="sbFields" style="display:flex;flex-direction:column;gap:15px">
 
-            <!-- App Name -->
+            <!-- Live preview -->
             <div>
-              <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">App Name</label>
-              <input id="brandName" type="text" placeholder="e.g. CAMBO" maxlength="60"
-                style="width:100%;box-sizing:border-box;padding:10px 13px;border-radius:9px;border:1.5px solid rgba(148,163,184,.15);background:rgba(148,163,184,.07);color:var(--text);font-size:13.5px;font-family:inherit;font-weight:700;outline:none;transition:.15s"
-                onfocus="this.style.borderColor='rgba(6,182,212,.45)';this.style.background='rgba(6,182,212,.06)'"
-                onblur="this.style.borderColor='rgba(148,163,184,.15)';this.style.background='rgba(148,163,184,.07)'">
-            </div>
-
-            <!-- App Subtitle -->
-            <div>
-              <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Subtitle</label>
-              <input id="brandSub" type="text" placeholder="e.g. Loan Management" maxlength="80"
-                style="width:100%;box-sizing:border-box;padding:10px 13px;border-radius:9px;border:1.5px solid rgba(148,163,184,.15);background:rgba(148,163,184,.07);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:.15s"
-                onfocus="this.style.borderColor='rgba(6,182,212,.45)';this.style.background='rgba(6,182,212,.06)'"
-                onblur="this.style.borderColor='rgba(148,163,184,.15)';this.style.background='rgba(148,163,184,.07)'">
-            </div>
-
-            <!-- Logo -->
-            <div>
-              <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Logo <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-
-              <!-- Upload area -->
-              <input type="file" id="brandLogoFile" accept="image/*" style="display:none" onchange="uploadBrandLogo(this)">
-              <div id="brandLogoDropZone"
-                style="position:relative;border:2px dashed rgba(6,182,212,.3);border-radius:11px;padding:18px 16px;text-align:center;cursor:pointer;transition:.18s;background:rgba(6,182,212,.03)"
-                onclick="document.getElementById('brandLogoFile').click()"
-                ondragover="event.preventDefault();this.style.borderColor='rgba(6,182,212,.7)';this.style.background='rgba(6,182,212,.08)'"
-                ondragleave="this.style.borderColor='rgba(6,182,212,.3)';this.style.background='rgba(6,182,212,.03)'"
-                ondrop="event.preventDefault();this.style.borderColor='rgba(6,182,212,.3)';this.style.background='rgba(6,182,212,.03)';if(event.dataTransfer.files[0])uploadBrandLogo({files:event.dataTransfer.files})">
-                <!-- Thumbnail (shown after upload) -->
-                <div id="brandLogoThumb" style="display:none;margin-bottom:10px;justify-content:center">
-                  <img id="brandLogoThumbImg" src="" alt="logo"
-                    style="width:56px;height:56px;object-fit:contain;border-radius:10px;border:1.5px solid rgba(148,163,184,.18);background:rgba(148,163,184,.06)">
-                </div>
-                <!-- Default prompt -->
-                <div id="brandLogoPrompt" style="display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(6,182,212,.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  <div style="font-size:12.5px;font-weight:700;color:var(--text)">Click to upload or drag & drop</div>
-                  <div style="font-size:11px;color:var(--muted)">PNG, JPG, SVG · max 5 MB</div>
-                </div>
-                <!-- Upload spinner -->
-                <div id="brandLogoSpinner" style="display:none;align-items:center;justify-content:center;gap:8px;pointer-events:none">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"/></svg>
-                  <span style="font-size:12px;color:var(--muted)">Uploading…</span>
-                </div>
-                <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-              </div>
-              <div id="brandLogoUploadErr" style="margin-top:5px;font-size:11.5px;color:#f87171;display:none"></div>
-
-              <!-- Manual URL input -->
-              <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
-                <div style="flex:1;height:1px;background:rgba(148,163,184,.12)"></div>
-                <span style="font-size:10.5px;color:var(--muted);white-space:nowrap">or paste URL</span>
-                <div style="flex:1;height:1px;background:rgba(148,163,184,.12)"></div>
-              </div>
-              <input id="brandLogoUrl" type="url" placeholder="https://example.com/logo.png"
-                style="margin-top:8px;width:100%;box-sizing:border-box;padding:9px 13px;border-radius:9px;border:1.5px solid rgba(148,163,184,.15);background:rgba(148,163,184,.07);color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:.15s"
-                onfocus="this.style.borderColor='rgba(6,182,212,.45)';this.style.background='rgba(6,182,212,.06)'"
-                onblur="this.style.borderColor='rgba(148,163,184,.15)';this.style.background='rgba(148,163,184,.07)'">
-              <div style="margin-top:5px;font-size:11px;color:var(--muted)">Leave blank to keep the default logo image</div>
-            </div>
-
-            <!-- Preview -->
-            <div>
-              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px">Preview</div>
-              <div style="display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:11px;background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.1)">
-                <div style="width:34px;height:34px;border-radius:9px;background:rgba(124,92,255,.12);border:1.5px solid rgba(124,92,255,.2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-                  <img id="brandPreviewImg" src="" alt="" style="width:100%;height:100%;object-fit:contain;display:none">
-                  <svg id="brandPreviewSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                </div>
-                <div>
-                  <div id="brandPreviewName" style="font-size:13px;font-weight:800;color:var(--text)">CAMBO</div>
-                  <div id="brandPreviewSub" style="font-size:11px;color:var(--muted)">Loan Management</div>
+              <div class="tb-lbl">Live preview <span class="tb-hint" id="sbPrevNote"></span></div>
+              <div class="sbp-frame" id="sbPrevFrame">
+                <div class="sbp-scale" id="sbPrevScale">
+                  <div class="sbp-stage">
+                    <div id="sbPreview" class="sidebar sbp-bar"></div>
+                    <div class="sbp-body">
+                      <span class="tbp-line" style="width:58%"></span>
+                      <span class="tbp-line" style="width:82%"></span>
+                      <span class="tbp-line" style="width:40%"></span>
+                      <span class="tbp-line" style="width:70%"></span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Save row -->
-            <div style="display:flex;align-items:center;gap:12px;padding-top:4px">
-              <button onclick="saveBrand()" id="brandSaveBtn" style="display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:11px;border:none;background:linear-gradient(135deg,#06b6d4,#7c5cff);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(6,182,212,.28);transition:.15s">
+            <!-- Width + Mode -->
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:150px">
+                <div class="tb-lbl">Width</div>
+                <div class="tb-seg" id="sbWidthSeg">
+                  <button type="button" data-v="sm" onclick="sbSet('width','sm')">Compact</button>
+                  <button type="button" data-v="md" onclick="sbSet('width','md')">Normal</button>
+                  <button type="button" data-v="lg" onclick="sbSet('width','lg')">Wide</button>
+                </div>
+              </div>
+              <div style="flex:1;min-width:150px">
+                <div class="tb-lbl">Mode</div>
+                <div class="tb-seg" id="sbModeSeg">
+                  <button type="button" data-v="full"  onclick="sbSet('mode','full')">Labels</button>
+                  <button type="button" data-v="icons" onclick="sbSet('mode','icons')">Icons only</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style -->
+            <div>
+              <div class="tb-lbl">Style</div>
+              <div class="tb-seg" id="sbStyleSeg">
+                <button type="button" data-v="solid"  onclick="sbSet('style','solid')">Solid</button>
+                <button type="button" data-v="glass"  onclick="sbSet('style','glass')">Glass</button>
+                <button type="button" data-v="accent" onclick="sbSet('style','accent')">Accent</button>
+              </div>
+            </div>
+
+            <!-- Elements -->
+            <div>
+              <div class="tb-lbl">Elements <span class="tb-hint">tap to show / hide</span></div>
+              <div class="tb-chips" id="sbModuleChips"></div>
+            </div>
+
+            <!-- Menu items -->
+            <div>
+              <div class="tb-lbl">Menu items <span class="tb-hint" id="sbLinkCount"></span></div>
+              <div class="tb-chips" id="sbLinkChips"></div>
+            </div>
+            </div><!-- /sbFields -->
+
+            <!-- Save row (stays live so the OFF state can be saved) -->
+            <div style="display:flex;align-items:center;gap:12px;padding-top:2px;flex-wrap:wrap">
+              <button onclick="saveSidebar()" id="sbSaveBtn" style="display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:11px;border:none;background:linear-gradient(135deg,#06b6d4,#7c5cff);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(6,182,212,.28);transition:.15s">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save Branding
+                Save Navigation
               </button>
-              <span id="brandStatus" style="font-size:12px;color:var(--muted)"></span>
+              <button onclick="sbReset()" type="button" style="padding:10px 16px;border-radius:11px;border:1px solid rgba(148,163,184,.18);background:transparent;color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
+              <span id="sbStatus" style="font-size:12px;color:var(--muted)"></span>
             </div>
 
           </div>
@@ -808,90 +796,102 @@
 
         <div class="glass-card" style="padding:0;overflow:hidden;margin-top:14px">
           <div style="padding:16px 18px 14px;border-bottom:1px solid rgba(148,163,184,.08);display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:9px;background:rgba(34,197,94,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="5.5" y1="9" x2="6.5" y2="9"/><line x1="5.5" y1="13" x2="6.5" y2="13"/></svg>
+            <div style="width:32px;height:32px;border-radius:9px;background:rgba(6,182,212,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:800;color:var(--text)">Left Navigation</div>
-              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Width, look and menu items of the sidebar</div>
+            <div>
+              <div style="font-size:14px;font-weight:800;color:var(--text)">App Branding</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Change the name and logo displayed in the sidebar</div>
             </div>
-            <label class="nt-toggle" title="Show / hide the sidebar">
-              <input type="checkbox" id="sbOn" onchange="sbSet('on', this.checked ? 1 : 0)">
-              <span class="nt-slider"></span>
-            </label>
           </div>
 
-          <div id="sbBody" style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:15px">
-            <div id="sbFields" style="display:flex;flex-direction:column;gap:15px">
+          <div style="padding:20px 18px;display:flex;flex-direction:column;gap:16px">
 
-            <!-- Live preview -->
+            <!-- App Name -->
             <div>
-              <div class="tb-lbl">Live preview <span class="tb-hint" id="sbPrevNote"></span></div>
-              <div class="sbp-frame" id="sbPrevFrame">
-                <div class="sbp-scale" id="sbPrevScale">
-                  <div class="sbp-stage">
-                    <div id="sbPreview" class="sidebar sbp-bar"></div>
-                    <div class="sbp-body">
-                      <span class="tbp-line" style="width:58%"></span>
-                      <span class="tbp-line" style="width:82%"></span>
-                      <span class="tbp-line" style="width:40%"></span>
-                      <span class="tbp-line" style="width:70%"></span>
-                    </div>
-                  </div>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">App Name</label>
+              <input id="brandName" type="text" placeholder="e.g. CAMBO" maxlength="60"
+                style="width:100%;box-sizing:border-box;padding:10px 13px;border-radius:9px;border:1.5px solid rgba(148,163,184,.15);background:rgba(148,163,184,.07);color:var(--text);font-size:13.5px;font-family:inherit;font-weight:700;outline:none;transition:.15s"
+                onfocus="this.style.borderColor='rgba(6,182,212,.45)';this.style.background='rgba(6,182,212,.06)'"
+                onblur="this.style.borderColor='rgba(148,163,184,.15)';this.style.background='rgba(148,163,184,.07)'">
+            </div>
+
+            <!-- App Subtitle -->
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Subtitle</label>
+              <input id="brandSub" type="text" placeholder="e.g. Loan Management" maxlength="80"
+                style="width:100%;box-sizing:border-box;padding:10px 13px;border-radius:9px;border:1.5px solid rgba(148,163,184,.15);background:rgba(148,163,184,.07);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:.15s"
+                onfocus="this.style.borderColor='rgba(6,182,212,.45)';this.style.background='rgba(6,182,212,.06)'"
+                onblur="this.style.borderColor='rgba(148,163,184,.15)';this.style.background='rgba(148,163,184,.07)'">
+            </div>
+
+            <!-- Logo -->
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Logo <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+
+              <!-- Upload area -->
+              <input type="file" id="brandLogoFile" accept="image/*" style="display:none" onchange="uploadBrandLogo(this)">
+              <div id="brandLogoDropZone"
+                style="position:relative;border:2px dashed rgba(6,182,212,.3);border-radius:11px;padding:18px 16px;text-align:center;cursor:pointer;transition:.18s;background:rgba(6,182,212,.03)"
+                onclick="document.getElementById('brandLogoFile').click()"
+                ondragover="event.preventDefault();this.style.borderColor='rgba(6,182,212,.7)';this.style.background='rgba(6,182,212,.08)'"
+                ondragleave="this.style.borderColor='rgba(6,182,212,.3)';this.style.background='rgba(6,182,212,.03)'"
+                ondrop="event.preventDefault();this.style.borderColor='rgba(6,182,212,.3)';this.style.background='rgba(6,182,212,.03)';if(event.dataTransfer.files[0])uploadBrandLogo({files:event.dataTransfer.files})">
+                <!-- Thumbnail (shown after upload) -->
+                <div id="brandLogoThumb" style="display:none;margin-bottom:10px;justify-content:center">
+                  <img id="brandLogoThumbImg" src="" alt="logo"
+                    style="width:56px;height:56px;object-fit:contain;border-radius:10px;border:1.5px solid rgba(148,163,184,.18);background:rgba(148,163,184,.06)">
+                </div>
+                <!-- Default prompt -->
+                <div id="brandLogoPrompt" style="display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(6,182,212,.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <div style="font-size:12.5px;font-weight:700;color:var(--text)">Click to upload or drag & drop</div>
+                  <div style="font-size:11px;color:var(--muted)">PNG, JPG, SVG · max 5 MB</div>
+                </div>
+                <!-- Upload spinner -->
+                <div id="brandLogoSpinner" style="display:none;align-items:center;justify-content:center;gap:8px;pointer-events:none">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"/></svg>
+                  <span style="font-size:12px;color:var(--muted)">Uploading…</span>
+                </div>
+                <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+              </div>
+              <div id="brandLogoUploadErr" style="margin-top:5px;font-size:11.5px;color:#f87171;display:none"></div>
+
+              <!-- Manual URL input -->
+              <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+                <div style="flex:1;height:1px;background:rgba(148,163,184,.12)"></div>
+                <span style="font-size:10.5px;color:var(--muted);white-space:nowrap">or paste URL</span>
+                <div style="flex:1;height:1px;background:rgba(148,163,184,.12)"></div>
+              </div>
+              <input id="brandLogoUrl" type="url" placeholder="https://example.com/logo.png"
+                style="margin-top:8px;width:100%;box-sizing:border-box;padding:9px 13px;border-radius:9px;border:1.5px solid rgba(148,163,184,.15);background:rgba(148,163,184,.07);color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:.15s"
+                onfocus="this.style.borderColor='rgba(6,182,212,.45)';this.style.background='rgba(6,182,212,.06)'"
+                onblur="this.style.borderColor='rgba(148,163,184,.15)';this.style.background='rgba(148,163,184,.07)'">
+              <div style="margin-top:5px;font-size:11px;color:var(--muted)">Leave blank to keep the default logo image</div>
+            </div>
+
+            <!-- Preview -->
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px">Preview</div>
+              <div style="display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:11px;background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.1)">
+                <div style="width:34px;height:34px;border-radius:9px;background:rgba(124,92,255,.12);border:1.5px solid rgba(124,92,255,.2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                  <img id="brandPreviewImg" src="" alt="" style="width:100%;height:100%;object-fit:contain;display:none">
+                  <svg id="brandPreviewSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </div>
+                <div>
+                  <div id="brandPreviewName" style="font-size:13px;font-weight:800;color:var(--text)">CAMBO</div>
+                  <div id="brandPreviewSub" style="font-size:11px;color:var(--muted)">Loan Management</div>
                 </div>
               </div>
             </div>
 
-            <!-- Width + Mode -->
-            <div style="display:flex;gap:12px;flex-wrap:wrap">
-              <div style="flex:1;min-width:150px">
-                <div class="tb-lbl">Width</div>
-                <div class="tb-seg" id="sbWidthSeg">
-                  <button type="button" data-v="sm" onclick="sbSet('width','sm')">Compact</button>
-                  <button type="button" data-v="md" onclick="sbSet('width','md')">Normal</button>
-                  <button type="button" data-v="lg" onclick="sbSet('width','lg')">Wide</button>
-                </div>
-              </div>
-              <div style="flex:1;min-width:150px">
-                <div class="tb-lbl">Mode</div>
-                <div class="tb-seg" id="sbModeSeg">
-                  <button type="button" data-v="full"  onclick="sbSet('mode','full')">Labels</button>
-                  <button type="button" data-v="icons" onclick="sbSet('mode','icons')">Icons only</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Style -->
-            <div>
-              <div class="tb-lbl">Style</div>
-              <div class="tb-seg" id="sbStyleSeg">
-                <button type="button" data-v="solid"  onclick="sbSet('style','solid')">Solid</button>
-                <button type="button" data-v="glass"  onclick="sbSet('style','glass')">Glass</button>
-                <button type="button" data-v="accent" onclick="sbSet('style','accent')">Accent</button>
-              </div>
-            </div>
-
-            <!-- Elements -->
-            <div>
-              <div class="tb-lbl">Elements <span class="tb-hint">tap to show / hide</span></div>
-              <div class="tb-chips" id="sbModuleChips"></div>
-            </div>
-
-            <!-- Menu items -->
-            <div>
-              <div class="tb-lbl">Menu items <span class="tb-hint" id="sbLinkCount"></span></div>
-              <div class="tb-chips" id="sbLinkChips"></div>
-            </div>
-            </div><!-- /sbFields -->
-
-            <!-- Save row (stays live so the OFF state can be saved) -->
-            <div style="display:flex;align-items:center;gap:12px;padding-top:2px;flex-wrap:wrap">
-              <button onclick="saveSidebar()" id="sbSaveBtn" style="display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:11px;border:none;background:linear-gradient(135deg,#06b6d4,#7c5cff);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(6,182,212,.28);transition:.15s">
+            <!-- Save row -->
+            <div style="display:flex;align-items:center;gap:12px;padding-top:4px">
+              <button onclick="saveBrand()" id="brandSaveBtn" style="display:flex;align-items:center;gap:7px;padding:10px 22px;border-radius:11px;border:none;background:linear-gradient(135deg,#06b6d4,#7c5cff);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(6,182,212,.28);transition:.15s">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save Navigation
+                Save Branding
               </button>
-              <button onclick="sbReset()" type="button" style="padding:10px 16px;border-radius:11px;border:1px solid rgba(148,163,184,.18);background:transparent;color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
-              <span id="sbStatus" style="font-size:12px;color:var(--muted)"></span>
+              <span id="brandStatus" style="font-size:12px;color:var(--muted)"></span>
             </div>
 
           </div>
