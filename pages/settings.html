@@ -1226,13 +1226,28 @@ function expBadge(d) {
 }
 
 /* ── Render ── */
+/* Display order: the signed-in account first, then active accounts, then inactive ones at the
+   bottom. Sorts a copy — _users itself keeps its server order, which the org chart and the
+   drag-reorder prefs rely on. Array.sort is stable, so within each group the original order
+   (by id) is preserved. */
+function _orderedUsers() {
+  return _users.slice().sort(function(a, b) {
+    var aMe = a.username === _selfUser ? 0 : 1;
+    var bMe = b.username === _selfUser ? 0 : 1;
+    if (aMe !== bMe) return aMe - bMe;
+    var aOff = (a.status || 'active') === 'active' ? 0 : 1;
+    var bOff = (b.status || 'active') === 'active' ? 0 : 1;
+    return aOff - bOff;
+  });
+}
+
 function renderTable() {
   var tbody = document.getElementById('umTbody');
   if (!_users.length) {
     tbody.innerHTML = '<tr><td colspan="9" class="um-empty">No users found</td></tr>';
     return;
   }
-  tbody.innerHTML = _users.map(function(u, i) {
+  tbody.innerHTML = _orderedUsers().map(function(u, i) {
     var isSelf = u.username === _selfUser;
     var safeU  = u.username.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     var isPend = _pendingDelUser === u.username;
