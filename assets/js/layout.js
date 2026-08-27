@@ -628,7 +628,7 @@
 
     document.getElementById('hlUmenuThemeBtn').addEventListener('click', function() {
       var cur = document.documentElement.getAttribute('data-theme');
-      window._hlApplyTheme && window._hlApplyTheme(cur === 'light' ? 'dark' : 'light');
+      window._hlApplyTheme && window._hlApplyTheme(cur === 'light' ? 'dark' : 'light', true);
       menu.remove();
     });
     document.getElementById('hlUmenuProfileBtn').addEventListener('click', function() {
@@ -676,14 +676,27 @@
   }
 
   function initThemeBtn() {
-    function applyTheme(th) {
+    /* `persist` writes the choice to the server too. My Profile reads that value back and
+       treats it as authoritative, so a toggle that only touched localStorage used to be
+       undone the next time that page loaded. Page load itself must NOT persist. */
+    function applyTheme(th, persist) {
       document.documentElement.setAttribute('data-theme', th);
       localStorage.setItem('theme', th);
       var tBtn = document.getElementById('topbarThemeBtn');
       if (tBtn) tBtn.innerHTML = th === 'light' ? ic.moon : ic.sun;
+      var aBtn = document.getElementById('apptbThemeBtn');
+      if (aBtn) aBtn.innerHTML = th === 'light' ? ic.moon : ic.sun;
+      if (persist) {
+        /* Stamp the choice so My Profile's server sync does not undo it while the
+           fire-and-forget write is still in flight. */
+        try { localStorage.setItem('theme_at', String(Date.now())); } catch(e) {}
+        if (typeof CamboAPI !== 'undefined') {
+          try { CamboAPI.post({ action: 'ui_prefs_set', prefs: { theme: th } }).catch(function(){}); } catch(e) {}
+        }
+      }
     }
     window._hlApplyTheme = applyTheme;
-    applyTheme(localStorage.getItem('theme') || 'light');
+    applyTheme(localStorage.getItem('theme') || 'light', false);
   }
 
   function initLogoutBtn() {
@@ -1138,7 +1151,7 @@
       th.innerHTML = curTh === 'light' ? ic.moon : ic.sun;
       th.addEventListener('click', function() {
         var now = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        if (window._hlApplyTheme) window._hlApplyTheme(now);
+        if (window._hlApplyTheme) window._hlApplyTheme(now, true);
         else { document.documentElement.setAttribute('data-theme', now); localStorage.setItem('theme', now); }
         th.innerHTML = now === 'light' ? ic.moon : ic.sun;
       });

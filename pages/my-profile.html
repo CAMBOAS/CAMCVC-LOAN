@@ -263,8 +263,8 @@
         <div class="mp-info-list">
           <div class="mp-theme-row" style="padding:4px 0">
             <div>
-              <div class="mp-theme-label" id="mpThemeLabel">Dark Mode</div>
-              <div class="mp-theme-sub" id="mpThemeSub">Switch UI theme</div>
+              <div class="mp-theme-label">Dark Mode</div>
+              <div class="mp-theme-sub" id="mpThemeSub">Off</div>
             </div>
             <label class="mp-toggle">
               <input type="checkbox" id="mpThemeToggle" onchange="applyTheme(this.checked)">
@@ -387,8 +387,8 @@
 
 <div id="mpToast"></div>
 
-<script src="../assets/js/layout.js?v=27"></script>
-<script src="../assets/js/dashboard-layout.js?v=27"></script>
+<script src="../assets/js/layout.js?v=29"></script>
+<script src="../assets/js/dashboard-layout.js?v=29"></script>
 <script src="../assets/js/auth.js?v=2"></script>
 <script src="../assets/js/api.js?v=8"></script>
 <script>
@@ -580,18 +580,22 @@ async function changePin() {
 /* ── Theme ── */
 function applyTheme(isDark) {
   var theme = isDark ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('theme', theme);
-  updateThemeLabels(isDark);
-  /* Persist to server */
-  if (typeof CamboAPI !== 'undefined') {
-    CamboAPI.post({ action: 'ui_prefs_set', prefs: { theme: theme } }).catch(function(){});
+  if (window._hlApplyTheme) {
+    window._hlApplyTheme(theme, true);          /* also persists and repaints the top bar icon */
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    if (typeof CamboAPI !== 'undefined') {
+      CamboAPI.post({ action: 'ui_prefs_set', prefs: { theme: theme } }).catch(function(){});
+    }
   }
+  updateThemeLabels(isDark);
 }
 
+/* The label stays "Dark Mode" — it names what the switch does, so the switch position and
+   the text can never contradict each other. */
 function updateThemeLabels(isDark) {
-  document.getElementById('mpThemeLabel').textContent  = isDark ? 'Dark Mode' : 'Light Mode';
-  document.getElementById('mpThemeSub').textContent    = isDark ? 'Dark mode is on' : 'Light mode is on';
+  document.getElementById('mpThemeSub').textContent    = isDark ? 'On' : 'Off';
   document.getElementById('mpThemeStatus').textContent = isDark ? 'Dark' : 'Light';
 }
 
@@ -626,7 +630,11 @@ async function syncThemePref() {
     if (r && r.ok && r.prefs && r.prefs.theme) {
       var serverTheme = r.prefs.theme;
       var localTheme  = localStorage.getItem('theme') || 'light';
-      /* Server is authoritative if different */
+      /* A choice made moments ago wins: its write may still be in flight, and adopting the
+         stale server value here is what used to flip the theme back on this page. */
+      var stampedAt = Number(localStorage.getItem('theme_at') || 0);
+      if (stampedAt && Date.now() - stampedAt < 15000) return;
+      /* Otherwise the server is authoritative (e.g. changed on another device) */
       if (serverTheme !== localTheme) {
         var isDark = serverTheme === 'dark';
         document.documentElement.setAttribute('data-theme', serverTheme);
