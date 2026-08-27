@@ -3221,6 +3221,34 @@ body[data-sbw="lg"] { --sb-w: 288px; }
   margin: 0 auto !important;
 }
 
+/* Collapsed rail shows bare icons — no plate behind them and no box on the row.
+   State is carried by colour instead, so nothing angular is left on screen. */
+.sidebar.sb-collapsed .sb-icon {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+.sidebar.sb-collapsed .sb-link,
+.sidebar.sb-collapsed .sb-link:hover,
+.sidebar.sb-collapsed .sb-link.sb-active {
+  background: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.sidebar.sb-collapsed .sb-link:hover .sb-icon,
+[data-theme="light"] .sidebar.sb-collapsed .sb-link:hover .sb-icon {
+  background: none !important; border: none !important;
+  color: #a78bfa !important;
+}
+.sidebar.sb-collapsed .sb-link.sb-active .sb-icon,
+[data-theme="light"] .sidebar.sb-collapsed .sb-link.sb-active .sb-icon {
+  background: none !important; border: none !important;
+}
+.sidebar.sb-collapsed .sb-link.sb-active .sb-icon { color: #a78bfa !important; }
+[data-theme="light"] .sidebar.sb-collapsed .sb-link.sb-active .sb-icon { color: #4f46e5 !important; }
+[data-theme="light"] .sidebar.sb-collapsed .sb-link:hover .sb-icon { color: #4f46e5 !important; }
+.sidebar.sb-collapsed .sb-icon svg { width: 20px !important; height: 20px !important; }
+
 /* Hover tooltips off */
 body.sbcfg-notips .sidebar.sb-collapsed .sb-link::after { display: none !important; }
 
