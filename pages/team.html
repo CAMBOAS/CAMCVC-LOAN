@@ -410,6 +410,23 @@ function getMyManagedSubAdminUsernames() {
   return mine;
 }
 
+/* Display order: me first, then active accounts, inactive last — matching User Management.
+   Sorted IN PLACE, deliberately: the cards and rows pass their array index to openCard/
+   openProfile, so rendering from a sorted copy while those read the unsorted _users would open
+   the wrong person. Every other use of _users is find/filter, which does not care about order.
+   Array.sort is stable, so the server's ordering survives within each group. */
+function sortTeamMembers() {
+  var me = getMyUsername();
+  _users.sort(function(a, b) {
+    var aMe = a.username === me ? 0 : 1;
+    var bMe = b.username === me ? 0 : 1;
+    if (aMe !== bMe) return aMe - bMe;
+    var aOff = (a.status || 'active') === 'active' ? 0 : 1;
+    var bOff = (b.status || 'active') === 'active' ? 0 : 1;
+    return aOff - bOff;
+  });
+}
+
 /* ── Sub Admin (own team) + Assistant (delegated teams): which team(s) may I add/see quota for ── */
 function getManageableTeams() {
   var mine   = getMyUsername();
@@ -885,6 +902,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!res||!res.ok){ stateEl.textContent=(res&&res.message)||'Error loading team'; return; }
     if (!res.users||!res.users.length){ stateEl.textContent='No team members found'; return; }
     _users=res.users;
+    sortTeamMembers();
     if (getMyManagesTeams().length) { await loadLinkedToForManage(); renderManageTeamsPanel(); }
     /* after the render, which sets display itself, so the remembered choice wins */
     _paintManagePanel(_isManagePanelHidden());
