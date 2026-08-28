@@ -350,7 +350,27 @@ async function ensureSessionsTable() {
     UNIQUE KEY uniq_user_device (username, device_id),
     INDEX idx_user (username)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  /* deployments created before the session list showed where a sign-in came from */
+  for (const col of ['ip VARCHAR(64)','city VARCHAR(120)','region VARCHAR(120)','country VARCHAR(8)']) {
+    try { await db().query('ALTER TABLE user_sessions ADD COLUMN ' + col + ' NULL'); } catch(e) {}
+  }
   _sessionsReady = true;
+}
+
+/* Vercel puts the visitor's rough location on the request itself, so the session list
+   can show it without sending anyone's IP to a third-party lookup service.
+   Locally none of these headers exist and the columns simply stay empty. */
+function readGeo(req) {
+  const h = (req && req.headers) || {};
+  const one = v => Array.isArray(v) ? v[0] : v;
+  const dec = v => { try { return v ? decodeURIComponent(String(v)) : null; } catch(e) { return v || null; } };
+  const fwd = String(one(h['x-forwarded-for']) || '').split(',')[0].trim();
+  return {
+    ip:      fwd || one(h['x-real-ip']) || null,
+    city:    dec(one(h['x-vercel-ip-city'])),
+    region:  dec(one(h['x-vercel-ip-country-region'])),
+    country: (one(h['x-vercel-ip-country']) || null),
+  };
 }
 
 let _loginQrReady = false;
@@ -386,15 +406,19 @@ async function clearStrikes(username) {
 
 /* Record this device against the account. When the cap is passed, the least recently
    used device is revoked — it discovers that on its next session_check and signs out. */
-async function registerDevice(username, deviceId, label) {
+async function registerDevice(username, deviceId, label, geo) {
   await ensureSessionsTable();
   if (!deviceId) return { ok: true, evicted: null };
+  geo = geo || {};
 
   await db().query(
-    `INSERT INTO user_sessions (username, device_id, label, revoked, last_seen)
-     VALUES (?,?,?,0,UTC_TIMESTAMP())
-     ON DUPLICATE KEY UPDATE label=VALUES(label), revoked=0, last_seen=UTC_TIMESTAMP()`,
-    [username, deviceId, String(label || '').slice(0, 160)]
+    `INSERT INTO user_sessions (username, device_id, label, revoked, last_seen, created_at, ip, city, region, country)
+     VALUES (?,?,?,0,UTC_TIMESTAMP(),UTC_TIMESTAMP(),?,?,?,?)
+     ON DUPLICATE KEY UPDATE label=VALUES(label), revoked=0,
+       last_seen=UTC_TIMESTAMP(), created_at=UTC_TIMESTAMP(),
+       ip=VALUES(ip), city=VALUES(city), region=VALUES(region), country=VALUES(country)`,
+    [username, deviceId, String(label || '').slice(0, 160),
+     geo.ip || null, geo.city || null, geo.region || null, geo.country || null]
   );
 
   const [live] = await db().query(
@@ -560,7 +584,7 @@ async function handler(req, res) {
       }
       if (v.expired)   return res.json({ ok:false, message:'គណនីបានផុតកំណត់ — សូមទំនាក់ទំនង Admin', code:'expired' });
       await clearStrikes(v.username);
-      const _reg = await registerDevice(v.username, String(body.device_id||'').trim(), String(body.device_label||''));
+      const _reg = await registerDevice(v.username, String(body.device_id||'').trim(), String(body.device_label||''), readGeo(req));
       db().query('UPDATE users SET last_seen=NOW() WHERE username=?', [v.username]).catch(()=>{});
       if (await isNotifEnabled('login')) { try { await sendTelegramEvent('login', { name:v.name, role:v.role, username:v.username }); } catch(e) {} }
       logActivity('user_login', v.name, v.username, null, { role: v.role }).catch(()=>{});
@@ -621,7 +645,7 @@ async function handler(req, res) {
       /* one scan only */
       await db().query('UPDATE login_qr SET used_at=UTC_TIMESTAMP() WHERE token=?', [tok]);
 
-      const reg = await registerDevice(uname, dev, String(body.label || '').slice(0,160));
+      const reg = await registerDevice(uname, dev, String(body.label || '').slice(0,160), readGeo(req));
       await clearStrikes(uname);
       logActivity('user_login', ur[0].display_name || uname, uname, null, { role: ur[0].role, via: 'qr' }).catch(()=>{});
       return res.json({
@@ -1460,12 +1484,22 @@ async function handler(req, res) {
     if (action === 'sessions_list') {
       await ensureSessionsTable();
       const [rows] = await db().query(
-        `SELECT device_id, label, revoked,
+        `SELECT device_id, label, revoked, ip, city, region, country,
                 DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_utc,
                 DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS seen_utc
          FROM user_sessions WHERE username=? ORDER BY revoked ASC, last_seen DESC LIMIT 20`, [_bu]
       );
       return res.json({ ok:true, max: MAX_DEVICES, sessions: rows });
+    }
+
+    if (action === 'sessions_revoke_others') {
+      await ensureSessionsTable();
+      const keep = String(body.device_id || '').trim();
+      const [r] = await db().query(
+        'UPDATE user_sessions SET revoked=1 WHERE username=? AND revoked=0 AND device_id<>?',
+        [_bu, keep]
+      );
+      return res.json({ ok:true, revoked: r.affectedRows || 0 });
     }
 
     if (action === 'session_revoke') {

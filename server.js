@@ -201,6 +201,9 @@ const server = http.createServer(async (req, res) => {
       const rawBody = body || '{}';
       const mockReq = {
         method: req.method,
+        /* the handler reads request headers (Vercel's geo headers, for one), so the
+           mock has to carry them or local behaviour silently differs from production */
+        headers: req.headers,
         body: parsedBody,
         on(event, cb) {
           if (event === 'data') cb(rawBody);

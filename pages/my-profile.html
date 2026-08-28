@@ -119,6 +119,46 @@
 
     /* Cards used to sit in a 1fr 1fr grid; without a cap a lone card stretches the
        full width of a wide monitor and the inputs go with it. */
+    .mp-ses-hd { display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:12px }
+    .mp-ses-hd > div { flex:1; min-width:220px }
+    .mp-ses-out {
+      padding:8px 14px; border-radius:10px; cursor:pointer; white-space:nowrap;
+      border:1px solid rgba(239,68,68,.28); background:rgba(239,68,68,.08); color:#dc2626;
+      font-family:inherit; font-size:12px; font-weight:700;
+    }
+    .mp-ses-out:hover { background:rgba(239,68,68,.16) }
+    .mp-ses-out:disabled { opacity:.45; cursor:default }
+
+    .mp-ses-scroll { overflow-x:auto }
+    .mp-ses-tbl { width:100%; border-collapse:collapse; min-width:560px }
+    .mp-ses-tbl th {
+      text-align:left; padding:8px 10px; font-size:10px; font-weight:800;
+      letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+      border-bottom:1px solid rgba(148,163,184,.18); white-space:nowrap;
+    }
+    .mp-ses-tbl td {
+      padding:11px 10px; font-size:12.5px; color:var(--text);
+      border-bottom:1px solid rgba(148,163,184,.10); vertical-align:middle;
+    }
+    .mp-ses-tbl tr:last-child td { border-bottom:none }
+    .mp-ses-dev { display:flex; align-items:center; gap:8px }
+    .mp-ses-name { font-weight:700; white-space:nowrap }
+    .mp-ses-you {
+      font-size:9.5px; font-weight:800; color:#4f46e5; white-space:nowrap;
+      border:1px solid rgba(79,70,229,.3); border-radius:999px; padding:1px 7px;
+    }
+    .mp-ses-live { display:inline-flex; align-items:center; gap:6px; white-space:nowrap }
+    .mp-ses-dot { width:7px; height:7px; border-radius:50%; background:#94a3b8; flex-shrink:0 }
+    .mp-ses-dot.on { background:#22c55e }
+    .mp-ses-muted { color:var(--muted) }
+    .mp-ses-kick {
+      border:none; background:transparent; color:#94a3b8; cursor:pointer;
+      padding:4px; border-radius:7px; display:flex;
+    }
+    .mp-ses-kick:hover { color:#ef4444; background:rgba(239,68,68,.1) }
+    .mp-ses-kick svg { width:14px; height:14px }
+    .mp-ses-empty { padding:18px 10px; font-size:12px; color:var(--muted) }
+
     .mp-dev-wrap { margin-top:18px; padding-top:14px; border-top:1px solid rgba(148,163,184,.14) }
     .mp-dev-list { display:flex; flex-direction:column; gap:6px }
     .mp-dev {
@@ -339,6 +379,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>
           <span>QR Code</span>
         </button>
+        <button type="button" class="mp-tab" data-tool="sessions" id="mpTabSessions" onclick="mpTool('sessions')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="10" rx="2"/><path d="M2 18h14"/><rect x="18" y="9" width="4" height="11" rx="1"/></svg>
+          <span>Sessions</span>
+        </button>
         <button type="button" class="mp-tab" data-tool="appearance" id="mpTabAppearance" onclick="mpTool('appearance')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
           <span>Appearance</span>
@@ -367,6 +411,24 @@
         <button type="button" class="mp-drag-cancel" onclick="mpCancelTabOrder()">Cancel</button>
       </div>
 
+      <div class="mp-tool-panel" id="mpToolSessions">
+        <div class="mp-ses-hd">
+          <div>
+            <div class="mp-qr-title">Where you are signed in</div>
+            <div class="mp-qr-sub" id="mpSesCap">Signing in on a new device signs out the oldest one.</div>
+          </div>
+          <button type="button" class="mp-ses-out" id="mpSesOutBtn" onclick="mpRevokeOthers()">Sign out other devices</button>
+        </div>
+        <div class="mp-ses-scroll">
+          <table class="mp-ses-tbl">
+            <thead><tr>
+              <th>Device</th><th>Last login</th><th>Active</th><th>Location</th><th></th>
+            </tr></thead>
+            <tbody id="mpSesBody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="mp-tool-panel" id="mpToolSignin">
         <div class="mp-qr-grid">
           <div class="mp-qr-side">
@@ -381,10 +443,6 @@
             </button>
             <div class="mp-qr-status" id="mpSiStatus"></div>
 
-            <div class="mp-dev-wrap">
-              <div class="mp-qr-lbl">My devices <span class="tb-hint" id="mpDevCap"></span></div>
-              <div id="mpDevList" class="mp-dev-list"></div>
-            </div>
           </div>
 
           <div class="mp-qr-out" id="mpSiOut" style="display:none">
@@ -953,7 +1011,7 @@ function mpToolsEligible() {
    Order is stored per user as tool keys (not indices), so hiding a
    tab for a role can never shift someone else's arrangement.
    ══════════════════════════════════════════════════════════════ */
-var MP_TOOLS_DEFAULT = ['profile','signin','qr','appearance','focus','account','activity'];
+var MP_TOOLS_DEFAULT = ['profile','signin','sessions','qr','appearance','focus','account','activity'];
 var _mpOrder   = MP_TOOLS_DEFAULT.slice();
 var _mpDragOn  = false;
 var _mpDirty   = false;
@@ -1156,6 +1214,7 @@ function mpToolsInit() {
   var allowed = {
     profile:    true,
     signin:     true,
+    sessions:   true,
     qr:         mpToolsEligible(),
     appearance: true,
     focus:      (typeof _focusEligible === 'function') ? _focusEligible() : false,
@@ -1179,7 +1238,7 @@ function mpToolsInit() {
   });
   if (first) mpTool(first);
   _mpInitDrag();
-  mpLoadDevices();
+  mpLoadSessions();
 }
 
 function mpTool(name) {
@@ -1270,9 +1329,91 @@ function _mpAgo(iso) {
   return Math.floor(h / 24) + ' day' + (h >= 48 ? 's' : '') + ' ago';
 }
 
+function _mpMins(iso) {
+  if (!iso) return null;
+  var ms = new Date(iso).getTime();
+  if (isNaN(ms)) return null;
+  return Math.floor((Date.now() - ms) / 60000);
+}
+
+/* Anything seen in the last 10 minutes counts as still in use */
+function _mpLive(iso) { var m = _mpMins(iso); return m !== null && m < 10; }
+
+function _mpWhen(iso) {
+  var m = _mpMins(iso);
+  if (m === null) return '—';
+  if (m < 1)  return 'just now';
+  if (m < 60) return m + ' min ago';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + ' hr ago';
+  var d = Math.floor(h / 24);
+  if (d < 30) return d + ' day' + (d > 1 ? 's' : '') + ' ago';
+  return new Date(iso).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function _mpPlace(d) {
+  var bits = [d.city, d.country].filter(Boolean);
+  if (bits.length) return bits.join(', ');
+  return d.ip ? d.ip : '—';
+}
+
+async function mpLoadSessions() {
+  var body = document.getElementById('mpSesBody');
+  if (!body) return;
+  try {
+    var r = await CamboAPI.post({ action: 'sessions_list' });
+    if (!r || !r.ok) throw new Error('x');
+    var mine = window.CamboDevice ? CamboDevice.id() : '';
+    var live = (r.sessions || []).filter(function(d){ return !Number(d.revoked); });
+
+    document.getElementById('mpSesCap').textContent =
+      'Signed in on ' + live.length + ' of ' + r.max + ' devices. '
+      + 'Signing in on a new one signs out the oldest.';
+    var btn = document.getElementById('mpSesOutBtn');
+    if (btn) btn.disabled = live.length < 2;
+
+    if (!live.length) {
+      body.innerHTML = '<tr><td colspan="5" class="mp-ses-empty">No devices recorded yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = live.map(function(d) {
+      var isMe = d.device_id === mine;
+      var on   = isMe || _mpLive(d.seen_utc);
+      return '<tr>'
+        + '<td><span class="mp-ses-dev"><span class="mp-ses-name">' + _esc(d.label || 'Device') + '</span>'
+        +   (isMe ? '<span class="mp-ses-you">THIS DEVICE</span>' : '') + '</span></td>'
+        + '<td class="mp-ses-muted">' + _esc(_mpWhen(d.created_utc)) + '</td>'
+        + '<td><span class="mp-ses-live"><span class="mp-ses-dot' + (on ? ' on' : '') + '"></span>'
+        +   (on ? 'Online' : _esc(_mpWhen(d.seen_utc))) + '</span></td>'
+        + '<td class="mp-ses-muted">' + _esc(_mpPlace(d)) + '</td>'
+        + '<td style="text-align:right">'
+        +   (isMe ? '' : '<button type="button" class="mp-ses-kick" title="Sign out" onclick="mpKickDevice(\'' + _esc(d.device_id) + '\')">'
+              + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>')
+        + '</td>'
+        + '</tr>';
+    }).join('');
+  } catch(e) {
+    body.innerHTML = '<tr><td colspan="5" class="mp-ses-empty">Could not load sessions.</td></tr>';
+  }
+}
+
+async function mpRevokeOthers() {
+  var btn = document.getElementById('mpSesOutBtn');
+  if (btn) btn.disabled = true;
+  try {
+    var r = await CamboAPI.post({
+      action: 'sessions_revoke_others',
+      device_id: window.CamboDevice ? CamboDevice.id() : ''
+    });
+    if (r && r.ok) mpToast(r.revoked ? (r.revoked + ' device signed out') : 'Nothing to sign out');
+    else mpToast('Could not sign them out', true);
+  } catch(e) { mpToast('Network error', true); }
+  mpLoadSessions();
+}
+
 async function mpLoadDevices() {
   var box = document.getElementById('mpDevList');
-  if (!box) return;
+  if (!box) return mpLoadSessions();
   try {
     var r = await CamboAPI.post({ action: 'sessions_list' });
     if (!r || !r.ok) throw new Error('x');
