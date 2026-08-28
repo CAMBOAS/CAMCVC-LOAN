@@ -352,7 +352,8 @@ async function ensureSessionsTable() {
     INDEX idx_user (username)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
   /* deployments created before the session list showed where a sign-in came from */
-  for (const col of ['ip VARCHAR(64)','city VARCHAR(120)','region VARCHAR(120)','country VARCHAR(8)']) {
+  for (const col of ['ip VARCHAR(64)','city VARCHAR(120)','region VARCHAR(120)','country VARCHAR(8)',
+                     'lat VARCHAR(24)','lon VARCHAR(24)','tz VARCHAR(64)','postal VARCHAR(24)','ua VARCHAR(255)']) {
     try { await db().query('ALTER TABLE user_sessions ADD COLUMN ' + col + ' NULL'); } catch(e) {}
   }
   _sessionsReady = true;
@@ -371,6 +372,14 @@ function readGeo(req) {
     city:    dec(one(h['x-vercel-ip-city'])),
     region:  dec(one(h['x-vercel-ip-country-region'])),
     country: (one(h['x-vercel-ip-country']) || null),
+    /* Coordinates come from the same IP lookup as the city, so they place the
+       network, not the person — good enough to drop a pin on a map, never
+       precise enough to tell one building from the next. */
+    lat:     (one(h['x-vercel-ip-latitude'])  || null),
+    lon:     (one(h['x-vercel-ip-longitude']) || null),
+    tz:      (one(h['x-vercel-ip-timezone'])  || null),
+    postal:  (one(h['x-vercel-ip-postal-code']) || null),
+    ua:      String(one(h['user-agent']) || '').slice(0, 250) || null,
   };
 }
 
@@ -437,13 +446,16 @@ async function registerDevice(username, deviceId, label, geo) {
   geo = geo || {};
 
   await db().query(
-    `INSERT INTO user_sessions (username, device_id, label, revoked, last_seen, created_at, ip, city, region, country)
-     VALUES (?,?,?,0,UTC_TIMESTAMP(),UTC_TIMESTAMP(),?,?,?,?)
+    `INSERT INTO user_sessions (username, device_id, label, revoked, last_seen, created_at,
+                                ip, city, region, country, lat, lon, tz, postal, ua)
+     VALUES (?,?,?,0,UTC_TIMESTAMP(),UTC_TIMESTAMP(),?,?,?,?,?,?,?,?,?)
      ON DUPLICATE KEY UPDATE label=VALUES(label), revoked=0,
        last_seen=UTC_TIMESTAMP(), created_at=UTC_TIMESTAMP(),
-       ip=VALUES(ip), city=VALUES(city), region=VALUES(region), country=VALUES(country)`,
+       ip=VALUES(ip), city=VALUES(city), region=VALUES(region), country=VALUES(country),
+       lat=VALUES(lat), lon=VALUES(lon), tz=VALUES(tz), postal=VALUES(postal), ua=VALUES(ua)`,
     [username, deviceId, String(label || '').slice(0, 160),
-     geo.ip || null, geo.city || null, geo.region || null, geo.country || null]
+     geo.ip || null, geo.city || null, geo.region || null, geo.country || null,
+     geo.lat || null, geo.lon || null, geo.tz || null, geo.postal || null, geo.ua || null]
   );
 
   const [live] = await db().query(
@@ -640,8 +652,16 @@ async function handler(req, res) {
       if (st.length && String(st[0].status).toLowerCase() !== 'active') {
         return res.json({ ok:true, valid:false, reason:'inactive' });
       }
-      db().query('UPDATE user_sessions SET last_seen=UTC_TIMESTAMP() WHERE username=? AND device_id=?',
-                 [u, dev]).catch(()=>{});
+      /* COALESCE so a request without the geo headers (local dev, an odd proxy)
+         leaves the last known position alone instead of blanking it. */
+      const _g = readGeo(req);
+      db().query(
+        `UPDATE user_sessions SET last_seen=UTC_TIMESTAMP(),
+           ip=COALESCE(?,ip), city=COALESCE(?,city), region=COALESCE(?,region), country=COALESCE(?,country),
+           lat=COALESCE(?,lat), lon=COALESCE(?,lon), tz=COALESCE(?,tz), postal=COALESCE(?,postal)
+         WHERE username=? AND device_id=?`,
+        [_g.ip, _g.city, _g.region, _g.country, _g.lat, _g.lon, _g.tz, _g.postal, u, dev]
+      ).catch(()=>{});
       return res.json({ ok:true, valid:true });
     }
 
@@ -1816,6 +1836,33 @@ async function handler(req, res) {
         try { u.manages_teams  = u.manages_teams  ? JSON.parse(u.manages_teams)  : []; } catch(e) { u.manages_teams  = []; }
       });
       return res.json({ ok:true, users });
+    }
+
+    /* ── Every account with the devices it is signed in on (Admin only) ──
+         One query per table rather than one per user: the panel wants the whole
+         org at once and the session table is capped at two rows per account. ── */
+    if (action === 'users_control') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      await ensureUserPhotoCol();
+      await ensureUserScopeCols();
+      await ensureTeamNameCol();
+      await ensureSessionsTable();
+
+      const [users] = await db().query(
+        `SELECT username, role, display_name, status, exp_date, photo_url, created_by, team_name
+         FROM users ORDER BY id`
+      );
+      const [rows] = await db().query(
+        `SELECT username, device_id, label, revoked, ip, city, region, country, lat, lon, tz, postal, ua,
+                DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_utc,
+                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS seen_utc
+         FROM user_sessions ORDER BY revoked ASC, last_seen DESC`
+      );
+      const byUser = {};
+      rows.forEach(r => { (byUser[r.username] = byUser[r.username] || []).push(r); });
+      users.forEach(u => { u.sessions = byUser[u.username] || []; });
+
+      return res.json({ ok:true, users, max_devices: MAX_DEVICES });
     }
 
     /* ── Set a Sub Admin's display team name (Admin only) — deliberately separate from user_update,
