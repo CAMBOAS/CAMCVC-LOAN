@@ -626,6 +626,7 @@
 <div id="mpToast"></div>
 
 <script src="../assets/js/qrcode.js?v=1"></script>
+<script src="../assets/js/qr-card.js?v=1"></script>
 <script src="../assets/js/layout.js?v=32"></script>
 <script src="../assets/js/dashboard-layout.js?v=32"></script>
 <script src="../assets/js/auth.js?v=2"></script>
@@ -1401,9 +1402,15 @@ async function mpQrGenerate() {
   btn.disabled = false;
 }
 
+/* The saved or shared file is the same card the borrower links use — it leaves the
+   app on its own, so it has to explain itself. This one has no borrower attached,
+   so the customer still identifies themselves after scanning. */
 function mpQrBlob() {
-  return new Promise(function(resolve) {
-    document.getElementById('mpQrCanvas').toBlob(function(b){ resolve(b); }, 'image/png');
+  return CamboQrCard.toBlob({
+    url:   _mpQrUrl,
+    line1: 'ស្កេនកូដនេះដើម្បីមើលប្រវត្តិ',
+    line2: 'បញ្ចូលឈ្មោះ និងលេខទូរស័ព្ទរបស់អ្នក',
+    note:  CamboQrCard.validityNote(_mpQrMinutes)
   });
 }
 
@@ -1413,7 +1420,7 @@ async function mpQrSave() {
   var url = URL.createObjectURL(b);
   var a = document.createElement('a');
   a.href = url;
-  a.download = 'camcvc-portal-qr.png';
+  a.download = CamboQrCard.fileName('portal');
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -1424,7 +1431,7 @@ async function mpQrSave() {
 async function mpQrShare() {
   var b = await mpQrBlob();
   if (!b) return mpToast('Could not build the image', true);
-  var file = new File([b], 'camcvc-portal-qr.png', { type: 'image/png' });
+  var file = new File([b], CamboQrCard.fileName('portal'), { type: 'image/png' });
   /* Web Share with a file is phone/Safari territory; fall back to a download elsewhere */
   if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
     try {

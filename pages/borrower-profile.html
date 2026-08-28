@@ -210,6 +210,7 @@
 </div>
 
 <script src="../assets/js/qrcode.js?v=1"></script>
+<script src="../assets/js/qr-card.js?v=1"></script>
 <script src="../assets/js/layout.js?v=32"></script>
 <script src="../assets/js/dashboard-layout.js?v=32"></script>
 <script src="../assets/js/auth.js?v=2"></script>
@@ -550,128 +551,18 @@ async function bpQrGenerate() {
 /* ── Exported image ──
    On screen the plain QR is enough, but the file that gets saved or sent is a card:
    the customer receives it on its own, with no page around it to explain what it is. */
-function _bpRoundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y,     x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x,     y + h, r);
-  ctx.arcTo(x,     y + h, x,     y,     r);
-  ctx.arcTo(x,     y,     x + w, y,     r);
-  ctx.closePath();
-}
 
 /* Shrink until it fits — Khmer names get long and must not run off the card */
-function _bpFitText(ctx, text, maxW, weight, startPx, minPx) {
-  var px = startPx;
-  do {
-    ctx.font = weight + ' ' + px + 'px "Noto Sans Khmer", system-ui, sans-serif';
-    if (ctx.measureText(text).width <= maxW) break;
-    px -= 2;
-  } while (px > minPx);
-  return px;
-}
 
-async function _bpQrCard() {
-  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e) {}
-
-  var W = 900;
-  var brand = 'CHECK CVC';
-
-  /* Encode first: the module count decides how tall the card has to be, so every
-     piece below is measured from the finished QR rather than guessed. */
-  var q = qrcode(0, 'M'); q.addData(_bpQrUrl); q.make();
-  var n = q.getModuleCount();
-  var cell = Math.floor(470 / n);
-  var qw = cell * n;
-
-  var HEAD = 210, PAD = 90, STRIP = 128;
-  var QGAP = 58;            /* strip → QR */
-  var L1 = 78, L2 = 46;     /* the two instruction lines */
-  var TAIL = 42;            /* breathing room before the card ends */
-  var cy = 260;
-  var ch = STRIP + QGAP + qw + L1 + L2 + TAIL;
-  var NOTE = 76, FOOT = 96;
-  var H = cy + ch + NOTE + FOOT;
-
-  var cv = document.createElement('canvas');
-  cv.width = W; cv.height = H;
-  var ctx = cv.getContext('2d');
-
-  /* page */
-  ctx.fillStyle = '#eef2f7';
-  ctx.fillRect(0, 0, W, H);
-
-  /* header band */
-  var g = ctx.createLinearGradient(0, 0, W, HEAD);
-  g.addColorStop(0, '#0f2f43'); g.addColorStop(1, '#12506b');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, HEAD);
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffffff';
-  _bpFitText(ctx, brand, W - 120, '800', 62, 30);
-  ctx.fillText(brand, W / 2, 108);
-  ctx.font = '500 26px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,.72)';
-  ctx.fillText('ប្រវត្តិការបង់ប្រាក់', W / 2, 152);
-
-  /* card */
-  var cx = PAD, cw = W - PAD * 2;
-  ctx.save();
-  ctx.shadowColor = 'rgba(15,23,42,.18)'; ctx.shadowBlur = 34; ctx.shadowOffsetY = 12;
-  ctx.fillStyle = '#ffffff';
-  _bpRoundRect(ctx, cx, cy, cw, ch, 30); ctx.fill();
-  ctx.restore();
-
-  /* name strip */
-  ctx.save();
-  _bpRoundRect(ctx, cx, cy, cw, STRIP, 30); ctx.clip();
-  var g2 = ctx.createLinearGradient(cx, cy, cx + cw, cy + STRIP);
-  g2.addColorStop(0, '#0891b2'); g2.addColorStop(1, '#6d5cff');
-  ctx.fillStyle = g2; ctx.fillRect(cx, cy, cw, STRIP);
-  ctx.restore();
-
-  var name = window._bpName || '';
-  ctx.fillStyle = '#ffffff';
-  var np = _bpFitText(ctx, name, cw - 90, '800', 44, 22);
-  ctx.fillText(name, W / 2, cy + 68 + np * 0.18);
-  if (window._bpPhone) {
-    ctx.font = '600 24px "Noto Sans Khmer", system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,.82)';
-    ctx.fillText(window._bpPhone, W / 2, cy + 108);
-  }
-
-  /* QR */
-  var qx = Math.round(cx + (cw - qw) / 2);
-  var qy = cy + STRIP + QGAP;
-  ctx.fillStyle = '#0f172a';
-  for (var r = 0; r < n; r++)
-    for (var c = 0; c < n; c++)
-      if (q.isDark(r, c)) ctx.fillRect(qx + c * cell, qy + r * cell, cell, cell);
-
-  /* instructions, both comfortably inside the card */
-  ctx.fillStyle = '#0f172a';
-  ctx.font = '800 34px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillText('ស្កេនកូដនេះដើម្បីមើលប្រវត្តិ', W / 2, qy + qw + L1 - 20);
-  ctx.fillStyle = '#64748b';
-  ctx.font = '500 25px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillText('បានបង់រួច និងចំនួននៅសល់របស់អ្នក', W / 2, qy + qw + L1 + L2 - 18);
-
-  /* how long it lasts, on the page below the card */
-  var note = (_bpQrMin === 0)
-    ? 'តំណនេះមិនមានកំណត់ពេលទេ'
-    : 'តំណនេះមានរយៈពេល ' + _bpQrMin + ' នាទី';
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '600 23px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillText(note, W / 2, cy + ch + 46);
-
-  /* footer band */
-  ctx.fillStyle = '#0f2f43';
-  ctx.fillRect(0, H - FOOT, W, FOOT);
-  ctx.fillStyle = 'rgba(255,255,255,.9)';
-  ctx.font = '700 26px "Noto Sans Khmer", system-ui, sans-serif';
-  ctx.fillText(brand + '  ·  សេវាពិនិត្យប្រវត្តិបង់ប្រាក់', W / 2, H - 38);
-
-  return cv;
+function _bpQrCard() {
+  return CamboQrCard.build({
+    url:        _bpQrUrl,
+    stripTitle: window._bpName || '',
+    stripSub:   window._bpPhone || '',
+    line1:      'ស្កេនកូដនេះដើម្បីមើលប្រវត្តិ',
+    line2:      'បានបង់រួច និងចំនួននៅសល់របស់អ្នក',
+    note:       CamboQrCard.validityNote(_bpQrMin)
+  });
 }
 
 async function _bpQrBlob() {
@@ -684,14 +575,14 @@ async function bpQrSave() {
   var url = URL.createObjectURL(b);
   var a = document.createElement('a');
   a.href = url;
-  a.download = 'QR-' + (window._bpName || 'borrower').replace(/[^\w\u1780-\u17ff]+/g, '-') + '.png';
+  a.download = CamboQrCard.fileName(window._bpName);
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
 }
 
 async function bpQrShare() {
   var b = await _bpQrBlob(); if (!b) return;
-  var f = new File([b], 'QR-' + (window._bpName || 'borrower').replace(/[^\w\u1780-\u17ff]+/g, '-') + '.png', { type: 'image/png' });
+  var f = new File([b], CamboQrCard.fileName(window._bpName), { type: 'image/png' });
   if (navigator.canShare && navigator.canShare({ files: [f] }) && navigator.share) {
     try { await navigator.share({ files: [f], text: _bpQrUrl }); return; }
     catch(e) { if (e && e.name === 'AbortError') return; }
