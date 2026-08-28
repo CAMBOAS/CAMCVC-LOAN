@@ -327,6 +327,7 @@ async function isWatched(username) {
 const MAX_DEVICES   = 2;   /* an account may be signed in on this many devices */
 const MAX_STRIKES   = 3;   /* wrong PINs, or device evictions, before the account is disabled */
 const QR_LOGIN_SECS = 50;  /* how long a sign-in QR stays valid */
+const QR_HS_SECS    = 120; /* how long the login page's QR waits to be approved */
 
 let _authGuardReady = false;
 async function ensureAuthGuardCols() {
@@ -384,6 +385,30 @@ async function ensureLoginQrTable() {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
   _loginQrReady = true;
+}
+
+/* ── Sign in a computer by scanning from a phone that is already signed in ──
+   The reverse of login_qr: here the *unauthenticated* browser mints the code and
+   waits, and the signed-in phone approves it. The row therefore starts with no
+   username at all — it is written only by the approving phone. ── */
+let _loginHsReady = false;
+async function ensureLoginHandshakeTable() {
+  if (_loginHsReady) return;
+  await db().query(`CREATE TABLE IF NOT EXISTS login_handshake (
+    token        VARCHAR(64) PRIMARY KEY,
+    device_id    VARCHAR(120) NOT NULL,
+    device_label VARCHAR(160) NULL,
+    ip           VARCHAR(64)  NULL,
+    city         VARCHAR(96)  NULL,
+    region       VARCHAR(96)  NULL,
+    country      VARCHAR(8)   NULL,
+    username     VARCHAR(100) NULL,
+    status       VARCHAR(12)  NOT NULL DEFAULT 'pending',
+    expires_at   DATETIME NOT NULL,
+    used_at      DATETIME NULL,
+    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  _loginHsReady = true;
 }
 
 /* Disable the account once a counter reaches the limit. Returns true when it just tripped. */
@@ -657,6 +682,55 @@ async function handler(req, res) {
       });
     }
 
+
+    /* ── Public: a computer at the login page asks for a code to be approved ──
+       Nothing here identifies anyone: the row only records which browser is waiting,
+       so a phone can later say who it is for. ── */
+    if (action === 'qr_handshake_start') {
+      await ensureLoginHandshakeTable();
+      const dev = String(body.device_id || '').trim();
+      if (!dev) return res.json({ ok:false, message:'missing_device' });
+      /* one waiting code per browser — asking again retires the last */
+      await db().query("UPDATE login_handshake SET status='cancelled' WHERE device_id=? AND status='pending'", [dev]);
+      const g = readGeo(req);
+      const token = crypto.randomBytes(18).toString('base64url');
+      await db().query(
+        `INSERT INTO login_handshake (token, device_id, device_label, ip, city, region, country, expires_at)
+         VALUES (?,?,?,?,?,?,?, DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? SECOND))`,
+        [token, dev, String(body.device_label || '').slice(0,160), g.ip, g.city, g.region, g.country, QR_HS_SECS]
+      );
+      return res.json({ ok:true, token, seconds: QR_HS_SECS });
+    }
+
+    /* ── Public: the waiting computer checks whether the phone approved yet ──
+       Only the browser that created the code may collect it, so a token read off
+       someone's screen is of no use anywhere else. ── */
+    if (action === 'qr_handshake_poll') {
+      await ensureLoginHandshakeTable();
+      const tok = String(body.token || '').trim();
+      const dev = String(body.device_id || '').trim();
+      if (!tok || !dev) return res.json({ ok:false, message:'invalid' });
+
+      const [rows] = await db().query(
+        `SELECT device_id, username, status, used_at, (expires_at <= UTC_TIMESTAMP()) AS expired
+         FROM login_handshake WHERE token=? LIMIT 1`, [tok]
+      );
+      if (!rows.length)                 return res.json({ ok:true, status:'invalid' });
+      if (rows[0].device_id !== dev)    return res.json({ ok:true, status:'invalid' });
+      if (rows[0].used_at)              return res.json({ ok:true, status:'used' });
+      if (rows[0].status === 'cancelled') return res.json({ ok:true, status:'cancelled' });
+      if (Number(rows[0].expired) === 1)  return res.json({ ok:true, status:'expired' });
+      if (rows[0].status !== 'approved')  return res.json({ ok:true, status:'pending' });
+
+      const [ur] = await db().query(
+        'SELECT username, pin, status FROM users WHERE username=? LIMIT 1', [rows[0].username]
+      );
+      if (!ur.length) return res.json({ ok:true, status:'invalid' });
+      if (String(ur[0].status).toLowerCase() !== 'active') return res.json({ ok:true, status:'inactive' });
+
+      await db().query('UPDATE login_handshake SET used_at=UTC_TIMESTAMP() WHERE token=?', [tok]);
+      return res.json({ ok:true, status:'approved', username: ur[0].username, pin: ur[0].pin });
+    }
 
     /* ── Portal share links (QR) ── */
     let _qrTokTableReady = false;
@@ -1478,6 +1552,65 @@ async function handler(req, res) {
         "SELECT DATE_FORMAT(expires_at, '%Y-%m-%dT%H:%i:%sZ') AS exp FROM login_qr WHERE token=?", [token]
       );
       return res.json({ ok:true, token, seconds: QR_LOGIN_SECS, expires_at:(row[0]||{}).exp || null });
+    }
+
+    /* ── Read a scanned computer's code without acting on it ──
+       Approving signs a whole other browser in as this account, so the phone is
+       shown what it is about to let in and has to say yes to it explicitly. ── */
+    if (action === 'qr_handshake_peek') {
+      await ensureLoginHandshakeTable();
+      const tok = String(body.token || '').trim();
+      if (!tok) return res.json({ ok:false, message:'invalid' });
+      const [rows] = await db().query(
+        `SELECT device_label, city, region, country, ip, status, used_at,
+                (expires_at <= UTC_TIMESTAMP()) AS expired,
+                TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), expires_at) AS left_secs
+         FROM login_handshake WHERE token=? LIMIT 1`, [tok]
+      );
+      if (!rows.length) return res.json({ ok:true, state:'invalid' });
+      const r = rows[0];
+      if (r.used_at)                return res.json({ ok:true, state:'used' });
+      if (r.status === 'cancelled') return res.json({ ok:true, state:'cancelled' });
+      if (Number(r.expired) === 1)  return res.json({ ok:true, state:'expired' });
+      if (r.status === 'approved')  return res.json({ ok:true, state:'approved' });
+      return res.json({
+        ok:true, state:'pending',
+        label: r.device_label || 'Unknown device',
+        city: r.city || '', region: r.region || '', country: r.country || '', ip: r.ip || '',
+        seconds: Math.max(0, Number(r.left_secs || 0)),
+      });
+    }
+
+    /* ── Approve it: the waiting computer may now sign in as me ── */
+    if (action === 'qr_handshake_approve') {
+      await ensureLoginHandshakeTable();
+      const tok = String(body.token || '').trim();
+      if (!tok) return res.json({ ok:false, message:'invalid' });
+      const [rows] = await db().query(
+        `SELECT status, used_at, (expires_at <= UTC_TIMESTAMP()) AS expired
+         FROM login_handshake WHERE token=? LIMIT 1`, [tok]
+      );
+      if (!rows.length)                  return res.json({ ok:false, message:'invalid' });
+      if (rows[0].used_at)               return res.json({ ok:false, message:'used' });
+      if (rows[0].status === 'cancelled') return res.json({ ok:false, message:'cancelled' });
+      if (Number(rows[0].expired) === 1) return res.json({ ok:false, message:'expired' });
+      if (rows[0].status === 'approved') return res.json({ ok:true, already:true });
+
+      await db().query(
+        "UPDATE login_handshake SET username=?, status='approved' WHERE token=? AND status='pending'",
+        [_bu, tok]
+      );
+      logActivity('user_login', _bv.name || _bu, _bu, null, { role: _bv.role, via: 'qr-approve' }).catch(()=>{});
+      return res.json({ ok:true });
+    }
+
+    /* ── Refuse it — the code dies immediately rather than waiting out its 2 minutes ── */
+    if (action === 'qr_handshake_deny') {
+      await ensureLoginHandshakeTable();
+      const tok = String(body.token || '').trim();
+      if (!tok) return res.json({ ok:false, message:'invalid' });
+      await db().query("UPDATE login_handshake SET status='cancelled' WHERE token=? AND status='pending'", [tok]);
+      return res.json({ ok:true });
     }
 
     /* ── My signed-in devices ── */
