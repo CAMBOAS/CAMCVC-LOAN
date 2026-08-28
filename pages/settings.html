@@ -255,7 +255,11 @@
       flex:0 1 240px; min-width:0; padding:7px 11px; border-radius:9px;
       border:1px solid rgba(148,163,184,.28); background:var(--card, rgba(255,255,255,.6));
       color:inherit; font-family:inherit; font-size:12px; outline:none;
+      /* type=search so browsers stop offering it a saved username — but Safari
+         then styles it as a rounded search field, which this undoes. */
+      -webkit-appearance:none; appearance:none;
     }
+    .cu-search::-webkit-search-cancel-button { -webkit-appearance:none; appearance:none }
     .cu-search:focus { border-color:rgba(124,92,255,.55) }
 
     .cu-tbl tbody tr.cu-row { cursor:pointer }
@@ -1231,7 +1235,7 @@
       <div class="st-panel" id="stPanel6">
         <div class="st-panel-toolbar">
           <div class="st-panel-title">Who is signed in, on what, and from where</div>
-          <input class="cu-search" id="cuSearch" type="text" placeholder="Search name or username…" oninput="cuRender()">
+          <input class="cu-search" id="cuSearch" name="cu_filter" type="search" placeholder="Search accounts…" oninput="cuRender()" autocomplete="off" data-lpignore="true" data-1p-ignore>
           <button class="st-section-add" onclick="loadControlUsers()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
             Refresh
