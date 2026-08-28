@@ -257,6 +257,35 @@
     .rt-sl-icon-btn:hover { color:var(--rt-accent); border-color:rgba(167,139,250,.45) }
     .rt-sl-empty { text-align:center; padding:18px 10px; color:var(--rt-muted); font-size:11px }
 
+    /* -- Customer QR -- */
+    .rt-qr { padding:14px 18px 18px; border-top:1px solid var(--rt-border) }
+    .rt-qr-hdr { display:flex; align-items:center; justify-content:space-between; gap:8px }
+    .rt-qr-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--rt-accent) }
+    .rt-qr-toggle { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; border:1.5px solid rgba(167,139,250,.4); background:rgba(167,139,250,.08); color:var(--rt-accent); font-size:11px; font-weight:700; font-family:inherit; cursor:pointer; transition:.15s }
+    .rt-qr-toggle:hover { background:rgba(167,139,250,.18) }
+    .rt-qr-body { margin-top:12px; flex-direction:column; gap:10px }
+    .rt-qr-sub { font-size:11px; color:var(--rt-muted); line-height:1.6 }
+    .rt-qr-sub b { color:var(--rt-text) }
+    .rt-qr-warn { margin-top:5px; font-size:10.5px; font-weight:700; color:#f59e0b; line-height:1.5 }
+    .rt-qr-lbl { font-size:9.5px; font-weight:800; color:var(--rt-muted); letter-spacing:.05em; text-transform:uppercase }
+    .rt-qr-seg { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px }
+    .rt-qr-seg button { flex:1; min-width:56px; padding:7px 4px; border-radius:8px; border:1.5px solid var(--rt-input-border); background:var(--rt-input); color:var(--rt-muted); font-size:11px; font-weight:700; font-family:inherit; cursor:pointer; transition:.15s }
+    .rt-qr-seg button:hover { color:var(--rt-text); border-color:rgba(167,139,250,.45) }
+    .rt-qr-seg button.on { background:rgba(167,139,250,.16); border-color:rgba(167,139,250,.6); color:var(--rt-accent) }
+    .rt-qr-hint { font-size:10px; color:var(--rt-muted); line-height:1.5 }
+    .rt-qr-gen { padding:9px 14px; border-radius:9px; border:none; background:linear-gradient(135deg,#7c5cff,#a78bfa); color:#fff; font-size:12px; font-weight:800; font-family:inherit; cursor:pointer; transition:.15s }
+    .rt-qr-gen:hover { filter:brightness(1.08) }
+    .rt-qr-gen:disabled { opacity:.55; cursor:default }
+    .rt-qr-status { font-size:10.5px; min-height:13px; color:var(--rt-muted); line-height:1.5 }
+    .rt-qr-out { display:none; flex-direction:column; align-items:center; gap:9px; padding-top:2px }
+    .rt-qr-canvas-wrap { background:#fff; border-radius:12px; padding:12px; line-height:0; box-shadow:0 6px 20px rgba(0,0,0,.18) }
+    .rt-qr-canvas-wrap canvas { width:186px; height:186px; display:block }
+    .rt-qr-exp { font-size:11px; font-weight:700; color:var(--rt-accent); font-variant-numeric:tabular-nums }
+    .rt-qr-exp.dead { color:var(--rt-red) }
+    .rt-qr-acts { display:flex; gap:6px; flex-wrap:wrap; justify-content:center }
+    .rt-qr-act { padding:7px 12px; border-radius:8px; border:1px solid var(--rt-border); background:var(--rt-card); color:var(--rt-text); font-size:11px; font-weight:700; font-family:inherit; cursor:pointer; transition:.15s }
+    .rt-qr-act:hover { border-color:rgba(167,139,250,.5); color:var(--rt-accent) }
+
     /* -- Upload overlay -- */
     .rt-upload-ov { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.7); backdrop-filter:blur(5px); animation:rtFadeIn .15s }
     @keyframes rtFadeIn { from{opacity:0} to{opacity:1} }
@@ -604,6 +633,42 @@
                 <div id="slForm"></div>
               </div>
 
+
+              <!-- -- Customer QR -- -->
+              <div class="rt-qr" style="margin:0 -18px">
+                <div class="rt-qr-hdr">
+                  <span class="rt-qr-title">Customer QR</span>
+                  <button type="button" class="rt-qr-toggle" id="rtQrToggleBtn" onclick="rtQrToggle()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg> QR</button>
+                </div>
+                <div class="rt-qr-body" id="rtQrBody" style="display:none">
+                  <div>
+                    <div class="rt-qr-sub" id="rtQrSub"></div>
+                    <div class="rt-qr-warn" id="rtQrWarn" style="display:none"></div>
+                  </div>
+                  <div>
+                    <div class="rt-qr-lbl">Valid for</div>
+                    <div class="rt-qr-seg" id="rtQrSeg">
+                      <button type="button" data-min="5" class="on" onclick="rtQrPick(5)">5 min</button>
+                      <button type="button" data-min="10" onclick="rtQrPick(10)">10 min</button>
+                      <button type="button" data-min="15" onclick="rtQrPick(15)">15 min</button>
+                      <button type="button" data-min="0" onclick="rtQrPick(0)">No limit</button>
+                    </div>
+                  </div>
+                  <div class="rt-qr-hint">Defaults to 5 minutes. After it runs out the link stops working.</div>
+                  <button type="button" class="rt-qr-gen" id="rtQrGenBtn" onclick="rtQrGenerate()">Generate</button>
+                  <div class="rt-qr-status" id="rtQrStatus"></div>
+                  <div class="rt-qr-out" id="rtQrOut">
+                    <div class="rt-qr-canvas-wrap"><canvas id="rtQrCanvas" width="360" height="360"></canvas></div>
+                    <div class="rt-qr-exp" id="rtQrExp"></div>
+                    <div class="rt-qr-acts">
+                      <button type="button" class="rt-qr-act" onclick="rtQrSave()">Save image</button>
+                      <button type="button" class="rt-qr-act" onclick="rtQrShare()">Share</button>
+                      <button type="button" class="rt-qr-act" onclick="rtQrCopy()">Copy link</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div><!-- rt-dp-body personal -->
           </div><!-- rt-dp-col-left -->
 
@@ -834,6 +899,8 @@
 <script src="../assets/js/dashboard-layout.js?v=32"></script>
 <script src="../assets/js/auth.js?v=3"></script>
 <script src="../assets/js/api.js?v=9"></script>
+<script src="../assets/js/qrcode.js?v=1"></script>
+<script src="../assets/js/qr-card.js?v=1"></script>
 <script>
 'use strict';
 
@@ -1119,6 +1186,170 @@ function renderGallery(loan) {
     +'<span class="rt-gadd-lbl">Add</span>'
     +'</div>';
   grid.innerHTML = html;
+}
+
+/* ── Customer QR ──
+   The same borrower-bound portal link the Borrower Profile hands out, generated here
+   so a customer can be dealt with without leaving the tracker. The token is tied to
+   whoever is selected, so it opens their repayment history and nobody else's. */
+var _rtQrMin = 5, _rtQrUrl = '', _rtQrTimer = null;
+
+function rtQrToggle() {
+  var el = document.getElementById('rtQrBody');
+  if (!el) return;
+  var open = el.style.display === 'none';
+  el.style.display = open ? 'flex' : 'none';
+  if (open) rtQrPortalWarn();
+}
+
+function rtQrPick(m) {
+  _rtQrMin = m;
+  var btns = document.querySelectorAll('#rtQrSeg button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('on', Number(btns[i].getAttribute('data-min')) === m);
+  }
+}
+
+/* A closed portal still generates a working link, but the customer lands on the
+   thank-you page instead of their history — say so before it gets sent. */
+function rtQrPortalWarn() {
+  var el = document.getElementById('rtQrWarn');
+  var chk = document.getElementById('dpInPortal');
+  if (!el || !chk) return;
+  if (chk.checked) { el.style.display = 'none'; el.textContent = ''; return; }
+  el.textContent = 'Customer Portal is closed for this borrower — the QR will open a thank-you page, not the history.';
+  el.style.display = '';
+}
+
+/* Selecting a different borrower must not leave the previous one's QR on screen. */
+function rtQrReset(loan) {
+  _rtQrUrl = '';
+  if (_rtQrTimer) { clearInterval(_rtQrTimer); _rtQrTimer = null; }
+  var body = document.getElementById('rtQrBody');
+  if (body) body.style.display = 'none';
+  var out = document.getElementById('rtQrOut');
+  if (out) out.style.display = 'none';
+  var st = document.getElementById('rtQrStatus');
+  if (st) { st.textContent = ''; st.style.color = ''; }
+  rtQrPick(5);
+  var sub = document.getElementById('rtQrSub');
+  if (sub) {
+    sub.innerHTML = 'A QR for <b>' + esc((loan && loan.FullName) || '—')
+      + '</b> only. Whoever scans it opens this borrower&#39;s repayment history straight away.';
+  }
+  rtQrPortalWarn();
+}
+
+function _rtQrCountdown(iso) {
+  var el = document.getElementById('rtQrExp');
+  if (_rtQrTimer) { clearInterval(_rtQrTimer); _rtQrTimer = null; }
+  if (!el) return;
+  if (!iso) { el.textContent = 'Never expires'; el.classList.remove('dead'); return; }
+  var end = new Date(iso).getTime();
+  var tick = function() {
+    var left = Math.max(0, end - Date.now());
+    if (left <= 0) {
+      el.textContent = 'Expired — generate a new one';
+      el.classList.add('dead');
+      clearInterval(_rtQrTimer); _rtQrTimer = null;
+      return;
+    }
+    var m = Math.floor(left / 60000), sec = Math.floor((left % 60000) / 1000);
+    el.textContent = 'Expires in ' + m + ':' + (sec < 10 ? '0' : '') + sec;
+    el.classList.remove('dead');
+  };
+  tick();
+  _rtQrTimer = setInterval(tick, 1000);
+}
+
+function _rtQrLoan() {
+  return _selectedKey ? _loans.find(function(l){ return l.DateTime === _selectedKey; }) : null;
+}
+
+async function rtQrGenerate() {
+  var btn = document.getElementById('rtQrGenBtn');
+  var st  = document.getElementById('rtQrStatus');
+  var loan = _rtQrLoan();
+  if (!loan) { st.textContent = 'Select a borrower first.'; st.style.color = 'var(--rt-red)'; return; }
+  if (typeof qrcode === 'undefined') {
+    st.textContent = 'QR library did not load — refresh the page.'; st.style.color = 'var(--rt-red)'; return;
+  }
+  btn.disabled = true;
+  st.textContent = 'Generating…'; st.style.color = '';
+  try {
+    var r = await CamboAPI.post({ action: 'qr_token_create', minutes: _rtQrMin, key: _selectedKey });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
+
+    _rtQrUrl = location.origin + location.pathname.replace(/[^/]*$/, 'user.html')
+             + '?t=' + encodeURIComponent(r.token);
+
+    var q = qrcode(0, 'M'); q.addData(_rtQrUrl); q.make();
+    var cv = document.getElementById('rtQrCanvas'), ctx = cv.getContext('2d');
+    var n = q.getModuleCount(), quiet = 4;
+    var cell = Math.floor(cv.width / (n + quiet * 2));
+    var off  = Math.floor((cv.width - cell * n) / 2);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#0f172a';
+    for (var row = 0; row < n; row++)
+      for (var col = 0; col < n; col++)
+        if (q.isDark(row, col)) ctx.fillRect(off + col * cell, off + row * cell, cell, cell);
+
+    document.getElementById('rtQrOut').style.display = 'flex';
+    _rtQrCountdown(r.expires_at);
+    st.textContent = r.minutes === 0 ? 'Link created — no time limit.'
+                                     : 'Link created — valid for ' + r.minutes + ' minutes.';
+    st.style.color = 'var(--rt-green)';
+  } catch(e) {
+    st.textContent = e.message || 'Error'; st.style.color = 'var(--rt-red)';
+  }
+  btn.disabled = false;
+}
+
+/* Saved or sent, the file leaves on its own — so it goes out as the shared card,
+   the same one the Borrower Profile produces. */
+function _rtQrBlob() {
+  var loan = _rtQrLoan() || {};
+  return CamboQrCard.toBlob({
+    url:        _rtQrUrl,
+    stripTitle: loan.FullName || '',
+    stripSub:   loan.Phone || '',
+    line1:      'ស្កេនកូដនេះដើម្បីមើលប្រវត្តិ',
+    line2:      'បានបង់រួច និងចំនួននៅសល់របស់អ្នក',
+    note:       CamboQrCard.validityNote(_rtQrMin)
+  });
+}
+
+function _rtQrFile() {
+  var loan = _rtQrLoan() || {};
+  return CamboQrCard.fileName(loan.FullName);
+}
+
+async function rtQrSave() {
+  if (!_rtQrUrl) return;
+  var b = await _rtQrBlob(); if (!b) return;
+  var url = URL.createObjectURL(b);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = _rtQrFile();
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
+
+async function rtQrShare() {
+  if (!_rtQrUrl) return;
+  var b = await _rtQrBlob(); if (!b) return;
+  var f = new File([b], _rtQrFile(), { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [f] }) && navigator.share) {
+    try { await navigator.share({ files: [f], text: _rtQrUrl }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
+  rtQrSave();
+}
+
+async function rtQrCopy() {
+  if (!_rtQrUrl) return;
+  try { await navigator.clipboard.writeText(_rtQrUrl); toast('Link copied!'); }
+  catch(e) { window.prompt('Copy this link:', _rtQrUrl); }
 }
 
 /* ── Social Links ── */
@@ -1852,6 +2083,8 @@ function populateDetail(loan) {
   renderGallery(loan);
   /* Social Links */
   renderSocialLinks(loan);
+  /* Customer QR */
+  rtQrReset(loan);
   /* Loan instance tabs */
   renderLoanTabs(loan);
 }
@@ -1869,6 +2102,7 @@ function onDetailPortalChange() {
   if (!chk || !sub) return;
   sub.textContent = chk.checked ? 'Open — customer can view history' : 'Closed — customer sees a thank-you';
   sub.style.color = chk.checked ? '' : '#059669';
+  if (window.rtQrPortalWarn) rtQrPortalWarn();
 }
 
 /* -- Build loan obj from form -- */
