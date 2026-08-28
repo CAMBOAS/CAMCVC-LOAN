@@ -525,7 +525,7 @@
       <div class="mp-cam" id="mpCam">
         <div class="mp-cam-card">
           <div class="mp-cam-hd">
-            <span>ស្កេនកូដពីកុំព្យូទ័រ</span>
+            <span>Scan a computer&#39;s code</span>
             <button type="button" class="mp-cam-x" onclick="mpApCamClose()" aria-label="close">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -1443,24 +1443,24 @@ async function mpApScan() {
   var box = document.getElementById('mpCam');
   var msg = document.getElementById('mpCamMsg');
   box.classList.add('on');
-  msg.textContent = 'កំពុងបើកកាមេរ៉ា…';
+  msg.textContent = 'Opening the camera…';
   _mpApBusy = false;
 
   try { await _mpApJsQR(); }
-  catch(e) { msg.textContent = 'មិនអាចផ្ទុកកម្មវិធីស្កេនបាន'; return; }
+  catch(e) { msg.textContent = 'Could not load the scanner'; return; }
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    msg.textContent = 'ឧបករណ៍នេះមិនអាចប្រើកាមេរ៉ាបានទេ'; return;
+    msg.textContent = 'This device has no camera'; return;
   }
   try {
     _mpApStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
   } catch(e) {
     /* the camera needs a secure context, and the person can simply say no */
     msg.textContent = (e && e.name === 'NotAllowedError')
-      ? 'សូមអនុញ្ញាតឲ្យប្រើកាមេរ៉ា'
+      ? 'Please allow camera access'
       : (location.protocol === 'https:' || location.hostname === 'localhost')
-        ? 'មិនអាចបើកកាមេរ៉ាបាន'
-        : 'កាមេរ៉ាដំណើរការតែលើ HTTPS ប៉ុណ្ណោះ';
+        ? 'Could not open the camera'
+        : 'The camera only works over HTTPS';
     return;
   }
 
@@ -1468,7 +1468,7 @@ async function mpApScan() {
   video.srcObject = _mpApStream;
   video.setAttribute('playsinline', 'true');
   await video.play();
-  msg.textContent = 'តម្រង់កាមេរ៉ាទៅកូដនៅលើកុំព្យូទ័រ';
+  msg.textContent = 'Point the camera at the code on the computer';
 
   var cv  = document.getElementById('mpCamCanvas');
   var ctx = cv.getContext('2d', { willReadFrequently:true });
@@ -1502,16 +1502,16 @@ function mpApCamClose() {
 }
 
 var _MP_AP_MSG = {
-  invalid:   'កូដមិនត្រឹមត្រូវ',
-  used:      'កូដនេះត្រូវបានប្រើរួចហើយ',
-  expired:   'កូដផុតកំណត់ហើយ — សូមបង្កើតកូដថ្មីនៅលើកុំព្យូទ័រ',
-  cancelled: 'កូដនេះត្រូវបានបោះបង់',
-  approved:  'កូដនេះត្រូវបានយល់ព្រមរួចហើយ'
+  invalid:   'That code is not valid',
+  used:      'This code has already been used',
+  expired:   'This code has expired — show a new one on the computer',
+  cancelled: 'This code was cancelled',
+  approved:  'This code was already approved'
 };
 
 async function mpApPeek(tok) {
   var st = document.getElementById('mpApStatus');
-  st.textContent = 'កំពុងពិនិត្យកូដ…';
+  st.textContent = 'Checking the code…';
   st.style.color = 'var(--muted)';
   try {
     var r = await CamboAPI.post({ action:'qr_handshake_peek', token: tok });
@@ -1544,13 +1544,13 @@ function _mpApCountdown(secs) {
   var left = secs;
   var t = function() {
     if (left <= 0) {
-      el.textContent = 'កូដផុតកំណត់ហើយ';
+      el.textContent = 'This code has expired';
       el.classList.add('dead');
       document.getElementById('mpApYes').disabled = true;
       clearInterval(_mpApTimer); _mpApTimer = null;
       return;
     }
-    el.textContent = 'នៅសល់ ' + left + ' វិនាទី';
+    el.textContent = left + 's left';
     el.classList.remove('dead');
     left--;
   };
@@ -1575,7 +1575,7 @@ async function mpApApprove() {
     _mpApClose();
     var st = document.getElementById('mpApStatus');
     if (r && r.ok) {
-      st.textContent = 'យល់ព្រមរួចរាល់ — កុំព្យូទ័រកំពុងចូល';
+      st.textContent = 'Approved — the computer is signing in';
       st.style.color = '#4ade80';
       mpToast('Computer signed in');
       mpLoadSessions();
@@ -1595,7 +1595,7 @@ async function mpApDeny() {
   if (!tok) return;
   try { await CamboAPI.post({ action:'qr_handshake_deny', token: tok }); } catch(e) {}
   var st = document.getElementById('mpApStatus');
-  st.textContent = 'បានបដិសេធ — កូដនោះលែងប្រើបាន';
+  st.textContent = 'Refused — that code no longer works';
   st.style.color = 'var(--muted)';
 }
 

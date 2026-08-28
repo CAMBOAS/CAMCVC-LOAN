@@ -536,15 +536,15 @@
         <span class="spin" id="btnSpin"></span>
       </button>
 
-      <div class="lq-or"><span>ឬ</span></div>
+      <div class="lq-or"><span>or</span></div>
       <button type="button" class="lq-scan-btn" onclick="lqOpenScanner()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>
-        ស្កេន QR ដើម្បីចូល
+        Scan a QR code to sign in
       </button>
 
       <button type="button" class="lq-scan-btn" style="margin-top:9px" onclick="CamboQrLogin.open({ next: 'pages/loan-list.html' })">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M2 20h20"/></svg>
-        ចូលដោយស្កេន QR ពីទូរស័ព្ទ
+        Sign in by scanning with your phone
       </button>
 
     </div>
@@ -553,7 +553,7 @@
     <div class="lq-scan" id="lqScan" style="display:none">
       <div class="lq-scan-card">
         <div class="lq-scan-hd">
-          <span>ស្កេនកូដ QR</span>
+          <span>Scan QR code</span>
           <button type="button" class="lq-scan-x" onclick="lqCloseScanner()" aria-label="close">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -602,10 +602,10 @@ function _lqStoreAndGo(res, uname, pin) {
 }
 
 var _LQ_MSG = {
-  used:    'កូដនេះត្រូវបានប្រើរួចហើយ — សូមបង្កើតកូដថ្មី',
-  expired: 'កូដនេះផុតកំណត់ហើយ — សូមបង្កើតកូដថ្មី',
-  invalid: 'កូដមិនត្រឹមត្រូវ',
-  inactive:'គណនីនេះត្រូវបានបិទ — សូមទំនាក់ទំនង Admin'
+  used:    'This code has already been used — show a new one',
+  expired: 'This code has expired — show a new one',
+  invalid: 'That code is not valid',
+  inactive:'This account is disabled — please contact Admin'
 };
 
 async function lqRedeem(token) {
@@ -615,7 +615,7 @@ async function lqRedeem(token) {
     label: window.CamboDevice ? CamboDevice.label() : ''
   });
   if (!r || !r.ok) {
-    showErr(_LQ_MSG[(r && r.message) || 'invalid'] || 'កូដមិនត្រឹមត្រូវ', true);
+    showErr(_LQ_MSG[(r && r.message) || 'invalid'] || 'That code is not valid', true);
     return false;
   }
   /* the token hands back the account's own credentials, so finish as a normal sign-in */
@@ -625,7 +625,7 @@ async function lqRedeem(token) {
     device_label: window.CamboDevice ? CamboDevice.label() : ''
   });
   if (!login || !login.ok) {
-    showErr((login && login.message) || 'ចូលមិនបាន', true);
+    showErr((login && login.message) || 'Could not sign in', true);
     return false;
   }
   _lqStoreAndGo(login, r.username, r.pin);
@@ -658,13 +658,13 @@ async function lqOpenScanner() {
   var box = document.getElementById('lqScan');
   var msg = document.getElementById('lqScanMsg');
   box.style.display = 'flex';
-  msg.textContent = 'កំពុងបើកកាមេរ៉ា…';
+  msg.textContent = 'Opening the camera…';
 
   try { await _lqLoadJsQR(); }
-  catch (e) { msg.textContent = 'មិនអាចផ្ទុកកម្មវិធីស្កេនបាន'; return; }
+  catch (e) { msg.textContent = 'Could not load the scanner'; return; }
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    msg.textContent = 'ឧបករណ៍នេះមិនអាចប្រើកាមេរ៉ាបានទេ';
+    msg.textContent = 'This device has no camera';
     return;
   }
   try {
@@ -674,10 +674,10 @@ async function lqOpenScanner() {
   } catch (e) {
     /* the browser blocks the camera outside a secure context, and the user can refuse */
     msg.textContent = (e && e.name === 'NotAllowedError')
-      ? 'សូមអនុញ្ញាតឲ្យប្រើកាមេរ៉ា'
+      ? 'Please allow camera access'
       : (location.protocol === 'https:' || location.hostname === 'localhost')
-        ? 'មិនអាចបើកកាមេរ៉ាបាន'
-        : 'កាមេរ៉ាដំណើរការតែលើ HTTPS ប៉ុណ្ណោះ';
+        ? 'Could not open the camera'
+        : 'The camera only works over HTTPS';
     return;
   }
 
@@ -685,7 +685,7 @@ async function lqOpenScanner() {
   video.srcObject = _lqStream;
   video.setAttribute('playsinline', 'true');
   await video.play();
-  msg.textContent = 'តម្រង់កាមេរ៉ាទៅកាន់កូដ QR';
+  msg.textContent = 'Point the camera at the QR code';
 
   var cv  = document.getElementById('lqCanvas');
   var ctx = cv.getContext('2d', { willReadFrequently: true });
@@ -700,7 +700,7 @@ async function lqOpenScanner() {
       var code = window.jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
       if (code && code.data) {
         _lqBusy = true;
-        msg.textContent = 'កំពុងចូល…';
+        msg.textContent = 'Signing in…';
         var tok = code.data;
         try {
           var u = new URL(code.data, location.href);

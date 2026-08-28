@@ -96,16 +96,16 @@
         '<div class="lh-qr"><canvas id="lhCanvas" width="380" height="380"></canvas>' +
           '<div class="lh-veil" id="lhVeil"><span id="lhVeilTxt"></span></div>' +
         '</div>' +
-        '<div class="lh-title">ស្កេនពីទូរស័ព្ទដែលចូលរួចហើយ</div>' +
+        '<div class="lh-title">Scan from a phone you are signed in on</div>' +
         '<ol class="lh-steps">' +
-          '<li><b>1.</b><span>បើកកម្មវិធីនៅលើទូរស័ព្ទរបស់អ្នក</span></li>' +
-          '<li><b>2.</b><span>ចូល My Profile › Sign-in QR › ស្កេនកូដកុំព្យូទ័រ</span></li>' +
-          '<li><b>3.</b><span>ស្កេនរូបនេះ រួចចុច យល់ព្រម</span></li>' +
+          '<li><b>1.</b><span>Open the app on your phone</span></li>' +
+          '<li><b>2.</b><span>Go to My Profile &rsaquo; Sign-in QR &rsaquo; Scan a computer&#39;s code</span></li>' +
+          '<li><b>3.</b><span>Scan this code, then tap Yes</span></li>' +
         '</ol>' +
         '<div class="lh-exp" id="lhExp"></div>' +
         '<div class="lh-msg" id="lhMsg"></div>' +
-        '<button type="button" class="lh-btn" id="lhNew" style="display:none">បង្កើតកូដថ្មី</button>' +
-        '<button type="button" class="lh-link" id="lhBack">← ចូលដោយ Username / PIN</button>' +
+        '<button type="button" class="lh-btn" id="lhNew" style="display:none">Show a new code</button>' +
+        '<button type="button" class="lh-link" id="lhBack">&larr; Sign in with username and PIN</button>' +
       '</div>';
     document.body.appendChild(ov);
     $('lhX').onclick = close;
@@ -152,8 +152,8 @@
     _left = secs;
     var el = $('lhExp');
     var t = function () {
-      if (_left <= 0) { dead('កូដផុតកំណត់ហើយ'); return; }
-      el.textContent = 'កូដនេះមានរយៈពេល ' + _left + ' វិនាទី';
+      if (_left <= 0) { dead('This code has expired'); return; }
+      el.textContent = 'Expires in ' + _left + 's';
       el.classList.remove('dead');
       _left--;
     };
@@ -162,22 +162,22 @@
   }
 
   var MSG = {
-    invalid:   'កូដមិនត្រឹមត្រូវ',
-    used:      'កូដនេះត្រូវបានប្រើរួចហើយ',
-    expired:   'កូដផុតកំណត់ហើយ',
-    cancelled: 'កូដនេះត្រូវបានបោះបង់',
-    inactive:  'គណនីនេះត្រូវបានបិទ — សូមទំនាក់ទំនង Admin'
+    invalid:   'That code is not valid',
+    used:      'This code has already been used',
+    expired:   'This code has expired',
+    cancelled: 'This code was cancelled',
+    inactive:  'This account is disabled — please contact Admin'
   };
 
   async function finish(username, pin) {
     stop();
-    veil('កំពុងចូល…');
+    veil('Signing in…');
     var login = await window.CamboAPI.post({
       action: 'api_login', username: username, pin: pin,
       device_id: window.CamboDevice ? window.CamboDevice.id() : '',
       device_label: window.CamboDevice ? window.CamboDevice.label() : ''
     });
-    if (!login || !login.ok) { dead((login && login.message) || 'ចូលមិនបាន'); return; }
+    if (!login || !login.ok) { dead((login && login.message) || 'Could not sign in'); return; }
 
     var exp = login.expDate ? new Date(login.expDate + 'T23:59:59').getTime()
                             : Date.now() + 7 * 24 * 60 * 60 * 1000;
@@ -230,11 +230,11 @@
     $('lhOv').classList.add('on');
     $('lhNew').style.display = 'none';
     $('lhMsg').textContent = '';
-    veil('កំពុងបង្កើតកូដ…');
+    veil('Creating a code…');
     stop();
 
     try { await loadQrLib(); }
-    catch (e) { dead('មិនអាចផ្ទុក QR បានទេ'); return; }
+    catch (e) { dead('Could not load the QR library'); return; }
 
     try {
       var r = await window.CamboAPI.post({
@@ -250,7 +250,7 @@
       _poll = setInterval(tickPoll, POLL_MS);
       watchVisible();
     } catch (e) {
-      dead('មិនអាចបង្កើតកូដបានទេ — សូមព្យាយាមម្ដងទៀត');
+      dead('Could not create a code — please try again');
     }
   }
 
