@@ -1575,6 +1575,115 @@
     location.replace(getBase() + 'login.html?bumped=1');
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     PRECISE LOCATION
+     The IP address only ever places the connection, which is a district at
+     best. The device itself knows better, but only the person sitting at it
+     can hand that over: the browser will not give a position to a page the
+     user has not allowed, and they can withdraw it at any time from the site
+     settings. That consent is the whole mechanism — there is no way around
+     it, and this code does not try.
+
+     So: never prompt on our own. Ask silently only where permission already
+     stands, and leave the asking to the button on My Profile.
+     ══════════════════════════════════════════════════════════════ */
+  var GEO_KEY   = 'geo_share';       /* the person's own choice, per device */
+  var GEO_EVERY = 5 * 60 * 1000;     /* a fix costs battery; five minutes is plenty */
+  var _geoTimer = null;
+
+  function geoWanted() {
+    try { return localStorage.getItem(GEO_KEY) === '1'; } catch(e) { return false; }
+  }
+
+  function geoSetWanted(on) {
+    try { on ? localStorage.setItem(GEO_KEY, '1') : localStorage.removeItem(GEO_KEY); } catch(e) {}
+  }
+
+  /* granted | prompt | denied | unknown */
+  async function geoPermission() {
+    if (!navigator.geolocation) return 'unsupported';
+    try {
+      if (!navigator.permissions || !navigator.permissions.query) return 'unknown';
+      var st = await navigator.permissions.query({ name: 'geolocation' });
+      return st.state;
+    } catch(e) { return 'unknown'; }
+  }
+
+  function geoRead(highAccuracy) {
+    return new Promise(function (resolve, reject) {
+      if (!navigator.geolocation) { reject(new Error('unsupported')); return; }
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: !!highAccuracy,
+        timeout: 15000,
+        maximumAge: 60000
+      });
+    });
+  }
+
+  async function geoSend(pos) {
+    if (typeof CamboAPI === 'undefined' || !window.CamboDevice) return false;
+    var c = pos && pos.coords;
+    if (!c) return false;
+    try {
+      var r = await CamboAPI.post({
+        action: 'session_geo',
+        device_id: CamboDevice.id(),
+        lat: c.latitude, lon: c.longitude, accuracy: c.accuracy
+      });
+      return !!(r && r.ok);
+    } catch(e) { return false; }
+  }
+
+  /* Called by the button on My Profile. This is the one path allowed to make the
+     browser ask, because a person just clicked to make it happen. */
+  async function appShareLocation() {
+    var pos;
+    try { pos = await geoRead(true); }
+    catch(e) {
+      geoSetWanted(false);
+      return { ok:false, reason: (e && e.code === 1) ? 'denied'
+                              : (e && e.code === 3) ? 'timeout' : 'unavailable' };
+    }
+    geoSetWanted(true);
+    var sent = await geoSend(pos);
+    geoStart();
+    return {
+      ok: sent, reason: sent ? '' : 'save_failed',
+      lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: pos.coords.accuracy
+    };
+  }
+
+  async function appStopSharingLocation() {
+    geoSetWanted(false);
+    if (_geoTimer) { clearInterval(_geoTimer); _geoTimer = null; }
+    if (typeof CamboAPI === 'undefined' || !window.CamboDevice) return { ok:false };
+    try {
+      var r = await CamboAPI.post({ action: 'session_geo_clear', device_id: CamboDevice.id() });
+      return { ok: !!(r && r.ok) };
+    } catch(e) { return { ok:false }; }
+  }
+
+  /* The quiet refresh. Bails out unless the person turned it on here *and* the
+     browser still says yes, so a revoked permission simply stops reporting. */
+  async function geoTick() {
+    if (!geoWanted()) return;
+    var st = await geoPermission();
+    if (st === 'denied' || st === 'unsupported') { geoSetWanted(false); return; }
+    if (st === 'prompt') return;              /* would pop a dialog — not from a timer */
+    try { geoSend(await geoRead(true)); } catch(e) {}
+  }
+
+  function geoStart() {
+    if (_geoTimer) return;
+    geoTick();
+    _geoTimer = setInterval(geoTick, GEO_EVERY);
+  }
+
+  window.appShareLocation      = appShareLocation;
+  window.appStopSharingLocation = appStopSharingLocation;
+  window.appGeoPermission      = geoPermission;
+  window.appGeoWanted          = geoWanted;
+
   window.appCheckSession = checkSession;
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -1596,6 +1705,8 @@
     if (_pg !== 'login.html' && _pg !== 'user.html') {
       setTimeout(checkSession, 1500);
       setInterval(checkSession, 30000);
+      /* only does anything for a device whose owner already opted in */
+      setTimeout(geoStart, 3000);
     }
   });
 })();

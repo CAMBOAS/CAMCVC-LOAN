@@ -318,6 +318,16 @@
     .cu-f-val { font-size:12px; margin-top:2px; word-break:break-word }
     .cu-f-val.mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px }
 
+    .cu-src {
+      margin-left:6px; font-size:8.5px; font-weight:800; letter-spacing:.05em; padding:1px 5px;
+      border-radius:4px; border:1px solid rgba(148,163,184,.35); color:var(--muted); white-space:nowrap;
+    }
+    .cu-src-gps { border-color:rgba(34,197,94,.45); color:#16a34a; background:rgba(34,197,94,.1) }
+    [data-theme="dark"] .cu-src-gps { color:#4ade80 }
+    .cu-map-gps { border-color:rgba(34,197,94,.4); background:rgba(34,197,94,.1); color:#16a34a }
+    [data-theme="dark"] .cu-map-gps { color:#4ade80 }
+    .cu-map-gps:hover { background:rgba(34,197,94,.18) }
+
     .cu-note {
       display:flex; align-items:flex-start; gap:8px; padding:10px 13px; border-radius:11px;
       border:1px solid rgba(245,158,11,.28); background:rgba(245,158,11,.07);
@@ -1274,9 +1284,11 @@
 
         <div class="cu-note">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span>Location comes from the internet connection each device signs in on, so it is accurate to a
-          city or a district — not to a street or a branch. Mobile data can place someone in the wrong town
-          entirely. Treat it as a rough area, never as proof of where a person is.</span>
+          <span><b>GPS</b> rows are the position the device itself reported — accurate enough to tell one
+          branch from another, and only available where the person switched it on in My Profile and allowed
+          their browser to share it. They can withdraw it at any time. <b>IP</b> rows are worked out from the
+          internet connection instead: a town or a district at best, and mobile data can be a province out.
+          Never read an IP row as proof of where someone is.</span>
         </div>
       </div><!-- /Panel 6 -->
 
@@ -1403,7 +1415,7 @@
 
 <script src="../assets/js/api.js"></script>
 <script src="../assets/js/auth.js"></script>
-<script src="../assets/js/layout.js?v=32"></script>
+<script src="../assets/js/layout.js?v=33"></script>
 <script>
 'use strict';
 
@@ -2436,16 +2448,46 @@ function _cuPlace(d) {
   return bits.join(', ');
 }
 
-/* Coordinates when we have them, otherwise let Maps search for the place name */
+/* A fix from the device beats the IP guess; failing both, let Maps search the name.
+   The zoom matches the confidence — street level for GPS, town level for an IP. */
 function _cuMapUrl(d) {
+  if (_cuHasGps(d)) return 'https://www.google.com/maps?q=' + encodeURIComponent(d.gps_lat + ',' + d.gps_lon) + '&z=18';
   if (d.lat && d.lon) return 'https://www.google.com/maps?q=' + encodeURIComponent(d.lat + ',' + d.lon) + '&z=13';
   var place = _cuPlace(d);
   if (!place) return '';
   return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(place);
 }
 
+function _cuHasGps(d) {
+  return d && d.gps_lat !== null && d.gps_lat !== undefined && d.gps_lat !== ''
+           && d.gps_lon !== null && d.gps_lon !== undefined && d.gps_lon !== '';
+}
+
+/* "±12 m" says more about how much to trust the pin than the coordinates do */
+function _cuAcc(d) {
+  var a = Number(d.gps_acc);
+  if (!isFinite(a) || a <= 0) return '';
+  return a < 1000 ? '±' + Math.round(a) + ' m' : '±' + (a / 1000).toFixed(1) + ' km';
+}
+
 function _cuLiveSessions(u) {
   return (u.sessions || []).filter(function(d){ return !Number(d.revoked); });
+}
+
+function _cuSeenMs(u) {
+  var best = 0;
+  _cuLiveSessions(u).forEach(function(d) {
+    var t = new Date(d.seen_utc || 0).getTime();
+    if (!isNaN(t) && t > best) best = t;
+  });
+  return best;
+}
+
+function _cuRank(u) {
+  if (String(u.status || '').toLowerCase() !== 'active') return 3;  /* disabled */
+  var live = _cuLiveSessions(u);
+  if (!live.length) return 2;                                       /* never signed in */
+  return live.some(function(d){ return _cuLive(d.seen_utc); }) ? 0 : 1;
 }
 
 function cuToggle(uname) {
@@ -2495,6 +2537,15 @@ function cuRender() {
     return;
   }
 
+  /* Whoever is working right now is what this panel is for, so they come first:
+     online, then whoever was here most recently, then the accounts that have
+     never signed in, and disabled accounts last however recently they were used. */
+  list = list.slice().sort(function(a, b) {
+    var ra = _cuRank(a), rb = _cuRank(b);
+    if (ra !== rb) return ra - rb;
+    return _cuSeenMs(b) - _cuSeenMs(a);
+  });
+
   body.innerHTML = list.map(function(u) {
     var safeU = String(u.username).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     var live  = _cuLiveSessions(u);
@@ -2513,21 +2564,30 @@ function cuRender() {
         + (live.length > 1 ? '<span class="cu-count">' + live.length + ' devices</span>' : '') + '</div>'
       : '<span class="cu-none">Never signed in</span>';
 
-    var on = newest && _cuLive(newest.seen_utc);
-    var activeCell = newest
-      ? '<span class="cu-live"><span class="cu-dot' + (on ? ' on' : '') + '"></span>'
-        + (on ? 'Online' : esc(_cuWhen(newest.seen_utc))) + '</span>'
-      : '<span class="cu-none">—</span>';
+    /* A disabled account cannot be in use however fresh its last heartbeat looks —
+       it is signed out at its next check — so never label one "Online". */
+    var dead = String(u.status || '').toLowerCase() !== 'active';
+    var on = !dead && newest && _cuLive(newest.seen_utc);
+    var activeCell = dead
+      ? '<span class="cu-live"><span class="cu-dot"></span>Disabled</span>'
+      : (newest
+          ? '<span class="cu-live"><span class="cu-dot' + (on ? ' on' : '') + '"></span>'
+            + (on ? 'Online' : esc(_cuWhen(newest.seen_utc))) + '</span>'
+          : '<span class="cu-none">—</span>');
 
     var locCell;
-    if (newest && (_cuPlace(newest) || newest.ip)) {
+    if (newest && (_cuHasGps(newest) || _cuPlace(newest) || newest.ip)) {
       var url = _cuMapUrl(newest);
-      var txt = _cuPlace(newest) || newest.ip;
+      var gps = _cuHasGps(newest);
+      var txt = _cuPlace(newest) || newest.ip || 'Shared position';
       var pin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+      var src = gps
+        ? '<span class="cu-src cu-src-gps" title="Reported by the device' + (_cuAcc(newest) ? ' · ' + _cuAcc(newest) : '') + '">GPS</span>'
+        : '<span class="cu-src" title="Worked out from the internet connection">IP</span>';
       locCell = url
         ? '<a class="cu-loc" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Open in Google Maps">'
-          + pin + '<span class="cu-loc-txt">' + esc(txt) + '</span></a>'
-        : '<span class="cu-none">' + esc(txt) + '</span>';
+          + pin + '<span class="cu-loc-txt">' + esc(txt) + '</span></a>' + src
+        : '<span class="cu-none">' + esc(txt) + '</span>' + src;
     } else {
       locCell = '<span class="cu-none">Unknown</span>';
     }
@@ -2570,9 +2630,9 @@ function _cuDetail(u) {
             : '<span class="cu-tag cu-tag-off">Idle</span>');
 
     var mapBtn = url
-      ? '<a class="cu-map-btn" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">'
+      ? '<a class="cu-map-btn' + (_cuHasGps(d) ? ' cu-map-gps' : '') + '" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">'
         + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>'
-        + 'Open map</a>'
+        + (_cuHasGps(d) ? 'Open exact spot' : 'Open map') + '</a>'
       : '';
 
     return '<div class="cu-card">'
@@ -2583,7 +2643,10 @@ function _cuDetail(u) {
       + '<div class="cu-grid">'
         + _cuField('Place',        _cuPlace(d))
         + _cuField('Postcode',     d.postal)
-        + _cuField('Coordinates',  (d.lat && d.lon) ? (d.lat + ', ' + d.lon) : '', true)
+        + _cuField('Device position (GPS)',
+                   _cuHasGps(d) ? (d.gps_lat + ', ' + d.gps_lon + (_cuAcc(d) ? '  ' + _cuAcc(d) : '')) : 'Not shared', true)
+        + _cuField('Position taken', _cuHasGps(d) ? _cuStamp(d.gps_utc) : '')
+        + _cuField('From IP (approx.)', (d.lat && d.lon) ? (d.lat + ', ' + d.lon) : '', true)
         + _cuField('IP address',   d.ip, true)
         + _cuField('Time zone',    d.tz)
         + _cuField('Signed in',    _cuStamp(d.created_utc))

@@ -353,7 +353,8 @@ async function ensureSessionsTable() {
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
   /* deployments created before the session list showed where a sign-in came from */
   for (const col of ['ip VARCHAR(64)','city VARCHAR(120)','region VARCHAR(120)','country VARCHAR(8)',
-                     'lat VARCHAR(24)','lon VARCHAR(24)','tz VARCHAR(64)','postal VARCHAR(24)','ua VARCHAR(255)']) {
+                     'lat VARCHAR(24)','lon VARCHAR(24)','tz VARCHAR(64)','postal VARCHAR(24)','ua VARCHAR(255)',
+                     'gps_lat DECIMAL(10,7)','gps_lon DECIMAL(10,7)','gps_acc INT','gps_at DATETIME']) {
     try { await db().query('ALTER TABLE user_sessions ADD COLUMN ' + col + ' NULL'); } catch(e) {}
   }
   _sessionsReady = true;
@@ -1633,13 +1634,56 @@ async function handler(req, res) {
       return res.json({ ok:true });
     }
 
+    /* ── A device reporting where it actually is ──
+       Only ever written by the device itself, for its own session, and only after
+       the person allowed it in the browser — there is no way to ask for this on
+       someone else's behalf. Stored beside the IP guess rather than over it, so
+       the panel can always say which of the two it is showing. ── */
+    if (action === 'session_geo') {
+      await ensureSessionsTable();
+      const dev = String(body.device_id || '').trim();
+      const lat = Number(body.lat), lon = Number(body.lon);
+      if (!dev) return res.json({ ok:false, message:'missing_device' });
+      if (!isFinite(lat) || !isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        return res.json({ ok:false, message:'bad_coords' });
+      }
+      let acc = Math.round(Number(body.accuracy));
+      if (!isFinite(acc) || acc < 0) acc = null;
+      if (acc !== null) acc = Math.min(acc, 100000);
+
+      const [upd] = await db().query(
+        `UPDATE user_sessions
+         SET gps_lat=?, gps_lon=?, gps_acc=?, gps_at=UTC_TIMESTAMP(), last_seen=UTC_TIMESTAMP()
+         WHERE username=? AND device_id=?`,
+        [lat, lon, acc, _bu, dev]
+      );
+      /* The WHERE ties the row to the caller, so naming another device's id simply
+         matches nothing — say so rather than reporting a save that never happened. */
+      if (!upd.affectedRows) return res.json({ ok:false, message:'no_session' });
+      return res.json({ ok:true });
+    }
+
+    /* ── Stop sharing: wipe the last fix rather than letting it sit there looking current ── */
+    if (action === 'session_geo_clear') {
+      await ensureSessionsTable();
+      const dev = String(body.device_id || '').trim();
+      if (!dev) return res.json({ ok:false, message:'missing_device' });
+      await db().query(
+        'UPDATE user_sessions SET gps_lat=NULL, gps_lon=NULL, gps_acc=NULL, gps_at=NULL WHERE username=? AND device_id=?',
+        [_bu, dev]
+      );
+      return res.json({ ok:true });
+    }
+
     /* ── My signed-in devices ── */
     if (action === 'sessions_list') {
       await ensureSessionsTable();
       const [rows] = await db().query(
         `SELECT device_id, label, revoked, ip, city, region, country,
+                gps_lat, gps_lon, gps_acc,
                 DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_utc,
-                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS seen_utc
+                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS seen_utc,
+                DATE_FORMAT(gps_at,     '%Y-%m-%dT%H:%i:%sZ') AS gps_utc
          FROM user_sessions WHERE username=? ORDER BY revoked ASC, last_seen DESC LIMIT 20`, [_bu]
       );
       return res.json({ ok:true, max: MAX_DEVICES, sessions: rows });
@@ -1854,8 +1898,10 @@ async function handler(req, res) {
       );
       const [rows] = await db().query(
         `SELECT username, device_id, label, revoked, ip, city, region, country, lat, lon, tz, postal, ua,
+                gps_lat, gps_lon, gps_acc,
                 DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_utc,
-                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS seen_utc
+                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS seen_utc,
+                DATE_FORMAT(gps_at,     '%Y-%m-%dT%H:%i:%sZ') AS gps_utc
          FROM user_sessions ORDER BY revoked ASC, last_seen DESC`
       );
       const byUser = {};
