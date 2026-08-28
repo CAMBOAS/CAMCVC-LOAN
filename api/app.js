@@ -328,6 +328,7 @@ const MAX_DEVICES   = 2;   /* an account may be signed in on this many devices *
 const MAX_STRIKES   = 3;   /* wrong PINs, or device evictions, before the account is disabled */
 const QR_LOGIN_SECS = 50;  /* how long a sign-in QR stays valid */
 const QR_HS_SECS    = 120; /* how long the login page's QR waits to be approved */
+const QR_ADMIN_SECS = 60;  /* an Admin handing someone a way in — kept short on purpose */
 
 let _authGuardReady = false;
 async function ensureAuthGuardCols() {
@@ -1573,6 +1574,45 @@ async function handler(req, res) {
         "SELECT DATE_FORMAT(expires_at, '%Y-%m-%dT%H:%i:%sZ') AS exp FROM login_qr WHERE token=?", [token]
       );
       return res.json({ ok:true, token, seconds: QR_LOGIN_SECS, expires_at:(row[0]||{}).exp || null });
+    }
+
+    /* ── Mint a sign-in QR for somebody else (Admin only) ──
+       Scanning this signs the scanner in as that person, so it is a credential
+       for the minute it lives: short by design, one at a time per account,
+       single use, and written to the activity log with both names on it. An
+       Admin can already reset anyone's PIN, so this grants nothing new — but
+       unlike a PIN reset it leaves the account working, which is exactly why
+       it has to be traceable. ── */
+    if (action === 'qr_login_for') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const target = String(body.username || '').trim();
+      if (!target) return res.json({ ok:false, message:'Username required' });
+
+      const [ur] = await db().query(
+        'SELECT username, display_name, role, status FROM users WHERE username=? LIMIT 1', [target]
+      );
+      if (!ur.length) return res.json({ ok:false, message:'User not found' });
+      if (String(ur[0].status).toLowerCase() !== 'active') {
+        return res.json({ ok:false, message:'គណនីនេះត្រូវបានបិទ — សូមបើកវាមុន' });
+      }
+
+      await ensureLoginQrTable();
+      /* one live code at a time — asking for a new one retires the old */
+      await db().query('UPDATE login_qr SET used_at=UTC_TIMESTAMP() WHERE username=? AND used_at IS NULL', [target]);
+      const token = crypto.randomBytes(18).toString('base64url');
+      await db().query(
+        'INSERT INTO login_qr (token, username, expires_at) VALUES (?,?,DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? SECOND))',
+        [token, target, QR_ADMIN_SECS]
+      );
+      logActivity('qr_login_issued', actor, _bu, target,
+                  { for_name: ur[0].display_name || target, role: ur[0].role, seconds: QR_ADMIN_SECS }).catch(()=>{});
+
+      return res.json({
+        ok: true, token, seconds: QR_ADMIN_SECS,
+        username: ur[0].username,
+        name: ur[0].display_name || ur[0].username,
+        role: ur[0].role || ''
+      });
     }
 
     /* ── Read a scanned computer's code without acting on it ──

@@ -250,6 +250,69 @@
     .st-drag-hint { display:none; align-items:center; gap:5px; padding:1px 3px 0; font-size:10.5px; color:var(--muted); flex-shrink:0 }
     .st-drag-hint svg { opacity:.55; flex-shrink:0 }
 
+    /* ── Sign-in QR for one user ── */
+    .uq-btn {
+      display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:8px;
+      border:1px solid rgba(56,189,248,.35); background:rgba(56,189,248,.09); color:#0284c7;
+      font-family:inherit; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap;
+    }
+    [data-theme="dark"] .uq-btn { color:#38bdf8 }
+    .uq-btn:hover { background:rgba(56,189,248,.2) }
+    .uq-off { color:var(--muted); font-size:12px }
+
+    .uq-ov {
+      position:fixed; inset:0; z-index:100000; display:none; align-items:center; justify-content:center;
+      background:rgba(8,12,24,.82); backdrop-filter:blur(5px); padding:18px; overflow:auto;
+    }
+    .uq-ov.on { display:flex }
+    .uq-box {
+      background:#151d2e; border:1px solid rgba(148,163,184,.18); border-radius:19px;
+      padding:20px; width:100%; max-width:340px; color:#e2e8f0;
+      box-shadow:0 30px 80px rgba(0,0,0,.55);
+    }
+    .uq-hd { display:flex; align-items:flex-start; gap:10px; margin-bottom:15px }
+    .uq-hd > div { flex:1; min-width:0 }
+    .uq-title { font-size:15px; font-weight:800 }
+    .uq-for { font-size:12px; color:#94a3b8; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .uq-x {
+      width:32px; height:32px; flex-shrink:0; border-radius:9px; border:none; cursor:pointer;
+      background:rgba(148,163,184,.14); color:#cbd5e1; display:flex; align-items:center; justify-content:center;
+    }
+    .uq-x:hover { background:rgba(148,163,184,.26) }
+    .uq-x svg { width:15px; height:15px }
+
+    .uq-qr {
+      position:relative; width:212px; height:212px; margin:0 auto 14px;
+      background:#fff; border-radius:15px; padding:10px; box-sizing:border-box;
+    }
+    .uq-qr canvas { width:100%; height:100%; display:block; border-radius:7px }
+    .uq-veil {
+      position:absolute; inset:0; border-radius:15px; background:rgba(15,23,42,.92); color:#fff;
+      display:none; align-items:center; justify-content:center; text-align:center; padding:16px;
+      font-size:12.5px; font-weight:700; line-height:1.6;
+    }
+    .uq-veil.on { display:flex }
+
+    .uq-exp {
+      text-align:center; font-size:13px; font-weight:800; color:#38bdf8;
+      font-variant-numeric:tabular-nums; min-height:18px;
+    }
+    .uq-exp.dead { color:#f87171 }
+    .uq-warn {
+      margin-top:11px; padding:9px 11px; border-radius:10px; font-size:11px; line-height:1.6;
+      border:1px solid rgba(245,158,11,.3); background:rgba(245,158,11,.09); color:#fbbf24;
+    }
+    .uq-acts { display:flex; gap:7px; margin-top:14px; flex-wrap:wrap }
+    .uq-act {
+      flex:1; min-width:92px; padding:9px 10px; border-radius:10px; cursor:pointer;
+      border:1px solid rgba(148,163,184,.24); background:rgba(148,163,184,.12); color:#e2e8f0;
+      font-family:inherit; font-size:12px; font-weight:700;
+    }
+    .uq-act:hover { background:rgba(148,163,184,.24) }
+    .uq-act:disabled { opacity:.45; cursor:default }
+    .uq-again { border-color:rgba(56,189,248,.35); background:rgba(56,189,248,.12); color:#38bdf8 }
+    .uq-again:hover { background:rgba(56,189,248,.22) }
+
     /* ── Control User ── */
     .cu-search {
       flex:0 1 240px; min-width:0; padding:7px 11px; border-radius:9px;
@@ -634,11 +697,12 @@
                   <th>Expires</th>
                   <th>Status</th>
                   <th>Online</th>
+                  <th>QR (Login)</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="umTbody">
-                <tr><td colspan="9" class="um-empty">Loading...</td></tr>
+                <tr><td colspan="10" class="um-empty">Loading...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1300,6 +1364,38 @@
   </div>
 </div>
 
+<!-- Sign-in QR for one user -->
+<div class="uq-ov" id="uqOv" onclick="if(event.target===this)uqClose()">
+  <div class="uq-box">
+    <div class="uq-hd">
+      <div>
+        <div class="uq-title">Sign-in code</div>
+        <div class="uq-for" id="uqFor">—</div>
+      </div>
+      <button type="button" class="uq-x" onclick="uqClose()" aria-label="close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="uq-qr">
+      <canvas id="uqCanvas" width="380" height="380"></canvas>
+      <div class="uq-veil" id="uqVeil"><span id="uqVeilTxt"></span></div>
+    </div>
+
+    <div class="uq-exp" id="uqExp"></div>
+    <div class="uq-warn">
+      Anyone who scans this within the minute is signed in as this person. Hand it over in
+      front of them, and never leave the picture lying around.
+    </div>
+
+    <div class="uq-acts">
+      <button type="button" class="uq-act" id="uqSaveBtn"  onclick="uqSave()">Save image</button>
+      <button type="button" class="uq-act" id="uqShareBtn" onclick="uqShare()">Share</button>
+      <button type="button" class="uq-act uq-again" onclick="uqRegen()">New code</button>
+    </div>
+  </div>
+</div>
+
 <!-- Access denied overlay -->
 <div class="st-denied" id="stDenied">
   <div class="st-denied-icon">
@@ -1418,6 +1514,8 @@
 <div class="um-toast" id="umToast"></div>
 
 <script src="../assets/js/api.js"></script>
+<script src="../assets/js/qrcode.js?v=1"></script>
+<script src="../assets/js/qr-card.js?v=2"></script>
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/layout.js?v=33"></script>
 <script>
@@ -1655,7 +1753,7 @@ function _orderedUsers() {
 function renderTable() {
   var tbody = document.getElementById('umTbody');
   if (!_users.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="um-empty">No users found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="um-empty">No users found</td></tr>';
     return;
   }
   tbody.innerHTML = _orderedUsers().map(function(u, i) {
@@ -1698,6 +1796,11 @@ function renderTable() {
       + '<td>'+expBadge(u.exp_date)+'</td>'
       + '<td><span class="um-status '+(u.status==='active'?'um-status-active':'um-status-inactive')+'"><span class="um-status-dot"></span>'+esc(u.status||'inactive')+'</span></td>'
       + '<td>'+onlineBadge(u.last_seen)+'</td>'
+      /* Only for an account that can actually be signed in to */
+      + '<td>' + (u.status === 'active'
+          ? '<button class="uq-btn" onclick="uqOpen(\''+safeU+'\')" title="Show a one-minute sign-in code">'
+            + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg> QR</button>'
+          : '<span class="uq-off">—</span>') + '</td>'
       + actHtml
       + '</tr>';
   }).join('');
@@ -2661,6 +2764,140 @@ function _cuDetail(u) {
   }).join('');
 
   return '<div class="cu-detail">' + cards + '</div>';
+}
+
+/* ══ Sign-in QR for one user ══
+   The same one-time token My Profile mints for itself, but issued by an Admin
+   for somebody else — for handing a phone to a colleague who has forgotten
+   their PIN. It is a way into that account for sixty seconds, so it is never
+   pre-generated: nothing exists until the button is pressed, and the code
+   retires itself the moment it is used or the minute runs out. */
+var _uqUser = '', _uqName = '', _uqRole = '', _uqUrl = '', _uqTimer = null;
+
+function uqVeil(txt) {
+  var v = document.getElementById('uqVeil');
+  if (!txt) { v.classList.remove('on'); return; }
+  document.getElementById('uqVeilTxt').textContent = txt;
+  v.classList.add('on');
+}
+
+function uqActs(on) {
+  document.getElementById('uqSaveBtn').disabled  = !on;
+  document.getElementById('uqShareBtn').disabled = !on;
+}
+
+function uqClose() {
+  if (_uqTimer) { clearInterval(_uqTimer); _uqTimer = null; }
+  document.getElementById('uqOv').classList.remove('on');
+  _uqUrl = '';
+}
+
+function uqOpen(username) {
+  _uqUser = username;
+  var u = _users.find(function(x){ return x.username === username; }) || {};
+  _uqName = u.display_name || username;
+  _uqRole = u.role || '';
+  document.getElementById('uqFor').textContent = _uqName + ' · ' + username;
+  document.getElementById('uqOv').classList.add('on');
+  uqRegen();
+}
+
+async function uqRegen() {
+  if (_uqTimer) { clearInterval(_uqTimer); _uqTimer = null; }
+  _uqUrl = '';
+  uqActs(false);
+  document.getElementById('uqExp').textContent = '';
+  document.getElementById('uqExp').classList.remove('dead');
+  uqVeil('Creating a code…');
+
+  if (typeof qrcode === 'undefined') { uqVeil('QR library did not load — refresh the page.'); return; }
+
+  var r;
+  try { r = await CamboAPI.post({ action: 'qr_login_for', username: _uqUser }); }
+  catch(e) { uqVeil('Network error'); return; }
+  if (!r || !r.ok) { uqVeil((r && r.message) || 'Could not create a code'); return; }
+
+  _uqName = r.name || _uqName;
+  _uqRole = r.role || _uqRole;
+  /* login.html sits at the site root, this page under /pages/ */
+  _uqUrl = location.origin + location.pathname.replace(/pages\/[^/]*$/, 'login.html')
+         + '?lt=' + encodeURIComponent(r.token);
+
+  var q = qrcode(0, 'M'); q.addData(_uqUrl); q.make();
+  var cv = document.getElementById('uqCanvas'), ctx = cv.getContext('2d');
+  var n = q.getModuleCount(), quiet = 2;
+  var cell = Math.floor(cv.width / (n + quiet * 2));
+  var off  = Math.floor((cv.width - cell * n) / 2);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = '#0f172a';
+  for (var row = 0; row < n; row++)
+    for (var col = 0; col < n; col++)
+      if (q.isDark(row, col)) ctx.fillRect(off + col * cell, off + row * cell, cell, cell);
+
+  uqVeil('');
+  uqActs(true);
+  uqCountdown(r.seconds || 60);
+}
+
+function uqCountdown(secs) {
+  var el = document.getElementById('uqExp');
+  var left = secs;
+  var tick = function() {
+    if (left <= 0) {
+      el.textContent = 'Expired';
+      el.classList.add('dead');
+      clearInterval(_uqTimer); _uqTimer = null;
+      /* an expired code must not stay on screen looking usable */
+      uqVeil('Expired — press New code');
+      uqActs(false);
+      _uqUrl = '';
+      return;
+    }
+    el.textContent = 'Valid for ' + left + 's';
+    el.classList.remove('dead');
+    left--;
+  };
+  tick();
+  _uqTimer = setInterval(tick, 1000);
+}
+
+/* Saved or sent, the picture travels without the page around it, so it goes as
+   a card that names who it signs in and says out loud how briefly it works. */
+function _uqBlob() {
+  return CamboQrCard.toBlob({
+    url:        _uqUrl,
+    stripTitle: _uqName,
+    stripSub:   _uqRole ? (_uqRole + ' · ' + _uqUser) : _uqUser,
+    subtitle:   'កូដចូលប្រើប្រាស់',
+    line1:      'ស្កេនកូដនេះដើម្បីចូលគណនី',
+    line2:      'មិនបាច់វាយឈ្មោះ ឬ PIN ទេ',
+    note:       'កូដនេះមានរយៈពេលត្រឹម ១ នាទី និងប្រើបានតែម្ដង',
+    footer:     'កូដចូលប្រើ — សូមកុំចែករំលែកជាសាធារណៈ',
+    accent:     ['#0284c7', '#22d3ee']
+  });
+}
+
+function _uqFile() { return CamboQrCard.fileName('login-' + (_uqUser || 'user')); }
+
+async function uqSave() {
+  if (!_uqUrl) return;
+  var b = await _uqBlob(); if (!b) return;
+  var url = URL.createObjectURL(b);
+  var a = document.createElement('a');
+  a.href = url; a.download = _uqFile();
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
+
+async function uqShare() {
+  if (!_uqUrl) return;
+  var b = await _uqBlob(); if (!b) return;
+  var f = new File([b], _uqFile(), { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [f] }) && navigator.share) {
+    try { await navigator.share({ files: [f], text: 'Sign-in code for ' + _uqName + ' — valid 1 minute' }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
+  uqSave();
 }
 
 /* ── Tab switcher ── */

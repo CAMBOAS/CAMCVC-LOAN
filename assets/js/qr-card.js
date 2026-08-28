@@ -32,8 +32,10 @@
   }
 
   /**
-   * opts: { url, stripTitle, stripSub, line1, line2, note }
+   * opts: { url, stripTitle, stripSub, line1, line2, note, subtitle, footer, accent }
    * stripTitle is optional — without it the coloured name strip is left out.
+   * subtitle/footer default to the repayment wording; a card for something else
+   * (a sign-in code, say) passes its own so the page never mislabels itself.
    */
   async function build(opts) {
     opts = opts || {};
@@ -79,7 +81,7 @@
     ctx.fillText(BRAND, W / 2, 108);
     ctx.font = '500 26px "Noto Sans Khmer", system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,.72)';
-    ctx.fillText('ប្រវត្តិការបង់ប្រាក់', W / 2, 152);
+    ctx.fillText(opts.subtitle || 'ប្រវត្តិការបង់ប្រាក់', W / 2, 152);
 
     /* card */
     var cx = PAD, cw = W - PAD * 2;
@@ -94,7 +96,8 @@
       ctx.save();
       roundRect(ctx, cx, cy, cw, STRIP, 30); ctx.clip();
       var g2 = ctx.createLinearGradient(cx, cy, cx + cw, cy + STRIP);
-      g2.addColorStop(0, '#0891b2'); g2.addColorStop(1, '#6d5cff');
+      var acc = opts.accent || ['#0891b2', '#6d5cff'];
+      g2.addColorStop(0, acc[0]); g2.addColorStop(1, acc[1]);
       ctx.fillStyle = g2; ctx.fillRect(cx, cy, cw, STRIP);
       ctx.restore();
 
@@ -136,7 +139,7 @@
     ctx.fillRect(0, H - FOOT, W, FOOT);
     ctx.fillStyle = 'rgba(255,255,255,.9)';
     ctx.font = '700 26px "Noto Sans Khmer", system-ui, sans-serif';
-    ctx.fillText(BRAND + '  ·  សេវាពិនិត្យប្រវត្តិបង់ប្រាក់', W / 2, H - 38);
+    ctx.fillText(BRAND + '  ·  ' + (opts.footer || 'សេវាពិនិត្យប្រវត្តិបង់ប្រាក់'), W / 2, H - 38);
 
     return cv;
   }
