@@ -76,7 +76,16 @@
       '.lh-btn:hover{filter:brightness(1.08)}',
       '.lh-link{margin-top:10px;background:none;border:none;color:#38bdf8;font-family:inherit;',
       'font-size:12.5px;font-weight:700;cursor:pointer;padding:6px}',
-      '.lh-link:hover{text-decoration:underline}'
+      '.lh-link:hover{text-decoration:underline}',
+      /* On a phone this is the whole sign-in screen, not a dialog floating over
+         one, so it fills the display the way the login card itself does. */
+      '@media (max-width:560px){',
+      '.lh-ov{padding:0}',
+      '.lh-card{max-width:none;min-height:100vh;min-height:100dvh;border:none;border-radius:0;',
+      'display:flex;flex-direction:column;justify-content:center;',
+      'padding:calc(30px + env(safe-area-inset-top,0px)) 22px calc(30px + env(safe-area-inset-bottom,0px))}',
+      '.lh-x{top:calc(16px + env(safe-area-inset-top,0px))}',
+      '}'
     ].join('');
     document.head.appendChild(css);
   }

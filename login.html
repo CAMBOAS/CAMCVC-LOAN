@@ -447,15 +447,63 @@
     .fb-icon { color: #1877f2; }
 
     /* ── Mobile tweaks ── */
+    /* ── Phones: the card stops being a card and becomes the screen ──
+       At this width a floating panel wastes the edges and leaves a strip of
+       background on every side, so it goes full-bleed instead: no gutters, no
+       corners, no shadow. Scrolling is allowed here (the page is clipped
+       everywhere else) because a short phone must still reach the button. ── */
+    @media (max-width: 560px) {
+      html, body { width: 100%; align-items: stretch; overflow-y: auto; }
+
+      .wrap {
+        max-width: none;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        /* one surface for the whole screen, so the footer is not a separate band */
+        background: var(--card);
+      }
+
+      .card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        animation: none;
+        padding:
+          calc(30px + env(safe-area-inset-top, 0px))
+          calc(22px + env(safe-area-inset-right, 0px))
+          30px
+          calc(22px + env(safe-area-inset-left, 0px));
+      }
+      .card::before { border-radius: 0; }
+
+      .login-footer {
+        margin-top: 0;
+        padding: 16px 12px calc(14px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+
     @media (max-width: 480px) {
-      .card { padding: 32px 22px 28px; border-radius: 24px; }
       .logo-ring { width: 72px; height: 72px; border-radius: 20px; }
       .logo-img  { width: 48px; height: 48px; }
       .logo-title { font-size: 22px; }
       .btn-login  { padding: 15px; font-size: 15px; border-radius: 14px; }
     }
     @media (max-width: 360px) {
-      .card { padding: 28px 18px 24px; }
+      .card {
+        padding:
+          calc(24px + env(safe-area-inset-top, 0px))
+          calc(18px + env(safe-area-inset-right, 0px))
+          24px
+          calc(18px + env(safe-area-inset-left, 0px));
+      }
       .logo-title { font-size: 20px; }
     }
   </style>
