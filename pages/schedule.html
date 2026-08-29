@@ -22,21 +22,6 @@
     .sc-title { font-size:18px; font-weight:800; color:var(--text) }
     .sc-sub { font-size:11.5px; color:var(--muted); margin-top:1px }
 
-    /* ── language switch ── */
-    .sc-lang {
-      margin-left:auto; display:inline-flex; padding:3px; border-radius:10px; flex-shrink:0;
-      background:rgba(148,163,184,.14); border:1px solid rgba(148,163,184,.2);
-    }
-    .sc-lang-b {
-      font-family:inherit; font-size:11.5px; font-weight:800; letter-spacing:.02em;
-      padding:5px 13px; border:none; background:transparent; color:var(--muted);
-      border-radius:7px; cursor:pointer; transition:.15s; line-height:1.5;
-    }
-    .sc-lang-b:hover { color:var(--text) }
-    .sc-lang-on { background:var(--card,#fff); color:var(--text); box-shadow:0 1px 6px rgba(0,0,0,.14) }
-    [data-theme="dark"] .sc-lang-on { background:rgba(255,255,255,.14) }
-    @media print { .sc-lang { display:none !important } }
-
     /* ── toolbar ── */
     .sc-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0 }
     .sc-bar-spacer { flex:1 }
@@ -222,10 +207,6 @@
         <div style="min-width:0">
           <div class="sc-title" data-i18n="title">Schedule</div>
           <div class="sc-sub" data-i18n="sub">Every instalment, what it costs, and what is still owed</div>
-        </div>
-        <div class="sc-lang" role="group" aria-label="Language">
-          <button type="button" class="sc-lang-b" id="scLangEn" onclick="scSetLang('en')">EN</button>
-          <button type="button" class="sc-lang-b" id="scLangKh" onclick="scSetLang('kh')">ខ្មែរ</button>
         </div>
       </div>
 
@@ -547,23 +528,15 @@ var TX = {
 function scLang() { return (window.appGetLang ? appGetLang() : 'en') === 'kh' ? 'kh' : 'en'; }
 function T(k) { var v = TX[k]; return v ? v[scLang() === 'kh' ? 0 : 1] : ''; }
 
-function scSetLang(l) {
-  if (window.appSetLang) appSetLang(l);
-  else { try { localStorage.setItem('lang', l); } catch(e) {} }
-  scApplyLang();
-}
-
-/* Swap every fixed label, then redraw the parts that are built in script. */
+/* Swap every fixed label, then redraw the parts that are built in script.
+   The language is chosen in Settings; this page only reads it. */
 function scApplyLang() {
   var kh = scLang() === 'kh';
-  document.getElementById('scLangEn').classList.toggle('sc-lang-on', !kh);
-  document.getElementById('scLangKh').classList.toggle('sc-lang-on', kh);
   document.documentElement.lang = kh ? 'km' : 'en';
   document.querySelectorAll('[data-i18n]').forEach(function(el) {
     var v = TX[el.getAttribute('data-i18n')];
     if (v) el.textContent = v[kh ? 0 : 1];
   });
-  document.querySelector('.sc-lang').setAttribute('aria-label', T('langLabel'));
   document.getElementById('scNoteText').innerHTML = T('note');
   var d = document.getElementById('scDenied');
   d.querySelector('div > div:first-child').textContent = T('denied');

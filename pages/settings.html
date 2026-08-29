@@ -970,6 +970,26 @@
 
         <div class="glass-card" style="padding:0;overflow:hidden;margin-top:14px">
           <div style="padding:16px 18px 14px;border-bottom:1px solid rgba(148,163,184,.08);display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:9px;background:rgba(124,92,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:800;color:var(--text)">Language</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:2px">The language the app is displayed in</div>
+            </div>
+          </div>
+
+          <div style="padding:20px 18px;display:flex;flex-direction:column;gap:12px">
+            <div class="tb-seg" id="langSeg" style="max-width:300px">
+              <button type="button" data-lang="en" onclick="setAppLang('en')">English</button>
+              <button type="button" data-lang="kh" onclick="setAppLang('kh')">ភាសាខ្មែរ</button>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted);line-height:1.75" id="langNote"></div>
+          </div>
+        </div><!-- /Language -->
+
+        <div class="glass-card" style="padding:0;overflow:hidden;margin-top:14px">
+          <div style="padding:16px 18px 14px;border-bottom:1px solid rgba(148,163,184,.08);display:flex;align-items:center;gap:10px">
             <div style="width:32px;height:32px;border-radius:9px;background:rgba(6,182,212,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             </div>
@@ -3412,6 +3432,33 @@ loadTabOrder();
 renderTabs();
 syncTabOrderFromDB(); /* background: sync DB → localStorage if different */
 
+/* ── Language ──
+   Settings is Admin-only, so this is the one place the choice is made; every
+   page reads it on load. Menus and the top bar redraw at once, but a page's
+   own wording is built when it loads, so the current page is reloaded rather
+   than left half-translated. */
+function setAppLang(l) {
+  var lang = (l === 'kh') ? 'kh' : 'en';
+  if (window.appSetLang) appSetLang(lang);
+  else { try { localStorage.setItem('lang', lang); } catch(e) {} }
+  paintLangSeg();
+  toast(lang === 'kh' ? 'ប្ដូរទៅភាសាខ្មែរហើយ' : 'Switched to English');
+  setTimeout(function(){ location.reload(); }, 700);
+}
+
+function paintLangSeg() {
+  var cur = window.appGetLang ? appGetLang() : 'en';
+  var seg = document.getElementById('langSeg');
+  if (!seg) return;
+  seg.querySelectorAll('button').forEach(function(b) {
+    b.classList.toggle('tb-seg-on', b.getAttribute('data-lang') === cur);
+  });
+  var n = document.getElementById('langNote');
+  if (n) n.textContent = cur === 'kh'
+    ? 'អនុវត្តលើម៉ឺនុយ របារខាងលើ និងទំព័រដែលបានបកប្រែរួច។ បច្ចុប្បន្នមានតែទំព័រ កាលវិភាគសង ប៉ុណ្ណោះដែលបកប្រែពេញលេញ។ ការកំណត់នេះជារបស់ឧបករណ៍នេះ មិនមែនរបស់គណនីទេ។'
+    : 'Applies to the menus, the top bar and any page that has been translated. Only Schedule is fully translated so far. The choice belongs to this device, not to the account.';
+}
+
 /* ── App Branding ── */
 function _brandPreviewUpdate() {
   var name = (document.getElementById('brandName').value || 'CAMBO').trim();
@@ -3481,6 +3528,7 @@ async function uploadBrandLogo(input) {
 }
 
 async function loadBrand() {
+  paintLangSeg();
   try {
     var r = await CamboAPI.post({ action: 'get_settings' });
     if (!r || !r.ok) return;
