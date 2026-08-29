@@ -156,32 +156,6 @@
     .mp-ses-kick:hover { color:#ef4444; background:rgba(239,68,68,.1) }
     .mp-ses-kick svg { width:14px; height:14px }
     .mp-ses-empty { padding:18px 10px; font-size:12px; color:var(--muted) }
-
-    .mp-geo {
-      display:flex; gap:13px; margin-top:16px; padding:14px 16px; border-radius:13px;
-      border:1px solid rgba(56,189,248,.28); background:rgba(56,189,248,.06);
-    }
-    .mp-geo-ico {
-      width:38px; height:38px; flex-shrink:0; border-radius:11px; display:flex;
-      align-items:center; justify-content:center; background:rgba(56,189,248,.14); color:#0ea5e9;
-    }
-    [data-theme="dark"] .mp-geo-ico { color:#38bdf8 }
-    .mp-geo-ico svg { width:19px; height:19px }
-    .mp-geo-body { flex:1; min-width:0 }
-    .mp-geo-title { font-size:13px; font-weight:800; margin-bottom:4px }
-    .mp-geo-sub { font-size:11.5px; color:var(--muted); line-height:1.65 }
-    .mp-geo-state { font-size:11.5px; font-weight:700; margin-top:8px; min-height:16px; line-height:1.6 }
-    .mp-geo-acts { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap }
-    .mp-geo-on, .mp-geo-off {
-      padding:8px 16px; border-radius:10px; cursor:pointer; font-family:inherit;
-      font-size:12px; font-weight:800; border:none;
-    }
-    .mp-geo-on  { background:linear-gradient(135deg,#0ea5e9,#22d3ee); color:#fff }
-    .mp-geo-on:hover { filter:brightness(1.08) }
-    .mp-geo-on:disabled { opacity:.55; cursor:default }
-    .mp-geo-off { background:rgba(148,163,184,.18); color:var(--text) }
-    .mp-geo-off:hover { background:rgba(148,163,184,.3) }
-
     .mp-dev-wrap { margin-top:18px; padding-top:14px; border-top:1px solid rgba(148,163,184,.14) }
     .mp-dev-list { display:flex; flex-direction:column; gap:6px }
     .mp-dev {
@@ -583,23 +557,7 @@
           </table>
         </div>
 
-        <div class="mp-geo" id="mpGeoCard">
-          <div class="mp-geo-ico">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          </div>
-          <div class="mp-geo-body">
-            <div class="mp-geo-title">Precise location on this device</div>
-            <div class="mp-geo-sub" id="mpGeoSub">
-              Your workplace can see roughly where each device signs in from, worked out from the
-              internet connection — usually only the town. Turning this on shares this device&#39;s
-              actual position instead, so the branch you are at is clear.
-            </div>
-            <div class="mp-geo-state" id="mpGeoState"></div>
-            <div class="mp-geo-acts">
-              <button type="button" class="mp-geo-on"  id="mpGeoOn"  onclick="mpGeoTurnOn()">Turn on</button>
-              <button type="button" class="mp-geo-off" id="mpGeoOff" onclick="mpGeoTurnOff()" style="display:none">Turn off</button>
-            </div>
-          </div>
+      </div>
         </div>
       </div>
 
@@ -1043,7 +1001,7 @@
 
 <script src="../assets/js/qrcode.js?v=1"></script>
 <script src="../assets/js/qr-card.js?v=2"></script>
-<script src="../assets/js/layout.js?v=34"></script>
+<script src="../assets/js/layout.js?v=35"></script>
 <script src="../assets/js/dashboard-layout.js?v=33"></script>
 <script src="../assets/js/auth.js?v=2"></script>
 <script src="../assets/js/api.js?v=9"></script>
@@ -2084,7 +2042,6 @@ function _mpPlace(d) {
 async function mpLoadSessions() {
   var body = document.getElementById('mpSesBody');
   if (!body) return;
-  mpGeoRefresh();
   try {
     var r = await CamboAPI.post({ action: 'sessions_list' });
     if (!r || !r.ok) throw new Error('x');
@@ -2120,69 +2077,6 @@ async function mpLoadSessions() {
   } catch(e) {
     body.innerHTML = '<tr><td colspan="5" class="mp-ses-empty">Could not load sessions.</td></tr>';
   }
-}
-
-/* ── Precise location, opt-in, per device ──
-   The browser will not hand a position to a page the person has not allowed,
-   so the button below is the only way this can ever start — and the browser's
-   own site settings are the way to stop it for good. The card reports the real
-   permission state rather than just what we last stored. */
-async function mpGeoRefresh(msg, tone) {
-  var st = document.getElementById('mpGeoState');
-  var on = document.getElementById('mpGeoOn');
-  var off = document.getElementById('mpGeoOff');
-  if (!st) return;
-
-  var perm  = window.appGeoPermission ? await appGeoPermission() : 'unknown';
-  var want  = window.appGeoWanted ? appGeoWanted() : false;
-  var live  = want && (perm === 'granted' || perm === 'unknown');
-
-  on.style.display  = live ? 'none' : '';
-  off.style.display = live ? '' : 'none';
-  on.disabled = false;
-
-  if (msg) { st.textContent = msg; st.style.color = tone || 'var(--muted)'; return; }
-
-  if (perm === 'unsupported') {
-    st.textContent = 'This device cannot report its position.';
-    st.style.color = 'var(--muted)';
-    on.disabled = true;
-  } else if (perm === 'denied') {
-    st.textContent = 'Blocked in your browser — allow location for this site in its settings first.';
-    st.style.color = '#f59e0b';
-    on.disabled = true;
-  } else if (live) {
-    st.textContent = 'On — this device reports its position every few minutes while the app is open.';
-    st.style.color = '#22c55e';
-  } else {
-    st.textContent = 'Off — only the rough area from your internet connection is shared.';
-    st.style.color = 'var(--muted)';
-  }
-}
-
-async function mpGeoTurnOn() {
-  var on = document.getElementById('mpGeoOn');
-  on.disabled = true;
-  await mpGeoRefresh('Asking for your position…');
-  var r = await appShareLocation();
-  if (r.ok) {
-    mpToast('Precise location is on');
-    await mpGeoRefresh();
-    mpLoadSessions();
-    return;
-  }
-  var why = r.reason === 'denied'  ? 'You said no — nothing was shared.'
-          : r.reason === 'timeout' ? 'Could not get a position in time. Try again outdoors or near a window.'
-          : r.reason === 'save_failed' ? 'Got your position but could not save it — check your connection.'
-          : 'Could not read this device\'s position.';
-  await mpGeoRefresh(why, '#f87171');
-}
-
-async function mpGeoTurnOff() {
-  await appStopSharingLocation();
-  mpToast('Precise location is off');
-  await mpGeoRefresh();
-  mpLoadSessions();
 }
 
 async function mpRevokeOthers() {

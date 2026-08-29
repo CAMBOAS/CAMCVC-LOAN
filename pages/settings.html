@@ -395,6 +395,28 @@
     [data-theme="dark"] .cu-map-gps { color:#4ade80 }
     .cu-map-gps:hover { background:rgba(34,197,94,.18) }
 
+    .cu-geo { display:flex; align-items:flex-start; gap:14px; padding:14px 16px }
+    .cu-geo-body { flex:1; min-width:0 }
+    .cu-geo-title { font-size:13px; font-weight:800; margin-bottom:5px }
+    .cu-geo-sub { font-size:11.5px; color:var(--muted); line-height:1.7 }
+    .cu-geo-warn {
+      margin-top:9px; padding:9px 11px; border-radius:9px; font-size:11px; line-height:1.7;
+      border:1px solid rgba(245,158,11,.28); background:rgba(245,158,11,.07); color:var(--muted);
+    }
+    .cu-sw { position:relative; width:46px; height:26px; flex-shrink:0; margin-top:2px }
+    .cu-sw input { opacity:0; width:0; height:0; position:absolute }
+    .cu-sw-track {
+      position:absolute; inset:0; border-radius:999px; cursor:pointer; transition:.2s;
+      background:rgba(148,163,184,.35);
+    }
+    .cu-sw-track::before {
+      content:''; position:absolute; width:20px; height:20px; left:3px; top:3px;
+      border-radius:50%; background:#fff; transition:.2s; box-shadow:0 1px 4px rgba(0,0,0,.3);
+    }
+    .cu-sw input:checked + .cu-sw-track { background:#22c55e }
+    .cu-sw input:checked + .cu-sw-track::before { transform:translateX(20px) }
+    .cu-sw input:disabled + .cu-sw-track { opacity:.5; cursor:default }
+
     .cu-note {
       display:flex; align-items:flex-start; gap:8px; padding:10px 13px; border-radius:11px;
       border:1px solid rgba(245,158,11,.28); background:rgba(245,158,11,.07);
@@ -1350,6 +1372,27 @@
           <div class="um-tbl-footer" id="cuFooter"></div>
         </div>
 
+        <div class="glass-card cu-geo">
+          <div class="cu-geo-body">
+            <div class="cu-geo-title">Ask every device for its exact position</div>
+            <div class="cu-geo-sub">
+              While this is on, the app asks each device for its own location as soon as somebody
+              signs in, and refreshes it every few minutes. That is what turns the <b>IP</b> rows
+              below into <b>GPS</b> ones — accurate enough to tell one branch from another.
+            </div>
+            <div class="cu-geo-warn">
+              The switch decides whether the app <b>asks</b>. It cannot decide the answer: a browser
+              only hands over a position after the person at that device allows its own prompt, and
+              they can withdraw it afterwards in their browser settings. Anyone who says no simply
+              stays on the IP estimate.
+            </div>
+          </div>
+          <label class="cu-sw">
+            <input type="checkbox" id="cuGeoReq" onchange="cuGeoSave()">
+            <span class="cu-sw-track"></span>
+          </label>
+        </div>
+
         <div class="cu-note">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <span><b>GPS</b> rows are the position the device itself reported — accurate enough to tell one
@@ -1517,7 +1560,7 @@
 <script src="../assets/js/qrcode.js?v=1"></script>
 <script src="../assets/js/qr-card.js?v=2"></script>
 <script src="../assets/js/auth.js"></script>
-<script src="../assets/js/layout.js?v=34"></script>
+<script src="../assets/js/layout.js?v=35"></script>
 <script>
 'use strict';
 
@@ -2602,7 +2645,33 @@ function cuToggle(uname) {
   cuRender();
 }
 
+/* Whether the app asks every device for a real position. Admin-wide, and the
+   browser prompt on each device still has the final say. */
+async function cuGeoLoad() {
+  var box = document.getElementById('cuGeoReq');
+  if (!box) return;
+  try {
+    var r = await CamboAPI.post({ action: 'get_settings' });
+    box.checked = !!(r && r.ok && r.geo && String(r.geo.require) === '1');
+  } catch(e) {}
+}
+
+async function cuGeoSave() {
+  var box = document.getElementById('cuGeoReq');
+  box.disabled = true;
+  try {
+    var r = await CamboAPI.post({ action: 'geo_save', require: box.checked ? 1 : 0 });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
+    toast(box.checked ? 'Devices will be asked for their position' : 'Devices will no longer be asked');
+  } catch(e) {
+    box.checked = !box.checked;          /* put the switch back where it was */
+    toast(e.message || 'Could not save', true);
+  }
+  box.disabled = false;
+}
+
 async function loadControlUsers() {
+  cuGeoLoad();
   var body = document.getElementById('cuTbody');
   if (!body) return;
   try {

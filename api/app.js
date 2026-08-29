@@ -1143,6 +1143,7 @@ async function handler(req, res) {
           show:  one('sb_show')  || '',
           links: one('sb_links') || '',
         },
+        geo: { require: one('geo_req') || '0' },
       });
     }
 
@@ -1156,6 +1157,19 @@ async function handler(req, res) {
         if (val) await db().query('INSERT INTO settings (type,value) VALUES (?,?)', [f, val]);
       }
       return res.json({ ok:true });
+    }
+
+    /* ── Precise location: on or off for the whole organisation (Admin only) ──
+       This decides whether the app *asks* each device for its position. It cannot
+       decide the answer: a browser hands a page a location only after the person
+       at it allows the prompt, and they can take that back at any time. ── */
+    if (action === 'geo_save') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
+      const on = (body.require === 1 || body.require === '1' || body.require === true) ? '1' : '0';
+      await db().query('DELETE FROM settings WHERE type=?', ['geo_req']);
+      await db().query('INSERT INTO settings (type,value) VALUES (?,?)', ['geo_req', on]);
+      logActivity('geo_require', actor, _bu, null, { on: on === '1' }).catch(()=>{});
+      return res.json({ ok:true, require: on });
     }
 
     /* ── Save Top Bar config (app-wide, Admin only) ── */

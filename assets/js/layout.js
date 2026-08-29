@@ -1686,18 +1686,36 @@
     } catch(e) { return { ok:false }; }
   }
 
-  /* The quiet refresh. Bails out unless the person turned it on here *and* the
-     browser still says yes, so a revoked permission simply stops reporting. */
+  /* The organisation-wide switch, cached so a refresh does not wait on the network */
+  var GEO_REQ_KEY = 'geo_required';
+  function geoRequired() {
+    try { return localStorage.getItem(GEO_REQ_KEY) === '1'; } catch(e) { return false; }
+  }
+  async function geoSyncRequired() {
+    if (typeof CamboAPI === 'undefined') return geoRequired();
+    try {
+      var r = await CamboAPI.post({ action: 'get_settings' });
+      var on = !!(r && r.ok && r.geo && String(r.geo.require) === '1');
+      try { on ? localStorage.setItem(GEO_REQ_KEY, '1') : localStorage.removeItem(GEO_REQ_KEY); } catch(e) {}
+      return on;
+    } catch(e) { return geoRequired(); }
+  }
+
+  /* Asks for a position when the organisation has turned this on. The browser
+     shows its own prompt the first time and remembers the answer, so this is one
+     dialog per device — never a nag. A refusal is final and simply ends here. */
   async function geoTick() {
-    if (!geoWanted()) return;
+    var required = geoRequired();
+    if (!required && !geoWanted()) return;
     var st = await geoPermission();
     if (st === 'denied' || st === 'unsupported') { geoSetWanted(false); return; }
-    if (st === 'prompt') return;              /* would pop a dialog — not from a timer */
+    if (st === 'prompt' && !required) return;   /* never prompt off our own bat */
     try { geoSend(await geoRead(true)); } catch(e) {}
   }
 
-  function geoStart() {
+  async function geoStart() {
     if (_geoTimer) return;
+    await geoSyncRequired();
     geoTick();
     _geoTimer = setInterval(geoTick, GEO_EVERY);
   }
@@ -1728,7 +1746,7 @@
     if (_pg !== 'login.html' && _pg !== 'user.html') {
       setTimeout(checkSession, 1500);
       setInterval(checkSession, 30000);
-      /* only does anything for a device whose owner already opted in */
+      /* does nothing unless an Admin turned it on for the organisation */
       setTimeout(geoStart, 3000);
     }
   });
