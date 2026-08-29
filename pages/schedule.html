@@ -269,16 +269,16 @@
 
             <div class="sc-sec">The money</div>
             <div class="sc-f"><label class="sc-lbl" for="scPrincipal">Principal</label>
-              <input class="sc-in" id="scPrincipal" type="number" step="0.01" min="0" value="3000" oninput="scDraw()"></div>
+              <input class="sc-in" id="scPrincipal" type="number" step="0.01" min="0" placeholder="0.00" oninput="scDraw()"></div>
             <div class="sc-f"><label class="sc-lbl" for="scCur">Currency</label>
               <select class="sc-in" id="scCur" onchange="scDraw()">
                 <option value="USD">USD $</option>
                 <option value="KHR">KHR ៛</option>
               </select></div>
             <div class="sc-f"><label class="sc-lbl" for="scRate">Interest %/year</label>
-              <input class="sc-in" id="scRate" type="number" step="0.01" min="0" value="18" oninput="scDraw()"></div>
+              <input class="sc-in" id="scRate" type="number" step="0.01" min="0" placeholder="0.00" oninput="scDraw()"></div>
             <div class="sc-f"><label class="sc-lbl" for="scMonths">Instalments (months)</label>
-              <input class="sc-in" id="scMonths" type="number" step="1" min="1" max="600" value="36" oninput="scDraw()"></div>
+              <input class="sc-in" id="scMonths" type="number" step="1" min="1" max="600" placeholder="0" oninput="scDraw()"></div>
             <div class="sc-f"><label class="sc-lbl" for="scMethod">Method</label>
               <select class="sc-in" id="scMethod" onchange="scDraw()">
                 <option value="declining">Declining balance</option>
@@ -290,9 +290,9 @@
                 <option value="365">365 days/year</option>
               </select></div>
             <div class="sc-f"><label class="sc-lbl" for="scDisb">Disbursed on</label>
-              <input class="sc-in" id="scDisb" type="date" value="2025-05-06" onchange="scDraw()"></div>
+              <input class="sc-in" id="scDisb" type="date" onchange="scDraw()"></div>
             <div class="sc-f"><label class="sc-lbl" for="scFirst">First due on</label>
-              <input class="sc-in" id="scFirst" type="date" value="2025-06-10" onchange="scDraw()"></div>
+              <input class="sc-in" id="scFirst" type="date" onchange="scDraw()"></div>
 
             <div class="sc-sec">Fees and penalties</div>
             <div class="sc-f"><label class="sc-lbl" for="scFeeAdmin">Admin fee</label>
@@ -547,16 +547,27 @@ function scBuild(f) {
 }
 
 /* ── draw everything ── */
+/* Nothing typed yet — as opposed to typed wrongly. */
+function scBlankForm() {
+  return !val('scPrincipal') && !val('scRate') && !val('scMonths')
+      && !val('scDisb') && !val('scFirst');
+}
+
 function scDraw() {
   var f = scForm();
   var s = scBuild(f);
   var body = document.getElementById('scBody');
 
   if (s.err) {
-    scErr(s.err);
-    body.innerHTML = '<tr><td colspan="10" class="sc-empty">' + esc(s.err) + '</td></tr>';
+    var blank = scBlankForm();
+    /* Only complain once they have actually started */
+    scErr(blank ? '' : s.err);
+    body.innerHTML = '<tr><td colspan="10" class="sc-empty">'
+      + (blank ? 'Fill in the principal, the rate, the number of instalments and the two dates — the schedule appears as you type'
+               : esc(s.err)) + '</td></tr>';
     document.getElementById('scFootRow').innerHTML = '';
     document.getElementById('scKeyFacts').innerHTML = '';
+    document.getElementById('scFoot').textContent = '';
     document.getElementById('scRateHint').textContent = '';
     document.getElementById('scKpis').innerHTML = '';
     document.getElementById('scFoot').textContent = '';
@@ -820,13 +831,19 @@ async function scDelete() {
 
 function scNew() {
   _scKey = ''; _scPaid = {};
-  ['scBorrower','scCo','scAcct','scContract','scBranch','scPurpose','scOfficer','scOffPhone']
+  ['scBorrower','scCo','scAcct','scContract','scBranch','scPurpose','scOfficer','scOffPhone',
+   'scPrincipal','scRate','scMonths','scDisb','scFirst']
     .forEach(function(id){ document.getElementById(id).value = ''; });
-  document.getElementById('scCust').value = '';
-  document.getElementById('scSaved').value = '';
-  document.getElementById('scDelBtn').disabled = true;
   ['scFeeAdmin','scFeeCbc','scFeeOther','scLate','scEarly']
     .forEach(function(id){ document.getElementById(id).value = '0'; });
+  /* The three pickers keep their defaults — a dropdown has to hold something,
+     and USD / declining / 360 is a starting point, not somebody's data. */
+  document.getElementById('scCur').value    = 'USD';
+  document.getElementById('scMethod').value = 'declining';
+  document.getElementById('scBasis').value  = '360';
+  document.getElementById('scCust').value   = '';
+  document.getElementById('scSaved').value  = '';
+  document.getElementById('scDelBtn').disabled = true;
   scDraw();
 }
 
