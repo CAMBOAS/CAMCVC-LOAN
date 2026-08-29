@@ -477,6 +477,31 @@ async function registerDevice(username, deviceId, label, geo) {
 }
 
 
+/* The profile beyond a display name: who someone is, how to reach them, and who
+   to call if something happens to them. All optional, all owned by the person
+   themselves — nobody else's row is ever touched by the action that writes these. */
+let _userDetailColsReady = false;
+async function ensureUserDetailCols() {
+  if (_userDetailColsReady) return;
+  for (const col of [
+    'first_name VARCHAR(80)', 'last_name VARCHAR(80)',
+    'dob VARCHAR(10)', 'gender VARCHAR(20)', 'nationality VARCHAR(60)',
+    'email VARCHAR(160)', 'phone VARCHAR(40)', 'telegram_id VARCHAR(80)',
+    'addr_line VARCHAR(200)', 'addr_commune VARCHAR(120)', 'addr_city VARCHAR(120)',
+    'emg_name VARCHAR(120)', 'emg_relation VARCHAR(60)', 'emg_phone VARCHAR(40)',
+  ]) {
+    try { await db().query('ALTER TABLE users ADD COLUMN ' + col + ' NULL'); } catch(e) {}
+  }
+  _userDetailColsReady = true;
+}
+
+const USER_DETAIL_FIELDS = [
+  'first_name', 'last_name', 'dob', 'gender', 'nationality',
+  'email', 'phone', 'telegram_id',
+  'addr_line', 'addr_commune', 'addr_city',
+  'emg_name', 'emg_relation', 'emg_phone',
+];
+
 async function validateAuth(u, p) {
   if (!u || !p) return null;
   await ensureUserPhotoCol();
@@ -2204,7 +2229,38 @@ async function handler(req, res) {
         }
       }
 
+      if (type === 'details') {
+        await ensureUserDetailCols();
+        /* Only ever the caller's own row, and only the columns on this list —
+           a field name arriving from the client can never reach the SQL. */
+        const sets = [], vals = [];
+        USER_DETAIL_FIELDS.forEach(f => {
+          if (!(f in body)) return;
+          let v = body[f];
+          v = (v === null || v === undefined) ? '' : String(v).trim();
+          if (f === 'email' && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return;
+          sets.push(f + '=?');
+          vals.push(v.slice(0, 200) || null);
+        });
+        if (!sets.length) return res.json({ ok:false, message:'គ្មានព័ត៌មានត្រូវធ្វើបច្ចុប្បន្ន' });
+        vals.push(_bu);
+        await db().query('UPDATE users SET ' + sets.join(', ') + ' WHERE username=?', vals);
+        const [rows] = await db().query(
+          'SELECT ' + USER_DETAIL_FIELDS.join(', ') + ' FROM users WHERE username=? LIMIT 1', [_bu]
+        );
+        return res.json({ ok:true, details: rows[0] || {} });
+      }
+
       return res.json({ ok: false, message: 'Invalid type' });
+    }
+
+    /* ── My own profile details ── */
+    if (action === 'my_details') {
+      await ensureUserDetailCols();
+      const [rows] = await db().query(
+        'SELECT ' + USER_DETAIL_FIELDS.join(', ') + ' FROM users WHERE username=? LIMIT 1', [_bu]
+      );
+      return res.json({ ok:true, details: rows[0] || {} });
     }
 
     /* ── UI Preferences: get (any authenticated user, own prefs only) ── */
