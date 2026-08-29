@@ -277,8 +277,11 @@
               </select></div>
             <div class="sc-f"><label class="sc-lbl" for="scRate" data-i18n="ratePct">Interest %/year</label>
               <input class="sc-in" id="scRate" type="number" step="0.01" min="0" placeholder="0.00" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scYears" data-i18n="years">Years</label>
+              <input class="sc-in" id="scYears" type="number" step="0.5" min="0" max="50" placeholder="0"
+                     oninput="scYearsTyped()" title="Type 3 and the months fill in as 36"></div>
             <div class="sc-f"><label class="sc-lbl" for="scMonths" data-i18n="instalMonths">Instalments (months)</label>
-              <input class="sc-in" id="scMonths" type="number" step="1" min="1" max="600" placeholder="0" oninput="scDraw()"></div>
+              <input class="sc-in" id="scMonths" type="number" step="1" min="1" max="600" placeholder="0" oninput="scMonthsTyped()"></div>
             <div class="sc-f"><label class="sc-lbl" for="scMethod" data-i18n="method">Method</label>
               <select class="sc-in" id="scMethod" onchange="scDraw()">
                 <option value="declining" data-i18n="mDecl">Declining balance</option>
@@ -290,9 +293,9 @@
                 <option value="365" data-i18n="b365">365 days/year</option>
               </select></div>
             <div class="sc-f"><label class="sc-lbl" for="scDisb" data-i18n="disbursed">Disbursed on</label>
-              <input class="sc-in" id="scDisb" type="date" onchange="scDraw()"></div>
+              <input class="sc-in" id="scDisb" type="date" onchange="scDateTyped()"></div>
             <div class="sc-f"><label class="sc-lbl" for="scFirst" data-i18n="firstDue">First due on</label>
-              <input class="sc-in" id="scFirst" type="date" onchange="scDraw()"></div>
+              <input class="sc-in" id="scFirst" type="date" onchange="scDateTyped()"></div>
 
             <div class="sc-sec" data-i18n="fees">Fees and penalties</div>
             <div class="sc-f"><label class="sc-lbl" for="scFeeAdmin" data-i18n="feeAdmin">Admin fee</label>
@@ -424,6 +427,7 @@ var TX = {
   principal:    ['ប្រាក់ដើម', 'Principal'],
   currency:     ['រូបិយប័ណ្ណ', 'Currency'],
   ratePct:      ['អត្រាការប្រាក់ %/ឆ្នាំ', 'Interest %/year'],
+  years:        ['ចំនួនឆ្នាំ', 'Years'],
   instalMonths: ['ចំនួនដងសង (ខែ)', 'Instalments (months)'],
   method:       ['របៀបគិត', 'Method'],
   basis:        ['មូលដ្ឋានរាប់ថ្ងៃ', 'Day-count basis'],
@@ -647,6 +651,57 @@ function scForm() {
   };
 }
 
+/* ── Years, months and the two dates ─────────────────────────────────────
+   Nobody should have to work out that four years is forty-eight months, so
+   the years box fills the months in. Months stays typeable on its own, because
+   plenty of loans do not land on a whole year.
+
+   The dates fill themselves from today the moment a term is entered — but only
+   while they are still untouched. A loan handed over last week is entered by
+   someone sitting down today, so the instant they set a date by hand it is
+   theirs and nothing here writes over it again. */
+var _scDatesOwned = false;   /* true once a person has set a date themselves */
+
+function scYearsTyped() {
+  var y = Number(val('scYears'));
+  if (isFinite(y) && y > 0) {
+    var m = Math.round(y * 12);
+    document.getElementById('scMonths').value = Math.min(Math.max(m, 1), 600);
+  } else if (!val('scYears')) {
+    document.getElementById('scMonths').value = '';
+  }
+  scFillDates();
+  scDraw();
+}
+
+function scMonthsTyped() {
+  var m = Number(val('scMonths'));
+  /* Show the years that number comes to, so the two never contradict each
+     other on screen. 18 months reads as 1.5 years, and typing 1.5 back gives
+     18 again. */
+  document.getElementById('scYears').value =
+    (isFinite(m) && m > 0) ? String(Math.round((m / 12) * 100) / 100) : '';
+  scFillDates();
+  scDraw();
+}
+
+function scDateTyped() {
+  _scDatesOwned = true;
+  scDraw();
+}
+
+/* Disbursed today, first instalment a month later — the ordinary case, offered
+   only when both boxes are still empty and nobody has chosen for themselves. */
+function scFillDates() {
+  if (_scDatesOwned) return;
+  if (val('scDisb') || val('scFirst')) return;
+  if (!Number(val('scMonths'))) return;
+  var today = dISO(todayISO());
+  if (!today) return;
+  document.getElementById('scDisb').value  = todayISO();
+  document.getElementById('scFirst').value = iso(addMonths(today, 1));
+}
+
 /* ── the engine ──────────────────────────────────────────────────────────
    Returns null with a reason when the contract is not yet complete enough to
    compute, so the caller can say what is missing instead of showing zeroes. */
@@ -708,7 +763,7 @@ function scBuild(f) {
 /* ── draw everything ── */
 /* Nothing typed yet — as opposed to typed wrongly. */
 function scBlankForm() {
-  return !val('scPrincipal') && !val('scRate') && !val('scMonths')
+  return !val('scPrincipal') && !val('scRate') && !val('scYears') && !val('scMonths')
       && !val('scDisb') && !val('scFirst');
 }
 
@@ -944,6 +999,7 @@ async function scOpen(key) {
     put('scPrincipal', Number(d.principal));
     put('scRate', Number(d.annual_rate));
     put('scMonths', d.term_months);
+    put('scYears', d.term_months ? String(Math.round((d.term_months / 12) * 100) / 100) : '');
     put('scMethod', d.method || 'declining');
     put('scBasis', String(d.basis || 360));
     put('scDisb', String(d.disbursed_on || '').slice(0,10));
@@ -953,6 +1009,7 @@ async function scOpen(key) {
     put('scEarly', Number(d.early_fee));
     document.getElementById('scCust').value =
       _scLoans.some(function(x){ return x.DateTime === d.loan_key; }) ? d.loan_key : '';
+    _scDatesOwned = true;   /* these dates were chosen when it was saved */
     try { _scPaid = d.paid_json ? (JSON.parse(d.paid_json) || {}) : {}; } catch(e) { _scPaid = {}; }
     document.getElementById('scDelBtn').disabled = false;
     scDraw();
@@ -995,8 +1052,9 @@ async function scDelete() {
 function scNew() {
   _scKey = ''; _scPaid = {};
   ['scBorrower','scCo','scAcct','scContract','scBranch','scPurpose','scOfficer','scOffPhone',
-   'scPrincipal','scRate','scMonths','scDisb','scFirst']
+   'scPrincipal','scRate','scYears','scMonths','scDisb','scFirst']
     .forEach(function(id){ document.getElementById(id).value = ''; });
+  _scDatesOwned = false;
   ['scFeeAdmin','scFeeCbc','scFeeOther','scLate','scEarly']
     .forEach(function(id){ document.getElementById(id).value = '0'; });
   /* The three pickers keep their defaults — a dropdown has to hold something,
