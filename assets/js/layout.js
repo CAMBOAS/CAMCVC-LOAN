@@ -13,6 +13,10 @@
     setLang(l);
     try { window.appApplyTopbar && window.appApplyTopbar(); } catch(e) {}
     try { window.appRerenderSidebar && window.appRerenderSidebar(); } catch(e) {}
+    /* Reloading to re-translate would throw away whatever the reader had
+       half-typed — the moment they are most likely to reach for this button.
+       Pages that carry translations listen for this and re-label in place. */
+    try { window.dispatchEvent(new CustomEvent('applang', { detail: { lang: getLang() } })); } catch(e) {}
   };
 
   function getBrand() {
@@ -1209,14 +1213,12 @@
       });
     }
 
-    /* Language button — the menus redraw at once, but a page builds its own
-       wording when it loads, so reload rather than leave it half translated. */
+    /* Language button */
     var lg = tbEl('apptbLangBtn');
     if (lg) lg.addEventListener('click', function() {
-      var next = getLang() === 'kh' ? 'en' : 'kh';
-      setLang(next);
-      lg.textContent = next === 'kh' ? 'ខ្មែរ' : 'EN';
-      location.reload();
+      /* appSetLang redraws this very bar, so the button comes back already
+         carrying the new label — nothing to set by hand here. */
+      window.appSetLang(getLang() === 'kh' ? 'en' : 'kh');
     });
 
     /* Menu button (phones) — opens the same sidebar drawer as the hamburger bar did */
