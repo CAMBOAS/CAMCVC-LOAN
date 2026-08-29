@@ -743,7 +743,7 @@
   };
   window.appTbPages = TB_PAGES;
 
-  var TB_MODULES = ['title','links','search','chat','clock','theme','user','logout','mob'];
+  var TB_MODULES = ['title','links','search','chat','clock','theme','lang','user','logout','mob'];
   window.appTbModules = TB_MODULES;
 
   var TB_DEFAULT = {
@@ -751,7 +751,7 @@
     mode:  'always',                 /* always | auto (hide while scrolling down) */
     size:  'md',                     /* sm | md | lg */
     style: 'glass',                  /* glass | solid | accent */
-    show:  ['title','links','search','chat','theme','user'],
+    show:  ['title','links','search','chat','theme','lang','user'],
     links: ['dash','cust','loans','rep','team']
   };
   window.appTbDefault = TB_DEFAULT;
@@ -1122,6 +1122,14 @@
     if (tbHas(cfg, 'theme')) {
       right += '<button type="button" class="apptb-ico" id="apptbThemeBtn" title="' + t('ប្ដូររចនាបថ','Toggle theme') + '"></button>';
     }
+    if (tbHas(cfg, 'lang')) {
+      /* Shows the language in force; one tap moves to the other. Two languages
+         need a toggle, not a menu. */
+      var curL = getLang();
+      right += '<button type="button" class="apptb-ico apptb-lang" id="apptbLangBtn" title="'
+            +  (curL === 'kh' ? 'Change to English' : 'ប្ដូរទៅភាសាខ្មែរ') + '">'
+            +  (curL === 'kh' ? 'ខ្មែរ' : 'EN') + '</button>';
+    }
     if (tbHas(cfg, 'user')) {
       var a = null;
       try { a = JSON.parse(localStorage.getItem('appAuth') || 'null'); } catch(e) {}
@@ -1200,6 +1208,16 @@
         th.innerHTML = now === 'light' ? ic.moon : ic.sun;
       });
     }
+
+    /* Language button — the menus redraw at once, but a page builds its own
+       wording when it loads, so reload rather than leave it half translated. */
+    var lg = tbEl('apptbLangBtn');
+    if (lg) lg.addEventListener('click', function() {
+      var next = getLang() === 'kh' ? 'en' : 'kh';
+      setLang(next);
+      lg.textContent = next === 'kh' ? 'ខ្មែរ' : 'EN';
+      location.reload();
+    });
 
     /* Menu button (phones) — opens the same sidebar drawer as the hamburger bar did */
     var mBtn = tbEl('apptbMenuBtn');
