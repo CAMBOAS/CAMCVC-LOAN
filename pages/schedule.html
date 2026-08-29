@@ -93,16 +93,22 @@
 
     /* ── table ── */
     .sc-tbl-wrap { overflow:auto; border-radius:13px 13px 0 0 }
-    .sc-tbl { width:100%; border-collapse:collapse; font-size:12px; min-width:820px }
+    .sc-tbl { width:100%; border-collapse:collapse; font-size:12px; min-width:900px; table-layout:fixed }
     .sc-tbl thead th {
       position:sticky; top:0; z-index:2; background:var(--card,rgba(255,255,255,.92));
       backdrop-filter:blur(8px); text-align:left; padding:9px 10px; font-size:9.5px; font-weight:800;
       letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
       border-bottom:1px solid rgba(148,163,184,.22); white-space:nowrap;
     }
-    .sc-tbl tbody td { padding:8px 10px; border-bottom:1px solid rgba(148,163,184,.11); vertical-align:middle }
+    .sc-tbl tbody td { padding:8px 10px; border-bottom:1px solid rgba(148,163,184,.11); vertical-align:middle; overflow:hidden; text-overflow:ellipsis }
+    .sc-tbl thead th { overflow:hidden; text-overflow:ellipsis }
     .sc-tbl tbody tr:hover { background:rgba(124,92,255,.05) }
     .sc-num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap }
+    /* Beats `.sc-tbl thead th`, which sets every heading left. A figure column
+       has to be headed from the right or the label floats away from its own
+       numbers. */
+    .sc-tbl thead th.sc-num { text-align:right }
+    .sc-mid, .sc-tbl thead th.sc-mid { text-align:center }
     .sc-no { font-variant-numeric:tabular-nums; color:var(--muted); font-size:11px }
     .sc-due { font-weight:700; white-space:nowrap }
     .sc-dow { font-size:11px; color:var(--muted); white-space:nowrap }
@@ -318,9 +324,14 @@
       <div class="glass-card" style="border-radius:14px;overflow:hidden;padding:0">
         <div class="sc-tbl-wrap" id="scTblWrap">
           <table class="sc-tbl">
+            <colgroup>
+              <col style="width:4%"><col style="width:10%"><col style="width:17%"><col style="width:6%">
+              <col style="width:11%"><col style="width:11%"><col style="width:12%"><col style="width:12%">
+              <col style="width:11%"><col style="width:6%">
+            </colgroup>
             <thead>
               <tr>
-                <th style="width:34px">#</th>
+                <th>#</th>
                 <th>Day</th>
                 <th>Due date</th>
                 <th class="sc-num">Days</th>
@@ -329,7 +340,7 @@
                 <th class="sc-num">Total due</th>
                 <th class="sc-num">Balance</th>
                 <th>Status</th>
-                <th style="width:44px">Paid</th>
+                <th class="sc-mid">Paid</th>
               </tr>
             </thead>
             <tbody id="scBody">
@@ -620,13 +631,14 @@ function scTable(f, s) {
       + '<td class="sc-num sc-tot">' + num(r.total) + '</td>'
       + '<td class="sc-num sc-no">' + num(r.balance) + '</td>'
       + '<td>' + pill + '</td>'
-      + '<td><input class="sc-ck" type="checkbox"' + (paid ? ' checked' : '')
+      + '<td class="sc-mid"><input class="sc-ck" type="checkbox"' + (paid ? ' checked' : '')
       +     ' onchange="scTogglePaid(' + r.i + ', this)" title="Mark this instalment settled"></td>'
       + '</tr>';
   }).join('');
 
   document.getElementById('scFootRow').innerHTML =
-    '<tr><td colspan="4">Total</td>'
+    '<tr><td colspan="3">Total</td>'
+    + '<td class="sc-num">' + s.totalDays + '</td>'
     + '<td class="sc-num">' + num(s.totalPrincipal) + '</td>'
     + '<td class="sc-num">' + num(s.totalInterest) + '</td>'
     + '<td class="sc-num">' + num(s.totalInstalments) + '</td>'
