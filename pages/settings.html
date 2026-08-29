@@ -395,26 +395,18 @@
     [data-theme="dark"] .cu-map-gps { color:#4ade80 }
     .cu-map-gps:hover { background:rgba(34,197,94,.18) }
 
-    .cu-geo { display:flex; align-items:flex-start; gap:14px; padding:14px 16px }
-    .cu-geo-body { flex:1; min-width:0 }
-    .cu-geo-title { font-size:13px; font-weight:800; margin-bottom:5px }
-    .cu-geo-sub { font-size:11.5px; color:var(--muted); line-height:1.7 }
-    .cu-geo-warn {
-      margin-top:9px; padding:9px 11px; border-radius:9px; font-size:11px; line-height:1.7;
-      border:1px solid rgba(245,158,11,.28); background:rgba(245,158,11,.07); color:var(--muted);
-    }
-    .cu-sw { position:relative; width:46px; height:26px; flex-shrink:0; margin-top:2px }
+    .cu-sw { position:relative; display:inline-block; width:38px; height:21px; flex-shrink:0; vertical-align:middle }
     .cu-sw input { opacity:0; width:0; height:0; position:absolute }
     .cu-sw-track {
       position:absolute; inset:0; border-radius:999px; cursor:pointer; transition:.2s;
       background:rgba(148,163,184,.35);
     }
     .cu-sw-track::before {
-      content:''; position:absolute; width:20px; height:20px; left:3px; top:3px;
+      content:''; position:absolute; width:15px; height:15px; left:3px; top:3px;
       border-radius:50%; background:#fff; transition:.2s; box-shadow:0 1px 4px rgba(0,0,0,.3);
     }
     .cu-sw input:checked + .cu-sw-track { background:#22c55e }
-    .cu-sw input:checked + .cu-sw-track::before { transform:translateX(20px) }
+    .cu-sw input:checked + .cu-sw-track::before { transform:translateX(17px) }
     .cu-sw input:disabled + .cu-sw-track { opacity:.5; cursor:default }
 
     .cu-note {
@@ -1362,44 +1354,25 @@
                   <th>Last login</th>
                   <th>Active</th>
                   <th>Location</th>
+                  <th title="Ask this account's devices for their exact position">GPS</th>
                 </tr>
               </thead>
               <tbody id="cuTbody">
-                <tr><td colspan="8" class="um-empty">Loading…</td></tr>
+                <tr><td colspan="9" class="um-empty">Loading…</td></tr>
               </tbody>
             </table>
           </div>
           <div class="um-tbl-footer" id="cuFooter"></div>
         </div>
 
-        <div class="glass-card cu-geo">
-          <div class="cu-geo-body">
-            <div class="cu-geo-title">Ask every device for its exact position</div>
-            <div class="cu-geo-sub">
-              While this is on, the app asks each device for its own location as soon as somebody
-              signs in, and refreshes it every few minutes. That is what turns the <b>IP</b> rows
-              below into <b>GPS</b> ones — accurate enough to tell one branch from another.
-            </div>
-            <div class="cu-geo-warn">
-              The switch decides whether the app <b>asks</b>. It cannot decide the answer: a browser
-              only hands over a position after the person at that device allows its own prompt, and
-              they can withdraw it afterwards in their browser settings. Anyone who says no simply
-              stays on the IP estimate.
-            </div>
-          </div>
-          <label class="cu-sw">
-            <input type="checkbox" id="cuGeoReq" onchange="cuGeoSave()">
-            <span class="cu-sw-track"></span>
-          </label>
-        </div>
-
         <div class="cu-note">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span><b>GPS</b> rows are the position the device itself reported — accurate enough to tell one
-          branch from another, and only available where the person switched it on in My Profile and allowed
-          their browser to share it. They can withdraw it at any time. <b>IP</b> rows are worked out from the
-          internet connection instead: a town or a district at best, and mobile data can be a province out.
-          Never read an IP row as proof of where someone is.</span>
+          <span>Switch <b>GPS</b> on for an account and its devices are asked for their exact position —
+          accurate enough to tell one branch from another. The switch decides whether the app <b>asks</b>,
+          not the answer: a browser hands one over only after the person at that device allows its own
+          prompt, and they can withdraw it afterwards. Anyone who refuses stays on the <b>IP</b> estimate,
+          which is a town or a district at best and can be a province out on mobile data — never read an
+          IP row as proof of where someone is. Switching GPS off also clears what was stored.</span>
         </div>
       </div><!-- /Panel 6 -->
 
@@ -1560,7 +1533,7 @@
 <script src="../assets/js/qrcode.js?v=1"></script>
 <script src="../assets/js/qr-card.js?v=2"></script>
 <script src="../assets/js/auth.js"></script>
-<script src="../assets/js/layout.js?v=35"></script>
+<script src="../assets/js/layout.js?v=36"></script>
 <script>
 'use strict';
 
@@ -2647,31 +2620,26 @@ function cuToggle(uname) {
 
 /* Whether the app asks every device for a real position. Admin-wide, and the
    browser prompt on each device still has the final say. */
-async function cuGeoLoad() {
-  var box = document.getElementById('cuGeoReq');
-  if (!box) return;
-  try {
-    var r = await CamboAPI.post({ action: 'get_settings' });
-    box.checked = !!(r && r.ok && r.geo && String(r.geo.require) === '1');
-  } catch(e) {}
-}
-
-async function cuGeoSave() {
-  var box = document.getElementById('cuGeoReq');
+/* One account at a time. Turning it off also wipes that account's stored fixes,
+   so a pin cannot sit on the map after the asking has stopped. */
+async function cuGeoRow(uname, box) {
   box.disabled = true;
+  var want = box.checked;
   try {
-    var r = await CamboAPI.post({ action: 'geo_save', require: box.checked ? 1 : 0 });
+    var r = await CamboAPI.post({ action: 'user_geo_set', username: uname, on: want ? 1 : 0 });
     if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
-    toast(box.checked ? 'Devices will be asked for their position' : 'Devices will no longer be asked');
+    var u = _cuUsers.find(function(x){ return x.username === uname; });
+    if (u) u.geo_req = want ? 1 : 0;
+    toast(want ? 'Will ask this account for its exact position' : 'Stopped asking, and cleared what was stored');
+    if (!want) loadControlUsers();
   } catch(e) {
-    box.checked = !box.checked;          /* put the switch back where it was */
+    box.checked = !want;                 /* put the switch back where it was */
     toast(e.message || 'Could not save', true);
   }
   box.disabled = false;
 }
 
 async function loadControlUsers() {
-  cuGeoLoad();
   var body = document.getElementById('cuTbody');
   if (!body) return;
   try {
@@ -2680,7 +2648,7 @@ async function loadControlUsers() {
     _cuUsers = r.users || [];
     _cuMax   = r.max_devices || 2;
   } catch(e) {
-    body.innerHTML = '<tr><td colspan="8" class="um-empty">' + esc(e.message || 'Could not load') + '</td></tr>';
+    body.innerHTML = '<tr><td colspan="9" class="um-empty">' + esc(e.message || 'Could not load') + '</td></tr>';
     return;
   }
   cuRender();
@@ -2709,7 +2677,7 @@ function cuRender() {
   document.getElementById('cuFooter').textContent    = list.length + ' of ' + _cuUsers.length + ' accounts';
 
   if (!list.length) {
-    body.innerHTML = '<tr><td colspan="8" class="um-empty">No accounts match</td></tr>';
+    body.innerHTML = '<tr><td colspan="9" class="um-empty">No accounts match</td></tr>';
     return;
   }
 
@@ -2777,9 +2745,16 @@ function cuRender() {
       + '<td style="font-size:12px;color:var(--muted)">' + (newest ? esc(_cuWhen(newest.created_utc)) : '—') + '</td>'
       + '<td>' + activeCell + '</td>'
       + '<td>' + locCell + '</td>'
+      + '<td onclick="event.stopPropagation()">'
+      +   '<label class="cu-sw" title="Ask this account for its exact position">'
+      +     '<input type="checkbox"' + (Number(u.geo_req) ? ' checked' : '')
+      +       ' onchange="cuGeoRow(\'' + safeU + '\', this)">'
+      +     '<span class="cu-sw-track"></span>'
+      +   '</label>'
+      + '</td>'
       + '</tr>';
 
-    if (isOpen) row += '<tr><td class="cu-detail-td" colspan="8">' + _cuDetail(u) + '</td></tr>';
+    if (isOpen) row += '<tr><td class="cu-detail-td" colspan="9">' + _cuDetail(u) + '</td></tr>';
     return row;
   }).join('');
 }

@@ -489,6 +489,7 @@ async function ensureUserDetailCols() {
     'email VARCHAR(160)', 'phone VARCHAR(40)', 'telegram_id VARCHAR(80)',
     'addr_line VARCHAR(200)', 'addr_commune VARCHAR(120)', 'addr_city VARCHAR(120)',
     'emg_name VARCHAR(120)', 'emg_relation VARCHAR(60)', 'emg_phone VARCHAR(40)',
+    'geo_req TINYINT(1) NOT NULL DEFAULT 0',
   ]) {
     try { await db().query('ALTER TABLE users ADD COLUMN ' + col + ' NULL'); } catch(e) {}
   }
@@ -688,10 +689,21 @@ async function handler(req, res) {
       const u   = String(body.u || '').trim();
       const dev = String(body.device_id || '').trim();
       if (!u || !dev) return res.json({ ok:true, valid:true });   /* nothing to judge */
+
+      /* Read first, so every answer below can carry it. A device with no session
+         row still needs to be told, or an account switched on would never be
+         asked from the browser that pre-dates the session table. */
+      let _geoReq = 0;
+      try {
+        await ensureUserDetailCols();
+        const [gr] = await db().query('SELECT COALESCE(geo_req,0) AS g FROM users WHERE username=? LIMIT 1', [u]);
+        _geoReq = Number((gr[0] || {}).g || 0);
+      } catch(e) {}
+
       const [rows] = await db().query(
         'SELECT revoked FROM user_sessions WHERE username=? AND device_id=? LIMIT 1', [u, dev]
       );
-      if (!rows.length) return res.json({ ok:true, valid:true }); /* pre-dates the feature */
+      if (!rows.length) return res.json({ ok:true, valid:true, geo:_geoReq }); /* pre-dates the feature */
       if (Number(rows[0].revoked) === 1) return res.json({ ok:true, valid:false, reason:'revoked' });
       const [st] = await db().query('SELECT status FROM users WHERE username=? LIMIT 1', [u]);
       if (st.length && String(st[0].status).toLowerCase() !== 'active') {
@@ -707,7 +719,7 @@ async function handler(req, res) {
          WHERE username=? AND device_id=?`,
         [_g.ip, _g.city, _g.region, _g.country, _g.lat, _g.lon, _g.tz, _g.postal, u, dev]
       ).catch(()=>{});
-      return res.json({ ok:true, valid:true });
+      return res.json({ ok:true, valid:true, geo:_geoReq });
     }
 
     /* ── Public: redeem a sign-in QR (the phone scanning it has no credentials yet) ── */
@@ -1143,7 +1155,6 @@ async function handler(req, res) {
           show:  one('sb_show')  || '',
           links: one('sb_links') || '',
         },
-        geo: { require: one('geo_req') || '0' },
       });
     }
 
@@ -1157,19 +1168,6 @@ async function handler(req, res) {
         if (val) await db().query('INSERT INTO settings (type,value) VALUES (?,?)', [f, val]);
       }
       return res.json({ ok:true });
-    }
-
-    /* ── Precise location: on or off for the whole organisation (Admin only) ──
-       This decides whether the app *asks* each device for its position. It cannot
-       decide the answer: a browser hands a page a location only after the person
-       at it allows the prompt, and they can take that back at any time. ── */
-    if (action === 'geo_save') {
-      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
-      const on = (body.require === 1 || body.require === '1' || body.require === true) ? '1' : '0';
-      await db().query('DELETE FROM settings WHERE type=?', ['geo_req']);
-      await db().query('INSERT INTO settings (type,value) VALUES (?,?)', ['geo_req', on]);
-      logActivity('geo_require', actor, _bu, null, { on: on === '1' }).catch(()=>{});
-      return res.json({ ok:true, require: on });
     }
 
     /* ── Save Top Bar config (app-wide, Admin only) ── */
@@ -1979,6 +1977,29 @@ async function handler(req, res) {
       return res.json({ ok:true, users });
     }
 
+    /* ── Ask this one account's devices for their exact position (Admin only) ──
+       The switch decides whether the app *asks*. It cannot decide the answer: a
+       browser hands over a position only after the person at that device allows
+       its own prompt, and they can withdraw it afterwards. ── */
+    if (action === 'user_geo_set') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      const u = String(body.username || '').trim();
+      if (!u) return res.json({ ok:false, message:'Username required' });
+      await ensureUserDetailCols();
+      const on = (body.on === 1 || body.on === '1' || body.on === true) ? 1 : 0;
+      const [r] = await db().query('UPDATE users SET geo_req=? WHERE username=?', [on, u]);
+      if (!r.affectedRows) return res.json({ ok:false, message:'User not found' });
+      /* Turning it off should not leave a stale pin sitting on the map */
+      if (!on) {
+        await ensureSessionsTable();
+        await db().query(
+          'UPDATE user_sessions SET gps_lat=NULL, gps_lon=NULL, gps_acc=NULL, gps_at=NULL WHERE username=?', [u]
+        );
+      }
+      logActivity('geo_require', actor, _bu, u, { on: !!on }).catch(()=>{});
+      return res.json({ ok:true, on });
+    }
+
     /* ── Every account with the devices it is signed in on (Admin only) ──
          One query per table rather than one per user: the panel wants the whole
          org at once and the session table is capped at two rows per account. ── */
@@ -1988,9 +2009,11 @@ async function handler(req, res) {
       await ensureUserScopeCols();
       await ensureTeamNameCol();
       await ensureSessionsTable();
+      await ensureUserDetailCols();
 
       const [users] = await db().query(
-        `SELECT username, role, display_name, status, exp_date, photo_url, created_by, team_name
+        `SELECT username, role, display_name, status, exp_date, photo_url, created_by, team_name,
+                COALESCE(geo_req,0) AS geo_req
          FROM users ORDER BY id`
       );
       const [rows] = await db().query(

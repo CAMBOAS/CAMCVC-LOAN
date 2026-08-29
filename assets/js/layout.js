@@ -1587,6 +1587,12 @@
     try {
       r = await CamboAPI.post({ action: 'session_check', u: a.u, device_id: CamboDevice.id() });
     } catch(e) { return; }                    /* offline — never sign out on a network blip */
+    if (r && r.ok) {
+      /* the same answer says whether this account is being asked for a position */
+      var wasOn = geoRequired();
+      geoSetRequired(Number(r.geo) === 1);
+      if (!wasOn && Number(r.geo) === 1) geoStart();
+    }
     if (!r || !r.ok || r.valid !== false) return;
 
     try { localStorage.removeItem('appAuth'); localStorage.removeItem('user_photo'); } catch(e) {}
@@ -1686,19 +1692,14 @@
     } catch(e) { return { ok:false }; }
   }
 
-  /* The organisation-wide switch, cached so a refresh does not wait on the network */
+  /* Set per account by an Admin and carried on the session heartbeat, so this
+     never costs a request of its own and follows the switch within 30 seconds. */
   var GEO_REQ_KEY = 'geo_required';
   function geoRequired() {
     try { return localStorage.getItem(GEO_REQ_KEY) === '1'; } catch(e) { return false; }
   }
-  async function geoSyncRequired() {
-    if (typeof CamboAPI === 'undefined') return geoRequired();
-    try {
-      var r = await CamboAPI.post({ action: 'get_settings' });
-      var on = !!(r && r.ok && r.geo && String(r.geo.require) === '1');
-      try { on ? localStorage.setItem(GEO_REQ_KEY, '1') : localStorage.removeItem(GEO_REQ_KEY); } catch(e) {}
-      return on;
-    } catch(e) { return geoRequired(); }
+  function geoSetRequired(on) {
+    try { on ? localStorage.setItem(GEO_REQ_KEY, '1') : localStorage.removeItem(GEO_REQ_KEY); } catch(e) {}
   }
 
   /* Asks for a position when the organisation has turned this on. The browser
@@ -1713,9 +1714,8 @@
     try { geoSend(await geoRead(true)); } catch(e) {}
   }
 
-  async function geoStart() {
+  function geoStart() {
     if (_geoTimer) return;
-    await geoSyncRequired();
     geoTick();
     _geoTimer = setInterval(geoTick, GEO_EVERY);
   }
