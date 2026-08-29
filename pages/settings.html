@@ -325,6 +325,7 @@
     .cu-search::-webkit-search-cancel-button { -webkit-appearance:none; appearance:none }
     .cu-search:focus { border-color:rgba(124,92,255,.55) }
 
+    .cu-no { color:var(--muted); font-size:11.5px; font-variant-numeric:tabular-nums; text-align:right; padding-right:10px !important }
     .cu-tbl tbody tr.cu-row { cursor:pointer }
     .cu-tbl tbody tr.cu-row:hover { background:rgba(124,92,255,.05) }
     .cu-caret {
@@ -1353,6 +1354,7 @@
               <thead>
                 <tr>
                   <th style="width:28px"></th>
+                  <th style="width:34px">#</th>
                   <th>Photo</th>
                   <th>Display Name</th>
                   <th>Role</th>
@@ -1364,7 +1366,7 @@
                 </tr>
               </thead>
               <tbody id="cuTbody">
-                <tr><td colspan="9" class="um-empty">Loading…</td></tr>
+                <tr><td colspan="10" class="um-empty">Loading…</td></tr>
               </tbody>
             </table>
           </div>
@@ -2683,7 +2685,7 @@ function cuRender() {
   document.getElementById('cuFooter').textContent    = list.length + ' of ' + _cuUsers.length + ' accounts';
 
   if (!list.length) {
-    body.innerHTML = '<tr><td colspan="9" class="um-empty">No accounts match</td></tr>';
+    body.innerHTML = '<tr><td colspan="10" class="um-empty">No accounts match</td></tr>';
     return;
   }
 
@@ -2696,7 +2698,7 @@ function cuRender() {
     return _cuSeenMs(b) - _cuSeenMs(a);
   });
 
-  body.innerHTML = list.map(function(u) {
+  body.innerHTML = list.map(function(u, idx) {
     var safeU = String(u.username).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     var live  = _cuLiveSessions(u);
     /* newest first, so "the device" means the one in use right now */
@@ -2744,6 +2746,7 @@ function cuRender() {
 
     var row = '<tr class="cu-row' + (isOpen ? ' cu-open' : '') + '" onclick="cuToggle(\'' + safeU + '\')">'
       + '<td><span class="cu-caret"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></td>'
+      + '<td class="cu-no">' + (idx + 1) + '</td>'
       + '<td><div class="um-photo-cell">' + photo + '</div></td>'
       + '<td><div class="um-name">' + esc(u.display_name || '—') + '</div><div class="um-uname">' + esc(u.username) + '</div></td>'
       + '<td><span class="' + roleClass(u.role) + '">' + esc(u.role || '—') + '</span></td>'
@@ -2760,27 +2763,65 @@ function cuRender() {
       + '</td>'
       + '</tr>';
 
-    if (isOpen) row += '<tr><td class="cu-detail-td" colspan="9">' + _cuDetail(u) + '</td></tr>';
+    if (isOpen) row += '<tr><td class="cu-detail-td" colspan="10">' + _cuDetail(u) + '</td></tr>';
     return row;
   }).join('');
 
-  cuFitTen();
+  cuFitRows();
 }
 
-/* Cap the table at ten rows. Measured from the rows actually on screen rather
-   than a fixed pixel height, so it stays ten at any zoom or font size. */
-var CU_ROWS = 10;
-function cuFitTen() {
+/* Fill whatever screen this is on, down to the bottom, and cut on a whole row so
+   no half a row is left peeking. A laptop lands near ten, a desk monitor nearer
+   twenty; measured from the rows themselves so it holds at any zoom. */
+var CU_MIN_ROWS = 15;
+
+function cuFitRows() {
   var wrap = document.getElementById('cuTblWrap');
   var body = document.getElementById('cuTbody');
   if (!wrap || !body) return;
   var rows = body.querySelectorAll('tr.cu-row');
-  if (rows.length <= CU_ROWS) { wrap.style.maxHeight = ''; return; }
-  var head = wrap.querySelector('thead');
-  var h = head ? head.getBoundingClientRect().height : 0;
-  for (var i = 0; i < CU_ROWS; i++) h += rows[i].getBoundingClientRect().height;
-  wrap.style.maxHeight = Math.round(h) + 'px';
+  if (!rows.length) { wrap.style.maxHeight = ''; return; }
+
+  var head  = wrap.querySelector('thead');
+  var headH = head ? head.getBoundingClientRect().height : 0;
+  var rowH  = rows[0].getBoundingClientRect().height || 46;
+
+  /* Where the table sits with the panel scrolled to the top — taking the current
+     scroll into account, so a re-fit while scrolled down does not shrink it. */
+  var sc = wrap.closest('.st-wrap');
+  var scrolls = sc && getComputedStyle(sc).overflowY === 'auto';
+  var top, viewH;
+  if (scrolls) {
+    var scr = sc.getBoundingClientRect();
+    top = (wrap.getBoundingClientRect().top - scr.top) + sc.scrollTop;
+    /* The scroller can run past the bottom of the window, so its clientHeight is
+       not what you can actually see — measure to whichever ends first. */
+    viewH = Math.min(scr.bottom, window.innerHeight) - scr.top;
+  } else {
+    top   = wrap.getBoundingClientRect().top + (window.scrollY || 0);
+    viewH = window.innerHeight;
+  }
+
+  /* leave room for whatever sits under the table */
+  var below = 0;
+  var foot = document.getElementById('cuFooter');
+  var note = document.querySelector('#stPanel6 .cu-note');
+  if (foot) below += foot.getBoundingClientRect().height;
+  if (note) below += note.getBoundingClientRect().height + 10;
+
+  var n = Math.floor((viewH - top - below - 18 - headH) / rowH);
+  if (!isFinite(n)) n = CU_MIN_ROWS;
+  /* Fifteen at least, more where the screen allows it */
+  n = Math.max(CU_MIN_ROWS, n);
+  if (n >= rows.length) { wrap.style.maxHeight = ''; return; }
+  wrap.style.maxHeight = Math.round(headH + n * rowH) + 'px';
 }
+
+var _cuFitRaf = null;
+window.addEventListener('resize', function() {
+  if (_cuFitRaf) cancelAnimationFrame(_cuFitRaf);
+  _cuFitRaf = requestAnimationFrame(function(){ _cuFitRaf = null; cuFitRows(); });
+});
 
 function _cuField(label, value, mono) {
   return '<div><div class="cu-f-lbl">' + esc(label) + '</div>'
