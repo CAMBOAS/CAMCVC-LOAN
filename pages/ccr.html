@@ -12,7 +12,9 @@
   <link rel="stylesheet" href="../assets/css/main.css?v=38">
   <style>
     .orb{display:none!important}
-    .main-content{padding:60px 0 0!important}
+    /* The shared top bar is fixed and hidden on desktop, and body.apptb-on already
+       offsets for the app bar — so padding here only ever doubled up. */
+    .main-content{padding:0!important}
 
     .cc-wrap { display:flex; flex-direction:column; gap:10px; padding:12px 14px 14px; overflow-y:auto; overflow-x:hidden; flex:1; min-height:0 }
     @media (max-width:768px) { .cc-wrap { flex:unset; overflow:visible; padding-bottom:calc(90px + env(safe-area-inset-bottom,0px)) } }
