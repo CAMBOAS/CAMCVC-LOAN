@@ -167,6 +167,60 @@ async function logActivity(act, actor, actorUser, target, detail) {
   } catch(e) {}
 }
 
+/* ── Who actually opened their own repayment history ──
+   One row per borrower record, not per visit: the question staff ask is "has
+   this customer ever looked, and when did they last look", and keeping a row
+   per visit would grow without bound for no extra answer. */
+let _portalVisitsReady = false;
+async function ensurePortalVisitsTable() {
+  if (_portalVisitsReady) return;
+  await db().query(`CREATE TABLE IF NOT EXISTS portal_visits (
+    loan_key    VARCHAR(64) PRIMARY KEY,
+    visits      INT NOT NULL DEFAULT 0,
+    first_seen  DATETIME NULL,
+    last_seen   DATETIME NULL,
+    last_ip     VARCHAR(64)  NULL,
+    last_city   VARCHAR(120) NULL,
+    last_region VARCHAR(120) NULL,
+    last_country VARCHAR(8)  NULL,
+    last_ua     VARCHAR(255) NULL,
+    last_via    VARCHAR(12)  NULL
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  _portalVisitsReady = true;
+}
+
+/* Called after a borrower is let in. Never throws into the response: a failure
+   to record a visit must not stop somebody reading their own history. */
+async function recordPortalVisit(keys, req, via) {
+  try {
+    if (!keys || !keys.length) return;
+    await ensurePortalVisitsTable();
+    const g = readGeo(req);
+    /* A page refresh restores the same session — keep the clock moving but do not
+       count it again, or the number would measure refreshes rather than visits. */
+    const bump = (via === 'restore') ? 0 : 1;
+    for (const k of keys) {
+      await db().query(
+        `INSERT INTO portal_visits
+           (loan_key, visits, first_seen, last_seen, last_ip, last_city, last_region, last_country, last_ua, last_via)
+         VALUES (?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP(),?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE
+           visits = visits + ?, last_seen = UTC_TIMESTAMP(),
+           /* COALESCE so a request without the geo headers keeps the last known
+              place instead of blanking it, and a refresh does not rewrite how
+              they got in — that was decided when the visit started. */
+           last_ip=COALESCE(VALUES(last_ip),last_ip),
+           last_city=COALESCE(VALUES(last_city),last_city),
+           last_region=COALESCE(VALUES(last_region),last_region),
+           last_country=COALESCE(VALUES(last_country),last_country),
+           last_ua=COALESCE(VALUES(last_ua),last_ua),
+           last_via=IF(?=0, last_via, VALUES(last_via))`,
+        [k, bump, g.ip, g.city, g.region, g.country, g.ua, String(via || '').slice(0, 12), bump, bump]
+      );
+    }
+  } catch(e) {}
+}
+
 let _sbCcrDone = false;
 
 /* ── Map DB row → frontend loan object ── */
@@ -959,6 +1013,10 @@ async function handler(req, res) {
           repayments: repaymentMap[t.tab_id] || [],
         })),
       }));
+      /* They are in and about to see their history — that is the visit. */
+      const _via = ['qr','manual','restore'].indexOf(String(body.via||'')) !== -1 ? String(body.via) : 'manual';
+      recordPortalVisit(loanRows.map(r => r.loan_key), req, _via);
+
       return res.json({ ok: true, loans });
     }
 
@@ -2030,6 +2088,18 @@ async function handler(req, res) {
       }
       logActivity('geo_require', actor, _bu, u, { on: !!on }).catch(()=>{});
       return res.json({ ok:true, on });
+    }
+
+    /* ── Which customers have opened their own history, and when ── */
+    if (action === 'portal_visits_list') {
+      await ensurePortalVisitsTable();
+      const [rows] = await db().query(
+        `SELECT loan_key, visits, last_ip, last_city, last_region, last_country, last_ua, last_via,
+                DATE_FORMAT(first_seen, '%Y-%m-%dT%H:%i:%sZ') AS first_utc,
+                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS last_utc
+         FROM portal_visits`
+      );
+      return res.json({ ok:true, visits: rows });
     }
 
     /* ── Every account with the devices it is signed in on (Admin only) ──

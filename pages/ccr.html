@@ -127,6 +127,23 @@
     .cc-foot { padding:9px 14px; font-size:11.5px; color:var(--muted); border-top:1px solid rgba(148,163,184,.1) }
     .cc-empty { text-align:center; padding:26px 12px; color:var(--muted); font-size:12.5px }
 
+    .cc-note {
+      display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:10px 13px; border-radius:11px;
+      border:1px solid rgba(245,158,11,.28); background:rgba(245,158,11,.07);
+      font-size:11px; line-height:1.7; color:var(--muted);
+    }
+    .cc-note svg { width:13px; height:13px; flex-shrink:0; margin-top:2px; color:#f59e0b }
+    .cc-seen { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; font-size:12px }
+    .cc-dot { width:7px; height:7px; border-radius:50%; background:#94a3b8; flex-shrink:0 }
+    .cc-dot.on { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.16) }
+    .cc-times { font-weight:800; font-variant-numeric:tabular-nums; font-size:12.5px }
+    .cc-via {
+      margin-left:6px; font-size:8.5px; font-weight:800; letter-spacing:.05em; padding:1px 5px;
+      border-radius:4px; border:1px solid rgba(148,163,184,.35); color:var(--muted); white-space:nowrap;
+    }
+    .cc-via-qr { border-color:rgba(14,165,233,.45); color:#0284c7; background:rgba(14,165,233,.1) }
+    [data-theme="dark"] .cc-via-qr { color:#38bdf8 }
+
     .cc-soon {
       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
       padding:56px 24px; text-align:center;
@@ -173,8 +190,8 @@
           <span>Customers</span>
         </button>
         <button type="button" class="cc-tab" data-tab="two" onclick="ccTab('two')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-          <span>Tab 2</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Who checked</span>
         </button>
         <button type="button" class="cc-tab" data-tab="three" onclick="ccTab('three')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -247,14 +264,76 @@
         </div>
       </div>
 
-      <!-- ══ Tab 2 ══ -->
+      <!-- ══ Tab 2: who has opened their own history ══ -->
       <div class="cc-panel" id="ccPanelTwo">
-        <div class="glass-card cc-soon">
-          <div class="cc-soon-ico">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        <div class="cc-bar">
+          <div class="cc-bar-title">Which customers have opened their own repayment history, and when</div>
+          <input class="cc-search" id="ccvSearch" name="ccv_filter" type="search" placeholder="Search name, NID, phone…"
+                 oninput="ccvRender()" autocomplete="off" data-lpignore="true" data-1p-ignore>
+          <button type="button" class="cc-refresh" onclick="ccvLoad()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+            Refresh
+          </button>
+        </div>
+
+        <div class="cc-kpis">
+          <div class="glass-card cc-kpi">
+            <div class="cc-kpi-label">Have checked</div>
+            <div class="cc-kpi-val" id="ccvKpiSeen" style="color:#22c55e">—</div>
+            <div class="cc-kpi-sub">Opened it at least once</div>
+            <div class="cc-kpi-accent" style="background:#22c55e"></div>
           </div>
-          <div class="cc-soon-title">Tab 2</div>
-          <div class="cc-soon-sub">Nothing here yet — this tab is a placeholder, ready for whatever you want it to do.</div>
+          <div class="glass-card cc-kpi">
+            <div class="cc-kpi-label">Never checked</div>
+            <div class="cc-kpi-val" id="ccvKpiNever" style="color:#64748b">—</div>
+            <div class="cc-kpi-sub">Have not opened it</div>
+            <div class="cc-kpi-accent" style="background:#64748b"></div>
+          </div>
+          <div class="glass-card cc-kpi">
+            <div class="cc-kpi-label">Checked this week</div>
+            <div class="cc-kpi-val" id="ccvKpiWeek" style="color:#0ea5e9">—</div>
+            <div class="cc-kpi-sub">In the last 7 days</div>
+            <div class="cc-kpi-accent" style="background:#0ea5e9"></div>
+          </div>
+          <div class="glass-card cc-kpi">
+            <div class="cc-kpi-label">Times opened</div>
+            <div class="cc-kpi-val" id="ccvKpiTotal">—</div>
+            <div class="cc-kpi-sub">Across every customer</div>
+            <div class="cc-kpi-accent" style="background:#a78bfa"></div>
+          </div>
+        </div>
+
+        <div class="glass-card cc-card">
+          <div class="cc-tbl-wrap" id="ccvTblWrap">
+            <table class="cc-tbl">
+              <thead>
+                <tr>
+                  <th style="width:28px"></th>
+                  <th style="width:34px">#</th>
+                  <th>Photo</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Checked</th>
+                  <th>First opened</th>
+                  <th>Last opened</th>
+                  <th>Times</th>
+                  <th>Opened from</th>
+                </tr>
+              </thead>
+              <tbody id="ccvBody">
+                <tr><td colspan="10" class="cc-empty">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="cc-foot" id="ccvFoot"></div>
+        </div>
+
+        <div class="cc-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Counted from the moment this was built — a customer who read their history before then
+          shows as never checked until the next time they open it. A refresh of the same session does not
+          count again, so <b>Times</b> is how often they came back, not how often the page reloaded.
+          <b>Opened from</b> is worked out from the internet connection, so it is a town at best.</span>
         </div>
       </div>
 
@@ -318,9 +397,10 @@ function ccTab(name) {
   var panel = document.getElementById('ccPanel' + name.charAt(0).toUpperCase() + name.slice(1));
   if (panel) panel.classList.add('on');
   if (name === 'list') ccFitRows();
+  if (name === 'two') { _ccvLoaded ? ccvFitRows() : (_ccvLoaded = true, ccvLoad()); }
 }
 
-var _ccLoans = [], _ccOpen = {};
+var _ccLoans = [], _ccOpen = {}, _ccvLoaded = false;
 
 function ccMoney(v) {
   var n = Number(v);
@@ -468,11 +548,182 @@ async function ccPortal(key, box) {
   box.disabled = false;
 }
 
+/* ══ Tab 2 — who opened their own history ══
+   The customer side of Control User: one row per borrower, showing whether they
+   have ever opened the portal, when, how often, and roughly from where. The
+   visit itself is recorded by the server when the portal lets them in. */
+var _ccVisits = {}, _ccvOpen = {};
+
+async function ccvLoad() {
+  var body = document.getElementById('ccvBody');
+  try {
+    if (!_ccLoans.length) {
+      var a = await CamboAPI.post({ action: 'get_all' });
+      if (a && a.ok) _ccLoans = a.loans || [];
+    }
+    var r = await CamboAPI.post({ action: 'portal_visits_list' });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not load');
+    _ccVisits = {};
+    (r.visits || []).forEach(function(v){ _ccVisits[v.loan_key] = v; });
+  } catch(e) {
+    body.innerHTML = '<tr><td colspan="10" class="cc-empty">' + esc(e.message || 'Could not load') + '</td></tr>';
+    return;
+  }
+  ccvRender();
+}
+
+function ccvToggleRow(key) {
+  _ccvOpen[key] = !_ccvOpen[key];
+  ccvRender();
+}
+
+function ccvAgo(iso) {
+  if (!iso) return '—';
+  var ms = new Date(iso).getTime();
+  if (isNaN(ms)) return '—';
+  var m = Math.floor((Date.now() - ms) / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return m + ' min ago';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + ' hr ago';
+  var d = Math.floor(h / 24);
+  if (d < 30) return d + ' day' + (d > 1 ? 's' : '') + ' ago';
+  return new Date(iso).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function ccvStamp(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function ccvPlace(v) {
+  if (!v) return '';
+  var bits = [v.last_city, v.last_country].filter(Boolean);
+  return bits.join(', ') || v.last_ip || '';
+}
+
+function ccvRender() {
+  var body = document.getElementById('ccvBody');
+  if (!body) return;
+
+  var q = ((document.getElementById('ccvSearch') || {}).value || '').trim().toLowerCase();
+  var list = !q ? _ccLoans : _ccLoans.filter(function(l) {
+    return [l.FullName, l.NationalID, l.Phone, l.Groups].some(function(x) {
+      return String(x || '').toLowerCase().indexOf(q) !== -1;
+    });
+  });
+
+  var seen = 0, week = 0, total = 0;
+  var weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+  _ccLoans.forEach(function(l) {
+    var v = _ccVisits[l.DateTime];
+    if (!v || !Number(v.visits)) return;
+    seen++;
+    total += Number(v.visits) || 0;
+    var t = new Date(v.last_utc || 0).getTime();
+    if (!isNaN(t) && t >= weekAgo) week++;
+  });
+  document.getElementById('ccvKpiSeen').textContent  = seen;
+  document.getElementById('ccvKpiNever').textContent = _ccLoans.length - seen;
+  document.getElementById('ccvKpiWeek').textContent  = week;
+  document.getElementById('ccvKpiTotal').textContent = total;
+  document.getElementById('ccvFoot').textContent     = list.length + ' of ' + _ccLoans.length + ' customers';
+
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="10" class="cc-empty">'
+      + (_ccLoans.length ? 'No customers match' : 'No customers yet') + '</td></tr>';
+    ccvFitRows();
+    return;
+  }
+
+  /* Whoever looked most recently first, then everyone who never has */
+  list = list.slice().sort(function(a, b) {
+    var va = _ccVisits[a.DateTime], vb = _ccVisits[b.DateTime];
+    var ta = va ? new Date(va.last_utc || 0).getTime() : 0;
+    var tb = vb ? new Date(vb.last_utc || 0).getTime() : 0;
+    return (tb || 0) - (ta || 0);
+  });
+
+  body.innerHTML = list.map(function(l, idx) {
+    var key   = l.DateTime || '';
+    var safeK = key.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    var v     = _ccVisits[key];
+    var has   = !!(v && Number(v.visits));
+    var isOpen = !!_ccvOpen[key];
+    var init  = (l.FullName || '?').charAt(0).toUpperCase();
+
+    var av = l.photo_url
+      ? '<div class="cc-av"><img src="' + esc(l.photo_url) + '" alt=""></div>'
+      : '<div class="cc-av">' + esc(init) + '</div>';
+
+    var checked = has
+      ? '<span class="cc-seen"><span class="cc-dot on"></span>Yes</span>'
+      : '<span class="cc-seen"><span class="cc-dot"></span>Never</span>';
+
+    var place = has ? ccvPlace(v) : '';
+    var via   = has && v.last_via === 'qr'
+      ? '<span class="cc-via cc-via-qr">QR</span>'
+      : (has ? '<span class="cc-via">TYPED</span>' : '');
+
+    var row = '<tr class="cc-row' + (isOpen ? ' cc-open' : '') + '" onclick="ccvToggleRow(\'' + safeK + '\')">'
+      + '<td><span class="cc-caret"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></td>'
+      + '<td class="cc-no">' + (idx + 1) + '</td>'
+      + '<td>' + av + '</td>'
+      + '<td><div class="cc-name">' + esc(l.FullName || '—') + '</div>'
+      +     '<div class="cc-nid">' + esc(l.NationalID || '—') + '</div></td>'
+      + '<td>' + (l.Phone ? esc(l.Phone) : '<span class="cc-none">—</span>') + '</td>'
+      + '<td>' + checked + '</td>'
+      + '<td style="font-size:12px;color:var(--muted)">' + (has ? esc(ccvAgo(v.first_utc)) : '—') + '</td>'
+      + '<td style="font-size:12px;color:var(--muted)">' + (has ? esc(ccvAgo(v.last_utc)) : '—') + '</td>'
+      + '<td class="cc-times">' + (has ? Number(v.visits) : '<span class="cc-none">—</span>') + '</td>'
+      + '<td>' + (has ? (place ? esc(place) : '<span class="cc-none">Unknown</span>') + via
+                      : '<span class="cc-none">—</span>') + '</td>'
+      + '</tr>';
+
+    if (isOpen) row += '<tr><td class="cc-detail-td" colspan="10">' + ccvDetail(l, v) + '</td></tr>';
+    return row;
+  }).join('');
+
+  ccvFitRows();
+}
+
+function ccvDetail(l, v) {
+  if (!v || !Number(v.visits)) {
+    return '<div class="cc-detail"><div><div class="cc-f-lbl">Nothing recorded</div>'
+         + '<div class="cc-f-val">This customer has not opened their repayment history since tracking began.'
+         + (l.PortalClosed ? ' Their portal is currently closed, so they cannot.' : '') + '</div></div></div>';
+  }
+  var base = location.pathname.replace(/[^/]*$/, '');
+  var link = base + 'borrower-profile.html?key=' + encodeURIComponent(l.DateTime || '');
+  return '<div class="cc-detail">'
+    + ccField('First opened',  ccvStamp(v.first_utc))
+    + ccField('Last opened',   ccvStamp(v.last_utc))
+    + ccField('Times opened',  String(v.visits))
+    + ccField('Opened how',    v.last_via === 'qr' ? 'Scanned a QR link' : 'Typed their details in')
+    + ccField('Place',         ccvPlace(v))
+    + ccField('IP address',    v.last_ip)
+    + ccField('Browser',       v.last_ua)
+    + ccField('Portal',        l.PortalClosed ? 'Closed' : 'Open')
+    + '<div><div class="cc-f-lbl">Full record</div>'
+    +   '<a class="cc-open-link" href="' + esc(link) + '">'
+    +     '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+    +     'Open borrower profile</a></div>'
+    + '</div>';
+}
+
+function ccvFitRows() { ccFitTable('ccvTblWrap', 'ccvBody', 'ccvFoot'); }
+
+/* Fill the screen down to the bottom, cutting on a whole row, fifteen at least */
 /* Fill the screen down to the bottom, cutting on a whole row, fifteen at least */
 var CC_MIN_ROWS = 15;
-function ccFitRows() {
-  var wrap = document.getElementById('ccTblWrap');
-  var body = document.getElementById('ccBody');
+
+function ccFitRows() { ccFitTable('ccTblWrap', 'ccBody', 'ccFoot'); }
+
+function ccFitTable(wrapId, bodyId, footId) {
+  var wrap = document.getElementById(wrapId);
+  var body = document.getElementById(bodyId);
   if (!wrap || !body) return;
   var rows = body.querySelectorAll('tr.cc-row');
   if (!rows.length) { wrap.style.maxHeight = ''; return; }
@@ -493,8 +744,10 @@ function ccFitRows() {
     viewH = window.innerHeight;
   }
 
-  var foot = document.getElementById('ccFoot');
+  var foot = document.getElementById(footId);
   var below = foot ? foot.getBoundingClientRect().height : 0;
+  var note = wrap.closest('.cc-panel').querySelector('.cc-note');
+  if (note) below += note.getBoundingClientRect().height + 10;
 
   var n = Math.floor((viewH - top - below - 18 - headH) / rowH);
   if (!isFinite(n)) n = CC_MIN_ROWS;
@@ -506,7 +759,7 @@ function ccFitRows() {
 var _ccFitRaf = null;
 window.addEventListener('resize', function() {
   if (_ccFitRaf) cancelAnimationFrame(_ccFitRaf);
-  _ccFitRaf = requestAnimationFrame(function(){ _ccFitRaf = null; ccFitRows(); });
+  _ccFitRaf = requestAnimationFrame(function(){ _ccFitRaf = null; ccFitRows(); ccvFitRows(); });
 });
 
 document.addEventListener('DOMContentLoaded', function() {

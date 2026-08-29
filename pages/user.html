@@ -768,7 +768,7 @@ async function tokenBlocks() {
    history instead of asking them to type the details in again. */
 async function tokenAutoOpen() {
   if (!_tokBorrower) return false;
-  var body = { action: 'portal_login', method: _tokBorrower.method, phone: _tokBorrower.phone };
+  var body = { action: 'portal_login', method: _tokBorrower.method, phone: _tokBorrower.phone, via: 'qr' };
   if (_tokBorrower.method === 'nid') body.nid = _tokBorrower.cred;
   else                               body.name = _tokBorrower.cred;
   var r = await portalAPI(body);
@@ -805,7 +805,8 @@ window.addEventListener('load', async function() {
 
   if (sm && sp && sc) {
     /* silently re-fetch to restore session */
-    var body = { action: 'portal_login', method: sm, phone: sp };
+    /* Same visit continuing after a refresh — the server keeps the clock but not the count */
+    var body = { action: 'portal_login', method: sm, phone: sp, via: 'restore' };
     if (sm === 'name') body.name = sc; else body.nid = sc;
     var r = await portalAPI(body);
     if (r && r.ok) {
@@ -914,7 +915,7 @@ async function doLogin() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span> កំពុងស្វែងរក...';
 
-  var body = { action: 'portal_login', method: _method, phone: phone };
+  var body = { action: 'portal_login', method: _method, phone: phone, via: 'manual' };
   if (_method === 'name') body.name = name;
   else                    body.nid  = nid;
 
