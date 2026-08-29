@@ -277,6 +277,12 @@
     .mp-acct-k { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted) }
     .mp-acct-v { font-size:13px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 
+    .mp-det-sub {
+      font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+      color:var(--muted); margin:20px 0 10px;
+      display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
+    }
+
     .mp-det-confirm {
       margin-top:16px; padding:12px 14px; border-radius:11px;
       border:1px solid rgba(245,158,11,.3); background:rgba(245,158,11,.07);
@@ -703,25 +709,6 @@
           </div>
           </div>
 
-          <div class="mp-det-sec">Contact</div>
-          <div class="mp-det-grid">
-          <div class="mp-df">
-            <label class="mp-dl" for="mpdEmail">Email</label>
-            <input class="mp-input" id="mpdEmail" type="email" placeholder="name@example.com" autocomplete="off" data-lpignore="true" data-1p-ignore
-                   readonly onfocus="this.removeAttribute('readonly')">
-          </div>
-          <div class="mp-df">
-            <label class="mp-dl" for="mpdPhone">Phone number</label>
-            <input class="mp-input" id="mpdPhone" type="tel" placeholder="0XX XXX XXX" autocomplete="off" data-lpignore="true" data-1p-ignore
-                   readonly onfocus="this.removeAttribute('readonly')">
-          </div>
-          <div class="mp-df">
-            <label class="mp-dl" for="mpdTg">Telegram</label>
-            <input class="mp-input" id="mpdTg" type="text" placeholder="@username" autocomplete="off" data-lpignore="true" data-1p-ignore
-                   readonly onfocus="this.removeAttribute('readonly')">
-          </div>
-          </div>
-
           <div class="mp-det-sec">Address</div>
           <div class="mp-det-grid">
           <div class="mp-df">
@@ -795,6 +782,27 @@
           </div>
           </div>
 
+          <div class="mp-det-sec">Security &amp; sign-in
+            <span class="mp-det-note">How you are reached, and how you get in</span>
+          </div>
+          <div class="mp-det-note" style="margin:-2px 0 10px">Your email will double as a sign-in name later, so it lives here rather than with your address.</div>
+          <div class="mp-det-grid">
+          <div class="mp-df">
+            <label class="mp-dl" for="mpdEmail">Email</label>
+            <input class="mp-input" id="mpdEmail" type="email" placeholder="name@example.com" autocomplete="off" data-lpignore="true" data-1p-ignore
+                   readonly onfocus="this.removeAttribute('readonly')">
+          </div>
+          <div class="mp-df">
+            <label class="mp-dl" for="mpdPhone">Phone number</label>
+            <input class="mp-input" id="mpdPhone" type="tel" placeholder="0XX XXX XXX" autocomplete="off" data-lpignore="true" data-1p-ignore
+                   readonly onfocus="this.removeAttribute('readonly')">
+          </div>
+          <div class="mp-df">
+            <label class="mp-dl" for="mpdTg">Telegram</label>
+            <input class="mp-input" id="mpdTg" type="text" placeholder="@username" autocomplete="off" data-lpignore="true" data-1p-ignore
+                   readonly onfocus="this.removeAttribute('readonly')">
+          </div>
+          </div>
           <!-- Renaming the account rewrites the name stamped on old loan records, so
                that one change still has to be confirmed. Everything else does not,
                and the box only appears once the name is actually edited. -->
@@ -816,8 +824,8 @@
             </button>
           </div>
 
-          <div class="mp-det-sec">Security
-            <span class="mp-det-note">Changing the PIN is its own step — it signs nothing else</span>
+          <div class="mp-det-sub">Change PIN
+            <span class="mp-det-note">Its own step — the button below saves only this</span>
           </div>
           <div class="mp-det-grid">
           <div class="mp-df">

@@ -2242,6 +2242,18 @@ async function handler(req, res) {
           sets.push(f + '=?');
           vals.push(v.slice(0, 200) || null);
         });
+        /* The email is meant to become a way to sign in, which only works if it
+           picks out one account. Two people saving the same address today would
+           make that impossible later, so it is refused now while the field is
+           still empty for nearly everyone. */
+        const _mail = ('email' in body) ? String(body.email || '').trim() : null;
+        if (_mail) {
+          const [dupe] = await db().query(
+            'SELECT username FROM users WHERE email=? AND username<>? LIMIT 1', [_mail, _bu]
+          );
+          if (dupe.length) return res.json({ ok:false, message:'អ៊ីមែលនេះមានគណនីផ្សេងប្រើរួចហើយ' });
+        }
+
         if (!sets.length) return res.json({ ok:false, message:'គ្មានព័ត៌មានត្រូវធ្វើបច្ចុប្បន្ន' });
         vals.push(_bu);
         await db().query('UPDATE users SET ' + sets.join(', ') + ' WHERE username=?', vals);
