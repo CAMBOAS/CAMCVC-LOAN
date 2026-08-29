@@ -2,9 +2,18 @@
 (function () {
   'use strict';
 
-  function getLang() { return localStorage.getItem('lang') || 'en'; }
-  function setLang(l) { localStorage.setItem('lang', l); }
+  function getLang() { return localStorage.getItem('lang') === 'kh' ? 'kh' : 'en'; }
+  function setLang(l) { try { localStorage.setItem('lang', l === 'kh' ? 'kh' : 'en'); } catch(e) {} }
   function t(kh, en) { return getLang() === 'en' ? en : kh; }
+  /* Every nav label here already has its Khmer, but nothing outside this file
+     could read the setting or change it. Exposed so a page can offer the switch
+     and have the shared chrome follow along. */
+  window.appGetLang = getLang;
+  window.appSetLang = function (l) {
+    setLang(l);
+    try { window.appApplyTopbar && window.appApplyTopbar(); } catch(e) {}
+    try { window.appRerenderSidebar && window.appRerenderSidebar(); } catch(e) {}
+  };
 
   function getBrand() {
     try { return JSON.parse(localStorage.getItem('appBrand')||'null') || {}; } catch(e) { return {}; }
@@ -73,21 +82,21 @@
 
   function getPageMeta() {
     return {
-      'index.html':     { title: t('Dashboard','Dashboard'),   subtitle: t('ការវិភាគ និងទិដ្ឋភាពទូទៅ','Analytics & overview') },
+      'index.html':     { title: t('ផ្ទាំងគ្រប់គ្រង','Dashboard'),   subtitle: t('ការវិភាគ និងទិដ្ឋភាពទូទៅ','Analytics & overview') },
       'loan-list.html':       { title: t('បញ្ជីកម្ចី','Loan List'),       subtitle: t('តារាង និងការគ្រប់គ្រងអ្នកខ្ចីសរុប','Borrower list and full management') },
       'borrower-profile.html':{ title: t('Profile អ្នកខ្ចី','Borrower Profile'), subtitle: t('ព័ត៌មានលម្អិតអ្នកខ្ចី','Full borrower details and loan history') },
-      'activity-log.html':  { title: t('Activity Log','Activity Log'), subtitle: t('កំណត់ហេតុសកម្មភាព','All system events and actions') },
+      'activity-log.html':  { title: t('កំណត់ហេតុ','Activity Log'), subtitle: t('កំណត់ហេតុសកម្មភាព','All system events and actions') },
       'team.html':          { title: t('ក្រុម','Team'),               subtitle: t('សមាជិកក្រុម និងស្ថិតិ','Team members and activity stats') },
       'customers.html':     { title: t('អតិថិជន','Customers'),         subtitle: t('គ្រប់គ្រងព័ត៌មានអតិថិជន','Customer information and records') },
       'add-customer.html':  { title: t('បន្ថែមអតិថិជន','Add Customer'),  subtitle: t('បំពេញព័ត៌មានអតិថិជនខាងក្រោម','Fill in the customer information below') },
       'repayment-tracker.html': { title: t('Repayment Tracker','Repayment Tracker'), subtitle: t('តាមដានការសងប្រាក់','Track loan repayments and paid status') },
-      'fb-id-finder.html': { title: t('FB ID Finder','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
+      'fb-id-finder.html': { title: t('FB ID','FB ID Finder'), subtitle: t('បំប្លែង Facebook URL ទៅជា Numeric ID','Convert Facebook URL to Numeric ID') },
       'journal.html':   { title: t('កំណត់ត្រា','Journal'), subtitle: t('ទម្លាប់ និងកំណត់ចំណាំផ្ទាល់ខ្លួន','Personal habits and notes') },
       'reports.html':   { title: t('របាយការណ៍','Reports'), subtitle: t('សង្ខេប និងស្ថិតិ','Summaries and statistics') },
       'ccr.html':       { title: t('CCR','CCR'), subtitle: t('គ្រប់គ្រងអតិថិជន','Control Customer') },
       'schedule.html':  { title: t('កាលវិភាគសង','Schedule'), subtitle: t('តារាងកាលវិភាគសងប្រាក់','Loan repayment schedule') },
-      'my-profile.html':{ title: t('Profile','My Profile'), subtitle: t('គណនី និងចំណូលចិត្ត','Account and preferences') },
-      'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
+      'my-profile.html':{ title: t('ប្រវត្តិរូបខ្ញុំ','My Profile'), subtitle: t('គណនី និងចំណូលចិត្ត','Account and preferences') },
+      'settings.html':  { title: t('ការកំណត់','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },
     };
   }
@@ -234,22 +243,22 @@
       <nav class="sb-nav">
         ${_has('label') ? `<div class="sb-section-label">${t('ម៉ឺនុយចំបង','Main Menu')}</div>` : ''}
         <ul class="sb-list">
-          ${(_pick('dash') && appCanPage('dashboard')) ? link('index.html', ic.dashboard, t('Dashboard','Dashboard')) : ''}
+          ${(_pick('dash') && appCanPage('dashboard')) ? link('index.html', ic.dashboard, t('ផ្ទាំងគ្រប់គ្រង','Dashboard')) : ''}
           ${(_pick('cust') && appCanPage('customers')) ? link('pages/customers.html', ic.customers, t('អតិថិជន','Customers')) : ''}
           ${(_pick('add')  && appCanPage('customers')) ? link('pages/add-customer.html', ic.profile, t('បន្ថែមអតិថិជន','Add Customer')) : ''}
           ${(_pick('loans') && appCanPage('loanlist')) ? link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List')) : ''}
-          ${(_pick('rpt') && appCan('reports') && appCanPage('reports')) ? link('pages/reports.html', ic.report, t('Reports','Reports')) : ''}
-          ${(_pick('rep') && appCanPage('repayment')) ? link('pages/repayment-tracker.html', ic.repayment, t('Repayment','Repayment')) : ''}
-          ${(_pick('fb') && appCanPage('fbid')) ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID Finder','FB ID Finder')) : ''}
-          ${(_pick('act') && appCanPage('activitylog')) ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
+          ${(_pick('rpt') && appCan('reports') && appCanPage('reports')) ? link('pages/reports.html', ic.report, t('របាយការណ៍','Reports')) : ''}
+          ${(_pick('rep') && appCanPage('repayment')) ? link('pages/repayment-tracker.html', ic.repayment, t('ការសង','Repayment')) : ''}
+          ${(_pick('fb') && appCanPage('fbid')) ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID','FB ID Finder')) : ''}
+          ${(_pick('act') && appCanPage('activitylog')) ? link('pages/activity-log.html', ic.activity, t('កំណត់ហេតុ','Activity Log')) : ''}
           ${(_pick('team') && appCanPage('team')) ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
           ${(_pick('ccr') && appCanPage('ccr')) ? link('pages/ccr.html', ic.ccr, t('CCR','CCR')) : ''}
           ${(_pick('sch') && appCanPage('schedule')) ? link('pages/schedule.html', ic.schedule, t('កាលវិភាគសង','Schedule')) : ''}
-          ${(_pick('set') && role === 'Admin') ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
+          ${(_pick('set') && role === 'Admin') ? link('pages/settings.html', ic.settings, t('ការកំណត់','Settings')) : ''}
           ${(_pick('jr') && appCanPage('journal')) ? link('pages/journal.html', ic.journal, t('កំណត់ត្រា','Journal')) : ''}
-          ${_pick('prof') ? link('pages/my-profile.html', ic.profile, t('Profile','My Profile')) : ''}
+          ${_pick('prof') ? link('pages/my-profile.html', ic.profile, t('ប្រវត្តិរូបខ្ញុំ','My Profile')) : ''}
           ${_has('portal') ? `<li class="sb-divider sb-divider-sm"></li>
-          <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('User','User')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('User','User')}</span><span class="sb-active-dot"></span></a></li>` : ''}
+          <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('ផតថលអតិថិជន','User')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('ផតថលអតិថិជន','User')}</span><span class="sb-active-dot"></span></a></li>` : ''}
         </ul>
       </nav>
 
@@ -275,11 +284,11 @@
       </a>`;
     }
     return `<nav class="sb-bottom-nav" id="sbBottomNav">
-      ${bnItem('index.html',              ic.dashboard, t('Dashboard','Dashboard'))}
+      ${bnItem('index.html',              ic.dashboard, t('ផ្ទាំងគ្រប់គ្រង','Dashboard'))}
       ${bnItem('pages/loan-list.html',    ic.loanlist,  t('កម្ចី','Loans'))}
       ${bnItem('pages/fb-id-finder.html', ic.facebook,  t('FB ID','FB ID'))}
       ${bnItem('pages/team.html',         ic.users,     t('ក្រុម','Team'))}
-      ${role === 'Admin' ? bnItem('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
+      ${role === 'Admin' ? bnItem('pages/settings.html', ic.settings, t('ការកំណត់','Settings')) : ''}
     </nav>`;
   }
 
@@ -717,7 +726,7 @@
 
   /* Every page that can appear as a quick link: key → page, icon, perm, label */
   var TB_PAGES = {
-    dash:  { page:'index.html',                    ic:'dashboard', perm:'dashboard',   kh:'Dashboard',   en:'Dashboard'    },
+    dash:  { page:'index.html',                    ic:'dashboard', perm:'dashboard',   kh:'ផ្ទាំងគ្រប់គ្រង', en:'Dashboard'    },
     cust:  { page:'pages/customers.html',          ic:'customers', perm:'customers',   kh:'អតិថិជន',      en:'Customers'    },
     add:   { page:'pages/add-customer.html',       ic:'profile',   perm:'customers',   kh:'បន្ថែមអតិថិជន', en:'Add Customer' },
     loans: { page:'pages/loan-list.html',          ic:'loanlist',  perm:'loanlist',    kh:'បញ្ជីកម្ចី',     en:'Loan List'    },
@@ -730,7 +739,7 @@
     sch:   { page:'pages/schedule.html',           ic:'schedule',  perm:'schedule',    kh:'កាលវិភាគសង',   en:'Schedule'     },
     jr:    { page:'pages/journal.html',            ic:'journal',   perm:'journal',     kh:'កំណត់ត្រា',     en:'Journal'      },
     set:   { page:'pages/settings.html',           ic:'settings',  perm:'__admin',     kh:'ការកំណត់',     en:'Settings'     },
-    prof:  { page:'pages/my-profile.html',         ic:'profile',   perm:'__all',       kh:'Profile',      en:'My Profile'   }
+    prof:  { page:'pages/my-profile.html',         ic:'profile',   perm:'__all',       kh:'ប្រវត្តិរូបខ្ញុំ', en:'My Profile'   }
   };
   window.appTbPages = TB_PAGES;
 

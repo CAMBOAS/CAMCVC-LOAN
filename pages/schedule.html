@@ -22,6 +22,21 @@
     .sc-title { font-size:18px; font-weight:800; color:var(--text) }
     .sc-sub { font-size:11.5px; color:var(--muted); margin-top:1px }
 
+    /* ── language switch ── */
+    .sc-lang {
+      margin-left:auto; display:inline-flex; padding:3px; border-radius:10px; flex-shrink:0;
+      background:rgba(148,163,184,.14); border:1px solid rgba(148,163,184,.2);
+    }
+    .sc-lang-b {
+      font-family:inherit; font-size:11.5px; font-weight:800; letter-spacing:.02em;
+      padding:5px 13px; border:none; background:transparent; color:var(--muted);
+      border-radius:7px; cursor:pointer; transition:.15s; line-height:1.5;
+    }
+    .sc-lang-b:hover { color:var(--text) }
+    .sc-lang-on { background:var(--card,#fff); color:var(--text); box-shadow:0 1px 6px rgba(0,0,0,.14) }
+    [data-theme="dark"] .sc-lang-on { background:rgba(255,255,255,.14) }
+    @media print { .sc-lang { display:none !important } }
+
     /* ── toolbar ── */
     .sc-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0 }
     .sc-bar-spacer { flex:1 }
@@ -204,9 +219,13 @@
         <div class="sc-icon">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#7c5cff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
         </div>
-        <div>
-          <div class="sc-title">Schedule</div>
-          <div class="sc-sub">កាលវិភាគសងប្រាក់ — every instalment, what it costs, and what is still owed</div>
+        <div style="min-width:0">
+          <div class="sc-title" data-i18n="title">Schedule</div>
+          <div class="sc-sub" data-i18n="sub">Every instalment, what it costs, and what is still owed</div>
+        </div>
+        <div class="sc-lang" role="group" aria-label="Language">
+          <button type="button" class="sc-lang-b" id="scLangEn" onclick="scSetLang('en')">EN</button>
+          <button type="button" class="sc-lang-b" id="scLangKh" onclick="scSetLang('kh')">ខ្មែរ</button>
         </div>
       </div>
 
@@ -216,20 +235,20 @@
         </select>
         <button type="button" class="sc-btn" onclick="scNew()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New
+          <span data-i18n="btnNew">New</span>
         </button>
         <div class="sc-bar-spacer"></div>
         <button type="button" class="sc-btn" onclick="scPrint()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Print
+          <span data-i18n="btnPrint">Print</span>
         </button>
         <button type="button" class="sc-btn sc-btn-del" id="scDelBtn" onclick="scDelete()" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          Delete
+          <span data-i18n="btnDelete">Delete</span>
         </button>
         <button type="button" class="sc-btn sc-btn-go" onclick="scSave()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          Save
+          <span data-i18n="btnSave">Save</span>
         </button>
       </div>
 
@@ -240,70 +259,70 @@
         <div class="glass-card sc-card">
           <div class="sc-card-hd">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            The contract
+            <span data-i18n="contract">The contract</span>
           </div>
           <div class="sc-grid">
-            <div class="sc-sec">Who</div>
+            <div class="sc-sec" data-i18n="who">Who</div>
             <div class="sc-f sc-f-wide">
-              <label class="sc-lbl" for="scCust">Customer on file</label>
+              <label class="sc-lbl" for="scCust" data-i18n="custOnFile">Customer on file</label>
               <select class="sc-in" id="scCust" onchange="scPickCustomer()">
-                <option value="">— not linked to a customer —</option>
+                <option value="" data-i18n="noCust">— not linked to a customer —</option>
               </select>
             </div>
-            <div class="sc-f"><label class="sc-lbl" for="scBorrower">Borrower</label>
+            <div class="sc-f"><label class="sc-lbl" for="scBorrower" data-i18n="borrower">Borrower</label>
               <input class="sc-in" id="scBorrower" autocomplete="off" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scCo">Co-borrower</label>
+            <div class="sc-f"><label class="sc-lbl" for="scCo" data-i18n="coBorrower">Co-borrower</label>
               <input class="sc-in" id="scCo" autocomplete="off" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scAcct">Account no.</label>
+            <div class="sc-f"><label class="sc-lbl" for="scAcct" data-i18n="acct">Account no.</label>
               <input class="sc-in" id="scAcct" autocomplete="off" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scContract">Contract no.</label>
+            <div class="sc-f"><label class="sc-lbl" for="scContract" data-i18n="contractNo">Contract no.</label>
               <input class="sc-in" id="scContract" autocomplete="off" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scBranch">Branch</label>
+            <div class="sc-f"><label class="sc-lbl" for="scBranch" data-i18n="branch">Branch</label>
               <input class="sc-in" id="scBranch" autocomplete="off" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scPurpose">Purpose</label>
+            <div class="sc-f"><label class="sc-lbl" for="scPurpose" data-i18n="purpose">Purpose</label>
               <input class="sc-in" id="scPurpose" autocomplete="off" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scOfficer">Officer</label>
+            <div class="sc-f"><label class="sc-lbl" for="scOfficer" data-i18n="officer">Officer</label>
               <input class="sc-in" id="scOfficer" autocomplete="off" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scOffPhone">Officer phone</label>
+            <div class="sc-f"><label class="sc-lbl" for="scOffPhone" data-i18n="officerPhone">Officer phone</label>
               <input class="sc-in" id="scOffPhone" autocomplete="off" oninput="scDraw()"></div>
 
-            <div class="sc-sec">The money</div>
-            <div class="sc-f"><label class="sc-lbl" for="scPrincipal">Principal</label>
+            <div class="sc-sec" data-i18n="money">The money</div>
+            <div class="sc-f"><label class="sc-lbl" for="scPrincipal" data-i18n="principal">Principal</label>
               <input class="sc-in" id="scPrincipal" type="number" step="0.01" min="0" placeholder="0.00" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scCur">Currency</label>
+            <div class="sc-f"><label class="sc-lbl" for="scCur" data-i18n="currency">Currency</label>
               <select class="sc-in" id="scCur" onchange="scDraw()">
                 <option value="USD">USD $</option>
                 <option value="KHR">KHR ៛</option>
               </select></div>
-            <div class="sc-f"><label class="sc-lbl" for="scRate">Interest %/year</label>
+            <div class="sc-f"><label class="sc-lbl" for="scRate" data-i18n="ratePct">Interest %/year</label>
               <input class="sc-in" id="scRate" type="number" step="0.01" min="0" placeholder="0.00" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scMonths">Instalments (months)</label>
+            <div class="sc-f"><label class="sc-lbl" for="scMonths" data-i18n="instalMonths">Instalments (months)</label>
               <input class="sc-in" id="scMonths" type="number" step="1" min="1" max="600" placeholder="0" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scMethod">Method</label>
+            <div class="sc-f"><label class="sc-lbl" for="scMethod" data-i18n="method">Method</label>
               <select class="sc-in" id="scMethod" onchange="scDraw()">
-                <option value="declining">Declining balance</option>
-                <option value="flat">Flat rate</option>
+                <option value="declining" data-i18n="mDecl">Declining balance</option>
+                <option value="flat" data-i18n="mFlat">Flat rate</option>
               </select></div>
-            <div class="sc-f"><label class="sc-lbl" for="scBasis">Day-count basis</label>
+            <div class="sc-f"><label class="sc-lbl" for="scBasis" data-i18n="basis">Day-count basis</label>
               <select class="sc-in" id="scBasis" onchange="scDraw()">
-                <option value="360">360 days/year</option>
-                <option value="365">365 days/year</option>
+                <option value="360" data-i18n="b360">360 days/year</option>
+                <option value="365" data-i18n="b365">365 days/year</option>
               </select></div>
-            <div class="sc-f"><label class="sc-lbl" for="scDisb">Disbursed on</label>
+            <div class="sc-f"><label class="sc-lbl" for="scDisb" data-i18n="disbursed">Disbursed on</label>
               <input class="sc-in" id="scDisb" type="date" onchange="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scFirst">First due on</label>
+            <div class="sc-f"><label class="sc-lbl" for="scFirst" data-i18n="firstDue">First due on</label>
               <input class="sc-in" id="scFirst" type="date" onchange="scDraw()"></div>
 
-            <div class="sc-sec">Fees and penalties</div>
-            <div class="sc-f"><label class="sc-lbl" for="scFeeAdmin">Admin fee</label>
+            <div class="sc-sec" data-i18n="fees">Fees and penalties</div>
+            <div class="sc-f"><label class="sc-lbl" for="scFeeAdmin" data-i18n="feeAdmin">Admin fee</label>
               <input class="sc-in" id="scFeeAdmin" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scFeeCbc">Credit-bureau fee</label>
+            <div class="sc-f"><label class="sc-lbl" for="scFeeCbc" data-i18n="feeCbc">Credit-bureau fee</label>
               <input class="sc-in" id="scFeeCbc" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scFeeOther">Other fees</label>
+            <div class="sc-f"><label class="sc-lbl" for="scFeeOther" data-i18n="feeOther">Other fees</label>
               <input class="sc-in" id="scFeeOther" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scLate">Late interest %/year</label>
+            <div class="sc-f"><label class="sc-lbl" for="scLate" data-i18n="lateRate">Late interest %/year</label>
               <input class="sc-in" id="scLate" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scEarly">Early-payoff fee %</label>
+            <div class="sc-f"><label class="sc-lbl" for="scEarly" data-i18n="earlyFee">Early-payoff fee %</label>
               <input class="sc-in" id="scEarly" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
           </div>
         </div>
@@ -312,7 +331,7 @@
         <div class="glass-card sc-card">
           <div class="sc-card-hd">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            What it costs
+            <span data-i18n="costs">What it costs</span>
           </div>
           <div class="sc-kf" id="scKeyFacts"></div>
           <div class="sc-kf-hint" id="scRateHint"></div>
@@ -332,15 +351,15 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Day</th>
-                <th>Due date</th>
-                <th class="sc-num">Days</th>
-                <th class="sc-num">Principal</th>
-                <th class="sc-num">Interest</th>
-                <th class="sc-num">Total due</th>
-                <th class="sc-num">Balance</th>
-                <th>Status</th>
-                <th class="sc-mid">Paid</th>
+                <th data-i18n="cDay">Day</th>
+                <th data-i18n="cDue">Due date</th>
+                <th class="sc-num" data-i18n="cDays">Days</th>
+                <th class="sc-num" data-i18n="cPrincipal">Principal</th>
+                <th class="sc-num" data-i18n="cInterest">Interest</th>
+                <th class="sc-num" data-i18n="cTotal">Total due</th>
+                <th class="sc-num" data-i18n="cBalance">Balance</th>
+                <th data-i18n="cStatus">Status</th>
+                <th class="sc-mid" data-i18n="cPaid">Paid</th>
               </tr>
             </thead>
             <tbody id="scBody">
@@ -354,7 +373,7 @@
 
       <div class="sc-note">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <span>Interest is charged on what is still owed, for the actual number of days between
+        <span id="scNoteText">Interest is charged on what is still owed, for the actual number of days between
         instalments — so a longer gap costs more, and the first instalment costs most of all.
         Dates falling on a weekend are marked; the schedule keeps the calendar date, because
         that is what the contract says, and the borrower pays the next working day.
@@ -398,6 +417,173 @@
                  rounding so the balance lands exactly on zero
 
    Nothing is stored but the contract; the rows are worked out on demand. */
+
+/* ══ Khmer / English ══
+   Drives the app-wide `lang` setting rather than a private one, so the shared
+   sidebar and top bar — which already carry Khmer for every entry — follow the
+   same switch. Each value is [Khmer, English]. */
+var TX = {
+  title:        ['កាលវិភាគសង', 'Schedule'],
+  sub:          ['គ្រប់ដងនៃការសង តម្លៃរបស់វា និងចំនួននៅសល់', 'Every instalment, what it costs, and what is still owed'],
+  contract:     ['កិច្ចសន្យា', 'The contract'],
+  costs:        ['តម្លៃសរុប', 'What it costs'],
+  who:          ['អ្នកពាក់ព័ន្ធ', 'Who'],
+  money:        ['ចំនួនទឹកប្រាក់', 'The money'],
+  fees:         ['កម្រៃ និងការពិន័យ', 'Fees and penalties'],
+  custOnFile:   ['អតិថិជនក្នុងប្រព័ន្ធ', 'Customer on file'],
+  noCust:       ['— មិនភ្ជាប់នឹងអតិថិជន —', '— not linked to a customer —'],
+  borrower:     ['អ្នកខ្ចី', 'Borrower'],
+  coBorrower:   ['អ្នករួមខ្ចី', 'Co-borrower'],
+  acct:         ['លេខគណនី', 'Account no.'],
+  contractNo:   ['លេខកិច្ចសន្យា', 'Contract no.'],
+  branch:       ['សាខា', 'Branch'],
+  purpose:      ['គោលបំណង', 'Purpose'],
+  officer:      ['មន្ត្រី', 'Officer'],
+  officerPhone: ['ទូរស័ព្ទមន្ត្រី', 'Officer phone'],
+  principal:    ['ប្រាក់ដើម', 'Principal'],
+  currency:     ['រូបិយប័ណ្ណ', 'Currency'],
+  ratePct:      ['អត្រាការប្រាក់ %/ឆ្នាំ', 'Interest %/year'],
+  instalMonths: ['ចំនួនដងសង (ខែ)', 'Instalments (months)'],
+  method:       ['របៀបគិត', 'Method'],
+  basis:        ['មូលដ្ឋានរាប់ថ្ងៃ', 'Day-count basis'],
+  disbursed:    ['ថ្ងៃបើកប្រាក់', 'Disbursed on'],
+  firstDue:     ['ថ្ងៃសងលើកទី១', 'First due on'],
+  feeAdmin:     ['កម្រៃរដ្ឋបាល', 'Admin fee'],
+  feeCbc:       ['កម្រៃ CBC', 'Credit-bureau fee'],
+  feeOther:     ['កម្រៃផ្សេងៗ', 'Other fees'],
+  lateRate:     ['ការប្រាក់ពិន័យយឺត %/ឆ្នាំ', 'Late interest %/year'],
+  earlyFee:     ['កម្រៃសងមុនកំណត់ %', 'Early-payoff fee %'],
+  mDecl:        ['តាមសមតុល្យថយចុះ', 'Declining balance'],
+  mFlat:        ['អត្រាថេរ', 'Flat rate'],
+  b360:         ['360 ថ្ងៃ/ឆ្នាំ', '360 days/year'],
+  b365:         ['365 ថ្ងៃ/ឆ្នាំ', '365 days/year'],
+  btnNew:       ['ថ្មី', 'New'],
+  btnPrint:     ['បោះពុម្ព', 'Print'],
+  btnDelete:    ['លុប', 'Delete'],
+  btnSave:      ['រក្សាទុក', 'Save'],
+  savedNone:    ['— កាលវិភាគដែលរក្សាទុក —', '— Saved schedules —'],
+  savedSome:    ['— កាលវិភាគដែលរក្សាទុក (N) —', '— Saved schedules (N) —'],
+
+  cDay:         ['ថ្ងៃ', 'Day'],
+  cDue:         ['ថ្ងៃត្រូវសង', 'Due date'],
+  cDays:        ['ចំនួនថ្ងៃ', 'Days'],
+  cPrincipal:   ['ប្រាក់ដើម', 'Principal'],
+  cInterest:    ['ការប្រាក់', 'Interest'],
+  cTotal:       ['សរុបត្រូវសង', 'Total due'],
+  cBalance:     ['នៅសល់', 'Balance'],
+  cStatus:      ['ស្ថានភាព', 'Status'],
+  cPaid:        ['សងរួច', 'Paid'],
+
+  pPaid:        ['សងរួច', 'Paid'],
+  pOverdue:     ['យឺត', 'Overdue'],
+  pNext:        ['បន្ទាប់', 'Next'],
+  pUpcoming:    ['មិនទាន់ដល់', 'Upcoming'],
+  wknd:         ['ចុងសប្ដាហ៍', 'WKND'],
+  wkndTip:      ['ចំចុងសប្ដាហ៍ — អតិថិជនសងនៅថ្ងៃធ្វើការបន្ទាប់',
+                 'Falls on a weekend — the borrower pays the next working day'],
+  markPaid:     ['ចុចសម្គាល់ថាសងរួច', 'Mark this instalment settled'],
+
+  kNominal:     ['អត្រាការប្រាក់ស្នើសុំ', 'Nominal interest rate'],
+  kInstal:      ['ចំនួនដងសង', 'Instalments'],
+  kTotInt:      ['ការប្រាក់សរុប', 'Total interest'],
+  kTotFees:     ['កម្រៃសរុប', 'Total fees'],
+  kFirstInst:   ['ដងសងទី១', 'First instalment'],
+  kLastInst:    ['ដងសងចុងក្រោយ', 'Last instalment'],
+  kCostRate:    ['អត្រាថ្លៃដើម (ការប្រាក់ + កម្រៃ)', 'Cost rate (interest + fees)'],
+  kTotRepay:    ['សរុបត្រូវសង', 'Total to repay'],
+  perMonth:     ['ដង ប្រចាំខែ', 'x monthly'],
+  perYear:      ['% / ឆ្នាំ', '% / year'],
+  daysYear:     ['ថ្ងៃ/ឆ្នាំ', 'days/year'],
+
+  kpiSettled:   ['សងរួច', 'Settled'],
+  kpiOwed:      ['នៅជំពាក់', 'Still owed'],
+  kpiOverdue:   ['យឺត', 'Overdue'],
+  kpiNext:      ['ដងបន្ទាប់', 'Next due'],
+  subSettled:   ['N ក្នុង M ដង', 'N of M instalments'],
+  subLeft:      ['នៅសល់ N ដង', 'N left to pay'],
+  subPastDue:   ['យឺត N ដង', 'N instalments past due'],
+  subNoPastDue: ['គ្មានយឺតទេ', 'Nothing past due'],
+  subDone:      ['សងរួចទាំងអស់', 'Fully settled'],
+
+  total:        ['សរុប', 'Total'],
+  footLine:     ['N ដង · D ថ្ងៃ · A → B', 'N instalments · D days · A → B'],
+  footFees:     ['  ·  បូក F ជាកម្រៃ គិតពេលបើកប្រាក់', '  ·  plus F of fees, charged at disbursement'],
+
+  blankPrompt:  ['សូមបំពេញប្រាក់ដើម អត្រាការប្រាក់ ចំនួនដងសង និងកាលបរិច្ឆេទទាំងពីរ — តារាងនឹងចេញភ្លាមៗ',
+                 'Fill in the principal, the rate, the number of instalments and the two dates — the schedule appears as you type'],
+  ePrincipal:   ['សូមបញ្ចូលប្រាក់ដើមធំជាងសូន្យ', 'Enter a principal greater than zero'],
+  eMonths:      ['ចំនួនដងសងត្រូវនៅចន្លោះ 1 និង 600', 'Instalments must be between 1 and 600'],
+  eRate:        ['អត្រាការប្រាក់មិនអាចអវិជ្ជមានទេ', 'The interest rate cannot be negative'],
+  eDisb:        ['សូមជ្រើសថ្ងៃបើកប្រាក់', 'Pick the disbursement date'],
+  eFirst:       ['សូមជ្រើសថ្ងៃសងលើកទី១', 'Pick the first due date'],
+  eOrder:       ['ថ្ងៃសងលើកទី១ត្រូវនៅក្រោយថ្ងៃបើកប្រាក់', 'The first due date must come after the disbursement date'],
+
+  tSaved:       ['រក្សាទុករួច', 'Saved'],
+  tDeleted:     ['លុបរួច', 'Deleted'],
+  tNeedName:    ['សូមបញ្ចូលឈ្មោះអ្នកខ្ចីជាមុនសិន', 'Give the schedule a borrower name first'],
+  tOpened:      ['បើក', 'Opened'],
+  tNoSave:      ['រក្សាទុកមិនបាន', 'Could not save'],
+  tNoDelete:    ['លុបមិនបាន', 'Could not delete'],
+  tNoOpen:      ['បើកមិនបាន', 'Could not open'],
+  tNoList:      ['ទាញយកកាលវិភាគមិនបាន', 'Could not load saved schedules'],
+  tNoServer:    ['ភ្ជាប់ Server មិនបាន', 'Could not reach the server'],
+  tNoCust:      ['ទាញយកបញ្ជីអតិថិជនមិនបាន — អ្នកនៅតែវាយឈ្មោះដោយដៃបាន',
+                 'Could not load the customer list — you can still type the names in'],
+  tNotFound:    ['រកមិនឃើញ', 'Not found'],
+  cfDelete:     ['លុបកាលវិភាគនេះមែនទេ? កិច្ចសន្យា និងសញ្ញាសងរួច នឹងបាត់ទាំងអស់។',
+                 'Delete this saved schedule? The contract and its paid marks go with it.'],
+
+  dNothing:     ['មិនទាន់មានអ្វីកត់ត្រា', 'Nothing recorded'],
+  note:         ['ការប្រាក់គិតលើចំនួននៅសល់ តាមចំនួនថ្ងៃពិតរវាងដងសងនីមួយៗ — ដូច្នេះគម្លាតវែងជាងគឺថ្លៃជាង ហើយដងទី១ថ្លៃជាងគេ។ ថ្ងៃដែលចំចុងសប្ដាហ៍ត្រូវបានសម្គាល់ទុក តារាងនៅរក្សាកាលបរិច្ឆេទដើមព្រោះនោះជាអ្វីដែលកិច្ចសន្យាចែង ហើយអតិថិជនសងនៅថ្ងៃធ្វើការបន្ទាប់។ <b>ការរក្សាទុកគឺរក្សាកិច្ចសន្យា មិនមែនជួរតារាងទេ</b> — លេខត្រូវបានគណនាឡើងវិញរាល់ពេលបើក ដូច្នេះកាលវិភាគដែលរក្សាទុកមិនអាចផ្ទុយនឹងការគណនាខ្លួនឯងបានឡើយ។',
+                 'Interest is charged on what is still owed, for the actual number of days between instalments — so a longer gap costs more, and the first instalment costs most of all. Dates falling on a weekend are marked; the schedule keeps the calendar date, because that is what the contract says, and the borrower pays the next working day. <b>Saving stores the contract, not the rows</b> — the figures are worked out again each time it is opened, so a saved schedule can never disagree with its own arithmetic.'],
+  costHint:     ['អត្រាថ្លៃដើម = (ការប្រាក់ I + កម្រៃ F) ÷ សមតុល្យមធ្យម A ÷ Y ឆ្នាំ។ ដកកម្រៃចេញ វាត្រឡប់ជាអត្រាស្នើសុំ R ត្រង់ៗ។ ស្ថាប័ននីមួយៗបង្គត់ខុសគ្នា ដូច្នេះសន្លឹកបង្ហាញថ្លៃដើមអាចបោះពុម្ពលេខខុសគ្នាបន្តិចបន្តួច។',
+                 'Cost rate = (interest I + fees F) ÷ average balance A ÷ Y years. Take out the fees and it returns the nominal R exactly. Institutions round this differently, so a disclosure sheet may print a figure a few hundredths apart.'],
+  denied:       ['មិនអនុញ្ញាតសម្រាប់តួនាទីរបស់អ្នក', 'Not available for your role'],
+  deniedSub:    ['សូមទាក់ទង Admin ប្រសិនបើអ្នកត្រូវការចូលប្រើ Schedule',
+                 'Ask an Admin if you need access to Schedule'],
+  langLabel:    ['ភាសា', 'Language']
+};
+
+function scLang() { return (window.appGetLang ? appGetLang() : 'en') === 'kh' ? 'kh' : 'en'; }
+function T(k) { var v = TX[k]; return v ? v[scLang() === 'kh' ? 0 : 1] : ''; }
+
+function scSetLang(l) {
+  if (window.appSetLang) appSetLang(l);
+  else { try { localStorage.setItem('lang', l); } catch(e) {} }
+  scApplyLang();
+}
+
+/* Swap every fixed label, then redraw the parts that are built in script. */
+function scApplyLang() {
+  var kh = scLang() === 'kh';
+  document.getElementById('scLangEn').classList.toggle('sc-lang-on', !kh);
+  document.getElementById('scLangKh').classList.toggle('sc-lang-on', kh);
+  document.documentElement.lang = kh ? 'km' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var v = TX[el.getAttribute('data-i18n')];
+    if (v) el.textContent = v[kh ? 0 : 1];
+  });
+  document.querySelector('.sc-lang').setAttribute('aria-label', T('langLabel'));
+  document.getElementById('scNoteText').innerHTML = T('note');
+  var d = document.getElementById('scDenied');
+  d.querySelector('div > div:first-child').textContent = T('denied');
+  d.querySelector('div > div:last-child').textContent  = T('deniedSub');
+  scSavedLabel();
+  scDraw();
+}
+
+/* Both dropdowns are rebuilt from script after their data arrives, so their
+   placeholders are re-tagged there and refreshed here rather than relying on
+   the markup that was replaced. */
+
+/* The placeholder option carries a count, so it is built rather than tagged. */
+function scSavedLabel() {
+  var sel = document.getElementById('scSaved');
+  if (!sel || !sel.options.length) return;
+  sel.options[0].textContent = _scSaved.length
+    ? T('savedSome').replace('N', _scSaved.length)
+    : T('savedNone');
+}
 
 var _scLoans = [], _scSaved = [], _scKey = '', _scPaid = {}, _scToastT = null;
 
@@ -492,13 +678,13 @@ function scForm() {
    Returns null with a reason when the contract is not yet complete enough to
    compute, so the caller can say what is missing instead of showing zeroes. */
 function scBuild(f) {
-  if (!(f.principal > 0))                   return { err: 'Enter a principal greater than zero' };
-  if (!(f.term_months >= 1 && f.term_months <= 600)) return { err: 'Instalments must be between 1 and 600' };
-  if (!(f.annual_rate >= 0))                return { err: 'The interest rate cannot be negative' };
+  if (!(f.principal > 0))                   return { err: 'ePrincipal' };
+  if (!(f.term_months >= 1 && f.term_months <= 600)) return { err: 'eMonths' };
+  if (!(f.annual_rate >= 0))                return { err: 'eRate' };
   var disb = dISO(f.disbursed_on), first = dISO(f.first_due_on);
-  if (!disb)  return { err: 'Pick the disbursement date' };
-  if (!first) return { err: 'Pick the first due date' };
-  if (first <= disb) return { err: 'The first due date must come after the disbursement date' };
+  if (!disb)  return { err: 'eDisb' };
+  if (!first) return { err: 'eFirst' };
+  if (first <= disb) return { err: 'eOrder' };
 
   var rate = f.annual_rate / 100;
   var n    = f.term_months;
@@ -561,10 +747,9 @@ function scDraw() {
   if (s.err) {
     var blank = scBlankForm();
     /* Only complain once they have actually started */
-    scErr(blank ? '' : s.err);
+    scErr(blank ? '' : T(s.err));
     body.innerHTML = '<tr><td colspan="10" class="sc-empty">'
-      + (blank ? 'Fill in the principal, the rate, the number of instalments and the two dates — the schedule appears as you type'
-               : esc(s.err)) + '</td></tr>';
+      + esc(blank ? T('blankPrompt') : T(s.err)) + '</td></tr>';
     document.getElementById('scFootRow').innerHTML = '';
     document.getElementById('scKeyFacts').innerHTML = '';
     document.getElementById('scFoot').textContent = '';
@@ -590,29 +775,28 @@ function kfRow(k, v, cls) {
 function scKeyFacts(f, s) {
   var c = f.currency;
   var h = '';
-  h += kfRow('Principal',                money(f.principal, c));
-  h += kfRow('Nominal interest rate',    f.annual_rate.toFixed(2) + '% / year');
-  h += kfRow('Instalments',              f.term_months + ' x monthly');
-  h += kfRow('Method',                   f.method === 'flat' ? 'Flat rate' : 'Declining balance');
-  h += kfRow('Day-count basis',          f.basis + ' days/year');
-  h += kfRow('Total interest',           money(s.totalInterest, c));
+  h += kfRow(T('principal'),  money(f.principal, c));
+  h += kfRow(T('kNominal'),   f.annual_rate.toFixed(2) + T('perYear'));
+  h += kfRow(T('kInstal'),    f.term_months + ' ' + T('perMonth'));
+  h += kfRow(T('method'),     f.method === 'flat' ? T('mFlat') : T('mDecl'));
+  h += kfRow(T('basis'),      f.basis + ' ' + T('daysYear'));
+  h += kfRow(T('kTotInt'),    money(s.totalInterest, c));
   if (s.totalFees > 0) {
-    if (f.fee_admin  > 0) h += kfRow('· Admin fee',         money(f.fee_admin, c));
-    if (f.fee_cbc    > 0) h += kfRow('· Credit-bureau fee', money(f.fee_cbc, c));
-    if (f.fee_other  > 0) h += kfRow('· Other fees',        money(f.fee_other, c));
-    h += kfRow('Total fees',             money(s.totalFees, c));
+    if (f.fee_admin  > 0) h += kfRow('· ' + T('feeAdmin'), money(f.fee_admin, c));
+    if (f.fee_cbc    > 0) h += kfRow('· ' + T('feeCbc'),   money(f.fee_cbc, c));
+    if (f.fee_other  > 0) h += kfRow('· ' + T('feeOther'), money(f.fee_other, c));
+    h += kfRow(T('kTotFees'), money(s.totalFees, c));
   }
-  h += kfRow('First instalment',         money(s.first.total, c) + '  ·  ' + pretty(s.first.due));
-  h += kfRow('Last instalment',          money(s.last.total, c)  + '  ·  ' + pretty(s.last.due));
-  h += kfRow('Cost rate (interest + fees)', s.costRate.toFixed(2) + '% / year');
-  h += kfRow('Total to repay',           money(s.totalPayable, c), 'sc-kf-sum');
+  h += kfRow(T('kFirstInst'), money(s.first.total, c) + '  ·  ' + pretty(s.first.due));
+  h += kfRow(T('kLastInst'),  money(s.last.total, c)  + '  ·  ' + pretty(s.last.due));
+  h += kfRow(T('kCostRate'),  s.costRate.toFixed(2) + T('perYear'));
+  h += kfRow(T('kTotRepay'),  money(s.totalPayable, c), 'sc-kf-sum');
   document.getElementById('scKeyFacts').innerHTML = h;
 
-  document.getElementById('scRateHint').textContent =
-    'Cost rate = (interest ' + num(s.totalInterest) + ' + fees ' + num(s.totalFees) + ') ÷ average balance '
-    + num(s.avgBal) + ' ÷ ' + s.years.toFixed(2) + ' years. Take out the fees and it returns the nominal '
-    + f.annual_rate.toFixed(2) + '% exactly. Institutions round this differently, so a disclosure sheet '
-    + 'may print a figure a few hundredths apart.';
+  document.getElementById('scRateHint').textContent = T('costHint')
+    .replace('I', num(s.totalInterest)).replace('F', num(s.totalFees))
+    .replace('A', num(s.avgBal)).replace('Y', s.years.toFixed(2))
+    .replace('R', f.annual_rate.toFixed(2) + '%');
 }
 
 function scTable(f, s) {
@@ -626,15 +810,15 @@ function scTable(f, s) {
     var paid = !!_scPaid[r.i];
     var late = !paid && r.iso < today;
     var cls  = paid ? 'sc-r-paid' : (late ? 'sc-r-late' : (r.i === nextUnpaid ? 'sc-r-next' : ''));
-    var pill = paid ? '<span class="sc-pill sc-pill-paid">Paid</span>'
-             : late ? '<span class="sc-pill sc-pill-late">Overdue</span>'
-             : (r.i === nextUnpaid ? '<span class="sc-pill sc-pill-due">Next</span>'
-                                   : '<span class="sc-pill">Upcoming</span>');
+    var pill = paid ? '<span class="sc-pill sc-pill-paid">' + esc(T('pPaid')) + '</span>'
+             : late ? '<span class="sc-pill sc-pill-late">' + esc(T('pOverdue')) + '</span>'
+             : (r.i === nextUnpaid ? '<span class="sc-pill sc-pill-due">' + esc(T('pNext')) + '</span>'
+                                   : '<span class="sc-pill">' + esc(T('pUpcoming')) + '</span>');
     return '<tr class="' + cls + '">'
       + '<td class="sc-no">' + r.i + '</td>'
       + '<td class="sc-dow">' + KH_DAY[r.due.getUTCDay()] + '</td>'
       + '<td class="sc-due">' + pretty(r.due)
-      +   (r.weekend ? '<span class="sc-wknd" title="Falls on a weekend — the borrower pays the next working day">WKND</span>' : '')
+      +   (r.weekend ? '<span class="sc-wknd" title="' + esc(T('wkndTip')) + '">' + esc(T('wknd')) + '</span>' : '')
       + '</td>'
       + '<td class="sc-num sc-no">' + r.days + '</td>'
       + '<td class="sc-num">' + num(r.principal) + '</td>'
@@ -643,12 +827,12 @@ function scTable(f, s) {
       + '<td class="sc-num sc-no">' + num(r.balance) + '</td>'
       + '<td>' + pill + '</td>'
       + '<td class="sc-mid"><input class="sc-ck" type="checkbox"' + (paid ? ' checked' : '')
-      +     ' onchange="scTogglePaid(' + r.i + ', this)" title="Mark this instalment settled"></td>'
+      +     ' onchange="scTogglePaid(' + r.i + ', this)" title="' + esc(T('markPaid')) + '"></td>'
       + '</tr>';
   }).join('');
 
   document.getElementById('scFootRow').innerHTML =
-    '<tr><td colspan="3">Total</td>'
+    '<tr><td colspan="3">' + esc(T('total')) + '</td>'
     + '<td class="sc-num">' + s.totalDays + '</td>'
     + '<td class="sc-num">' + num(s.totalPrincipal) + '</td>'
     + '<td class="sc-num">' + num(s.totalInterest) + '</td>'
@@ -656,9 +840,9 @@ function scTable(f, s) {
     + '<td colspan="3"></td></tr>';
 
   document.getElementById('scFoot').textContent =
-    s.rows.length + ' instalments · ' + s.totalDays + ' days · '
-    + pretty(s.first.due) + ' → ' + pretty(s.last.due)
-    + (s.totalFees > 0 ? '  ·  plus ' + money(s.totalFees, c) + ' of fees, charged at disbursement' : '');
+    T('footLine').replace('N', s.rows.length).replace('D', s.totalDays)
+                 .replace('A', pretty(s.first.due)).replace('B', pretty(s.last.due))
+    + (s.totalFees > 0 ? T('footFees').replace('F', money(s.totalFees, c)) : '');
 }
 
 function scKpis(f, s) {
@@ -671,14 +855,18 @@ function scKpis(f, s) {
   });
   var remaining = r2(s.totalInstalments - paidAmt);
 
+  var kh = scLang() === 'kh';
   document.getElementById('scKpis').innerHTML =
-      kpi('Settled',   money(r2(paidAmt), c), paidN + ' of ' + s.rows.length + ' instalments', '#22c55e')
-    + kpi('Still owed', money(remaining, c),  (s.rows.length - paidN) + ' left to pay', '#7c5cff')
-    + kpi('Overdue',   lateN ? money(r2(lateAmt), c) : '—',
-          lateN ? lateN + ' instalment' + (lateN > 1 ? 's' : '') + ' past due' : 'Nothing past due',
+      kpi(T('kpiSettled'), money(r2(paidAmt), c),
+          T('subSettled').replace('N', paidN).replace('M', s.rows.length), '#22c55e')
+    + kpi(T('kpiOwed'), money(remaining, c),
+          T('subLeft').replace('N', s.rows.length - paidN), '#7c5cff')
+    + kpi(T('kpiOverdue'), lateN ? money(r2(lateAmt), c) : '—',
+          lateN ? T('subPastDue').replace('N', lateN) : T('subNoPastDue'),
           lateN ? '#ef4444' : '#64748b')
-    + kpi('Next due',  next ? money(next.total, c) : '—',
-          next ? pretty(next.due) + '  ·  ' + EN_DAY[next.due.getUTCDay()] : 'Fully settled', '#0ea5e9');
+    + kpi(T('kpiNext'), next ? money(next.total, c) : '—',
+          next ? pretty(next.due) + '  ·  ' + (kh ? KH_DAY[next.due.getUTCDay()] : EN_DAY[next.due.getUTCDay()])
+               : T('subDone'), '#0ea5e9');
 }
 function kpi(label, val, sub, colour) {
   return '<div class="glass-card sc-kpi">'
@@ -723,7 +911,7 @@ function scPrintable(f, s) {
 
 function scPrint() {
   var f = scForm(), s = scBuild(f);
-  if (s.err) { scToast(s.err, true); return; }
+  if (s.err) { scToast(T(s.err), true); return; }
   /* Move the signature block below the table for the printed page */
   window.print();
 }
@@ -745,17 +933,17 @@ function scPickCustomer() {
 async function scLoadSaved() {
   try {
     var r = await CamboAPI.post({ action: 'schedule_list' });
-    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not load');
+    if (!r || !r.ok) throw new Error((r && r.message) || T('tNoList'));
     _scSaved = r.schedules || [];
   } catch(e) {
     _scSaved = [];
     document.getElementById('scSaved').innerHTML =
-      '<option value="">— ' + esc(e.message || 'Could not reach the server') + ' —</option>';
-    scToast(e.message || 'Could not load saved schedules', true);
+      '<option value="">— ' + esc(e.message || T('tNoServer')) + ' —</option>';
+    scToast(e.message || T('tNoList'), true);
     return;
   }
   var sel = document.getElementById('scSaved');
-  sel.innerHTML = '<option value="">— Saved schedules (' + _scSaved.length + ') —</option>'
+  sel.innerHTML = '<option value="">' + esc(_scSaved.length ? T('savedSome').replace('N', _scSaved.length) : T('savedNone')) + '</option>'
     + _scSaved.map(function(s) {
         var when = s.updated_utc ? new Date(s.updated_utc).toLocaleDateString('en-GB',
           { day:'2-digit', month:'short', year:'numeric' }) : '';
@@ -771,7 +959,7 @@ async function scOpen(key) {
   if (!key) return;
   try {
     var r = await CamboAPI.post({ action: 'schedule_get', key: key });
-    if (!r || !r.ok) throw new Error((r && r.message) || 'Not found');
+    if (!r || !r.ok) throw new Error((r && r.message) || T('tNotFound'));
     var d = r.schedule;
     _scKey = d.sched_key;
     var put = function(id, v) { document.getElementById(id).value = (v == null ? '' : v); };
@@ -795,38 +983,38 @@ async function scOpen(key) {
     try { _scPaid = d.paid_json ? (JSON.parse(d.paid_json) || {}) : {}; } catch(e) { _scPaid = {}; }
     document.getElementById('scDelBtn').disabled = false;
     scDraw();
-    scToast('Opened ' + (d.borrower || 'schedule'));
-  } catch(e) { scToast(e.message || 'Could not open', true); }
+    scToast(T('tOpened') + ' ' + (d.borrower || T('title')));
+  } catch(e) { scToast(e.message || T('tNoOpen'), true); }
 }
 
 async function scSave() {
   var f = scForm();
   var s = scBuild(f);
-  if (s.err) { scToast(s.err, true); return; }
-  if (!f.borrower) { scToast('Give the schedule a borrower name first', true); return; }
+  if (s.err) { scToast(T(s.err), true); return; }
+  if (!f.borrower) { scToast(T('tNeedName'), true); return; }
   try {
     f.key  = _scKey;
     f.paid = _scPaid;
     f.action = 'schedule_save';
     var r = await CamboAPI.post(f);
-    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not save');
+    if (!r || !r.ok) throw new Error((r && r.message) || T('tNoSave'));
     _scKey = r.key;
     document.getElementById('scDelBtn').disabled = false;
     await scLoadSaved();
-    scToast('Saved');
-  } catch(e) { scToast(e.message || 'Could not save', true); }
+    scToast(T('tSaved'));
+  } catch(e) { scToast(e.message || T('tNoSave'), true); }
 }
 
 async function scDelete() {
   if (!_scKey) return;
-  if (!confirm('Delete this saved schedule? The contract and its paid marks go with it.')) return;
+  if (!confirm(T('cfDelete'))) return;
   try {
     var r = await CamboAPI.post({ action: 'schedule_delete', key: _scKey });
-    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not delete');
-    scToast('Deleted');
+    if (!r || !r.ok) throw new Error((r && r.message) || T('tNoDelete'));
+    scToast(T('tDeleted'));
     scNew();
     await scLoadSaved();
-  } catch(e) { scToast(e.message || 'Could not delete', true); }
+  } catch(e) { scToast(e.message || T('tNoDelete'), true); }
 }
 
 function scNew() {
@@ -853,7 +1041,7 @@ async function scInit() {
     if (a && a.ok) {
       _scLoans = a.loans || [];
       document.getElementById('scCust').innerHTML =
-        '<option value="">— not linked to a customer —</option>'
+        '<option value="" data-i18n="noCust">' + esc(T('noCust')) + '</option>'
         + _scLoans.map(function(l) {
             return '<option value="' + esc(l.DateTime) + '">'
                  + esc((l.FullName || 'Unnamed') + (l.Phone ? '  ·  ' + l.Phone : ''))
@@ -861,7 +1049,7 @@ async function scInit() {
           }).join('');
     }
   } catch(e) {
-    scToast('Could not load the customer list — you can still type the names in', true);
+    scToast(T('tNoCust'), true);
   }
   scLoadSaved();
 }
@@ -871,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('scDenied').classList.add('on');
     return;
   }
-  scDraw();
+  scApplyLang();      /* also performs the first scDraw() */
   scInit();
 });
 </script>
