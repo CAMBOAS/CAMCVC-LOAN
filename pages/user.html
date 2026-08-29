@@ -776,6 +776,7 @@ async function tokenAutoOpen() {
     _method = _tokBorrower.method;
     _portalData = r.loans;
     saveSession(_tokBorrower.method, _tokBorrower.phone, _tokBorrower.cred);
+    portalShareGeo(r, { method: _tokBorrower.method, phone: _tokBorrower.phone, cred: _tokBorrower.cred });
     renderDashboard();
     return true;
   }
@@ -812,6 +813,7 @@ window.addEventListener('load', async function() {
     if (r && r.ok) {
       _method = sm;
       _portalData = r.loans;
+      portalShareGeo(r, { method: sm, phone: sp, cred: sc });
       renderDashboard();
       ol.classList.add('hide');
       setTimeout(function(){ ol.style.display='none'; }, 350);
@@ -897,6 +899,28 @@ async function portalAPI(body) {
   }
 }
 
+/* ── Share this phone's position, but only when staff asked for it ──
+   The server answers ask_geo on a successful login; the browser then puts up its
+   own permission prompt, and a refusal is simply the end of it — nothing here
+   blocks the borrower from reading their history either way. Once per page load,
+   because asking twice for the same answer only annoys people. */
+var _geoSent = false;
+function portalShareGeo(r, cred) {
+  if (!r || !r.ask_geo || _geoSent) return;
+  if (!navigator.geolocation) return;
+  _geoSent = true;
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var c = pos.coords || {};
+    var body = {
+      action: 'portal_geo', method: cred.method, phone: cred.phone,
+      lat: c.latitude, lon: c.longitude, accuracy: c.accuracy
+    };
+    if (cred.method === 'nid') body.nid = cred.cred; else body.name = cred.cred;
+    portalAPI(body);
+  }, function() { /* said no, or the fix timed out — nothing to do */ },
+     { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+}
+
 /* ── Login ── */
 async function doLogin() {
   /* Re-check on submit: the page may have sat open until after the link expired */
@@ -941,6 +965,7 @@ async function doLogin() {
 
   _portalData = r.loans;
   saveSession(_method, phone, _method === 'name' ? name : nid);
+  portalShareGeo(r, { method: _method, phone: phone, cred: _method === 'name' ? name : nid });
   renderDashboard();
 }
 

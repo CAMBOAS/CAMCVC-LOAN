@@ -144,6 +144,27 @@
     .cc-via-qr { border-color:rgba(14,165,233,.45); color:#0284c7; background:rgba(14,165,233,.1) }
     [data-theme="dark"] .cc-via-qr { color:#38bdf8 }
 
+    /* Location — a link, because a place name nobody can put on a map is trivia */
+    .cc-loc {
+      display:inline-flex; align-items:center; gap:5px; font-size:12px; max-width:190px;
+      color:#2563eb; text-decoration:none; font-weight:600; vertical-align:middle;
+    }
+    [data-theme="dark"] .cc-loc { color:#60a5fa }
+    .cc-loc:hover { text-decoration:underline }
+    .cc-loc svg { width:12px; height:12px; flex-shrink:0 }
+    .cc-loc-txt { overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    /* Says which of the two positions is on screen — never let them be confused */
+    .cc-src {
+      margin-left:6px; font-size:8.5px; font-weight:800; letter-spacing:.05em; padding:1px 5px;
+      border-radius:4px; border:1px solid rgba(148,163,184,.35); color:var(--muted);
+      white-space:nowrap; vertical-align:middle;
+    }
+    .cc-src-gps { border-color:rgba(34,197,94,.45); color:#16a34a; background:rgba(34,197,94,.1) }
+    [data-theme="dark"] .cc-src-gps { color:#4ade80 }
+    /* The chip sits beside the link, not inside it — without this the pair can
+       break onto two lines and make the row taller than every other row. */
+    #ccvBody td:nth-child(6), #ccvBody td:nth-child(10) { white-space:nowrap }
+
     .cc-soon {
       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
       padding:56px 24px; text-align:center;
@@ -317,11 +338,12 @@
                   <th>First opened</th>
                   <th>Last opened</th>
                   <th>Times</th>
-                  <th>Opened from</th>
+                  <th>Location</th>
+                  <th style="width:56px">GPS</th>
                 </tr>
               </thead>
               <tbody id="ccvBody">
-                <tr><td colspan="10" class="cc-empty">Loading…</td></tr>
+                <tr><td colspan="12" class="cc-empty">Loading…</td></tr>
               </tbody>
             </table>
           </div>
@@ -333,7 +355,10 @@
           <span>Counted from the moment this was built — a customer who read their history before then
           shows as never checked until the next time they open it. A refresh of the same session does not
           count again, so <b>Times</b> is how often they came back, not how often the page reloaded.
-          <b>Opened from</b> is worked out from the internet connection, so it is a town at best.</span>
+          <b>Location</b> is worked out from the internet connection, so it is a town at best — turn
+          <b>GPS</b> on for a customer and the portal will ask their phone for its exact position the
+          next time they open it. Their phone still has to agree, and turning the switch back off
+          clears what was stored.</span>
         </div>
       </div>
 
@@ -552,7 +577,7 @@ async function ccPortal(key, box) {
    The customer side of Control User: one row per borrower, showing whether they
    have ever opened the portal, when, how often, and roughly from where. The
    visit itself is recorded by the server when the portal lets them in. */
-var _ccVisits = {}, _ccvOpen = {};
+var _ccVisits = {}, _ccvOpen = {}, _ccGeoReq = {};
 
 async function ccvLoad() {
   var body = document.getElementById('ccvBody');
@@ -563,10 +588,13 @@ async function ccvLoad() {
     }
     var r = await CamboAPI.post({ action: 'portal_visits_list' });
     if (!r || !r.ok) throw new Error((r && r.message) || 'Could not load');
-    _ccVisits = {};
+    _ccVisits = {}; _ccGeoReq = {};
     (r.visits || []).forEach(function(v){ _ccVisits[v.loan_key] = v; });
+    /* The switch lives on the loan, so it arrives separately — a customer who has
+       never opened the portal still gets one. */
+    (r.geo || []).forEach(function(g){ _ccGeoReq[g.loan_key] = Number(g.geo_req) ? 1 : 0; });
   } catch(e) {
-    body.innerHTML = '<tr><td colspan="10" class="cc-empty">' + esc(e.message || 'Could not load') + '</td></tr>';
+    body.innerHTML = '<tr><td colspan="12" class="cc-empty">' + esc(e.message || 'Could not load') + '</td></tr>';
     return;
   }
   ccvRender();
@@ -596,6 +624,48 @@ function ccvStamp(iso) {
   var d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
   return d.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function ccvHasGps(v) {
+  return !!v && v.gps_lat !== null && v.gps_lat !== undefined && v.gps_lat !== ''
+             && v.gps_lon !== null && v.gps_lon !== undefined && v.gps_lon !== '';
+}
+
+/* A fix from the phone beats the IP guess; failing both, let Maps search the name.
+   The zoom matches the confidence — street level for GPS, town level for an IP. */
+function ccvMapUrl(v) {
+  if (ccvHasGps(v)) return 'https://www.google.com/maps?q=' + encodeURIComponent(v.gps_lat + ',' + v.gps_lon) + '&z=18';
+  if (v && v.last_lat && v.last_lon) return 'https://www.google.com/maps?q=' + encodeURIComponent(v.last_lat + ',' + v.last_lon) + '&z=13';
+  var place = ccvPlace(v);
+  return place ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(place) : '';
+}
+
+/* "±12 m" says more about how far to trust the pin than the coordinates do */
+function ccvAcc(v) {
+  var a = Number(v && v.gps_acc);
+  if (!isFinite(a) || a <= 0) return '';
+  return a >= 1000 ? '±' + (a / 1000).toFixed(1) + ' km' : '±' + Math.round(a) + ' m';
+}
+
+/* Flip whether the portal asks this one customer's phone where it is.
+   The re-enable sits in a finally: anything that throws in here would otherwise
+   leave the switch disabled for good, with no way back but a reload. */
+async function ccvGeoRow(key, box) {
+  box.disabled = true;
+  var want = box.checked;
+  try {
+    var r = await CamboAPI.post({ action: 'loan_geo_set', key: key, on: want ? 1 : 0 });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
+    _ccGeoReq[key] = want ? 1 : 0;
+    ccToast(want ? 'Will ask this customer for their exact position next time they open the portal'
+                 : 'Stopped asking, and cleared what was stored');
+    if (!want) ccvLoad();          /* the pin is gone — redraw rather than leave it on screen */
+  } catch(e) {
+    box.checked = !want;           /* put the switch back where it was */
+    ccToast(e.message || 'Could not save', true);
+  } finally {
+    box.disabled = false;
+  }
 }
 
 function ccvPlace(v) {
@@ -632,7 +702,7 @@ function ccvRender() {
   document.getElementById('ccvFoot').textContent     = list.length + ' of ' + _ccLoans.length + ' customers';
 
   if (!list.length) {
-    body.innerHTML = '<tr><td colspan="10" class="cc-empty">'
+    body.innerHTML = '<tr><td colspan="12" class="cc-empty">'
       + (_ccLoans.length ? 'No customers match' : 'No customers yet') + '</td></tr>';
     ccvFitRows();
     return;
@@ -662,10 +732,36 @@ function ccvRender() {
       ? '<span class="cc-seen"><span class="cc-dot on"></span>Yes</span>'
       : '<span class="cc-seen"><span class="cc-dot"></span>Never</span>';
 
-    var place = has ? ccvPlace(v) : '';
-    var via   = has && v.last_via === 'qr'
-      ? '<span class="cc-via cc-via-qr">QR</span>'
-      : (has ? '<span class="cc-via">TYPED</span>' : '');
+    /* How they got in belongs next to whether they got in, not next to the place */
+    var via = has
+      ? (v.last_via === 'qr' ? '<span class="cc-via cc-via-qr">QR</span>'
+                             : '<span class="cc-via">TYPED</span>')
+      : '';
+    var checkedCell = checked + via;
+
+    var locCell;
+    if (has && (ccvHasGps(v) || ccvPlace(v) || v.last_ip)) {
+      var gps = ccvHasGps(v);
+      var url = ccvMapUrl(v);
+      var txt = ccvPlace(v) || v.last_ip || 'Shared position';
+      var pin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+      var src = gps
+        ? '<span class="cc-src cc-src-gps" title="Reported by their phone' + (ccvAcc(v) ? ' · ' + ccvAcc(v) : '') + '">GPS</span>'
+        : '<span class="cc-src" title="Worked out from the internet connection">IP</span>';
+      locCell = url
+        ? '<a class="cc-loc" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Open in Google Maps">'
+          + pin + '<span class="cc-loc-txt">' + esc(txt) + '</span></a>' + src
+        : '<span class="cc-none">' + esc(txt) + '</span>' + src;
+    } else {
+      locCell = has ? '<span class="cc-none">Unknown</span>' : '<span class="cc-none">—</span>';
+    }
+
+    var gpsCell = '<td onclick="event.stopPropagation()">'
+      + '<label class="cc-sw" title="Ask this customer\'s phone for its exact position when they open the portal">'
+      +   '<input type="checkbox"' + (_ccGeoReq[key] ? ' checked' : '')
+      +     ' onchange="ccvGeoRow(\'' + safeK + '\', this)">'
+      +   '<span class="cc-sw-track"></span>'
+      + '</label></td>';
 
     var row = '<tr class="cc-row' + (isOpen ? ' cc-open' : '') + '" onclick="ccvToggleRow(\'' + safeK + '\')">'
       + '<td><span class="cc-caret"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></td>'
@@ -674,15 +770,15 @@ function ccvRender() {
       + '<td><div class="cc-name">' + esc(l.FullName || '—') + '</div>'
       +     '<div class="cc-nid">' + esc(l.NationalID || '—') + '</div></td>'
       + '<td>' + (l.Phone ? esc(l.Phone) : '<span class="cc-none">—</span>') + '</td>'
-      + '<td>' + checked + '</td>'
+      + '<td>' + checkedCell + '</td>'
       + '<td style="font-size:12px;color:var(--muted)">' + (has ? esc(ccvAgo(v.first_utc)) : '—') + '</td>'
       + '<td style="font-size:12px;color:var(--muted)">' + (has ? esc(ccvAgo(v.last_utc)) : '—') + '</td>'
       + '<td class="cc-times">' + (has ? Number(v.visits) : '<span class="cc-none">—</span>') + '</td>'
-      + '<td>' + (has ? (place ? esc(place) : '<span class="cc-none">Unknown</span>') + via
-                      : '<span class="cc-none">—</span>') + '</td>'
+      + '<td>' + locCell + '</td>'
+      + gpsCell
       + '</tr>';
 
-    if (isOpen) row += '<tr><td class="cc-detail-td" colspan="10">' + ccvDetail(l, v) + '</td></tr>';
+    if (isOpen) row += '<tr><td class="cc-detail-td" colspan="12">' + ccvDetail(l, v) + '</td></tr>';
     return row;
   }).join('');
 
@@ -690,10 +786,13 @@ function ccvRender() {
 }
 
 function ccvDetail(l, v) {
+  var asking = _ccGeoReq[l.DateTime] ? 'On — their phone will be asked next time they open the portal'
+                                    : 'Off — the portal will not ask';
   if (!v || !Number(v.visits)) {
     return '<div class="cc-detail"><div><div class="cc-f-lbl">Nothing recorded</div>'
          + '<div class="cc-f-val">This customer has not opened their repayment history since tracking began.'
-         + (l.PortalClosed ? ' Their portal is currently closed, so they cannot.' : '') + '</div></div></div>';
+         + (l.PortalClosed ? ' Their portal is currently closed, so they cannot.' : '') + '</div></div>'
+         + ccField('GPS request', asking) + '</div>';
   }
   var base = location.pathname.replace(/[^/]*$/, '');
   var link = base + 'borrower-profile.html?key=' + encodeURIComponent(l.DateTime || '');
@@ -702,8 +801,13 @@ function ccvDetail(l, v) {
     + ccField('Last opened',   ccvStamp(v.last_utc))
     + ccField('Times opened',  String(v.visits))
     + ccField('Opened how',    v.last_via === 'qr' ? 'Scanned a QR link' : 'Typed their details in')
-    + ccField('Place',         ccvPlace(v))
+    + ccField('Place (from IP)', ccvPlace(v))
     + ccField('IP address',    v.last_ip)
+    + ccField('GPS request',   asking)
+    + ccField('Exact position', ccvHasGps(v)
+        ? v.gps_lat + ', ' + v.gps_lon + (ccvAcc(v) ? '  ' + ccvAcc(v) : '')
+          + (v.gps_utc ? '  ·  ' + ccvStamp(v.gps_utc) : '')
+        : (_ccGeoReq[l.DateTime] ? 'Asked for, not shared yet' : 'Not collected'))
     + ccField('Browser',       v.last_ua)
     + ccField('Portal',        l.PortalClosed ? 'Closed' : 'Open')
     + '<div><div class="cc-f-lbl">Full record</div>'
@@ -730,7 +834,13 @@ function ccFitTable(wrapId, bodyId, footId) {
 
   var head  = wrap.querySelector('thead');
   var headH = head ? head.getBoundingClientRect().height : 0;
-  var rowH  = rows[0].getBoundingClientRect().height || 46;
+  /* Names long enough to wrap make some rows taller than the rest, so the middle
+     row is the honest measure — reading only the first one let a single odd row
+     decide how many everybody else got. */
+  var hs = [];
+  for (var i = 0; i < rows.length && i < 40; i++) hs.push(rows[i].getBoundingClientRect().height);
+  hs.sort(function(a, b){ return a - b; });
+  var rowH = hs[Math.floor(hs.length / 2)] || 46;
 
   var sc = wrap.closest('.cc-wrap');
   var scrolls = sc && getComputedStyle(sc).overflowY === 'auto';

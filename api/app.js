@@ -186,7 +186,24 @@ async function ensurePortalVisitsTable() {
     last_ua     VARCHAR(255) NULL,
     last_via    VARCHAR(12)  NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  /* Two positions, deliberately kept apart: last_lat/lon is the guess that comes
+     free with the connection, gps_* is what the borrower's own device reported
+     after being asked. The panel always says which of the two it is showing. */
+  for (const col of ['last_lat VARCHAR(24)', 'last_lon VARCHAR(24)',
+                     'gps_lat DECIMAL(10,7)', 'gps_lon DECIMAL(10,7)',
+                     'gps_acc INT', 'gps_at DATETIME']) {
+    try { await db().query('ALTER TABLE portal_visits ADD COLUMN ' + col + ' NULL'); } catch(e) {}
+  }
   _portalVisitsReady = true;
+}
+
+/* Whether a borrower's own device gets asked for its exact position when they
+   open the portal. Off for every customer until staff turn it on. */
+let _loanGeoColReady = false;
+async function ensureLoanGeoCol() {
+  if (_loanGeoColReady) return;
+  try { await db().query('ALTER TABLE loans ADD COLUMN geo_req TINYINT(1) NOT NULL DEFAULT 0'); } catch(e) {}
+  _loanGeoColReady = true;
 }
 
 /* Called after a borrower is let in. Never throws into the response: a failure
@@ -202,8 +219,8 @@ async function recordPortalVisit(keys, req, via) {
     for (const k of keys) {
       await db().query(
         `INSERT INTO portal_visits
-           (loan_key, visits, first_seen, last_seen, last_ip, last_city, last_region, last_country, last_ua, last_via)
-         VALUES (?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP(),?,?,?,?,?,?)
+           (loan_key, visits, first_seen, last_seen, last_ip, last_city, last_region, last_country, last_ua, last_via, last_lat, last_lon)
+         VALUES (?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP(),?,?,?,?,?,?,?,?)
          ON DUPLICATE KEY UPDATE
            visits = visits + ?, last_seen = UTC_TIMESTAMP(),
            /* COALESCE so a request without the geo headers keeps the last known
@@ -213,9 +230,12 @@ async function recordPortalVisit(keys, req, via) {
            last_city=COALESCE(VALUES(last_city),last_city),
            last_region=COALESCE(VALUES(last_region),last_region),
            last_country=COALESCE(VALUES(last_country),last_country),
+           last_lat=COALESCE(VALUES(last_lat),last_lat),
+           last_lon=COALESCE(VALUES(last_lon),last_lon),
            last_ua=COALESCE(VALUES(last_ua),last_ua),
            last_via=IF(?=0, last_via, VALUES(last_via))`,
-        [k, bump, g.ip, g.city, g.region, g.country, g.ua, String(via || '').slice(0, 12), bump, bump]
+        [k, bump, g.ip, g.city, g.region, g.country, g.ua, String(via || '').slice(0, 12),
+         g.lat, g.lon, bump, bump]
       );
     }
   } catch(e) {}
@@ -1017,7 +1037,75 @@ async function handler(req, res) {
       const _via = ['qr','manual','restore'].indexOf(String(body.via||'')) !== -1 ? String(body.via) : 'manual';
       recordPortalVisit(loanRows.map(r => r.loan_key), req, _via);
 
-      return res.json({ ok: true, loans });
+      /* Does staff want a precise position for any of these records? The portal
+         only asks when told to; the phone still decides whether to answer. */
+      let _askGeo = 0;
+      try {
+        await ensureLoanGeoCol();
+        const phG = loanRows.map(() => '?').join(',');
+        const [gr] = await db().query(
+          'SELECT MAX(COALESCE(geo_req,0)) AS g FROM loans WHERE loan_key IN (' + phG + ')',
+          loanRows.map(r => r.loan_key)
+        );
+        _askGeo = Number((gr[0] || {}).g || 0) ? 1 : 0;
+      } catch(e) {}
+
+      return res.json({ ok: true, loans, ask_geo: _askGeo });
+    }
+
+    /* ── Public: the borrower's own device reporting where it is ──
+         There is no session to trust here, so the position is only accepted
+         alongside the very same details that got them in — a coordinate can
+         never be pinned to a record the sender cannot already open. ── */
+    if (action === 'portal_geo') {
+      const method = String(body.method || 'name').trim();
+      const phone  = String(body.phone || '').trim().replace(/[\s\-]/g, '');
+      const name   = String(body.name  || '').trim();
+      const nid    = String(body.nid   || '').trim().replace(/[\s\-]/g, '');
+      const lat = Number(body.lat), lon = Number(body.lon);
+      if (!phone) return res.json({ ok:false, message:'phone_required' });
+      if (!isFinite(lat) || !isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        return res.json({ ok:false, message:'bad_coords' });
+      }
+      let acc = Math.round(Number(body.accuracy));
+      if (!isFinite(acc) || acc <= 0) acc = null; else acc = Math.min(acc, 100000);
+
+      let rows = [];
+      try {
+        if (method === 'nid') {
+          if (!nid) return res.json({ ok:false, message:'nid_required' });
+          [rows] = await db().query(
+            `SELECT loan_key FROM loans WHERE REPLACE(REPLACE(phone,' ',''),'-','')=?
+                AND REPLACE(REPLACE(national_id,' ',''),'-','')=? AND deleted_at IS NULL`,
+            [phone, nid]
+          );
+        } else {
+          if (!name) return res.json({ ok:false, message:'name_required' });
+          [rows] = await db().query(
+            `SELECT loan_key FROM loans WHERE REPLACE(REPLACE(phone,' ',''),'-','')=?
+                AND full_name=? AND deleted_at IS NULL`,
+            [phone, name]
+          );
+        }
+      } catch(e) { return res.json({ ok:false, message:'server_error' }); }
+      if (!rows.length) return res.json({ ok:false, message:'not_found' });
+
+      /* Only for records that actually asked — a switch turned off must not keep
+         collecting positions just because a page was left open on an old answer. */
+      try {
+        await ensureLoanGeoCol();
+        await ensurePortalVisitsTable();
+        for (const r of rows) {
+          await db().query(
+            `UPDATE portal_visits v
+                JOIN loans l ON l.loan_key = v.loan_key
+                SET v.gps_lat=?, v.gps_lon=?, v.gps_acc=?, v.gps_at=UTC_TIMESTAMP()
+              WHERE v.loan_key=? AND COALESCE(l.geo_req,0)=1`,
+            [lat, lon, acc, r.loan_key]
+          );
+        }
+      } catch(e) {}
+      return res.json({ ok:true });
     }
 
     /* ── Auth check for all write/read actions ── */
@@ -2090,16 +2178,48 @@ async function handler(req, res) {
       return res.json({ ok:true, on });
     }
 
+    /* ── Ask one customer's device for its exact position when they next open the
+         portal. The switch only decides whether the portal asks — the browser on
+         their phone still has the final say, exactly as it does for staff. ── */
+    if (action === 'loan_geo_set') {
+      if (_bv.role !== 'Admin') return res.json({ ok:false, message:'ត្រូវការសិទ្ធ Admin', code:403 });
+      await ensureLoanGeoCol();
+      const key = String(body.key || '').trim();
+      if (!key) return res.json({ ok:false, message:'Row not found' });
+      const on = (body.on === 1 || body.on === '1' || body.on === true) ? 1 : 0;
+      const [r] = await db().query(
+        'UPDATE loans SET geo_req=? WHERE loan_key=? AND deleted_at IS NULL', [on, key]
+      );
+      if (!r.affectedRows) return res.json({ ok:false, message:'Row not found' });
+      if (!on) {
+        /* Stop asking and drop what was stored, so no pin outlives the switch */
+        await ensurePortalVisitsTable();
+        await db().query(
+          'UPDATE portal_visits SET gps_lat=NULL, gps_lon=NULL, gps_acc=NULL, gps_at=NULL WHERE loan_key=?', [key]
+        );
+      }
+      logActivity('loan_geo', actor, _bu, key, { on: !!on }).catch(()=>{});
+      return res.json({ ok:true, on });
+    }
+
     /* ── Which customers have opened their own history, and when ── */
     if (action === 'portal_visits_list') {
       await ensurePortalVisitsTable();
+      await ensureLoanGeoCol();
       const [rows] = await db().query(
         `SELECT loan_key, visits, last_ip, last_city, last_region, last_country, last_ua, last_via,
+                last_lat, last_lon, gps_lat, gps_lon, gps_acc,
                 DATE_FORMAT(first_seen, '%Y-%m-%dT%H:%i:%sZ') AS first_utc,
-                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS last_utc
+                DATE_FORMAT(last_seen,  '%Y-%m-%dT%H:%i:%sZ') AS last_utc,
+                DATE_FORMAT(gps_at,     '%Y-%m-%dT%H:%i:%sZ') AS gps_utc
          FROM portal_visits`
       );
-      return res.json({ ok:true, visits: rows });
+      /* The switch lives on the loan, not the visit — a customer who has never
+         opened the portal still needs one, so it is sent as its own list. */
+      const [flags] = await db().query(
+        'SELECT loan_key, COALESCE(geo_req,0) AS geo_req FROM loans WHERE deleted_at IS NULL'
+      );
+      return res.json({ ok:true, visits: rows, geo: flags });
     }
 
     /* ── Every account with the devices it is signed in on (Admin only) ──
