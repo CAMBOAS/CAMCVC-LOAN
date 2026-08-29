@@ -167,6 +167,8 @@ async function logActivity(act, actor, actorUser, target, detail) {
   } catch(e) {}
 }
 
+let _sbCcrDone = false;
+
 /* ── Map DB row → frontend loan object ── */
 function rowToLoan(r) {
   return {
@@ -1127,8 +1129,24 @@ async function handler(req, res) {
       return res.json({ ok: true, logs, total: tot.total, is_admin: isAdmin });
     }
 
-    /* ── Infor only ── */
+    /* ── A saved sidebar config is a whitelist, so a page added later would never
+         appear in it. Put CCR in once, for configs that pre-date the page and
+         have not deliberately emptied the menu. An Admin can switch it off again
+         from App Config like any other link. ── */
     if (action === 'get_settings') {
+      try {
+        if (!_sbCcrDone) {
+          _sbCcrDone = true;
+          const [_lr] = await db().query("SELECT value FROM settings WHERE type='sb_links' LIMIT 1");
+          if (_lr.length) {
+            const _v = String(_lr[0].value || '');
+            if (_v && _v !== '-' && _v.split(',').indexOf('ccr') === -1) {
+              await db().query("UPDATE settings SET value=? WHERE type='sb_links'", [(_v + ',ccr').slice(0, 180)]);
+            }
+          }
+        }
+      } catch(e) {}
+
       const [infor] = await db().query('SELECT type, value FROM settings ORDER BY id');
       const one = (type) => (infor.find(r=>r.type===type)||{}).value || '';
       return res.json({
@@ -1342,6 +1360,20 @@ async function handler(req, res) {
       await db().query('UPDATE loans SET paid=? WHERE loan_key=?', [newPaid, key]);
       logActivity('loan_paid', actor, _bu, rows[0].full_name||'', { paid: newPaid }).catch(()=>{});
       return res.json({ ok:true, paid: newPaid });
+    }
+
+    /* ── Open or close one borrower's portal, without rewriting the whole row ── */
+    if (action === 'loan_toggle_portal') {
+      await ensurePortalClosedCol();
+      const key = String(body.key||'').trim();
+      const [rows] = await db().query(
+        'SELECT portal_closed, full_name FROM loans WHERE loan_key=? AND deleted_at IS NULL', [key]
+      );
+      if (!rows.length) return res.json({ ok:false, message:'Row not found' });
+      const closed = rows[0].portal_closed ? 0 : 1;
+      await db().query('UPDATE loans SET portal_closed=? WHERE loan_key=?', [closed, key]);
+      logActivity('loan_portal', actor, _bu, rows[0].full_name||'', { closed: !!closed }).catch(()=>{});
+      return res.json({ ok:true, portal_closed: closed });
     }
 
     /* ── Delete loan (soft) ── */

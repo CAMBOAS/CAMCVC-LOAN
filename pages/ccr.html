@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>CCR — CAMCVC LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=38">
+  <style>
+    .orb{display:none!important}
+    .main-content{padding:60px 0 0!important}
+
+    .cc-wrap { display:flex; flex-direction:column; gap:10px; padding:12px 14px 14px; overflow-y:auto; overflow-x:hidden; flex:1; min-height:0 }
+    @media (max-width:768px) { .cc-wrap { flex:unset; overflow:visible; padding-bottom:calc(90px + env(safe-area-inset-bottom,0px)) } }
+
+    .cc-hdr { display:flex; align-items:center; gap:10px; flex-shrink:0 }
+    .cc-icon { width:36px; height:36px; border-radius:10px; background:rgba(14,165,233,.13); display:flex; align-items:center; justify-content:center; flex-shrink:0 }
+    .cc-title { font-size:18px; font-weight:800; color:var(--text) }
+    .cc-sub { font-size:11.5px; color:var(--muted); margin-top:1px }
+
+    /* ── Tabs ── */
+    .cc-tabs { display:flex; gap:4px; overflow-x:auto; padding:4px; border-radius:12px;
+               background:rgba(148,163,184,.1); flex-shrink:0; scrollbar-width:none }
+    .cc-tabs::-webkit-scrollbar { display:none }
+    .cc-tab {
+      display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:9px;
+      border:none; background:transparent; color:var(--muted); cursor:pointer;
+      font-family:inherit; font-size:12.5px; font-weight:700; white-space:nowrap; transition:.15s;
+    }
+    .cc-tab:hover { color:var(--text) }
+    .cc-tab svg { width:14px; height:14px }
+    .cc-tab-on { background:var(--card); color:var(--text); box-shadow:0 2px 10px rgba(0,0,0,.15) }
+
+    .cc-panel { display:none; padding:12px 2px 0; max-width:1400px }
+    .cc-panel.on { display:block }
+
+    /* ── Toolbar + KPIs ── */
+    .cc-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px }
+    .cc-bar-title { font-size:13px; font-weight:700; color:var(--muted); flex:1; min-width:160px }
+    .cc-search {
+      flex:0 1 240px; min-width:0; padding:7px 11px; border-radius:9px;
+      border:1px solid rgba(148,163,184,.28); background:var(--card); color:inherit;
+      font-family:inherit; font-size:12px; outline:none; -webkit-appearance:none; appearance:none;
+    }
+    .cc-search:focus { border-color:rgba(14,165,233,.55) }
+    .cc-search::-webkit-search-cancel-button { -webkit-appearance:none; appearance:none }
+    .cc-refresh {
+      display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:9px;
+      border:none; cursor:pointer; font-family:inherit; font-size:12px; font-weight:700; color:#fff;
+      background:linear-gradient(135deg,#0ea5e9,#22d3ee);
+    }
+    .cc-refresh:hover { filter:brightness(1.08) }
+    .cc-refresh svg { width:13px; height:13px }
+
+    .cc-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-bottom:10px }
+    .cc-kpi { position:relative; padding:14px 16px; border-radius:14px; overflow:hidden }
+    .cc-kpi-label { font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted) }
+    .cc-kpi-val { font-size:24px; font-weight:800; margin-top:3px }
+    .cc-kpi-sub { font-size:10.5px; color:var(--muted); margin-top:2px }
+    .cc-kpi-accent { position:absolute; left:0; right:0; bottom:0; height:3px }
+
+    /* ── Table ── */
+    .cc-card { padding:0; overflow:hidden }
+    .cc-tbl-wrap { overflow-x:auto; overflow-y:auto }
+    .cc-tbl-wrap::-webkit-scrollbar { width:8px; height:6px }
+    .cc-tbl-wrap::-webkit-scrollbar-thumb { background:rgba(148,163,184,.35); border-radius:8px }
+    table.cc-tbl { width:100%; border-collapse:collapse; min-width:900px }
+    table.cc-tbl th {
+      padding:10px 12px; text-align:left; font-size:10.5px; font-weight:800; letter-spacing:.06em;
+      text-transform:uppercase; color:var(--muted); border-bottom:1px solid rgba(148,163,184,.12);
+      white-space:nowrap; position:sticky; top:0; background:var(--card); z-index:2;
+    }
+    table.cc-tbl td { padding:9px 12px; border-bottom:1px solid rgba(148,163,184,.08); vertical-align:middle }
+    table.cc-tbl tbody tr:last-child td { border-bottom:none }
+    .cc-row { cursor:pointer }
+    .cc-row:hover { background:rgba(14,165,233,.05) }
+    .cc-caret { display:inline-flex; transition:transform .18s; color:var(--muted) }
+    .cc-row.cc-open .cc-caret { transform:rotate(90deg); color:#0ea5e9 }
+    .cc-no { color:var(--muted); font-size:11.5px; font-variant-numeric:tabular-nums; text-align:right; padding-right:10px !important }
+
+    .cc-av { width:32px; height:32px; border-radius:50%; overflow:hidden; display:flex; align-items:center;
+             justify-content:center; background:rgba(14,165,233,.14); color:#0ea5e9; font-size:12px; font-weight:800 }
+    .cc-av img { width:100%; height:100%; object-fit:cover }
+    .cc-name { font-size:12.5px; font-weight:700 }
+    .cc-nid { font-size:10.5px; color:var(--muted); font-family:ui-monospace,SFMono-Regular,Menlo,monospace }
+    .cc-money { font-weight:800; font-size:12.5px; font-variant-numeric:tabular-nums }
+    .cc-none { font-size:11.5px; color:var(--muted); font-style:italic }
+    .cc-pill {
+      font-size:10px; font-weight:800; padding:2px 9px; border-radius:999px; white-space:nowrap;
+      border:1px solid rgba(148,163,184,.3); color:var(--muted);
+    }
+    .cc-pill-paid { border-color:rgba(34,197,94,.4); color:#16a34a; background:rgba(34,197,94,.1) }
+    [data-theme="dark"] .cc-pill-paid { color:#4ade80 }
+    .cc-pill-due  { border-color:rgba(245,158,11,.4); color:#b45309; background:rgba(245,158,11,.1) }
+    [data-theme="dark"] .cc-pill-due { color:#fbbf24 }
+
+    .cc-sw { position:relative; display:inline-block; width:38px; height:21px; vertical-align:middle }
+    .cc-sw input { opacity:0; width:0; height:0; position:absolute }
+    .cc-sw-track { position:absolute; inset:0; border-radius:999px; cursor:pointer; transition:.2s; background:rgba(148,163,184,.35) }
+    .cc-sw-track::before {
+      content:''; position:absolute; width:15px; height:15px; left:3px; top:3px; border-radius:50%;
+      background:#fff; transition:.2s; box-shadow:0 1px 4px rgba(0,0,0,.3);
+    }
+    .cc-sw input:checked + .cc-sw-track { background:#22c55e }
+    .cc-sw input:checked + .cc-sw-track::before { transform:translateX(17px) }
+    .cc-sw input:disabled + .cc-sw-track { opacity:.5; cursor:default }
+
+    .cc-detail-td { padding:0 !important; background:rgba(14,165,233,.035) }
+    [data-theme="dark"] .cc-detail-td { background:rgba(14,165,233,.06) }
+    .cc-detail { padding:12px 14px; display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px 16px }
+    .cc-f-lbl { font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted) }
+    .cc-f-val { font-size:12px; margin-top:2px; word-break:break-word }
+    .cc-open-link {
+      display:inline-flex; align-items:center; gap:6px; margin-top:4px; padding:6px 12px; border-radius:8px;
+      border:1px solid rgba(14,165,233,.32); background:rgba(14,165,233,.08); color:#0284c7;
+      font-size:11px; font-weight:700; text-decoration:none;
+    }
+    [data-theme="dark"] .cc-open-link { color:#38bdf8 }
+    .cc-open-link:hover { background:rgba(14,165,233,.18) }
+
+    .cc-foot { padding:9px 14px; font-size:11.5px; color:var(--muted); border-top:1px solid rgba(148,163,184,.1) }
+    .cc-empty { text-align:center; padding:26px 12px; color:var(--muted); font-size:12.5px }
+
+    .cc-soon {
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+      padding:56px 24px; text-align:center;
+    }
+    .cc-soon-ico {
+      width:52px; height:52px; border-radius:15px; display:flex; align-items:center; justify-content:center;
+      background:rgba(148,163,184,.14); color:var(--muted);
+    }
+    .cc-soon-ico svg { width:25px; height:25px }
+    .cc-soon-title { font-size:14px; font-weight:800 }
+    .cc-soon-sub { font-size:12px; color:var(--muted); line-height:1.7; max-width:420px }
+
+    .cc-denied { position:fixed; inset:0; z-index:99999; display:none; align-items:center; justify-content:center;
+                 background:rgba(8,12,24,.86); backdrop-filter:blur(6px); padding:18px }
+    .cc-denied.on { display:flex }
+    .cc-denied-box { background:#151d2e; border:1px solid rgba(148,163,184,.18); border-radius:18px;
+                     padding:26px 24px; max-width:340px; text-align:center; color:#e2e8f0 }
+  </style>
+</head>
+<body>
+<div class="background"><div class="orb"></div></div>
+
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
+
+    <div class="cc-wrap" id="ccWrap">
+
+      <div class="cc-hdr">
+        <div class="cc-icon">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="cc-title">CCR</div>
+          <div class="cc-sub">Control Customer — who is on the books, and what they owe</div>
+        </div>
+      </div>
+
+      <div class="cc-tabs" id="ccTabs">
+        <button type="button" class="cc-tab cc-tab-on" data-tab="list" onclick="ccTab('list')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span>Customers</span>
+        </button>
+        <button type="button" class="cc-tab" data-tab="two" onclick="ccTab('two')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+          <span>Tab 2</span>
+        </button>
+        <button type="button" class="cc-tab" data-tab="three" onclick="ccTab('three')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Tab 3</span>
+        </button>
+      </div>
+
+      <!-- ══ Tab 1: the customer list ══ -->
+      <div class="cc-panel on" id="ccPanelList">
+        <div class="cc-bar">
+          <div class="cc-bar-title">Every borrower on the books, with their portal switch</div>
+          <input class="cc-search" id="ccSearch" name="cc_filter" type="search" placeholder="Search name, NID, phone…"
+                 oninput="ccRender()" autocomplete="off" data-lpignore="true" data-1p-ignore>
+          <button type="button" class="cc-refresh" onclick="ccLoad()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+            Refresh
+          </button>
+        </div>
+
+        <div class="cc-kpis">
+          <div class="glass-card cc-kpi">
+            <div class="cc-kpi-label">Customers</div>
+            <div class="cc-kpi-val" id="ccKpiTotal">—</div>
+            <div class="cc-kpi-sub">On the books</div>
+            <div class="cc-kpi-accent" style="background:#0ea5e9"></div>
+          </div>
+          <div class="glass-card cc-kpi">
+            <div class="cc-kpi-label">Still owing</div>
+            <div class="cc-kpi-val" id="ccKpiDue" style="color:#f59e0b">—</div>
+            <div class="cc-kpi-sub">Not marked paid</div>
+            <div class="cc-kpi-accent" style="background:#f59e0b"></div>
+          </div>
+          <div class="glass-card cc-kpi">
+            <div class="cc-kpi-label">Portal closed</div>
+            <div class="cc-kpi-val" id="ccKpiClosed" style="color:#64748b">—</div>
+            <div class="cc-kpi-sub">Cannot check their history</div>
+            <div class="cc-kpi-accent" style="background:#64748b"></div>
+          </div>
+          <div class="glass-card cc-kpi">
+            <div class="cc-kpi-label">Lent out</div>
+            <div class="cc-kpi-val" id="ccKpiMoney" style="color:#22c55e">—</div>
+            <div class="cc-kpi-sub">Across every borrower</div>
+            <div class="cc-kpi-accent" style="background:#22c55e"></div>
+          </div>
+        </div>
+
+        <div class="glass-card cc-card">
+          <div class="cc-tbl-wrap" id="ccTblWrap">
+            <table class="cc-tbl">
+              <thead>
+                <tr>
+                  <th style="width:28px"></th>
+                  <th style="width:34px">#</th>
+                  <th>Photo</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Group</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                  <th>Repayment</th>
+                  <th title="Can this customer open the portal and read their own history?">Portal</th>
+                </tr>
+              </thead>
+              <tbody id="ccBody">
+                <tr><td colspan="10" class="cc-empty">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="cc-foot" id="ccFoot"></div>
+        </div>
+      </div>
+
+      <!-- ══ Tab 2 ══ -->
+      <div class="cc-panel" id="ccPanelTwo">
+        <div class="glass-card cc-soon">
+          <div class="cc-soon-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+          </div>
+          <div class="cc-soon-title">Tab 2</div>
+          <div class="cc-soon-sub">Nothing here yet — this tab is a placeholder, ready for whatever you want it to do.</div>
+        </div>
+      </div>
+
+      <!-- ══ Tab 3 ══ -->
+      <div class="cc-panel" id="ccPanelThree">
+        <div class="glass-card cc-soon">
+          <div class="cc-soon-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <div class="cc-soon-title">Tab 3</div>
+          <div class="cc-soon-sub">Nothing here yet — this tab is a placeholder, ready for whatever you want it to do.</div>
+        </div>
+      </div>
+
+    </div><!-- /.cc-wrap -->
+  </main>
+</div>
+
+<div class="cc-denied" id="ccDenied">
+  <div class="cc-denied-box">
+    <div style="font-size:16px;font-weight:800;margin-bottom:8px">Not available for your role</div>
+    <div style="font-size:12.5px;color:#94a3b8;line-height:1.7">Ask an Admin if you need access to Control Customer.</div>
+  </div>
+</div>
+
+<div id="ccToast" style="position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:100000;display:none;
+     padding:11px 18px;border-radius:11px;background:#151d2e;color:#e2e8f0;font-size:12.5px;font-weight:700;
+     box-shadow:0 18px 44px rgba(0,0,0,.4)"></div>
+
+<script src="../assets/js/layout.js?v=37"></script>
+<script src="../assets/js/dashboard-layout.js?v=37"></script>
+<script src="../assets/js/auth.js?v=3"></script>
+<script src="../assets/js/api.js?v=9"></script>
+<script>
+/* ══ CCR — Control Customer ══
+   The customer-side twin of Settings › Control User: one row per borrower,
+   numbered, searchable, expandable, and sized to the screen. Tabs two and
+   three are deliberately empty for now. */
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+
+var _ccToastTimer = null;
+function ccToast(msg, isErr) {
+  var el = document.getElementById('ccToast');
+  el.textContent = msg;
+  el.style.background = isErr ? '#7f1d1d' : '#151d2e';
+  el.style.display = 'block';
+  clearTimeout(_ccToastTimer);
+  _ccToastTimer = setTimeout(function(){ el.style.display = 'none'; }, 2600);
+}
+
+function ccTab(name) {
+  document.querySelectorAll('#ccTabs .cc-tab').forEach(function(b) {
+    b.classList.toggle('cc-tab-on', b.getAttribute('data-tab') === name);
+  });
+  document.querySelectorAll('.cc-panel').forEach(function(p){ p.classList.remove('on'); });
+  var panel = document.getElementById('ccPanel' + name.charAt(0).toUpperCase() + name.slice(1));
+  if (panel) panel.classList.add('on');
+  if (name === 'list') ccFitRows();
+}
+
+var _ccLoans = [], _ccOpen = {};
+
+function ccMoney(v) {
+  var n = Number(v);
+  if (!isFinite(n) || !n) return '—';
+  return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function ccWhen(v) {
+  if (!v) return '—';
+  var d = new Date(v);
+  if (isNaN(d.getTime())) return String(v).slice(0, 10);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+async function ccLoad() {
+  var body = document.getElementById('ccBody');
+  try {
+    var r = await CamboAPI.post({ action: 'get_all' });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not load');
+    _ccLoans = r.loans || [];
+  } catch(e) {
+    body.innerHTML = '<tr><td colspan="10" class="cc-empty">' + esc(e.message || 'Could not load') + '</td></tr>';
+    return;
+  }
+  ccRender();
+}
+
+function ccToggleRow(key) {
+  _ccOpen[key] = !_ccOpen[key];
+  ccRender();
+}
+
+function ccRender() {
+  var body = document.getElementById('ccBody');
+  if (!body) return;
+
+  var q = ((document.getElementById('ccSearch') || {}).value || '').trim().toLowerCase();
+  var list = !q ? _ccLoans : _ccLoans.filter(function(l) {
+    return [l.FullName, l.NationalID, l.Phone, l.Groups].some(function(v) {
+      return String(v || '').toLowerCase().indexOf(q) !== -1;
+    });
+  });
+
+  var due = 0, closed = 0, money = 0;
+  _ccLoans.forEach(function(l) {
+    if (!Number(l.Paid)) due++;
+    if (l.PortalClosed) closed++;
+    money += Number(l.Money) || 0;
+  });
+  document.getElementById('ccKpiTotal').textContent  = _ccLoans.length;
+  document.getElementById('ccKpiDue').textContent    = due;
+  document.getElementById('ccKpiClosed').textContent = closed;
+  document.getElementById('ccKpiMoney').textContent  = ccMoney(money);
+  document.getElementById('ccFoot').textContent      = list.length + ' of ' + _ccLoans.length + ' customers';
+
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="10" class="cc-empty">'
+      + (_ccLoans.length ? 'No customers match' : 'No customers yet') + '</td></tr>';
+    ccFitRows();
+    return;
+  }
+
+  body.innerHTML = list.map(function(l, idx) {
+    var key    = l.DateTime || '';
+    var safeK  = key.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    var isOpen = !!_ccOpen[key];
+    var init   = (l.FullName || '?').charAt(0).toUpperCase();
+
+    var av = l.photo_url
+      ? '<div class="cc-av"><img src="' + esc(l.photo_url) + '" alt=""></div>'
+      : '<div class="cc-av">' + esc(init) + '</div>';
+
+    var paid = Number(l.Paid)
+      ? '<span class="cc-pill cc-pill-paid">Paid</span>'
+      : '<span class="cc-pill cc-pill-due">Not paid</span>';
+
+    var row = '<tr class="cc-row' + (isOpen ? ' cc-open' : '') + '" onclick="ccToggleRow(\'' + safeK + '\')">'
+      + '<td><span class="cc-caret"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></td>'
+      + '<td class="cc-no">' + (idx + 1) + '</td>'
+      + '<td>' + av + '</td>'
+      + '<td><div class="cc-name">' + esc(l.FullName || '—') + '</div>'
+      +     '<div class="cc-nid">' + esc(l.NationalID || '—') + '</div></td>'
+      + '<td>' + (l.Phone ? esc(l.Phone) : '<span class="cc-none">—</span>') + '</td>'
+      + '<td>' + (l.Groups ? esc(l.Groups) : '<span class="cc-none">—</span>') + '</td>'
+      + '<td>' + (l.Status ? '<span class="cc-pill">' + esc(l.Status) + '</span>' : '<span class="cc-none">—</span>') + '</td>'
+      + '<td class="cc-money">' + ccMoney(l.Money) + '</td>'
+      + '<td>' + paid + '</td>'
+      + '<td onclick="event.stopPropagation()">'
+      +   '<label class="cc-sw" title="Open lets this customer read their own repayment history">'
+      +     '<input type="checkbox"' + (l.PortalClosed ? '' : ' checked')
+      +       ' onchange="ccPortal(\'' + safeK + '\', this)">'
+      +     '<span class="cc-sw-track"></span>'
+      +   '</label>'
+      + '</td>'
+      + '</tr>';
+
+    if (isOpen) row += '<tr><td class="cc-detail-td" colspan="10">' + ccDetail(l) + '</td></tr>';
+    return row;
+  }).join('');
+
+  ccFitRows();
+}
+
+function ccField(label, value) {
+  return '<div><div class="cc-f-lbl">' + esc(label) + '</div>'
+       + '<div class="cc-f-val">' + (value ? esc(value) : '—') + '</div></div>';
+}
+
+function ccDetail(l) {
+  var base = location.pathname.replace(/[^/]*$/, '');
+  var link = base + 'borrower-profile.html?key=' + encodeURIComponent(l.DateTime || '');
+  return '<div class="cc-detail">'
+    + ccField('Date of birth', l.DOB)
+    + ccField('Gender',        l.Gender)
+    + ccField('Linked to',     l.LinkedTo)
+    + ccField('Added by',      l.created_by)
+    + ccField('Added on',      ccWhen(l.DateTime))
+    + ccField('Facebook',      l.FBName)
+    + ccField('Note',          l.Note)
+    + '<div><div class="cc-f-lbl">Full record</div>'
+    +   '<a class="cc-open-link" href="' + esc(link) + '">'
+    +     '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+    +     'Open borrower profile</a></div>'
+    + '</div>';
+}
+
+/* The portal switch: open means the customer can read their own repayment
+   history through the QR link; closed means they see a thank-you instead. */
+async function ccPortal(key, box) {
+  box.disabled = true;
+  var wantOpen = box.checked;
+  try {
+    var r = await CamboAPI.post({ action: 'loan_toggle_portal', key: key });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
+    var l = _ccLoans.find(function(x){ return x.DateTime === key; });
+    if (l) l.PortalClosed = !!Number(r.portal_closed);
+    /* Trust the server's answer over the checkbox, in case the two disagreed */
+    box.checked = !Number(r.portal_closed);
+    ccToast(box.checked ? 'Portal opened' : 'Portal closed');
+    ccRender();
+  } catch(e) {
+    box.checked = !wantOpen;
+    ccToast(e.message || 'Could not save', true);
+  }
+  box.disabled = false;
+}
+
+/* Fill the screen down to the bottom, cutting on a whole row, fifteen at least */
+var CC_MIN_ROWS = 15;
+function ccFitRows() {
+  var wrap = document.getElementById('ccTblWrap');
+  var body = document.getElementById('ccBody');
+  if (!wrap || !body) return;
+  var rows = body.querySelectorAll('tr.cc-row');
+  if (!rows.length) { wrap.style.maxHeight = ''; return; }
+
+  var head  = wrap.querySelector('thead');
+  var headH = head ? head.getBoundingClientRect().height : 0;
+  var rowH  = rows[0].getBoundingClientRect().height || 46;
+
+  var sc = wrap.closest('.cc-wrap');
+  var scrolls = sc && getComputedStyle(sc).overflowY === 'auto';
+  var top, viewH;
+  if (scrolls) {
+    var scr = sc.getBoundingClientRect();
+    top   = (wrap.getBoundingClientRect().top - scr.top) + sc.scrollTop;
+    viewH = Math.min(scr.bottom, window.innerHeight) - scr.top;
+  } else {
+    top   = wrap.getBoundingClientRect().top + (window.scrollY || 0);
+    viewH = window.innerHeight;
+  }
+
+  var foot = document.getElementById('ccFoot');
+  var below = foot ? foot.getBoundingClientRect().height : 0;
+
+  var n = Math.floor((viewH - top - below - 18 - headH) / rowH);
+  if (!isFinite(n)) n = CC_MIN_ROWS;
+  n = Math.max(CC_MIN_ROWS, n);
+  if (n >= rows.length) { wrap.style.maxHeight = ''; return; }
+  wrap.style.maxHeight = Math.round(headH + n * rowH) + 'px';
+}
+
+var _ccFitRaf = null;
+window.addEventListener('resize', function() {
+  if (_ccFitRaf) cancelAnimationFrame(_ccFitRaf);
+  _ccFitRaf = requestAnimationFrame(function(){ _ccFitRaf = null; ccFitRows(); });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  /* Same gate the rest of the app uses, so this page cannot be reached by
+     typing its address when the role is not allowed to see customers. */
+  if (window.appCanPage && !appCanPage('ccr')) {
+    document.getElementById('ccDenied').classList.add('on');
+    return;
+  }
+  ccLoad();
+});
+</script>
+</body>
+</html>
