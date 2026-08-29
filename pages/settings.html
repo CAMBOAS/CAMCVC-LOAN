@@ -1517,7 +1517,7 @@
 <script src="../assets/js/qrcode.js?v=1"></script>
 <script src="../assets/js/qr-card.js?v=2"></script>
 <script src="../assets/js/auth.js"></script>
-<script src="../assets/js/layout.js?v=33"></script>
+<script src="../assets/js/layout.js?v=34"></script>
 <script>
 'use strict';
 
@@ -3514,11 +3514,16 @@ function tbPaint() {
     pv.className = (window.appTopbarClass ? window.appTopbarClass(c)
                                           : 'apptb apptb-' + c.size + ' apptb-' + c.style) + ' tbp-bar';
     pv.innerHTML = window.appBuildTopbarHTML(c);
-    var tbtn = pv.querySelector('#apptbThemeBtn');
+    /* This is a copy of the real bar, ids included. Two elements sharing an id is
+       how the chat panel ended up in the top-left corner: layout.js looked the id
+       up and got this dead copy inside a hidden panel. Rename them so only the
+       live bar ever answers. */
+    pv.querySelectorAll('[id]').forEach(function(el){ el.id = 'pv_' + el.id; });
+    var tbtn = pv.querySelector('#pv_apptbThemeBtn');
     if (tbtn) tbtn.innerHTML = (document.documentElement.getAttribute('data-theme') === 'light')
       ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
       : '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>';
-    var ck = pv.querySelector('#apptbClock');
+    var ck = pv.querySelector('#pv_apptbClock');
     if (ck) {
       var d = new Date(), hh = d.getHours(), mm = String(d.getMinutes());
       if (mm.length < 2) mm = '0' + mm;

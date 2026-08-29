@@ -789,6 +789,15 @@
   /* ══════════════════════════════════════════════════════════════
      TOP BAR CHAT — icon + Messenger-style dropdown of conversations
      ══════════════════════════════════════════════════════════════ */
+  /* Settings renders a live preview of this bar, ids and all, so two elements can
+     answer to the same id — and getElementById hands back whichever the page parsed
+     first, which is the dead copy inside a hidden panel. Every lookup below is
+     therefore anchored to the real bar. */
+  function tbEl(id) {
+    var bar = document.getElementById('appTopBar');
+    return (bar && bar.querySelector('#' + id)) || document.getElementById(id);
+  }
+
   var _tbChatThreads = null;   /* last loaded conversation list */
   var _tbChatTeam    = null;   /* team_list cache, for starting a new chat */
   var _tbChatCounts  = {};     /* unread per peer, kept fresh by chat-global's poll */
@@ -845,12 +854,12 @@
   }
 
   function tbChatPaintBadge() {
-    var b = document.getElementById('apptbChatBadge');
+    var b = tbEl('apptbChatBadge');
     if (!b) return;
     var n = tbChatBadgeTotal();
     b.textContent = n > 99 ? '99+' : String(n);
     b.hidden = n === 0;
-    var btn = document.getElementById('apptbChatBtn');
+    var btn = tbEl('apptbChatBtn');
     if (btn) btn.classList.toggle('has-unread', n > 0);
   }
 
@@ -952,14 +961,14 @@
   function tbChatClose() {
     var pop = document.getElementById('apptbChatPop');
     if (pop) pop.remove();
-    var btn = document.getElementById('apptbChatBtn');
+    var btn = tbEl('apptbChatBtn');
     if (btn) btn.classList.remove('is-open');
     document.removeEventListener('mousedown', tbChatOutside, true);
   }
 
   function tbChatOutside(e) {
     var pop = document.getElementById('apptbChatPop');
-    var btn = document.getElementById('apptbChatBtn');
+    var btn = tbEl('apptbChatBtn');
     if (!pop) return;
     if (pop.contains(e.target) || (btn && btn.contains(e.target))) return;
     tbChatClose();
@@ -967,14 +976,18 @@
 
   function tbChatPosition(pop, btn) {
     var r = btn.getBoundingClientRect();
+    /* A hidden or detached button measures 0×0 and would drag the panel to the
+       top-left corner. Fall back to the top-right, where the bar always is. */
     var w = pop.offsetWidth || 320;
-    var left = Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8);
+    var right = (r.width || r.height) ? r.right : (window.innerWidth - 12);
+    var top   = (r.width || r.height) ? r.bottom : 56;
+    var left = Math.min(Math.max(8, right - w), window.innerWidth - w - 8);
     pop.style.left = left + 'px';
-    pop.style.top  = (r.bottom + 8) + 'px';
+    pop.style.top  = (top + 8) + 'px';
   }
 
   function tbChatOpen() {
-    var btn = document.getElementById('apptbChatBtn');
+    var btn = tbEl('apptbChatBtn');
     if (!btn) return;
     if (document.getElementById('apptbChatPop')) { tbChatClose(); return; }
 
@@ -1034,7 +1047,7 @@
     });
     window.addEventListener('resize', function() {
       var pop = document.getElementById('apptbChatPop');
-      var btn = document.getElementById('apptbChatBtn');
+      var btn = tbEl('apptbChatBtn');
       if (pop && btn) tbChatPosition(pop, btn);
     });
   }
@@ -1149,7 +1162,7 @@
     document.body.setAttribute('data-apptb-size', cfg.size);
 
     /* Theme button */
-    var th = document.getElementById('apptbThemeBtn');
+    var th = tbEl('apptbThemeBtn');
     if (th) {
       var curTh = document.documentElement.getAttribute('data-theme') || 'light';
       th.innerHTML = curTh === 'light' ? ic.moon : ic.sun;
@@ -1162,7 +1175,7 @@
     }
 
     /* Menu button (phones) — opens the same sidebar drawer as the hamburger bar did */
-    var mBtn = document.getElementById('apptbMenuBtn');
+    var mBtn = tbEl('apptbMenuBtn');
     if (mBtn) mBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       document.body.classList.toggle('sidebar-open');
@@ -1170,7 +1183,7 @@
 
     /* Chat dropdown */
     tbChatClose();
-    var chatBtn = document.getElementById('apptbChatBtn');
+    var chatBtn = tbEl('apptbChatBtn');
     if (chatBtn) {
       chatBtn.addEventListener('click', function(e) { e.stopPropagation(); tbChatOpen(); });
       tbChatPaintBadge();
@@ -1184,14 +1197,14 @@
     });
 
     /* Logout */
-    var lo = document.getElementById('apptbLogoutBtn');
+    var lo = tbEl('apptbLogoutBtn');
     if (lo) lo.addEventListener('click', function() { showLogoutModal(); });
 
     /* Search → Loan List filtered by ?q= */
-    var sf = document.getElementById('apptbSearchForm');
+    var sf = tbEl('apptbSearchForm');
     if (sf) sf.addEventListener('submit', function(e) {
       e.preventDefault();
-      var el = document.getElementById('apptbSearchInput');
+      var el = tbEl('apptbSearchInput');
       var v  = (el && el.value ? el.value : '').trim();
       if (!v) return;
       location.href = getBase() + 'pages/loan-list.html?q=' + encodeURIComponent(v);
