@@ -277,6 +277,9 @@
     .mp-acct-k { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted) }
     .mp-acct-v { font-size:13px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 
+    .mp-dl-when { font-weight:500; opacity:.75 }
+    .mp-input.mp-need { border-color:rgba(245,158,11,.6); background:rgba(245,158,11,.06) }
+
     .mp-det-sub {
       font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
       color:var(--muted); margin:20px 0 10px;
@@ -803,55 +806,35 @@
                    readonly onfocus="this.removeAttribute('readonly')">
           </div>
           </div>
-          <!-- Renaming the account rewrites the name stamped on old loan records, so
-               that one change still has to be confirmed. Everything else does not,
-               and the box only appears once the name is actually edited. -->
-          <div class="mp-det-confirm" id="mpdPinRow" style="display:none">
-            <div class="mp-df">
-              <label class="mp-dl" for="mpCurrentPinProfile">Current PIN — needed to change your display name</label>
-              <input class="mp-input" id="mpCurrentPinProfile" type="password" placeholder="••••" maxlength="20"
-                     autocomplete="new-password" data-lpignore="true" data-1p-ignore
-                     readonly onfocus="this.removeAttribute('readonly')">
-            </div>
-          </div>
-
-          <div class="mp-det-foot">
-            <span class="mp-det-state" id="mpdState"></span>
-            <button type="button" class="mp-btn mp-btn-ghost" onclick="mpDetailsLoad()">Reset</button>
-            <button type="button" class="mp-btn mp-btn-primary" id="mpdSaveBtn" onclick="mpDetailsSave()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Save changes
-            </button>
-          </div>
-
-          <div class="mp-det-sub">Change PIN
-            <span class="mp-det-note">Its own step — the button below saves only this</span>
+          <div class="mp-det-sub">PIN
+            <span class="mp-det-note">Leave the new ones empty to keep the PIN you have</span>
           </div>
           <div class="mp-det-grid">
           <div class="mp-df">
-            <label class="mp-dl" for="mpOldPin">Current PIN</label>
+            <label class="mp-dl" for="mpOldPin">Current PIN <span class="mp-dl-when" id="mpPinWhy">— only if you change the name or the PIN</span></label>
             <input class="mp-input" id="mpOldPin" type="password" placeholder="••••" maxlength="20"
                    autocomplete="new-password" data-lpignore="true" data-1p-ignore
                    readonly onfocus="this.removeAttribute('readonly')">
           </div>
           <div class="mp-df">
             <label class="mp-dl" for="mpNewPin">New PIN</label>
-            <input class="mp-input" id="mpNewPin" type="password" placeholder="••••" maxlength="20"
+            <input class="mp-input" id="mpNewPin" type="password" oninput="mpdNameTouched()" placeholder="••••" maxlength="20"
                    autocomplete="new-password" data-lpignore="true" data-1p-ignore
                    readonly onfocus="this.removeAttribute('readonly')">
           </div>
           <div class="mp-df">
             <label class="mp-dl" for="mpConfirmPin">Confirm new PIN</label>
-            <input class="mp-input" id="mpConfirmPin" type="password" placeholder="••••" maxlength="20"
+            <input class="mp-input" id="mpConfirmPin" type="password" oninput="mpdNameTouched()" placeholder="••••" maxlength="20"
                    autocomplete="new-password" data-lpignore="true" data-1p-ignore
                    readonly onfocus="this.removeAttribute('readonly')">
           </div>
           </div>
           <div class="mp-det-foot">
-            <span class="mp-det-state" id="mpPinState"></span>
-            <button type="button" class="mp-btn mp-btn-primary" id="mpChangePinBtn" onclick="changePin()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              Change PIN
+            <span class="mp-det-state" id="mpdState"></span>
+            <button type="button" class="mp-btn mp-btn-ghost" onclick="mpDetailsLoad()">Reset</button>
+            <button type="button" class="mp-btn mp-btn-primary" id="mpdSaveBtn" onclick="mpDetailsSave()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save changes
             </button>
           </div>
         </div>
@@ -1167,11 +1150,20 @@ function _mpdState(msg, tone) {
    typed differs from this, so editing a phone number never asks for it. */
 var _mpdOrigName = '';
 
+/* The one Current PIN box covers both jobs that need it — renaming the account
+   and changing the PIN — so the hint next to it says which one is asking. */
 function mpdNameTouched() {
   var el  = document.getElementById('mpDisplayName');
-  var row = document.getElementById('mpdPinRow');
-  if (!el || !row) return;
-  row.style.display = (el.value.trim() !== _mpdOrigName) ? '' : 'none';
+  var why = document.getElementById('mpPinWhy');
+  var cur = document.getElementById('mpOldPin');
+  if (!el || !why || !cur) return;
+  var renaming = el.value.trim() !== _mpdOrigName;
+  var newPin   = (document.getElementById('mpNewPin').value || '').trim();
+  why.textContent = renaming && newPin ? '— required: name and PIN are changing'
+                  : renaming           ? '— required: the display name is changing'
+                  : newPin             ? '— required: the PIN is changing'
+                  : '— only if you change the name or the PIN';
+  cur.classList.toggle('mp-need', !!(renaming || newPin));
 }
 
 async function mpDetailsLoad() {
@@ -1181,8 +1173,10 @@ async function mpDetailsLoad() {
     _mpdOrigName = (a.name || '').trim();
     nameEl.value = _mpdOrigName;
   }
-  var pinEl = document.getElementById('mpCurrentPinProfile');
-  if (pinEl) pinEl.value = '';
+  ['mpOldPin', 'mpNewPin', 'mpConfirmPin'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   mpdNameTouched();
   try {
     var r = await CamboAPI.post({ action: 'my_details' });
@@ -1206,9 +1200,14 @@ async function mpDetailsLoad() {
 }
 
 async function mpDetailsSave() {
-  var btn = document.getElementById('mpdSaveBtn');
+  var btn  = document.getElementById('mpdSaveBtn');
   var name = document.getElementById('mpDisplayName').value.trim();
-  var renaming = name !== _mpdOrigName;
+  var cur  = document.getElementById('mpOldPin').value.trim();
+  var np   = document.getElementById('mpNewPin').value.trim();
+  var cp   = document.getElementById('mpConfirmPin').value.trim();
+
+  var renaming  = name !== _mpdOrigName;
+  var changePin = !!(np || cp);
 
   if (!name) { _mpdState('A display name is required', '#f87171'); return; }
 
@@ -1218,17 +1217,19 @@ async function mpDetailsSave() {
     payload[key] = el ? el.value.trim() : '';
   });
 
-  var email = payload.email;
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
     _mpdState('That email address does not look right', '#f87171');
     document.getElementById('mpdEmail').focus();
     return;
   }
-
-  var pin = (document.getElementById('mpCurrentPinProfile') || {}).value || '';
-  if (renaming && !pin.trim()) {
-    _mpdState('Enter your current PIN to change the display name', '#f87171');
-    document.getElementById('mpCurrentPinProfile').focus();
+  if (changePin) {
+    if (np !== cp)      { _mpdState('The two new PINs do not match', '#f87171'); document.getElementById('mpConfirmPin').focus(); return; }
+    if (np.length < 4)  { _mpdState('A PIN needs at least 4 characters', '#f87171'); document.getElementById('mpNewPin').focus(); return; }
+  }
+  if ((renaming || changePin) && !cur) {
+    _mpdState('Enter your current PIN — ' + (renaming && changePin ? 'the name and PIN are changing'
+                                           : renaming ? 'the display name is changing' : 'the PIN is changing'), '#f87171');
+    document.getElementById('mpOldPin').focus();
     return;
   }
 
@@ -1237,14 +1238,14 @@ async function mpDetailsSave() {
   btn.innerHTML = '<div class="mp-spinner"></div> Saving\u2026';
   _mpdState('');
   try {
-    /* The rename goes first: if the PIN is wrong nothing should have been saved yet. */
+    /* Order matters. The rename goes first so a wrong PIN saves nothing at all,
+       and the PIN change goes last because it invalidates the credentials every
+       request before it is signed with. */
     if (renaming) {
       var pr = await CamboAPI.post({
-        action: 'user_self_update', type: 'profile',
-        display_name: name, current_pin: pin.trim()
+        action: 'user_self_update', type: 'profile', display_name: name, current_pin: cur
       });
       if (!pr || !pr.ok) throw new Error((pr && pr.message) || 'Could not change the name');
-
       var auth = getAuth();
       auth.name = pr.display_name || name;
       localStorage.setItem('appAuth', JSON.stringify(auth));
@@ -1252,46 +1253,31 @@ async function mpDetailsSave() {
       document.getElementById('mpHeroName').textContent = auth.name;
       var av = document.getElementById('mpAvatar');
       if (av && !av.querySelector('img')) av.textContent = auth.name.charAt(0).toUpperCase();
-      document.getElementById('mpCurrentPinProfile').value = '';
-      mpdNameTouched();
     }
 
     var r = await CamboAPI.post(payload);
     if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
 
-    mpToast('Saved');
-    _mpdState('Saved', '#22c55e');
+    if (changePin) {
+      var xr = await CamboAPI.post({
+        action: 'user_self_update', type: 'pin', current_pin: cur, new_pin: np
+      });
+      if (!xr || !xr.ok) throw new Error((xr && xr.message) || 'Could not change the PIN');
+      /* every later request is signed with this, so it has to follow immediately */
+      var a2 = getAuth();
+      a2.p = np;
+      localStorage.setItem('appAuth', JSON.stringify(a2));
+      document.getElementById('mpNewPin').value = '';
+      document.getElementById('mpConfirmPin').value = '';
+    }
+
+    document.getElementById('mpOldPin').value = '';
+    mpdNameTouched();
+    mpToast(changePin ? 'Saved — your PIN has changed' : 'Saved');
+    _mpdState(changePin ? 'Saved — use the new PIN from now on' : 'Saved', '#22c55e');
   } catch(e) {
     _mpdState(e.message || 'Could not save', '#f87171');
     mpToast(e.message || 'Could not save', true);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = orig;
-  }
-}
-
-/* ── Change PIN ── */
-async function changePin() {
-  var btn    = document.getElementById('mpChangePinBtn');
-  var oldPin = document.getElementById('mpOldPin').value.trim();
-  var newPin = document.getElementById('mpNewPin').value.trim();
-  var conPin = document.getElementById('mpConfirmPin').value.trim();
-  if (!oldPin) { mpToast('Current PIN is required', true); return; }
-  if (!newPin) { mpToast('Please enter a new PIN', true); return; }
-  if (newPin !== conPin) { mpToast('New PINs do not match', true); return; }
-  if (newPin.length < 4) { mpToast('PIN must be at least 4 characters', true); return; }
-  var orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<div class="mp-spinner"></div> Changing...';
-  try {
-    var r = await CamboAPI.post({ action: 'user_self_update', type: 'pin', current_pin: oldPin, new_pin: newPin });
-    if (!r || !r.ok) throw new Error(r && r.message || 'Failed');
-    document.getElementById('mpOldPin').value    = '';
-    document.getElementById('mpNewPin').value    = '';
-    document.getElementById('mpConfirmPin').value = '';
-    mpToast('PIN changed successfully');
-  } catch(err) {
-    mpToast(err.message || 'Error', true);
   } finally {
     btn.disabled = false;
     btn.innerHTML = orig;
