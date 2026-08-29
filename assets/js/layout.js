@@ -265,11 +265,31 @@
     } catch(e){}
   };
 
+  /* Every entry the left menu can show, and what has to be true for it to
+     appear. Kept as data because the menu is drawn in the order the config
+     lists — the run of hard-coded lines it replaces meant a saved order was
+     read, stored and then quietly ignored. */
+  var SB_ITEMS = {
+    dash:  { page:'index.html',                   ic:'dashboard', label:function(){return t('ផ្ទាំងគ្រប់គ្រង','Dashboard');},  ok:function(){return appCanPage('dashboard');} },
+    cust:  { page:'pages/customers.html',         ic:'customers', label:function(){return t('អតិថិជន','Customers');},        ok:function(){return appCanPage('customers');} },
+    add:   { page:'pages/add-customer.html',      ic:'profile',   label:function(){return t('បន្ថែមអតិថិជន','Add Customer');}, ok:function(){return appCanPage('customers');} },
+    loans: { page:'pages/loan-list.html',         ic:'loanlist',  label:function(){return t('បញ្ជីកម្ចី','Loan List');},       ok:function(){return appCanPage('loanlist');} },
+    rpt:   { page:'pages/reports.html',           ic:'report',    label:function(){return t('របាយការណ៍','Reports');},        ok:function(){return appCan('reports') && appCanPage('reports');} },
+    rep:   { page:'pages/repayment-tracker.html', ic:'repayment', label:function(){return t('ការសង','Repayment');},          ok:function(){return appCanPage('repayment');} },
+    sch:   { page:'pages/schedule.html',          ic:'schedule',  label:function(){return t('កាលវិភាគសង','Schedule');},       ok:function(){return appCanPage('schedule');} },
+    jr:    { page:'pages/journal.html',           ic:'journal',   label:function(){return t('កំណត់ត្រា','Journal');},         ok:function(){return appCanPage('journal');} },
+    fb:    { page:'pages/fb-id-finder.html',      ic:'facebook',  label:function(){return t('FB ID','FB ID Finder');},      ok:function(){return appCanPage('fbid');} },
+    team:  { page:'pages/team.html',              ic:'users',     label:function(){return t('ក្រុម','Team');},               ok:function(){return appCanPage('team');} },
+    ccr:   { page:'pages/ccr.html',               ic:'ccr',       label:function(){return t('CCR','CCR');},                 ok:function(){return appCanPage('ccr');} },
+    act:   { page:'pages/activity-log.html',      ic:'activity',  label:function(){return t('កំណត់ហេតុ','Activity Log');},    ok:function(){return appCanPage('activitylog');} },
+    prof:  { page:'pages/my-profile.html',        ic:'profile',   label:function(){return t('ប្រវត្តិរូបខ្ញុំ','My Profile');}, ok:function(){return true;} },
+    set:   { page:'pages/settings.html',          ic:'settings',  label:function(){return t('ការកំណត់','Settings');},        ok:function(){return getAuthRole() === 'Admin';} }
+  };
+
   /* `cfgOverride` lets the Settings preview render a draft config without saving it. */
   function buildSidebar(cfgOverride) {
     const cur  = getCurrentPage();
     const base = getBase();
-    const role = getAuthRole();
     function link(page, icon, label, danger) {
       const pageName = page.split('/').pop();
       const active   = cur === pageName ? 'sb-active' : '';
@@ -312,20 +332,10 @@
       <nav class="sb-nav">
         ${_has('label') ? `<div class="sb-section-label">${t('ម៉ឺនុយចំបង','Main Menu')}</div>` : ''}
         <ul class="sb-list">
-          ${(_pick('dash') && appCanPage('dashboard')) ? link('index.html', ic.dashboard, t('ផ្ទាំងគ្រប់គ្រង','Dashboard')) : ''}
-          ${(_pick('cust') && appCanPage('customers')) ? link('pages/customers.html', ic.customers, t('អតិថិជន','Customers')) : ''}
-          ${(_pick('add')  && appCanPage('customers')) ? link('pages/add-customer.html', ic.profile, t('បន្ថែមអតិថិជន','Add Customer')) : ''}
-          ${(_pick('loans') && appCanPage('loanlist')) ? link('pages/loan-list.html', ic.loanlist, t('បញ្ជីកម្ចី','Loan List')) : ''}
-          ${(_pick('rpt') && appCan('reports') && appCanPage('reports')) ? link('pages/reports.html', ic.report, t('របាយការណ៍','Reports')) : ''}
-          ${(_pick('rep') && appCanPage('repayment')) ? link('pages/repayment-tracker.html', ic.repayment, t('ការសង','Repayment')) : ''}
-          ${(_pick('fb') && appCanPage('fbid')) ? link('pages/fb-id-finder.html', ic.facebook, t('FB ID','FB ID Finder')) : ''}
-          ${(_pick('act') && appCanPage('activitylog')) ? link('pages/activity-log.html', ic.activity, t('កំណត់ហេតុ','Activity Log')) : ''}
-          ${(_pick('team') && appCanPage('team')) ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
-          ${(_pick('ccr') && appCanPage('ccr')) ? link('pages/ccr.html', ic.ccr, t('CCR','CCR')) : ''}
-          ${(_pick('sch') && appCanPage('schedule')) ? link('pages/schedule.html', ic.schedule, t('កាលវិភាគសង','Schedule')) : ''}
-          ${(_pick('set') && role === 'Admin') ? link('pages/settings.html', ic.settings, t('ការកំណត់','Settings')) : ''}
-          ${(_pick('jr') && appCanPage('journal')) ? link('pages/journal.html', ic.journal, t('កំណត់ត្រា','Journal')) : ''}
-          ${_pick('prof') ? link('pages/my-profile.html', ic.profile, t('ប្រវត្តិរូបខ្ញុំ','My Profile')) : ''}
+          ${_sb.links.map(function (k) {
+            var it = SB_ITEMS[k];
+            return (it && it.ok()) ? link(it.page, ic[it.ic], it.label()) : '';
+          }).join('')}
           ${_has('portal') ? `<li class="sb-divider sb-divider-sm"></li>
           <li><a href="${base}pages/user.html" class="sb-link" target="_blank" rel="noopener" data-tooltip="${t('ផតថលអតិថិជន','User')}"><span class="sb-icon">${ic.portal}</span><span class="sb-label">${t('ផតថលអតិថិជន','User')}</span><span class="sb-active-dot"></span></a></li>` : ''}
         </ul>
@@ -1385,7 +1395,7 @@
     mode:  'full',                   /* full | icons */
     style: 'solid',                  /* solid | glass | accent */
     show:  ['brand','status','label','portal','collapse','tips'],
-    links: ['dash','cust','loans','rpt','rep','fb','act','team','ccr','sch','set','jr','prof']
+    links: ['dash','cust','add','rpt','rep','sch','jr','fb','team','ccr','act','prof','set']
   };
   window.appSbDefault = SB_DEFAULT;
 
