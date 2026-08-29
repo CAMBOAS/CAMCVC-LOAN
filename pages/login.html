@@ -509,14 +509,14 @@
       <div class="field">
         <label>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Username
+          Username or email
         </label>
         <div class="field-inner">
           <span class="field-icon">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </span>
-          <input id="loginUser" type="text" placeholder="Username..."
-                 autocomplete="username" autocapitalize="none" spellcheck="false">
+          <input id="loginUser" type="text" placeholder="Username or email..."
+                 autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email">
         </div>
       </div>
 
@@ -648,7 +648,7 @@
     var p = document.getElementById('loginPin').value.trim();
     document.getElementById('loginErr').style.display = 'none';
 
-    if (!u) { showErr('Please enter your username'); document.getElementById('loginUser').focus(); return; }
+    if (!u) { showErr('Please enter your username or email'); document.getElementById('loginUser').focus(); return; }
     if (!p) { showErr('Please enter your PIN'); document.getElementById('loginPin').focus(); return; }
 
     _busy = true;
@@ -673,7 +673,9 @@
         } else {
           _failCount = 0;
           localStorage.setItem('appAuth', JSON.stringify({
-            u: u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || '',
+            /* What was typed may be the email; every later request is keyed by the
+               username, so store the one the server resolved. */
+            u: res.username || u, p: p, name: res.name, role: res.role, exp: _exp, expDate: res.expDate || '',
             manages_teams: res.manages_teams || []
           }));
           if (res.photo_url) localStorage.setItem('user_photo', res.photo_url);

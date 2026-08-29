@@ -502,6 +502,24 @@ const USER_DETAIL_FIELDS = [
   'emg_name', 'emg_relation', 'emg_phone',
 ];
 
+/* Sign in with a username or with the email on the account. A real username
+   always wins: the email column is only consulted when nothing matches a
+   username, so no account can ever be shadowed by somebody else's address.
+   The email is set by the account holder alone and is unique across accounts,
+   which is what makes it safe to accept here. */
+async function resolveLoginName(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return raw;
+  const [byName] = await db().query('SELECT username FROM users WHERE username=? LIMIT 1', [raw]);
+  if (byName.length) return byName[0].username;
+  try {
+    await ensureUserDetailCols();
+    const [byMail] = await db().query('SELECT username FROM users WHERE email=? LIMIT 1', [raw]);
+    if (byMail.length) return byMail[0].username;
+  } catch(e) {}
+  return raw;
+}
+
 async function validateAuth(u, p) {
   if (!u || !p) return null;
   await ensureUserPhotoCol();
@@ -630,7 +648,7 @@ async function handler(req, res) {
 
     /* ── Public: login ── */
     if (action === 'api_login') {
-      const _lu = String(body.username||'').trim();
+      const _lu = await resolveLoginName(body.username);
       const _lp = String(body.pin||'').trim();
       const v = await validateAuth(_lu, _lp);
       if (!v) {
