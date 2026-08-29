@@ -374,7 +374,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../assets/js/layout.js?v=40"></script>
+<script src="../assets/js/layout.js?v=42"></script>
 <script src="../assets/js/dashboard-layout.js?v=1"></script>
 <script src="../assets/js/auth.js?v=2"></script>
 <script src="../assets/js/api.js?v=9"></script>
@@ -614,7 +614,7 @@ async function saveCustomer(){
   loan.photos=photoUrls;
   try{
     var res=await Promise.race([CamboAPI.post({action:'loan_add',loan:loan}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},30000);})]);
-    if(res&&res.ok){toast('Customer saved successfully');setTimeout(function(){location.href='customers.html';},900);}
+    if(res&&res.ok){if(window.appFormSaved)appFormSaved();toast('Customer saved successfully');setTimeout(function(){location.href='customers.html';},900);}
     else{toast((res&&res.message)||'Failed to save',true);btn.disabled=false;btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg> Save Customer';}
   }catch(e){toast('Error: '+(e.message||'timeout'),true);btn.disabled=false;btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg> Save Customer';}
 }
@@ -623,6 +623,9 @@ async function saveCustomer(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){var lb=document.getElementById('acLb');if(lb)lb.style.display='none';closeLinkedToMgmt();}});
 
 loadMeta();
+
+/* Watch the form once its own defaults (entry date, status) are in place. */
+if (window.appTrackForm) appTrackForm('.ac-wrap');
 renderSocialLinks();
 _setDefaultDT();
 </script>

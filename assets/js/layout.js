@@ -19,6 +19,71 @@
     try { window.dispatchEvent(new CustomEvent('applang', { detail: { lang: getLang() } })); } catch(e) {}
   };
 
+  /* ── Unsaved work ────────────────────────────────────────────────────────
+     Every page is its own document, so a link in the menu really does leave —
+     and takes any half-filled form with it. Nothing about that changes by
+     rewriting the app; the honest fix is to ask first.
+
+     Two exits to cover: the browser's own (reload, close, typed address),
+     which only accepts the native dialog, and a click on a link inside the
+     app, where we can ask in the reader's language. Both consult the same
+     question, so a page describes "dirty" once. ── */
+  var _dirtyFn = null, _skipLeave = false;
+
+  window.appGuardUnsaved = function (fn) { _dirtyFn = (typeof fn === 'function') ? fn : null; };
+  window.appAllowLeave   = function () { _skipLeave = true; };
+
+  function leavingCosts() {
+    if (_skipLeave || !_dirtyFn) return false;
+    try { return !!_dirtyFn(); } catch (e) { return false; }
+  }
+
+  window.addEventListener('beforeunload', function (e) {
+    if (!leavingCosts()) return;
+    e.preventDefault();
+    e.returnValue = '';   /* browsers insist on their own wording here */
+  });
+
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || !leavingCosts()) return;
+    if (a.target === '_blank' || a.hasAttribute('download')) return;
+    var href = a.getAttribute('href') || '';
+    if (!href || href.charAt(0) === '#' || /^(javascript|mailto|tel):/i.test(href)) return;
+    if (confirm(t('អ្នកបំពេញព័ត៌មានមិនទាន់រក្សាទុកនៅឡើយ។ ចាកចេញឥឡូវនេះគឺបាត់បង់អស់។ ចាកចេញមែនទេ?',
+                  'You have details that are not saved yet. Leaving now loses them. Leave anyway?'))) {
+      /* they said yes — do not ask a second time on the way out */
+      _skipLeave = true;
+      setTimeout(function () { _skipLeave = false; }, 2000);
+    } else {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  /* Answers "would leaving cost anything".
+
+     Comparing against a snapshot looked obvious and was wrong: these pages fill
+     their dropdowns from the server a second or so after load, so whenever the
+     snapshot was taken the arriving options moved values underneath it and a
+     form nobody had touched reported itself edited.
+
+     Listening for the typing instead settles it. Assigning to `.value` from
+     script raises no input event at all, so a form only counts as edited once a
+     person has actually edited it — and `isTrusted` rules out anything a script
+     dispatches. */
+  window.appTrackForm = function (root) {
+    var el = (typeof root === 'string') ? document.querySelector(root) : (root || document.body);
+    if (!el) return;
+    var touched = false;
+    function mark(e) { if (e && e.isTrusted) touched = true; }
+    el.addEventListener('input',  mark, true);
+    el.addEventListener('change', mark, true);
+    window.appGuardUnsaved(function () { return touched; });
+    /* Call after a successful save, or after the form is replaced wholesale. */
+    window.appFormSaved = function () { touched = false; };
+  };
+
   function getBrand() {
     try { return JSON.parse(localStorage.getItem('appBrand')||'null') || {}; } catch(e) { return {}; }
   }
