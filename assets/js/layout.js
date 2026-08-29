@@ -976,11 +976,21 @@
 
   function tbChatPosition(pop, btn) {
     var r = btn.getBoundingClientRect();
-    /* A hidden or detached button measures 0×0 and would drag the panel to the
-       top-left corner. Fall back to the top-right, where the bar always is. */
+    /* Hang it off the right end of the bar — under the profile chip — rather than
+       off the chat icon itself. The icon sits mid-group, so aligning to it left a
+       gap of bar to its right and the panel read as floating in the middle. */
+    var bar = document.getElementById('appTopBar');
+    var grp = bar && bar.querySelector('.apptb-right');
+    var gr  = grp && grp.getBoundingClientRect();
+
     var w = pop.offsetWidth || 320;
-    var right = (r.width || r.height) ? r.right : (window.innerWidth - 12);
-    var top   = (r.width || r.height) ? r.bottom : 56;
+    /* A hidden or detached element measures 0×0 and would drag the panel to the
+       top-left corner; fall back to the window's own right edge. */
+    var right = (gr && gr.width) ? gr.right
+              : ((r.width || r.height) ? r.right : (window.innerWidth - 12));
+    var top   = (r.width || r.height) ? r.bottom
+              : ((gr && gr.height) ? gr.bottom : 56);
+
     var left = Math.min(Math.max(8, right - w), window.innerWidth - w - 8);
     pop.style.left = left + 'px';
     pop.style.top  = (top + 8) + 'px';
