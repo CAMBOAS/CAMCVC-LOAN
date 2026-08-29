@@ -1091,7 +1091,8 @@ function initPage() {
 
   /* Hero */
   document.getElementById('mpHeroName').textContent = name;
-  document.getElementById('mpHeroUser').textContent = '@' + user;
+  _mpHeroUser = user;
+  mpHeroLine();
 
   /* Role badge */
   var rb = document.getElementById('mpRoleBadge');
@@ -1197,6 +1198,17 @@ function _mpdState(msg, tone) {
 
 /* The name as it stands on the server. The PIN box appears only once what is
    typed differs from this, so editing a phone number never asks for it. */
+/* The line under the name: the email once there is one, since that is the part
+   people recognise. The username is never lost — it is in the strip below. */
+var _mpHeroUser = '', _mpHeroMail = '';
+
+function mpHeroLine() {
+  var el = document.getElementById('mpHeroUser');
+  if (!el) return;
+  el.textContent = _mpHeroMail || ('@' + (_mpHeroUser || '—'));
+  el.title = _mpHeroMail ? ('@' + _mpHeroUser) : '';
+}
+
 var _mpdOrigName = '';
 /* False until the boxes have actually been filled from the server. A failed load
    leaves them empty, and saving then would write those blanks over real data. */
@@ -1246,6 +1258,8 @@ async function mpDetailsLoad() {
       el.value = v;
     });
     _mpdLoaded = true;
+    _mpHeroMail = (d.email || '').trim();
+    mpHeroLine();
     _mpdState('');
     mpFillCheck();
   } catch(e) {
@@ -1383,6 +1397,8 @@ async function mpDetailsSave() {
 
     document.getElementById('mpOldPin').value = '';
     mpdNameTouched();
+    _mpHeroMail = payload.email || '';
+    mpHeroLine();
     mpToast(changePin ? 'Saved — your PIN has changed' : 'Saved');
     _mpdState(changePin ? 'Saved — use the new PIN from now on' : 'Saved', '#22c55e');
   } catch(e) {
