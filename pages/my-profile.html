@@ -1198,6 +1198,9 @@ function _mpdState(msg, tone) {
 /* The name as it stands on the server. The PIN box appears only once what is
    typed differs from this, so editing a phone number never asks for it. */
 var _mpdOrigName = '';
+/* False until the boxes have actually been filled from the server. A failed load
+   leaves them empty, and saving then would write those blanks over real data. */
+var _mpdLoaded = false;
 
 /* The one Current PIN box covers both jobs that need it — renaming the account
    and changing the PIN — so the hint next to it says which one is asking. */
@@ -1242,10 +1245,12 @@ async function mpDetailsLoad() {
       }
       el.value = v;
     });
+    _mpdLoaded = true;
     _mpdState('');
     mpFillCheck();
   } catch(e) {
-    _mpdState(e.message || 'Could not load your details', '#f87171');
+    _mpdLoaded = false;
+    _mpdState('Could not read your details — reload before saving, or you would overwrite them with blanks.', '#f87171');
   }
 }
 
@@ -1307,6 +1312,14 @@ async function mpDetailsSave() {
   var changePin = !!(np || cp);
 
   if (!name) { _mpdState('A display name is required', '#f87171'); return; }
+
+  /* Refuse rather than write blanks over whatever is stored. This is the one
+     failure that loses data instead of merely not saving it. */
+  if (!_mpdLoaded) {
+    _mpdState('Your details never loaded, so there is nothing safe to save. Reload the page first.', '#f87171');
+    mpToast('Reload the page before saving', true);
+    return;
+  }
 
   var payload = { action: 'user_self_update', type: 'details' };
   Object.keys(MPD_FIELDS).forEach(function(key) {
