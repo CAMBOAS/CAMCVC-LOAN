@@ -85,6 +85,7 @@
       'journal.html':   { title: t('កំណត់ត្រា','Journal'), subtitle: t('ទម្លាប់ និងកំណត់ចំណាំផ្ទាល់ខ្លួន','Personal habits and notes') },
       'reports.html':   { title: t('របាយការណ៍','Reports'), subtitle: t('សង្ខេប និងស្ថិតិ','Summaries and statistics') },
       'ccr.html':       { title: t('CCR','CCR'), subtitle: t('គ្រប់គ្រងអតិថិជន','Control Customer') },
+      'schedule.html':  { title: t('កាលវិភាគសង','Schedule'), subtitle: t('តារាងកាលវិភាគសងប្រាក់','Loan repayment schedule') },
       'my-profile.html':{ title: t('Profile','My Profile'), subtitle: t('គណនី និងចំណូលចិត្ត','Account and preferences') },
       'settings.html':  { title: t('Settings','Settings'), subtitle: t('Admin ប៉ុណ្ណោះ','Admin only') },
       'login.html':     { title: t('ចូលប្រើ','Login'),        subtitle: '' },
@@ -109,6 +110,7 @@
     portal:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
     profile:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>',
     ccr:       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    schedule:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>',
     journal:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   };
 
@@ -164,7 +166,7 @@
   /* ── Page access ── */
   var _PA_ALL = ['Admin','Sub Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
   var _PAGE_ACCESS = (function(){
-    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), borrowerprofile:_PA_ALL.slice(), journal:_PA_ALL.slice(), ccr:_PA_ALL.slice(), settings:['Admin'] };
+    var def = { dashboard:_PA_ALL.slice(), customers:_PA_ALL.slice(), loanlist:_PA_ALL.slice(), reports:_PA_ALL.slice(), repayment:_PA_ALL.slice(), fbid:_PA_ALL.slice(), activitylog:_PA_ALL.slice(), team:_PA_ALL.slice(), borrowerprofile:_PA_ALL.slice(), journal:_PA_ALL.slice(), ccr:_PA_ALL.slice(), schedule:_PA_ALL.slice(), settings:['Admin'] };
     try { var s = JSON.parse(localStorage.getItem('appPageAccess')||'null'); if (s && typeof s==='object') Object.keys(s).forEach(function(k){ def[k]=s[k]; }); } catch(e){}
     return def;
   })();
@@ -242,6 +244,7 @@
           ${(_pick('act') && appCanPage('activitylog')) ? link('pages/activity-log.html', ic.activity, t('Activity Log','Activity Log')) : ''}
           ${(_pick('team') && appCanPage('team')) ? link('pages/team.html', ic.users, t('ក្រុម','Team')) : ''}
           ${(_pick('ccr') && appCanPage('ccr')) ? link('pages/ccr.html', ic.ccr, t('CCR','CCR')) : ''}
+          ${(_pick('sch') && appCanPage('schedule')) ? link('pages/schedule.html', ic.schedule, t('កាលវិភាគសង','Schedule')) : ''}
           ${(_pick('set') && role === 'Admin') ? link('pages/settings.html', ic.settings, t('Settings','Settings')) : ''}
           ${(_pick('jr') && appCanPage('journal')) ? link('pages/journal.html', ic.journal, t('កំណត់ត្រា','Journal')) : ''}
           ${_pick('prof') ? link('pages/my-profile.html', ic.profile, t('Profile','My Profile')) : ''}
@@ -724,6 +727,7 @@
     act:   { page:'pages/activity-log.html',       ic:'activity',  perm:'activitylog', kh:'កំណត់ហេតុ',     en:'Activity Log' },
     team:  { page:'pages/team.html',               ic:'users',     perm:'team',        kh:'ក្រុម',         en:'Team'         },
     ccr:   { page:'pages/ccr.html',                ic:'ccr',       perm:'ccr',         kh:'CCR',          en:'CCR'          },
+    sch:   { page:'pages/schedule.html',           ic:'schedule',  perm:'schedule',    kh:'កាលវិភាគសង',   en:'Schedule'     },
     jr:    { page:'pages/journal.html',            ic:'journal',   perm:'journal',     kh:'កំណត់ត្រា',     en:'Journal'      },
     set:   { page:'pages/settings.html',           ic:'settings',  perm:'__admin',     kh:'ការកំណត់',     en:'Settings'     },
     prof:  { page:'pages/my-profile.html',         ic:'profile',   perm:'__all',       kh:'Profile',      en:'My Profile'   }
@@ -1287,7 +1291,7 @@
     mode:  'full',                   /* full | icons */
     style: 'solid',                  /* solid | glass | accent */
     show:  ['brand','status','label','portal','collapse','tips'],
-    links: ['dash','cust','loans','rpt','rep','fb','act','team','ccr','set','jr','prof']
+    links: ['dash','cust','loans','rpt','rep','fb','act','team','ccr','sch','set','jr','prof']
   };
   window.appSbDefault = SB_DEFAULT;
 

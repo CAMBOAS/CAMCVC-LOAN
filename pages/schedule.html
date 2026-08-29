@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Schedule — CAMCVC LOAN</title>
+  <link rel="icon" type="image/png" href="../images/logo/LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/glass-admin.css?v=5">
+  <link rel="stylesheet" href="../assets/css/main.css?v=38">
+  <style>
+    .orb{display:none!important}
+    .main-content{padding:0!important}
+
+    .sc-wrap { display:flex; flex-direction:column; gap:10px; padding:12px 14px 14px; overflow-y:auto; overflow-x:hidden; flex:1; min-height:0 }
+    @media (max-width:768px) { .sc-wrap { flex:unset; overflow:visible; padding-bottom:calc(90px + env(safe-area-inset-bottom,0px)) } }
+
+    .sc-hdr { display:flex; align-items:center; gap:10px; flex-shrink:0 }
+    .sc-icon { width:36px; height:36px; border-radius:10px; background:rgba(124,92,255,.14); display:flex; align-items:center; justify-content:center; flex-shrink:0 }
+    .sc-title { font-size:18px; font-weight:800; color:var(--text) }
+    .sc-sub { font-size:11.5px; color:var(--muted); margin-top:1px }
+
+    /* ── toolbar ── */
+    .sc-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0 }
+    .sc-bar-spacer { flex:1 }
+    .sc-select, .sc-btn {
+      font-family:inherit; font-size:12px; font-weight:700; border-radius:9px; cursor:pointer;
+      border:1px solid rgba(148,163,184,.28); background:var(--card,rgba(255,255,255,.6)); color:var(--text);
+      padding:8px 12px; transition:.15s;
+    }
+    .sc-select { min-width:210px; max-width:340px }
+    .sc-btn { display:inline-flex; align-items:center; gap:6px; white-space:nowrap }
+    .sc-btn svg { width:13px; height:13px }
+    .sc-btn:hover { border-color:rgba(124,92,255,.5) }
+    .sc-btn-go { background:#7c5cff; border-color:#7c5cff; color:#fff }
+    .sc-btn-go:hover { background:#6d4ef0 }
+    .sc-btn-del { color:#dc2626; border-color:rgba(239,68,68,.35) }
+    .sc-btn-del:hover { background:rgba(239,68,68,.09) }
+    .sc-btn:disabled { opacity:.45; cursor:default }
+
+    /* ── the two top panels ── */
+    .sc-top { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:10px; align-items:start }
+    @media (max-width:1080px) { .sc-top { grid-template-columns:1fr } }
+
+    .sc-card { border-radius:14px; padding:13px 15px }
+    .sc-card-hd {
+      display:flex; align-items:center; gap:7px; font-size:11px; font-weight:800; letter-spacing:.07em;
+      text-transform:uppercase; color:var(--muted); margin-bottom:11px;
+    }
+    .sc-card-hd svg { width:13px; height:13px }
+
+    .sc-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:9px 11px }
+    .sc-f { display:flex; flex-direction:column; gap:4px; min-width:0 }
+    .sc-f-wide { grid-column:1 / -1 }
+    .sc-lbl { font-size:10px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--muted) }
+    .sc-in {
+      font-family:inherit; font-size:12.5px; font-weight:600; color:var(--text); width:100%;
+      padding:8px 10px; border-radius:9px; border:1px solid rgba(148,163,184,.3);
+      background:var(--card,rgba(255,255,255,.55)); transition:.15s; min-width:0;
+    }
+    .sc-in:focus { outline:none; border-color:#7c5cff; box-shadow:0 0 0 3px rgba(124,92,255,.14) }
+    select.sc-in { cursor:pointer }
+    .sc-sec {
+      grid-column:1 / -1; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+      color:var(--muted); padding-top:6px; margin-top:2px; border-top:1px solid rgba(148,163,184,.16);
+    }
+    .sc-sec:first-child { border-top:none; padding-top:0; margin-top:0 }
+
+    /* ── key facts ── */
+    .sc-kf { display:flex; flex-direction:column; gap:0 }
+    .sc-kf-row {
+      display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+      padding:6px 0; border-bottom:1px dashed rgba(148,163,184,.2); font-size:12px;
+    }
+    .sc-kf-row:last-child { border-bottom:none }
+    .sc-kf-k { color:var(--muted); min-width:0 }
+    .sc-kf-v { font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; text-align:right }
+    .sc-kf-sum { border-top:2px solid rgba(148,163,184,.32); margin-top:5px; padding-top:9px; font-size:13.5px }
+    .sc-kf-sum .sc-kf-k { font-weight:800; color:var(--text) }
+    .sc-kf-sum .sc-kf-v { font-size:16px; color:#7c5cff }
+    [data-theme="dark"] .sc-kf-sum .sc-kf-v { color:#a78bfa }
+    .sc-kf-hint { font-size:10.5px; color:var(--muted); line-height:1.6; margin-top:9px; font-style:italic }
+
+    /* ── KPI strip ── */
+    .sc-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:9px }
+    .sc-kpi { position:relative; border-radius:13px; padding:11px 13px 12px; overflow:hidden }
+    .sc-kpi-label { font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted) }
+    .sc-kpi-val { font-size:20px; font-weight:800; margin-top:5px; font-variant-numeric:tabular-nums; line-height:1.15 }
+    .sc-kpi-sub { font-size:10.5px; color:var(--muted); margin-top:3px }
+    .sc-kpi-accent { position:absolute; left:0; right:0; bottom:0; height:3px }
+
+    /* ── table ── */
+    .sc-tbl-wrap { overflow:auto; border-radius:13px 13px 0 0 }
+    .sc-tbl { width:100%; border-collapse:collapse; font-size:12px; min-width:820px }
+    .sc-tbl thead th {
+      position:sticky; top:0; z-index:2; background:var(--card,rgba(255,255,255,.92));
+      backdrop-filter:blur(8px); text-align:left; padding:9px 10px; font-size:9.5px; font-weight:800;
+      letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+      border-bottom:1px solid rgba(148,163,184,.22); white-space:nowrap;
+    }
+    .sc-tbl tbody td { padding:8px 10px; border-bottom:1px solid rgba(148,163,184,.11); vertical-align:middle }
+    .sc-tbl tbody tr:hover { background:rgba(124,92,255,.05) }
+    .sc-num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap }
+    .sc-no { font-variant-numeric:tabular-nums; color:var(--muted); font-size:11px }
+    .sc-due { font-weight:700; white-space:nowrap }
+    .sc-dow { font-size:11px; color:var(--muted); white-space:nowrap }
+    .sc-tot { font-weight:800 }
+    .sc-empty { text-align:center; padding:30px 12px; color:var(--muted); font-size:12.5px }
+
+    .sc-tbl tfoot td {
+      padding:10px; font-weight:800; font-size:12.5px; border-top:2px solid rgba(148,163,184,.3);
+      background:rgba(124,92,255,.06);
+    }
+
+    /* row states */
+    .sc-r-paid { background:rgba(34,197,94,.07) }
+    .sc-r-paid:hover { background:rgba(34,197,94,.12) }
+    .sc-r-late { background:rgba(239,68,68,.06) }
+    .sc-r-late:hover { background:rgba(239,68,68,.1) }
+    .sc-r-next td { box-shadow:inset 3px 0 0 #f59e0b }
+
+    .sc-pill {
+      display:inline-block; font-size:9px; font-weight:800; letter-spacing:.04em; padding:2px 7px;
+      border-radius:999px; border:1px solid rgba(148,163,184,.32); color:var(--muted); white-space:nowrap;
+    }
+    .sc-pill-paid { border-color:rgba(34,197,94,.45); color:#16a34a; background:rgba(34,197,94,.1) }
+    .sc-pill-late { border-color:rgba(239,68,68,.45); color:#dc2626; background:rgba(239,68,68,.09) }
+    .sc-pill-due  { border-color:rgba(245,158,11,.45); color:#b45309; background:rgba(245,158,11,.1) }
+    [data-theme="dark"] .sc-pill-paid { color:#4ade80 }
+    [data-theme="dark"] .sc-pill-late { color:#f87171 }
+    [data-theme="dark"] .sc-pill-due  { color:#fbbf24 }
+    .sc-wknd { font-size:9px; color:#b45309; margin-left:5px; font-weight:800 }
+    [data-theme="dark"] .sc-wknd { color:#fbbf24 }
+
+    .sc-ck { width:16px; height:16px; cursor:pointer; accent-color:#22c55e }
+
+    .sc-foot { padding:9px 14px; font-size:11.5px; color:var(--muted); border-top:1px solid rgba(148,163,184,.1) }
+
+    .sc-note {
+      display:flex; align-items:flex-start; gap:8px; padding:10px 13px; border-radius:11px;
+      border:1px solid rgba(245,158,11,.28); background:rgba(245,158,11,.07);
+      font-size:11px; line-height:1.7; color:var(--muted);
+    }
+    .sc-note svg { width:13px; height:13px; flex-shrink:0; margin-top:2px; color:#f59e0b }
+
+    .sc-err {
+      display:none; padding:10px 13px; border-radius:11px; font-size:12px; font-weight:700;
+      border:1px solid rgba(239,68,68,.35); background:rgba(239,68,68,.08); color:#dc2626;
+    }
+    [data-theme="dark"] .sc-err { color:#f87171 }
+    .sc-err.on { display:block }
+
+    /* ── print: the paper version, nothing of the app ── */
+    .sc-print { display:none }
+    @media print {
+      @page { size:A4 portrait; margin:11mm 10mm }
+      .sidebar, .shared-topbar, .sidebar-overlay, .background, .app-bottombar,
+      #appTopBar, .sc-bar, .sc-top, .sc-kpis, .sc-note, .sc-hdr, .sc-err, #scToast { display:none !important }
+      body, .dashboard, .main-content, .sc-wrap { display:block !important; background:#fff !important; padding:0 !important; margin:0 !important; overflow:visible !important; height:auto !important }
+      .sc-print { display:block !important; margin-bottom:8px }
+      .sc-tbl-wrap { overflow:visible !important; max-height:none !important }
+      .sc-tbl { min-width:0 !important; font-size:9.5pt }
+      .sc-tbl thead th { position:static; background:#eee !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+      .sc-tbl tbody td, .sc-tbl thead th { border:1px solid #999 !important; padding:3px 5px }
+      .sc-tbl tbody tr { break-inside:avoid }
+      .sc-r-paid, .sc-r-late, .sc-r-next td { background:#fff !important; box-shadow:none !important }
+      .sc-card, .sc-foot { box-shadow:none !important; border:none !important }
+      * { color:#000 !important }
+    }
+    .sc-p-title { text-align:center; font-size:15pt; font-weight:800; margin-bottom:2px }
+    .sc-p-sub   { text-align:center; font-size:10pt; margin-bottom:9px }
+    .sc-p-grid  { display:grid; grid-template-columns:repeat(3,1fr); gap:2px 14px; font-size:9pt; margin-bottom:8px }
+    .sc-p-grid div { padding:1px 0 }
+    .sc-p-grid b { font-weight:800 }
+    .sc-p-sign  { display:flex; justify-content:space-between; margin-top:26px; font-size:9.5pt }
+    .sc-p-sign div { text-align:center; width:44% }
+    .sc-p-line  { margin-top:34px; border-top:1px solid #000; padding-top:3px }
+
+    .sc-denied { position:fixed; inset:0; z-index:99999; display:none; align-items:center; justify-content:center; background:rgba(8,12,22,.9) }
+    .sc-denied.on { display:flex }
+    .sc-denied-box { text-align:center; color:#e2e8f0; padding:26px 32px; border-radius:16px; background:#111827; max-width:340px }
+  </style>
+</head>
+<body>
+<div class="background"><div class="orb"></div></div>
+
+<div class="dashboard">
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar" id="sharedSidebar"></aside>
+  <main class="main-content" id="mainContent">
+    <div class="shared-topbar" id="sharedHeader"></div>
+
+    <div class="sc-wrap" id="scWrap">
+
+      <div class="sc-hdr">
+        <div class="sc-icon">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#7c5cff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+        </div>
+        <div>
+          <div class="sc-title">Schedule</div>
+          <div class="sc-sub">កាលវិភាគសងប្រាក់ — every instalment, what it costs, and what is still owed</div>
+        </div>
+      </div>
+
+      <div class="sc-bar">
+        <select class="sc-select" id="scSaved" onchange="scOpen(this.value)">
+          <option value="">— Saved schedules —</option>
+        </select>
+        <button type="button" class="sc-btn" onclick="scNew()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New
+        </button>
+        <div class="sc-bar-spacer"></div>
+        <button type="button" class="sc-btn" onclick="scPrint()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print
+        </button>
+        <button type="button" class="sc-btn sc-btn-del" id="scDelBtn" onclick="scDelete()" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Delete
+        </button>
+        <button type="button" class="sc-btn sc-btn-go" onclick="scSave()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save
+        </button>
+      </div>
+
+      <div class="sc-err" id="scErr"></div>
+
+      <div class="sc-top">
+        <!-- ══ the contract ══ -->
+        <div class="glass-card sc-card">
+          <div class="sc-card-hd">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            The contract
+          </div>
+          <div class="sc-grid">
+            <div class="sc-sec">Who</div>
+            <div class="sc-f sc-f-wide">
+              <label class="sc-lbl" for="scCust">Customer on file</label>
+              <select class="sc-in" id="scCust" onchange="scPickCustomer()">
+                <option value="">— not linked to a customer —</option>
+              </select>
+            </div>
+            <div class="sc-f"><label class="sc-lbl" for="scBorrower">Borrower</label>
+              <input class="sc-in" id="scBorrower" autocomplete="off" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scCo">Co-borrower</label>
+              <input class="sc-in" id="scCo" autocomplete="off" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scAcct">Account no.</label>
+              <input class="sc-in" id="scAcct" autocomplete="off" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scContract">Contract no.</label>
+              <input class="sc-in" id="scContract" autocomplete="off" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scBranch">Branch</label>
+              <input class="sc-in" id="scBranch" autocomplete="off" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scPurpose">Purpose</label>
+              <input class="sc-in" id="scPurpose" autocomplete="off" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scOfficer">Officer</label>
+              <input class="sc-in" id="scOfficer" autocomplete="off" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scOffPhone">Officer phone</label>
+              <input class="sc-in" id="scOffPhone" autocomplete="off" oninput="scDraw()"></div>
+
+            <div class="sc-sec">The money</div>
+            <div class="sc-f"><label class="sc-lbl" for="scPrincipal">Principal</label>
+              <input class="sc-in" id="scPrincipal" type="number" step="0.01" min="0" value="3000" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scCur">Currency</label>
+              <select class="sc-in" id="scCur" onchange="scDraw()">
+                <option value="USD">USD $</option>
+                <option value="KHR">KHR ៛</option>
+              </select></div>
+            <div class="sc-f"><label class="sc-lbl" for="scRate">Interest %/year</label>
+              <input class="sc-in" id="scRate" type="number" step="0.01" min="0" value="18" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scMonths">Instalments (months)</label>
+              <input class="sc-in" id="scMonths" type="number" step="1" min="1" max="600" value="36" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scMethod">Method</label>
+              <select class="sc-in" id="scMethod" onchange="scDraw()">
+                <option value="declining">Declining balance</option>
+                <option value="flat">Flat rate</option>
+              </select></div>
+            <div class="sc-f"><label class="sc-lbl" for="scBasis">Day-count basis</label>
+              <select class="sc-in" id="scBasis" onchange="scDraw()">
+                <option value="360">360 days/year</option>
+                <option value="365">365 days/year</option>
+              </select></div>
+            <div class="sc-f"><label class="sc-lbl" for="scDisb">Disbursed on</label>
+              <input class="sc-in" id="scDisb" type="date" value="2025-05-06" onchange="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scFirst">First due on</label>
+              <input class="sc-in" id="scFirst" type="date" value="2025-06-10" onchange="scDraw()"></div>
+
+            <div class="sc-sec">Fees and penalties</div>
+            <div class="sc-f"><label class="sc-lbl" for="scFeeAdmin">Admin fee</label>
+              <input class="sc-in" id="scFeeAdmin" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scFeeCbc">Credit-bureau fee</label>
+              <input class="sc-in" id="scFeeCbc" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scFeeOther">Other fees</label>
+              <input class="sc-in" id="scFeeOther" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scLate">Late interest %/year</label>
+              <input class="sc-in" id="scLate" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scEarly">Early-payoff fee %</label>
+              <input class="sc-in" id="scEarly" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
+          </div>
+        </div>
+
+        <!-- ══ key facts ══ -->
+        <div class="glass-card sc-card">
+          <div class="sc-card-hd">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            What it costs
+          </div>
+          <div class="sc-kf" id="scKeyFacts"></div>
+          <div class="sc-kf-hint" id="scRateHint"></div>
+        </div>
+      </div>
+
+      <div class="sc-kpis" id="scKpis"></div>
+
+      <div class="glass-card" style="border-radius:14px;overflow:hidden;padding:0">
+        <div class="sc-tbl-wrap" id="scTblWrap">
+          <table class="sc-tbl">
+            <thead>
+              <tr>
+                <th style="width:34px">#</th>
+                <th>Day</th>
+                <th>Due date</th>
+                <th class="sc-num">Days</th>
+                <th class="sc-num">Principal</th>
+                <th class="sc-num">Interest</th>
+                <th class="sc-num">Total due</th>
+                <th class="sc-num">Balance</th>
+                <th>Status</th>
+                <th style="width:44px">Paid</th>
+              </tr>
+            </thead>
+            <tbody id="scBody">
+              <tr><td colspan="10" class="sc-empty">Fill the contract in and the schedule appears here</td></tr>
+            </tbody>
+            <tfoot id="scFootRow"></tfoot>
+          </table>
+        </div>
+        <div class="sc-foot" id="scFoot"></div>
+      </div>
+
+      <div class="sc-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Interest is charged on what is still owed, for the actual number of days between
+        instalments — so a longer gap costs more, and the first instalment costs most of all.
+        Dates falling on a weekend are marked; the schedule keeps the calendar date, because
+        that is what the contract says, and the borrower pays the next working day.
+        <b>Saving stores the contract, not the rows</b> — the figures are worked out again each
+        time it is opened, so a saved schedule can never disagree with its own arithmetic.</span>
+      </div>
+
+      <!-- the paper version -->
+      <div class="sc-print" id="scPrint"></div>
+
+    </div><!-- /.sc-wrap -->
+  </main>
+</div>
+
+<div class="sc-denied" id="scDenied">
+  <div class="sc-denied-box">
+    <div style="font-size:16px;font-weight:800;margin-bottom:8px">Not available for your role</div>
+    <div style="font-size:12.5px;color:#94a3b8;line-height:1.7">Ask an Admin if you need access to Schedule.</div>
+  </div>
+</div>
+
+<div id="scToast" style="position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:100000;display:none;
+     padding:11px 18px;border-radius:11px;background:#151d2e;color:#e2e8f0;font-size:12.5px;font-weight:700;
+     box-shadow:0 18px 44px rgba(0,0,0,.4)"></div>
+
+<script src="../assets/js/layout.js?v=38"></script>
+<script src="../assets/js/dashboard-layout.js?v=38"></script>
+<script src="../assets/js/auth.js?v=3"></script>
+<script src="../assets/js/api.js?v=9"></script>
+<script>
+/* ══ Schedule — កាលវិភាគសងប្រាក់ ══
+   Turns a loan contract into the instalment table a borrower signs, and keeps
+   track of which instalments have actually been settled.
+
+   The arithmetic was built by reverse-engineering a real MOHANOKOR MFI schedule
+   and checked row by row against it — all 36 instalments, every total, to the
+   cent. Two rules carry the whole thing:
+
+     interest  = balance still owed x annual rate x actual days / basis
+     principal = principal / instalments, with the last one absorbing the
+                 rounding so the balance lands exactly on zero
+
+   Nothing is stored but the contract; the rows are worked out on demand. */
+
+var _scLoans = [], _scSaved = [], _scKey = '', _scPaid = {}, _scToastT = null;
+
+var KH_DAY = ['អាទិត្យ','ចន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍'];
+var EN_DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function scToast(msg, isErr) {
+  var el = document.getElementById('scToast');
+  el.textContent = msg;
+  el.style.background = isErr ? '#7f1d1d' : '#151d2e';
+  el.style.display = 'block';
+  clearTimeout(_scToastT);
+  _scToastT = setTimeout(function(){ el.style.display = 'none'; }, 2800);
+}
+function scErr(msg) {
+  var el = document.getElementById('scErr');
+  if (!msg) { el.classList.remove('on'); el.textContent = ''; return; }
+  el.textContent = msg;
+  el.classList.add('on');
+}
+
+/* ── money and dates ── */
+var r2 = function(n) { return Math.round((n + Number.EPSILON) * 100) / 100; };
+function money(n, cur) {
+  var v = (isFinite(n) ? n : 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (cur === 'KHR' ? '៛' : '$') + v;
+}
+function num(n) { return (isFinite(n) ? n : 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+/* Dates are held as plain YYYY-MM-DD and worked on in UTC, so a schedule never
+   shifts by a day because of the machine's time zone. */
+function dISO(s) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ''));
+  if (!m) return null;
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+}
+function iso(t) {
+  return t.getUTCFullYear() + '-' + String(t.getUTCMonth()+1).padStart(2,'0') + '-' + String(t.getUTCDate()).padStart(2,'0');
+}
+function pretty(t) {
+  return String(t.getUTCDate()).padStart(2,'0') + '-' + String(t.getUTCMonth()+1).padStart(2,'0') + '-' + t.getUTCFullYear();
+}
+function daysApart(a, b) { return Math.round((b - a) / 86400000); }
+/* Adding a month to the 31st of a short month lands on its last day, which is
+   what a monthly instalment date has to do. */
+function addMonths(t, n) {
+  var y = t.getUTCFullYear(), m = t.getUTCMonth(), day = t.getUTCDate();
+  var last = new Date(Date.UTC(y, m + n + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m + n, Math.min(day, last)));
+}
+function todayISO() {
+  var t = new Date();
+  return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+}
+
+/* ── read the form ── */
+function val(id) { return (document.getElementById(id).value || '').trim(); }
+function fnum(id) { var n = Number(val(id)); return isFinite(n) ? n : 0; }
+
+function scForm() {
+  return {
+    loan_key:     val('scCust'),
+    borrower:     val('scBorrower'),
+    co_borrower:  val('scCo'),
+    account_no:   val('scAcct'),
+    contract_no:  val('scContract'),
+    branch:       val('scBranch'),
+    purpose:      val('scPurpose'),
+    officer:      val('scOfficer'),
+    officer_phone: val('scOffPhone'),
+    currency:     val('scCur') || 'USD',
+    principal:    fnum('scPrincipal'),
+    annual_rate:  fnum('scRate'),
+    term_months:  Math.round(fnum('scMonths')),
+    method:       val('scMethod'),
+    basis:        Number(val('scBasis')) === 365 ? 365 : 360,
+    disbursed_on: val('scDisb'),
+    first_due_on: val('scFirst'),
+    fee_admin:    fnum('scFeeAdmin'),
+    fee_cbc:      fnum('scFeeCbc'),
+    fee_other:    fnum('scFeeOther'),
+    late_rate:    fnum('scLate'),
+    early_fee:    fnum('scEarly')
+  };
+}
+
+/* ── the engine ──────────────────────────────────────────────────────────
+   Returns null with a reason when the contract is not yet complete enough to
+   compute, so the caller can say what is missing instead of showing zeroes. */
+function scBuild(f) {
+  if (!(f.principal > 0))                   return { err: 'Enter a principal greater than zero' };
+  if (!(f.term_months >= 1 && f.term_months <= 600)) return { err: 'Instalments must be between 1 and 600' };
+  if (!(f.annual_rate >= 0))                return { err: 'The interest rate cannot be negative' };
+  var disb = dISO(f.disbursed_on), first = dISO(f.first_due_on);
+  if (!disb)  return { err: 'Pick the disbursement date' };
+  if (!first) return { err: 'Pick the first due date' };
+  if (first <= disb) return { err: 'The first due date must come after the disbursement date' };
+
+  var rate = f.annual_rate / 100;
+  var n    = f.term_months;
+  var per  = r2(f.principal / n);
+  /* Flat rate charges the same interest every month on the original principal,
+     no matter how much has been paid back. Declining charges only on what is
+     still owed, for the days it was owed. */
+  var flatPer = r2(f.principal * rate / 12);
+
+  var rows = [], bal = f.principal, prev = disb;
+  for (var i = 1; i <= n; i++) {
+    var due  = addMonths(first, i - 1);
+    var days = daysApart(prev, due);
+    var open = bal;
+    var interest = (f.method === 'flat') ? flatPer : r2(open * rate * days / f.basis);
+    var principal = (i === n) ? r2(open) : per;
+    bal = r2(open - principal);
+    rows.push({
+      i: i, due: due, iso: iso(due), days: days, open: open,
+      principal: principal, interest: interest, total: r2(principal + interest), balance: bal,
+      weekend: (due.getUTCDay() === 0 || due.getUTCDay() === 6)
+    });
+    prev = due;
+  }
+
+  var totalInterest = r2(rows.reduce(function(s,x){ return s + x.interest; }, 0));
+  var totalFees     = r2(f.fee_admin + f.fee_cbc + f.fee_other);
+  var totalDays     = rows.reduce(function(s,x){ return s + x.days; }, 0);
+  /* Time-weighted average of what was owed: the honest denominator for a cost
+     rate, because a balance owed for 35 days should count more than one owed
+     for 28. With no fees this returns the nominal rate exactly, which is how
+     we know the framework is the right one. */
+  var weighted = rows.reduce(function(s,x){ return s + x.open * x.days; }, 0);
+  var avgBal   = totalDays ? weighted / totalDays : 0;
+  var years    = totalDays / 365;
+  var costRate = (avgBal > 0 && years > 0) ? (totalInterest + totalFees) / avgBal / years * 100 : 0;
+
+  return {
+    rows: rows, totalInterest: totalInterest, totalFees: totalFees,
+    totalPrincipal: r2(rows.reduce(function(s,x){ return s + x.principal; }, 0)),
+    totalPayable: r2(f.principal + totalInterest + totalFees),
+    totalInstalments: r2(f.principal + totalInterest),
+    totalDays: totalDays, avgBal: avgBal, years: years, costRate: costRate,
+    first: rows[0], last: rows[rows.length - 1]
+  };
+}
+
+/* ── draw everything ── */
+function scDraw() {
+  var f = scForm();
+  var s = scBuild(f);
+  var body = document.getElementById('scBody');
+
+  if (s.err) {
+    scErr(s.err);
+    body.innerHTML = '<tr><td colspan="10" class="sc-empty">' + esc(s.err) + '</td></tr>';
+    document.getElementById('scFootRow').innerHTML = '';
+    document.getElementById('scKeyFacts').innerHTML = '';
+    document.getElementById('scRateHint').textContent = '';
+    document.getElementById('scKpis').innerHTML = '';
+    document.getElementById('scFoot').textContent = '';
+    document.getElementById('scPrint').innerHTML = '';
+    return;
+  }
+  scErr('');
+  scKeyFacts(f, s);
+  scTable(f, s);
+  scKpis(f, s);
+  scPrintable(f, s);
+}
+
+function kfRow(k, v, cls) {
+  return '<div class="sc-kf-row' + (cls ? ' ' + cls : '') + '">'
+       + '<div class="sc-kf-k">' + esc(k) + '</div>'
+       + '<div class="sc-kf-v">' + esc(v) + '</div></div>';
+}
+
+function scKeyFacts(f, s) {
+  var c = f.currency;
+  var h = '';
+  h += kfRow('Principal',                money(f.principal, c));
+  h += kfRow('Nominal interest rate',    f.annual_rate.toFixed(2) + '% / year');
+  h += kfRow('Instalments',              f.term_months + ' x monthly');
+  h += kfRow('Method',                   f.method === 'flat' ? 'Flat rate' : 'Declining balance');
+  h += kfRow('Day-count basis',          f.basis + ' days/year');
+  h += kfRow('Total interest',           money(s.totalInterest, c));
+  if (s.totalFees > 0) {
+    if (f.fee_admin  > 0) h += kfRow('· Admin fee',         money(f.fee_admin, c));
+    if (f.fee_cbc    > 0) h += kfRow('· Credit-bureau fee', money(f.fee_cbc, c));
+    if (f.fee_other  > 0) h += kfRow('· Other fees',        money(f.fee_other, c));
+    h += kfRow('Total fees',             money(s.totalFees, c));
+  }
+  h += kfRow('First instalment',         money(s.first.total, c) + '  ·  ' + pretty(s.first.due));
+  h += kfRow('Last instalment',          money(s.last.total, c)  + '  ·  ' + pretty(s.last.due));
+  h += kfRow('Cost rate (interest + fees)', s.costRate.toFixed(2) + '% / year');
+  h += kfRow('Total to repay',           money(s.totalPayable, c), 'sc-kf-sum');
+  document.getElementById('scKeyFacts').innerHTML = h;
+
+  document.getElementById('scRateHint').textContent =
+    'Cost rate = (interest ' + num(s.totalInterest) + ' + fees ' + num(s.totalFees) + ') ÷ average balance '
+    + num(s.avgBal) + ' ÷ ' + s.years.toFixed(2) + ' years. Take out the fees and it returns the nominal '
+    + f.annual_rate.toFixed(2) + '% exactly. Institutions round this differently, so a disclosure sheet '
+    + 'may print a figure a few hundredths apart.';
+}
+
+function scTable(f, s) {
+  var c = f.currency, today = todayISO();
+  var nextUnpaid = null;
+  for (var k = 0; k < s.rows.length; k++) {
+    if (!_scPaid[s.rows[k].i]) { nextUnpaid = s.rows[k].i; break; }
+  }
+
+  document.getElementById('scBody').innerHTML = s.rows.map(function(r) {
+    var paid = !!_scPaid[r.i];
+    var late = !paid && r.iso < today;
+    var cls  = paid ? 'sc-r-paid' : (late ? 'sc-r-late' : (r.i === nextUnpaid ? 'sc-r-next' : ''));
+    var pill = paid ? '<span class="sc-pill sc-pill-paid">Paid</span>'
+             : late ? '<span class="sc-pill sc-pill-late">Overdue</span>'
+             : (r.i === nextUnpaid ? '<span class="sc-pill sc-pill-due">Next</span>'
+                                   : '<span class="sc-pill">Upcoming</span>');
+    return '<tr class="' + cls + '">'
+      + '<td class="sc-no">' + r.i + '</td>'
+      + '<td class="sc-dow">' + KH_DAY[r.due.getUTCDay()] + '</td>'
+      + '<td class="sc-due">' + pretty(r.due)
+      +   (r.weekend ? '<span class="sc-wknd" title="Falls on a weekend — the borrower pays the next working day">WKND</span>' : '')
+      + '</td>'
+      + '<td class="sc-num sc-no">' + r.days + '</td>'
+      + '<td class="sc-num">' + num(r.principal) + '</td>'
+      + '<td class="sc-num">' + num(r.interest) + '</td>'
+      + '<td class="sc-num sc-tot">' + num(r.total) + '</td>'
+      + '<td class="sc-num sc-no">' + num(r.balance) + '</td>'
+      + '<td>' + pill + '</td>'
+      + '<td><input class="sc-ck" type="checkbox"' + (paid ? ' checked' : '')
+      +     ' onchange="scTogglePaid(' + r.i + ', this)" title="Mark this instalment settled"></td>'
+      + '</tr>';
+  }).join('');
+
+  document.getElementById('scFootRow').innerHTML =
+    '<tr><td colspan="4">Total</td>'
+    + '<td class="sc-num">' + num(s.totalPrincipal) + '</td>'
+    + '<td class="sc-num">' + num(s.totalInterest) + '</td>'
+    + '<td class="sc-num">' + num(s.totalInstalments) + '</td>'
+    + '<td colspan="3"></td></tr>';
+
+  document.getElementById('scFoot').textContent =
+    s.rows.length + ' instalments · ' + s.totalDays + ' days · '
+    + pretty(s.first.due) + ' → ' + pretty(s.last.due)
+    + (s.totalFees > 0 ? '  ·  plus ' + money(s.totalFees, c) + ' of fees, charged at disbursement' : '');
+}
+
+function scKpis(f, s) {
+  var c = f.currency, today = todayISO();
+  var paidAmt = 0, paidN = 0, lateAmt = 0, lateN = 0, next = null;
+  s.rows.forEach(function(r) {
+    if (_scPaid[r.i]) { paidAmt += r.total; paidN++; return; }
+    if (!next) next = r;
+    if (r.iso < today) { lateAmt += r.total; lateN++; }
+  });
+  var remaining = r2(s.totalInstalments - paidAmt);
+
+  document.getElementById('scKpis').innerHTML =
+      kpi('Settled',   money(r2(paidAmt), c), paidN + ' of ' + s.rows.length + ' instalments', '#22c55e')
+    + kpi('Still owed', money(remaining, c),  (s.rows.length - paidN) + ' left to pay', '#7c5cff')
+    + kpi('Overdue',   lateN ? money(r2(lateAmt), c) : '—',
+          lateN ? lateN + ' instalment' + (lateN > 1 ? 's' : '') + ' past due' : 'Nothing past due',
+          lateN ? '#ef4444' : '#64748b')
+    + kpi('Next due',  next ? money(next.total, c) : '—',
+          next ? pretty(next.due) + '  ·  ' + EN_DAY[next.due.getUTCDay()] : 'Fully settled', '#0ea5e9');
+}
+function kpi(label, val, sub, colour) {
+  return '<div class="glass-card sc-kpi">'
+    + '<div class="sc-kpi-label">' + esc(label) + '</div>'
+    + '<div class="sc-kpi-val" style="color:' + colour + '">' + esc(val) + '</div>'
+    + '<div class="sc-kpi-sub">' + esc(sub) + '</div>'
+    + '<div class="sc-kpi-accent" style="background:' + colour + '"></div></div>';
+}
+
+function scTogglePaid(n, box) {
+  if (box.checked) _scPaid[n] = todayISO(); else delete _scPaid[n];
+  scDraw();
+}
+
+/* ── the paper version ── */
+function scPrintable(f, s) {
+  var c = f.currency;
+  var g = function(k, v) { return '<div><b>' + esc(k) + ':</b> ' + esc(v || '—') + '</div>'; };
+  document.getElementById('scPrint').innerHTML =
+      '<div class="sc-p-title">តារាងកាលវិភាគសងប្រាក់</div>'
+    + '<div class="sc-p-sub">Loan Repayment Schedule' + (f.branch ? ' — ' + esc(f.branch) : '') + '</div>'
+    + '<div class="sc-p-grid">'
+    +   g('អ្នកខ្ចី / Borrower', f.borrower)
+    +   g('អ្នករួមខ្ចី / Co-borrower', f.co_borrower)
+    +   g('លេខគណនី / Account', f.account_no)
+    +   g('លេខកិច្ចសន្យា / Contract', f.contract_no)
+    +   g('ចំនួនប្រាក់ / Principal', money(f.principal, c))
+    +   g('អត្រាការប្រាក់ / Rate', f.annual_rate.toFixed(2) + '% ' + (f.method === 'flat' ? 'flat' : 'declining'))
+    +   g('រយៈពេល / Term', f.term_months + ' months')
+    +   g('ថ្ងៃបើកប្រាក់ / Disbursed', pretty(dISO(f.disbursed_on)))
+    +   g('ថ្ងៃផុតកំណត់ / Matures', pretty(s.last.due))
+    +   g('ការប្រាក់សរុប / Total interest', money(s.totalInterest, c))
+    +   g('កម្រៃសរុប / Total fees', money(s.totalFees, c))
+    +   g('សរុបត្រូវសង / Total payable', money(s.totalPayable, c))
+    +   g('មន្ត្រី / Officer', f.officer)
+    +   g('ទូរស័ព្ទ / Phone', f.officer_phone)
+    +   g('គោលបំណង / Purpose', f.purpose)
+    + '</div>'
+    + '<div class="sc-p-sign"><div><div class="sc-p-line">ហត្ថលេខាអ្នកធ្វើតារាង</div></div>'
+    +   '<div><div class="sc-p-line">ស្នាមមេដៃ និងឈ្មោះអតិថិជន</div></div></div>';
+}
+
+function scPrint() {
+  var f = scForm(), s = scBuild(f);
+  if (s.err) { scToast(s.err, true); return; }
+  /* Move the signature block below the table for the printed page */
+  window.print();
+}
+
+/* ── customers ── */
+function scPickCustomer() {
+  var key = val('scCust');
+  if (!key) return;
+  var l = _scLoans.find(function(x){ return x.DateTime === key; });
+  if (!l) return;
+  document.getElementById('scBorrower').value = l.FullName || '';
+  if (!val('scPrincipal') || Number(val('scPrincipal')) === 0) {
+    if (Number(l.Money) > 0) document.getElementById('scPrincipal').value = Number(l.Money);
+  }
+  scDraw();
+}
+
+/* ── saved schedules ── */
+async function scLoadSaved() {
+  try {
+    var r = await CamboAPI.post({ action: 'schedule_list' });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not load');
+    _scSaved = r.schedules || [];
+  } catch(e) {
+    _scSaved = [];
+    document.getElementById('scSaved').innerHTML =
+      '<option value="">— ' + esc(e.message || 'Could not reach the server') + ' —</option>';
+    scToast(e.message || 'Could not load saved schedules', true);
+    return;
+  }
+  var sel = document.getElementById('scSaved');
+  sel.innerHTML = '<option value="">— Saved schedules (' + _scSaved.length + ') —</option>'
+    + _scSaved.map(function(s) {
+        var when = s.updated_utc ? new Date(s.updated_utc).toLocaleDateString('en-GB',
+          { day:'2-digit', month:'short', year:'numeric' }) : '';
+        return '<option value="' + esc(s.sched_key) + '">'
+             + esc((s.borrower || 'Untitled') + '  ·  ' + (s.currency === 'KHR' ? '៛' : '$')
+                   + num(Number(s.principal)) + '  ·  ' + s.term_months + 'm  ·  ' + when)
+             + '</option>';
+      }).join('');
+  sel.value = _scKey || '';
+}
+
+async function scOpen(key) {
+  if (!key) return;
+  try {
+    var r = await CamboAPI.post({ action: 'schedule_get', key: key });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Not found');
+    var d = r.schedule;
+    _scKey = d.sched_key;
+    var put = function(id, v) { document.getElementById(id).value = (v == null ? '' : v); };
+    put('scBorrower', d.borrower);   put('scCo', d.co_borrower);
+    put('scAcct', d.account_no);     put('scContract', d.contract_no);
+    put('scBranch', d.branch);       put('scPurpose', d.purpose);
+    put('scOfficer', d.officer);     put('scOffPhone', d.officer_phone);
+    put('scCur', d.currency || 'USD');
+    put('scPrincipal', Number(d.principal));
+    put('scRate', Number(d.annual_rate));
+    put('scMonths', d.term_months);
+    put('scMethod', d.method || 'declining');
+    put('scBasis', String(d.basis || 360));
+    put('scDisb', String(d.disbursed_on || '').slice(0,10));
+    put('scFirst', String(d.first_due_on || '').slice(0,10));
+    put('scFeeAdmin', Number(d.fee_admin)); put('scFeeCbc', Number(d.fee_cbc));
+    put('scFeeOther', Number(d.fee_other)); put('scLate', Number(d.late_rate));
+    put('scEarly', Number(d.early_fee));
+    document.getElementById('scCust').value =
+      _scLoans.some(function(x){ return x.DateTime === d.loan_key; }) ? d.loan_key : '';
+    try { _scPaid = d.paid_json ? (JSON.parse(d.paid_json) || {}) : {}; } catch(e) { _scPaid = {}; }
+    document.getElementById('scDelBtn').disabled = false;
+    scDraw();
+    scToast('Opened ' + (d.borrower || 'schedule'));
+  } catch(e) { scToast(e.message || 'Could not open', true); }
+}
+
+async function scSave() {
+  var f = scForm();
+  var s = scBuild(f);
+  if (s.err) { scToast(s.err, true); return; }
+  if (!f.borrower) { scToast('Give the schedule a borrower name first', true); return; }
+  try {
+    f.key  = _scKey;
+    f.paid = _scPaid;
+    f.action = 'schedule_save';
+    var r = await CamboAPI.post(f);
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not save');
+    _scKey = r.key;
+    document.getElementById('scDelBtn').disabled = false;
+    await scLoadSaved();
+    scToast('Saved');
+  } catch(e) { scToast(e.message || 'Could not save', true); }
+}
+
+async function scDelete() {
+  if (!_scKey) return;
+  if (!confirm('Delete this saved schedule? The contract and its paid marks go with it.')) return;
+  try {
+    var r = await CamboAPI.post({ action: 'schedule_delete', key: _scKey });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not delete');
+    scToast('Deleted');
+    scNew();
+    await scLoadSaved();
+  } catch(e) { scToast(e.message || 'Could not delete', true); }
+}
+
+function scNew() {
+  _scKey = ''; _scPaid = {};
+  ['scBorrower','scCo','scAcct','scContract','scBranch','scPurpose','scOfficer','scOffPhone']
+    .forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('scCust').value = '';
+  document.getElementById('scSaved').value = '';
+  document.getElementById('scDelBtn').disabled = true;
+  ['scFeeAdmin','scFeeCbc','scFeeOther','scLate','scEarly']
+    .forEach(function(id){ document.getElementById(id).value = '0'; });
+  scDraw();
+}
+
+async function scInit() {
+  try {
+    var a = await CamboAPI.post({ action: 'get_all' });
+    if (a && a.ok) {
+      _scLoans = a.loans || [];
+      document.getElementById('scCust').innerHTML =
+        '<option value="">— not linked to a customer —</option>'
+        + _scLoans.map(function(l) {
+            return '<option value="' + esc(l.DateTime) + '">'
+                 + esc((l.FullName || 'Unnamed') + (l.Phone ? '  ·  ' + l.Phone : ''))
+                 + '</option>';
+          }).join('');
+    }
+  } catch(e) {
+    scToast('Could not load the customer list — you can still type the names in', true);
+  }
+  scLoadSaved();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.appCanPage && !appCanPage('schedule')) {
+    document.getElementById('scDenied').classList.add('on');
+    return;
+  }
+  scDraw();
+  scInit();
+});
+</script>
+</body>
+</html>

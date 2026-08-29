@@ -241,6 +241,56 @@ async function recordPortalVisit(keys, req, via) {
   } catch(e) {}
 }
 
+/* ── Repayment schedules ──
+   A schedule is a plan, not a payment: it stores what was agreed and lets the
+   figures be regenerated from it. Only the inputs are kept, never the computed
+   rows — one source of truth means a saved schedule can never drift out of step
+   with the arithmetic that produced it. `paid_json` maps instalment number to
+   the date it was settled, so the plan and what actually happened stay apart. */
+let _schedTableReady = false;
+async function ensureScheduleTable() {
+  if (_schedTableReady) return;
+  await db().query(`CREATE TABLE IF NOT EXISTS loan_schedules (
+    sched_key     VARCHAR(64) PRIMARY KEY,
+    loan_key      VARCHAR(64)  NULL,
+    borrower      VARCHAR(200) NULL,
+    co_borrower   VARCHAR(200) NULL,
+    account_no    VARCHAR(64)  NULL,
+    contract_no   VARCHAR(64)  NULL,
+    branch        VARCHAR(120) NULL,
+    officer       VARCHAR(120) NULL,
+    officer_phone VARCHAR(60)  NULL,
+    purpose       VARCHAR(200) NULL,
+    currency      VARCHAR(8)   NULL,
+    principal     DECIMAL(15,2) NOT NULL DEFAULT 0,
+    annual_rate   DECIMAL(8,4)  NOT NULL DEFAULT 0,
+    term_months   INT           NOT NULL DEFAULT 0,
+    method        VARCHAR(16)   NULL,
+    basis         INT           NOT NULL DEFAULT 360,
+    disbursed_on  VARCHAR(10)   NULL,
+    first_due_on  VARCHAR(10)   NULL,
+    fee_admin     DECIMAL(15,2) NOT NULL DEFAULT 0,
+    fee_cbc       DECIMAL(15,2) NOT NULL DEFAULT 0,
+    fee_other     DECIMAL(15,2) NOT NULL DEFAULT 0,
+    late_rate     DECIMAL(8,4)  NOT NULL DEFAULT 0,
+    early_fee     DECIMAL(8,4)  NOT NULL DEFAULT 0,
+    paid_json     TEXT NULL,
+    note          TEXT NULL,
+    created_by    VARCHAR(100) NULL,
+    created_at    DATETIME NULL,
+    updated_at    DATETIME NULL,
+    KEY idx_sched_loan (loan_key)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  _schedTableReady = true;
+}
+
+/* Everything a caller is allowed to set, with how to clean it. Anything not
+   named here is ignored, so a stray field can never reach the table. */
+const SCHED_TEXT = ['loan_key','borrower','co_borrower','account_no','contract_no','branch',
+                    'officer','officer_phone','purpose','currency','method','disbursed_on',
+                    'first_due_on','note'];
+const SCHED_NUM  = ['principal','annual_rate','fee_admin','fee_cbc','fee_other','late_rate','early_fee'];
+
 let _sbCcrDone = false;
 
 /* ── Map DB row → frontend loan object ── */
@@ -2200,6 +2250,83 @@ async function handler(req, res) {
       }
       logActivity('loan_geo', actor, _bu, key, { on: !!on }).catch(()=>{});
       return res.json({ ok:true, on });
+    }
+
+    /* ── Saved repayment schedules ── */
+    if (action === 'schedule_list') {
+      await ensureScheduleTable();
+      const [rows] = await db().query(
+        `SELECT sched_key, loan_key, borrower, co_borrower, account_no, contract_no, currency,
+                principal, annual_rate, term_months, method, disbursed_on, first_due_on, paid_json,
+                DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updated_utc
+           FROM loan_schedules ORDER BY updated_at DESC LIMIT 500`
+      );
+      return res.json({ ok:true, schedules: rows });
+    }
+
+    if (action === 'schedule_get') {
+      await ensureScheduleTable();
+      const key = String(body.key || '').trim();
+      if (!key) return res.json({ ok:false, message:'Not found' });
+      const [rows] = await db().query('SELECT * FROM loan_schedules WHERE sched_key=? LIMIT 1', [key]);
+      if (!rows.length) return res.json({ ok:false, message:'Not found' });
+      return res.json({ ok:true, schedule: rows[0] });
+    }
+
+    if (action === 'schedule_save') {
+      await ensureScheduleTable();
+      const key = String(body.key || '').trim() || ('S' + Date.now() + Math.floor(Math.random()*1000));
+
+      const principal = Number(body.principal);
+      const months    = Math.round(Number(body.term_months));
+      if (!isFinite(principal) || principal <= 0) return res.json({ ok:false, message:'Principal must be greater than zero' });
+      if (!isFinite(months) || months < 1 || months > 600) return res.json({ ok:false, message:'Term must be between 1 and 600 months' });
+      const rate = Number(body.annual_rate);
+      if (!isFinite(rate) || rate < 0 || rate > 200) return res.json({ ok:false, message:'Interest rate looks wrong' });
+      const dateOk = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
+      if (!dateOk(body.disbursed_on)) return res.json({ ok:false, message:'Disbursement date is required' });
+      if (!dateOk(body.first_due_on)) return res.json({ ok:false, message:'First due date is required' });
+      if (String(body.first_due_on) <= String(body.disbursed_on)) {
+        return res.json({ ok:false, message:'The first due date must come after the disbursement date' });
+      }
+
+      const row = { sched_key: key };
+      for (const f of SCHED_TEXT) row[f] = String(body[f] == null ? '' : body[f]).slice(0, 200);
+      for (const f of SCHED_NUM)  { const n = Number(body[f]); row[f] = isFinite(n) && n >= 0 ? n : 0; }
+      row.term_months = months;
+      row.basis       = Number(body.basis) === 365 ? 365 : 360;
+      row.method      = row.method === 'flat' ? 'flat' : 'declining';
+      row.currency    = row.currency || 'USD';
+      if (!row.loan_key) row.loan_key = null;
+      /* paid map: instalment number → the day it was settled */
+      const paid = {};
+      const src = body.paid && typeof body.paid === 'object' ? body.paid : {};
+      for (const k of Object.keys(src).slice(0, 600)) {
+        const n = Math.round(Number(k));
+        if (n >= 1 && n <= months && dateOk(src[k])) paid[n] = String(src[k]);
+      }
+      row.paid_json = JSON.stringify(paid);
+
+      const cols = Object.keys(row);
+      const set  = cols.map(c => c + '=VALUES(' + c + ')').filter(c => !c.startsWith('sched_key'));
+      await db().query(
+        'INSERT INTO loan_schedules (' + cols.join(',') + ', created_by, created_at, updated_at) VALUES (' +
+        cols.map(()=>'?').join(',') + ',?,UTC_TIMESTAMP(),UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE ' +
+        set.join(',') + ', updated_at=UTC_TIMESTAMP()',
+        cols.map(c => row[c]).concat([_bu])
+      );
+      logActivity('schedule', actor, _bu, row.borrower || key, { key, principal, months }).catch(()=>{});
+      return res.json({ ok:true, key });
+    }
+
+    if (action === 'schedule_delete') {
+      await ensureScheduleTable();
+      const key = String(body.key || '').trim();
+      if (!key) return res.json({ ok:false, message:'Not found' });
+      const [r] = await db().query('DELETE FROM loan_schedules WHERE sched_key=?', [key]);
+      if (!r.affectedRows) return res.json({ ok:false, message:'Not found' });
+      logActivity('schedule_del', actor, _bu, key, {}).catch(()=>{});
+      return res.json({ ok:true });
     }
 
     /* ── Which customers have opened their own history, and when ── */
