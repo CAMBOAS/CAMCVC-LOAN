@@ -68,6 +68,23 @@
     }
     .sc-sec:first-child { border-top:none; padding-top:0; margin-top:0 }
 
+    /* A date box people can read: the text is ours, the calendar is the
+       browser's, and the native input sits out of sight behind the button. */
+    .sc-date { position:relative; display:block }
+    .sc-date .sc-in { padding-right:34px }
+    .sc-date-native {
+      position:absolute; right:6px; bottom:0; width:1px; height:1px;
+      opacity:0; pointer-events:none; border:0; padding:0; margin:0;
+    }
+    .sc-date-btn {
+      position:absolute; right:4px; top:50%; transform:translateY(-50%);
+      display:flex; align-items:center; justify-content:center;
+      width:26px; height:26px; padding:0; border:none; border-radius:7px;
+      background:transparent; color:var(--muted); cursor:pointer; transition:.15s;
+    }
+    .sc-date-btn:hover { background:rgba(124,92,255,.12); color:#7c5cff }
+    .sc-date-btn svg { width:14px; height:14px }
+
     /* ── key facts ── */
     .sc-kf { display:flex; flex-direction:column; gap:0 }
     .sc-kf-row {
@@ -293,9 +310,29 @@
                 <option value="365" data-i18n="b365">365 days/year</option>
               </select></div>
             <div class="sc-f"><label class="sc-lbl" for="scDisb" data-i18n="disbursed">Disbursed on</label>
-              <input class="sc-in" id="scDisb" type="date" onchange="scDateTyped()"></div>
+              <div class="sc-date">
+                <input class="sc-in" id="scDisb" type="text" inputmode="numeric" maxlength="10"
+                       placeholder="dd/mm/yyyy" autocomplete="off"
+                       oninput="scDateTyped()" onblur="scDateBlur('scDisb')">
+                <input type="date" id="scDisbPick" class="sc-date-native" tabindex="-1" aria-hidden="true"
+                       onchange="scDatePicked('scDisb')">
+                <button type="button" class="sc-date-btn" onclick="scOpenPicker('scDisb')"
+                        aria-label="Pick from a calendar" title="Pick from a calendar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+                </button>
+              </div></div>
             <div class="sc-f"><label class="sc-lbl" for="scFirst" data-i18n="firstDue">First due on</label>
-              <input class="sc-in" id="scFirst" type="date" onchange="scDateTyped()"></div>
+              <div class="sc-date">
+                <input class="sc-in" id="scFirst" type="text" inputmode="numeric" maxlength="10"
+                       placeholder="dd/mm/yyyy" autocomplete="off"
+                       oninput="scDateTyped()" onblur="scDateBlur('scFirst')">
+                <input type="date" id="scFirstPick" class="sc-date-native" tabindex="-1" aria-hidden="true"
+                       onchange="scDatePicked('scFirst')">
+                <button type="button" class="sc-date-btn" onclick="scOpenPicker('scFirst')"
+                        aria-label="Pick from a calendar" title="Pick from a calendar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+                </button>
+              </div></div>
 
             <div class="sc-sec" data-i18n="fees">Fees and penalties</div>
             <div class="sc-f"><label class="sc-lbl" for="scFeeAdmin" data-i18n="feeAdmin">Admin fee</label>
@@ -641,14 +678,65 @@ function scForm() {
     term_months:  Math.round(fnum('scMonths')),
     method:       val('scMethod'),
     basis:        Number(val('scBasis')) === 365 ? 365 : 360,
-    disbursed_on: val('scDisb'),
-    first_due_on: val('scFirst'),
+    disbursed_on: scGetDate('scDisb'),
+    first_due_on: scGetDate('scFirst'),
     fee_admin:    fnum('scFeeAdmin'),
     fee_cbc:      fnum('scFeeCbc'),
     fee_other:    fnum('scFeeOther'),
     late_rate:    fnum('scLate'),
     early_fee:    fnum('scEarly')
   };
+}
+
+/* ── Dates, written the way Cambodia writes them ─────────────────────────
+   A native date box shows whatever the browser's own locale says — mm/dd/yyyy
+   on a machine set to US English — and a page has no way to change that. So
+   the box people read and type into is plain text in dd/mm/yyyy, with the
+   browser's calendar still one click away behind the button.
+
+   Only the display changed. Everything downstream still holds and sends ISO,
+   because that is what sorts, compares and stores correctly. */
+function scGetDate(id) {
+  var v = String((document.getElementById(id) || {}).value || '').trim();
+  if (!v) return '';
+  /* Typed with slashes, dashes, dots or nothing at all */
+  var m = /^(\d{1,2})[\/\-. ]?(\d{1,2})[\/\-. ]?(\d{4})$/.exec(v);
+  if (!m) return '';
+  var d = +m[1], mo = +m[2], y = +m[3];
+  var t = new Date(Date.UTC(y, mo - 1, d));
+  /* 31/02 would quietly roll into March, so check it came back unchanged */
+  if (t.getUTCFullYear() !== y || t.getUTCMonth() !== mo - 1 || t.getUTCDate() !== d) return '';
+  return iso(t);
+}
+
+function scSetDate(id, isoStr) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var t = dISO(String(isoStr || '').slice(0, 10));
+  el.value = t ? (String(t.getUTCDate()).padStart(2,'0') + '/' +
+                  String(t.getUTCMonth()+1).padStart(2,'0') + '/' + t.getUTCFullYear()) : '';
+}
+
+/* Tidy 3/8/2026 into 03/08/2026 once they move on, and leave anything that is
+   not yet a date alone so it can be corrected rather than wiped. */
+function scDateBlur(id) {
+  var got = scGetDate(id);
+  if (got) scSetDate(id, got);
+}
+
+function scOpenPicker(id) {
+  var pick = document.getElementById(id + 'Pick');
+  if (!pick) return;
+  pick.value = scGetDate(id) || todayISO();
+  try { if (pick.showPicker) { pick.showPicker(); return; } } catch(e) {}
+  pick.click();   /* older browsers */
+}
+
+function scDatePicked(id) {
+  var pick = document.getElementById(id + 'Pick');
+  if (!pick || !pick.value) return;
+  scSetDate(id, pick.value);
+  scDateTyped();
 }
 
 /* ── Years, months and the two dates ─────────────────────────────────────
@@ -698,8 +786,8 @@ function scFillDates() {
   if (!Number(val('scMonths'))) return;
   var today = dISO(todayISO());
   if (!today) return;
-  document.getElementById('scDisb').value  = todayISO();
-  document.getElementById('scFirst').value = iso(addMonths(today, 1));
+  scSetDate('scDisb',  todayISO());
+  scSetDate('scFirst', iso(addMonths(today, 1)));
 }
 
 /* ── the engine ──────────────────────────────────────────────────────────
@@ -1002,8 +1090,8 @@ async function scOpen(key) {
     put('scYears', d.term_months ? String(Math.round((d.term_months / 12) * 100) / 100) : '');
     put('scMethod', d.method || 'declining');
     put('scBasis', String(d.basis || 360));
-    put('scDisb', String(d.disbursed_on || '').slice(0,10));
-    put('scFirst', String(d.first_due_on || '').slice(0,10));
+    scSetDate('scDisb',  d.disbursed_on);
+    scSetDate('scFirst', d.first_due_on);
     put('scFeeAdmin', Number(d.fee_admin)); put('scFeeCbc', Number(d.fee_cbc));
     put('scFeeOther', Number(d.fee_other)); put('scLate', Number(d.late_rate));
     put('scEarly', Number(d.early_fee));
