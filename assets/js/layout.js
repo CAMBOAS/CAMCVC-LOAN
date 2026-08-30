@@ -1395,7 +1395,7 @@
     mode:  'full',                   /* full | icons */
     style: 'solid',                  /* solid | glass | accent */
     show:  ['brand','status','label','portal','collapse','tips'],
-    links: ['dash','cust','add','rpt','rep','sch','jr','fb','team','ccr','act','prof','set']
+    links: ['dash','cust','add','loans','rpt','rep','sch','jr','fb','team','ccr','act','prof','set']
   };
   window.appSbDefault = SB_DEFAULT;
 
