@@ -204,6 +204,15 @@
       .sc-tbl tbody tr { break-inside:avoid }
       .sc-r-paid, .sc-r-late, .sc-r-next td { background:#fff !important; box-shadow:none !important }
       .sc-card, .sc-foot { box-shadow:none !important; border:none !important }
+      /* The table sits in a rounded, tinted card on screen. On paper that frame
+         is only ink, so it goes. `overflow` is opened up with it as a
+         precaution rather than a fix: the card is auto-height and was measured
+         clipping nothing, but a clipping ancestor is a well-known way to
+         confuse page breaking, and there is no reason to keep one here. */
+      .glass-card {
+        border:none !important; box-shadow:none !important; background:transparent !important;
+        border-radius:0 !important; overflow:visible !important; backdrop-filter:none !important;
+      }
       * { color:#000 !important }
     }
     .sc-p-title { text-align:center; font-size:15pt; font-weight:800; margin-bottom:2px }
