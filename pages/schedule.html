@@ -351,8 +351,11 @@
                 <option value="USD">USD $</option>
                 <option value="KHR">KHR ៛</option>
               </select></div>
+            <div class="sc-f"><label class="sc-lbl" for="scRateM" data-i18n="ratePctM">Interest %/month</label>
+              <input class="sc-in" id="scRateM" type="number" step="0.01" min="0" placeholder="0.00"
+                     oninput="scRateMonthTyped()" title="Type 1.5 and the yearly rate fills in as 18"></div>
             <div class="sc-f"><label class="sc-lbl" for="scRate" data-i18n="ratePct">Interest %/year</label>
-              <input class="sc-in" id="scRate" type="number" step="0.01" min="0" placeholder="0.00" oninput="scDraw()"></div>
+              <input class="sc-in" id="scRate" type="number" step="0.01" min="0" placeholder="0.00" oninput="scRateYearTyped()"></div>
             <div class="sc-f"><label class="sc-lbl" for="scYears" data-i18n="years">Years</label>
               <input class="sc-in" id="scYears" type="number" step="0.5" min="0" max="50" placeholder="0"
                      oninput="scYearsTyped()" title="Type 3 and the months fill in as 36"></div>
@@ -526,7 +529,11 @@ var TX = {
   officerPhone: ['ទូរស័ព្ទមន្ត្រី', 'Officer phone'],
   principal:    ['ប្រាក់ដើម', 'Principal'],
   currency:     ['រូបិយប័ណ្ណ', 'Currency'],
+  ratePctM:     ['អត្រាការប្រាក់ %/ខែ', 'Interest %/month'],
   ratePct:      ['អត្រាការប្រាក់ %/ឆ្នាំ', 'Interest %/year'],
+  kTermRate:    ['អត្រាសរុបពេញរយៈពេល', 'Rate across the whole term'],
+  termRateNote: ['អត្រា/ឆ្នាំ គុណនឹងចំនួនឆ្នាំ — ជាលេខប្រកាស មិនមែនចំនួនប្រាក់ដែលបង់ពិតទេ ព្រោះការប្រាក់គិតលើសមតុល្យដែលថយចុះ។',
+                 'The yearly rate times the years. A quoted figure, not what is actually paid — interest is charged on a balance that keeps falling.'],
   years:        ['ចំនួនឆ្នាំ', 'Years'],
   instalMonths: ['ចំនួនដងសង (ខែ)', 'Instalments (months)'],
   method:       ['របៀបគិត', 'Method'],
@@ -761,6 +768,35 @@ function scForm() {
   };
 }
 
+/* ── The rate, said by the month or by the year ──────────────────────────
+   Lenders here quote a monthly figure; the arithmetic wants a yearly one. The
+   two boxes hold the same rate said two ways and are kept in step — 1.5 a
+   month is 18 a year, exactly as the MOHANOKOR sheet writes it.
+
+   The engine still reads the yearly box, so nothing downstream changes. */
+function scRateMonthTyped() {
+  var m = Number(val('scRateM'));
+  document.getElementById('scRate').value =
+    (isFinite(m) && m > 0) ? String(Math.round(m * 12 * 10000) / 10000) : '';
+  scDraw();
+}
+
+function scRateYearTyped() {
+  var y = Number(val('scRate'));
+  document.getElementById('scRateM').value =
+    (isFinite(y) && y > 0) ? String(Math.round((y / 12) * 10000) / 10000) : '';
+  scDraw();
+}
+
+/* Show the yearly box from whatever the engine holds, without disturbing the
+   other one — used when a saved schedule is opened. */
+function scPaintRates(annual) {
+  var y = Number(annual);
+  document.getElementById('scRate').value  = isFinite(y) ? String(y) : '';
+  document.getElementById('scRateM').value = (isFinite(y) && y > 0)
+    ? String(Math.round((y / 12) * 10000) / 10000) : '';
+}
+
 /* ── Monthly or weekly ─────────────────────────────────────────────────────
    The same loan, repaid on a different rhythm. Only three things actually
    change: how far apart the due dates fall, how many instalments a year comes
@@ -976,7 +1012,7 @@ function scBuild(f) {
 /* ── draw everything ── */
 /* Nothing typed yet — as opposed to typed wrongly. */
 function scBlankForm() {
-  return !val('scPrincipal') && !val('scRate') && !val('scYears') && !val('scMonths')
+  return !val('scPrincipal') && !val('scRate') && !val('scRateM') && !val('scYears') && !val('scMonths')
       && !val('scDisb') && !val('scFirst');
 }
 
@@ -1031,11 +1067,13 @@ function scKeyFacts(f, s) {
   }
   h += kfRow(T('kFirstInst'), money(s.first.total, c) + '  ·  ' + pretty(s.first.due));
   h += kfRow(T('kLastInst'),  money(s.last.total, c)  + '  ·  ' + pretty(s.last.due));
+  h += kfRow(T('kTermRate'),
+        (f.annual_rate * (f.term_months / scPerYear())).toFixed(2) + '%');
   h += kfRow(T('kCostRate'),  s.costRate.toFixed(2) + T('perYear'));
   h += kfRow(T('kTotRepay'),  money(s.totalPayable, c), 'sc-kf-sum');
   document.getElementById('scKeyFacts').innerHTML = h;
 
-  document.getElementById('scRateHint').textContent = T('costHint')
+  document.getElementById('scRateHint').textContent = T('termRateNote') + ' ' + T('costHint')
     .replace('I', num(s.totalInterest)).replace('F', num(s.totalFees))
     .replace('A', num(s.avgBal)).replace('Y', s.years.toFixed(2))
     .replace('R', f.annual_rate.toFixed(2) + '%');
@@ -1247,7 +1285,7 @@ async function scOpen(key) {
     put('scOfficer', d.officer);     put('scOffPhone', d.officer_phone);
     put('scCur', d.currency || 'USD');
     put('scPrincipal', Number(d.principal));
-    put('scRate', Number(d.annual_rate));
+    scPaintRates(Number(d.annual_rate));
     put('scMonths', d.term_months);
     put('scYears', d.term_months ? String(Math.round((d.term_months / 12) * 100) / 100) : '');
     put('scMethod', d.method || 'declining');
@@ -1304,7 +1342,7 @@ async function scDelete() {
 function scNew() {
   _scKey = ''; _scPaid = {};
   ['scBorrower','scCo','scAcct','scContract','scBranch','scPurpose','scOfficer','scOffPhone',
-   'scPrincipal','scRate','scYears','scMonths','scDisb','scFirst']
+   'scPrincipal','scRate','scRateM','scYears','scMonths','scDisb','scFirst']
     .forEach(function(id){ document.getElementById(id).value = ''; });
   _scDatesOwned = false;
   ['scFeeAdmin','scFeeCbc','scFeeOther','scLate','scEarly']
