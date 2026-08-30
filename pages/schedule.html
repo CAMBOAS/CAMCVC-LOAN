@@ -192,13 +192,25 @@
     /* ── print: the paper version, nothing of the app ── */
     .sc-print { display:none }
     @media print {
-      @page { size:A4 portrait; margin:11mm 10mm }
+      @page { size:A4 portrait; margin:10mm 6mm }
       .sidebar, .shared-topbar, .sidebar-overlay, .background, .app-bottombar,
       #appTopBar, .sc-bar, .sc-top, .sc-kpis, .sc-note, .sc-hdr, .sc-err, #scToast { display:none !important }
       body, .dashboard, .main-content, .sc-wrap { display:block !important; background:#fff !important; padding:0 !important; margin:0 !important; overflow:visible !important; height:auto !important }
       .sc-print { display:block !important; margin-bottom:8px }
       .sc-tbl-wrap { overflow:visible !important; max-height:none !important }
-      .sc-tbl { min-width:0 !important; font-size:9.5pt }
+      /* On screen the columns are held to fixed shares so the figures line up
+         under their headings. On paper there is nothing to line up with, and
+         those shares were squeezing Khmer headings until they were cut off
+         mid-word — "ចំនួនថ្ងៃ" arriving as "ចំនួន…". Letting the browser size
+         the columns to their contents fixes the width and the clipping at once. */
+      .sc-tbl { table-layout:auto !important; width:100% !important; min-width:0 !important; font-size:9pt }
+      .sc-tbl col { width:auto !important }
+      /* Nothing is hidden on paper: there is no scrolling to reveal it later. */
+      .sc-tbl thead th, .sc-tbl tbody td { overflow:visible !important; text-overflow:clip !important }
+      /* Headings may take a second line; dates and figures stay on one. */
+      .sc-tbl thead th { white-space:normal !important }
+      .sc-due, .sc-num, .sc-dow { white-space:nowrap !important }
+      .sc-loc-txt, .cc-loc-txt { overflow:visible !important; text-overflow:clip !important; max-width:none !important }
       .sc-tbl thead th { position:static; background:#eee !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
       .sc-tbl tbody td, .sc-tbl thead th { border:1px solid #999 !important; padding:3px 5px }
       .sc-tbl tbody tr { break-inside:avoid }
