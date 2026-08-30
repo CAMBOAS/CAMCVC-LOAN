@@ -165,6 +165,69 @@
        break onto two lines and make the row taller than every other row. */
     #ccvBody td:nth-child(6), #ccvBody td:nth-child(10) { white-space:nowrap }
 
+    /* ── the QR button in the table, and the panel it opens ── */
+    .cc-qr-btn {
+      display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px;
+      border-radius:8px; border:1px solid rgba(124,92,255,.28); background:rgba(124,92,255,.08);
+      color:#7c5cff; cursor:pointer; transition:.15s; padding:0;
+    }
+    .cc-qr-btn:hover { background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.5) }
+    .cc-qr-btn svg { width:15px; height:15px }
+    [data-theme="dark"] .cc-qr-btn { color:#a78bfa }
+
+    .ccq-ov {
+      position:fixed; inset:0; z-index:100001; display:none; align-items:center; justify-content:center;
+      background:rgba(8,12,22,.62); backdrop-filter:blur(3px); padding:18px;
+    }
+    .ccq-ov.on { display:flex }
+    .ccq-box {
+      width:100%; max-width:420px; max-height:92vh; overflow:auto; border-radius:16px;
+      background:var(--card,#fff); box-shadow:0 24px 64px rgba(0,0,0,.4);
+      border:1px solid rgba(148,163,184,.18);
+    }
+    [data-theme="dark"] .ccq-box { background:#111827 }
+    .ccq-hd {
+      display:flex; align-items:flex-start; gap:10px; padding:15px 16px 12px;
+      border-bottom:1px solid rgba(148,163,184,.14);
+    }
+    .ccq-title { font-size:14px; font-weight:800; color:var(--text) }
+    .ccq-who { font-size:12px; color:var(--muted); margin-top:2px }
+    .ccq-x {
+      margin-left:auto; width:28px; height:28px; flex-shrink:0; border:none; border-radius:8px;
+      background:rgba(148,163,184,.12); color:var(--muted); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .ccq-x:hover { background:rgba(239,68,68,.14); color:#dc2626 }
+    .ccq-x svg { width:14px; height:14px }
+    .ccq-body { padding:15px 16px 18px }
+    .ccq-lbl { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:7px }
+    .ccq-seg { display:flex; border:1px solid rgba(148,163,184,.2); border-radius:10px; overflow:hidden; background:rgba(148,163,184,.06) }
+    .ccq-seg button {
+      flex:1; padding:8px 4px; border:none; background:transparent; color:var(--muted);
+      font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer; transition:.15s;
+    }
+    .ccq-seg button + button { border-left:1px solid rgba(148,163,184,.16) }
+    .ccq-seg button.on { background:linear-gradient(135deg,rgba(6,182,212,.22),rgba(124,92,255,.22)); color:var(--text) }
+    .ccq-hint { font-size:11px; color:var(--muted); line-height:1.7; margin-top:9px }
+    .ccq-gen {
+      width:100%; margin-top:12px; padding:11px; border:none; border-radius:11px; cursor:pointer;
+      background:linear-gradient(135deg,#06b6d4,#7c5cff); color:#fff;
+      font-family:inherit; font-size:13px; font-weight:800;
+    }
+    .ccq-gen:disabled { opacity:.55; cursor:default }
+    .ccq-status { font-size:11.5px; font-weight:700; margin-top:9px; min-height:16px; text-align:center }
+    .ccq-out { display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:14px }
+    .ccq-canvas { padding:10px; background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.14) }
+    .ccq-canvas canvas { display:block; width:220px; height:220px }
+    .ccq-exp { font-size:11.5px; font-weight:700; color:var(--muted) }
+    .ccq-acts { display:flex; gap:7px; flex-wrap:wrap; justify-content:center }
+    .ccq-act {
+      padding:8px 13px; border-radius:9px; border:1px solid rgba(148,163,184,.28);
+      background:var(--card,rgba(255,255,255,.6)); color:var(--text);
+      font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer; transition:.15s;
+    }
+    .ccq-act:hover { border-color:rgba(124,92,255,.5); color:#7c5cff }
+
     .cc-soon {
       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
       padding:56px 24px; text-align:center;
@@ -274,10 +337,11 @@
                   <th>Amount</th>
                   <th>Repayment</th>
                   <th title="Can this customer open the portal and read their own history?">Portal</th>
+                  <th style="width:52px" title="A link that opens this customer's repayment history">QR</th>
                 </tr>
               </thead>
               <tbody id="ccBody">
-                <tr><td colspan="10" class="cc-empty">Loading…</td></tr>
+                <tr><td colspan="11" class="cc-empty">Loading…</td></tr>
               </tbody>
             </table>
           </div>
@@ -340,6 +404,7 @@
                   <th>Times</th>
                   <th>Location</th>
                   <th style="width:56px">GPS</th>
+                  <th style="width:52px" title="A link that opens this customer's repayment history">QR</th>
                 </tr>
               </thead>
               <tbody id="ccvBody">
@@ -384,10 +449,49 @@
   </div>
 </div>
 
+<div class="ccq-ov" id="ccQrOv" onclick="if(event.target===this)ccQrClose()">
+  <div class="ccq-box" role="dialog" aria-modal="true" aria-labelledby="ccQrWho">
+    <div class="ccq-hd">
+      <div>
+        <div class="ccq-title">Repayment history link</div>
+        <div class="ccq-who" id="ccQrWho"></div>
+      </div>
+      <button type="button" class="ccq-x" onclick="ccQrClose()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="ccq-body">
+      <div class="ccq-lbl">Valid for</div>
+      <div class="ccq-seg" id="ccQrSeg">
+        <button type="button" data-min="5"  class="on" onclick="ccQrPick(5)">5 min</button>
+        <button type="button" data-min="10" onclick="ccQrPick(10)">10 min</button>
+        <button type="button" data-min="15" onclick="ccQrPick(15)">15 min</button>
+        <button type="button" data-min="0"  onclick="ccQrPick(0)">No limit</button>
+      </div>
+      <div class="ccq-hint">Whoever scans it opens this customer's repayment history straight away. After the time runs out the link stops working.</div>
+      <button type="button" class="ccq-gen" id="ccQrGen" onclick="ccQrGenerate()">Generate</button>
+      <div class="ccq-status" id="ccQrStatus"></div>
+
+      <div class="ccq-out" id="ccQrOut" style="display:none">
+        <div class="ccq-canvas"><canvas id="ccQrCanvas" width="320" height="320"></canvas></div>
+        <div class="ccq-exp" id="ccQrExp"></div>
+        <div class="ccq-acts">
+          <button type="button" class="ccq-act" onclick="ccQrSave()">Save image</button>
+          <button type="button" class="ccq-act" onclick="ccQrShare()">Share</button>
+          <button type="button" class="ccq-act" onclick="ccQrCopy()">Copy link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="ccToast" style="position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:100000;display:none;
      padding:11px 18px;border-radius:11px;background:#151d2e;color:#e2e8f0;font-size:12.5px;font-weight:700;
      box-shadow:0 18px 44px rgba(0,0,0,.4)"></div>
 
+<script src="../assets/js/qrcode.js?v=1"></script>
+<script src="../assets/js/qr-card.js?v=2"></script>
 <script src="../assets/js/layout.js?v=44"></script>
 <script src="../assets/js/dashboard-layout.js?v=44"></script>
 <script src="../assets/js/auth.js?v=3"></script>
@@ -447,7 +551,7 @@ async function ccLoad() {
     if (!r || !r.ok) throw new Error((r && r.message) || 'Could not load');
     _ccLoans = r.loans || [];
   } catch(e) {
-    body.innerHTML = '<tr><td colspan="10" class="cc-empty">' + esc(e.message || 'Could not load') + '</td></tr>';
+    body.innerHTML = '<tr><td colspan="11" class="cc-empty">' + esc(e.message || 'Could not load') + '</td></tr>';
     return;
   }
   ccRender();
@@ -482,7 +586,7 @@ function ccRender() {
   document.getElementById('ccFoot').textContent      = list.length + ' of ' + _ccLoans.length + ' customers';
 
   if (!list.length) {
-    body.innerHTML = '<tr><td colspan="10" class="cc-empty">'
+    body.innerHTML = '<tr><td colspan="11" class="cc-empty">'
       + (_ccLoans.length ? 'No customers match' : 'No customers yet') + '</td></tr>';
     ccFitRows();
     return;
@@ -520,9 +624,10 @@ function ccRender() {
       +     '<span class="cc-sw-track"></span>'
       +   '</label>'
       + '</td>'
+      + ccQrCell(l, safeK)
       + '</tr>';
 
-    if (isOpen) row += '<tr><td class="cc-detail-td" colspan="10">' + ccDetail(l) + '</td></tr>';
+    if (isOpen) row += '<tr><td class="cc-detail-td" colspan="11">' + ccDetail(l) + '</td></tr>';
     return row;
   }).join('');
 
@@ -572,6 +677,150 @@ async function ccPortal(key, box) {
   }
   box.disabled = false;
 }
+
+/* ══ The QR that opens one customer's repayment history ══
+   The same link Borrower Profile offers, brought to the table so a whole list
+   can be worked through without opening each person in turn. The token is
+   minted by the server and carries its own expiry; nothing here decides who
+   may read what. */
+var _ccQrKey = '', _ccQrName = '', _ccQrPhone = '', _ccQrMin = 5, _ccQrUrl = '', _ccQrTimer = null;
+
+function ccQrCell(l, safeK) {
+  var nm = String(l.FullName || '').replace(/\\/g,'\\\\').replace(/'/g, "\\'");
+  var ph = String(l.Phone   || '').replace(/'/g, "\\'");
+  return '<td onclick="event.stopPropagation()">'
+    + '<button type="button" class="cc-qr-btn" title="Make a link to this customer\'s repayment history"'
+    +   ' onclick="ccQrOpen(\'' + safeK + '\', \'' + nm + '\', \'' + ph + '\')">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17.5" y1="17.5" x2="17.5" y2="17.51"/></svg>'
+    + '</button></td>';
+}
+
+function ccQrOpen(key, name, phone) {
+  _ccQrKey = key; _ccQrName = name || ''; _ccQrPhone = phone || '';
+  _ccQrMin = 5; _ccQrUrl = '';
+  document.getElementById('ccQrWho').textContent = _ccQrName || 'This customer';
+  document.getElementById('ccQrOut').style.display = 'none';
+  document.getElementById('ccQrStatus').textContent = '';
+  ccQrPick(5);
+  document.getElementById('ccQrOv').classList.add('on');
+}
+
+function ccQrClose() {
+  document.getElementById('ccQrOv').classList.remove('on');
+  if (_ccQrTimer) { clearInterval(_ccQrTimer); _ccQrTimer = null; }
+}
+
+function ccQrPick(min) {
+  _ccQrMin = min;
+  document.querySelectorAll('#ccQrSeg button').forEach(function (b) {
+    b.classList.toggle('on', Number(b.getAttribute('data-min')) === min);
+  });
+}
+
+async function ccQrGenerate() {
+  var btn = document.getElementById('ccQrGen');
+  var st  = document.getElementById('ccQrStatus');
+  if (typeof qrcode === 'undefined') {
+    st.textContent = 'QR library did not load — refresh the page.'; st.style.color = '#ef4444'; return;
+  }
+  btn.disabled = true;
+  st.textContent = 'Generating…'; st.style.color = '';
+  try {
+    var r = await CamboAPI.post({ action: 'qr_token_create', minutes: _ccQrMin, key: _ccQrKey });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Failed');
+
+    _ccQrUrl = location.origin + location.pathname.replace(/[^/]*$/, 'user.html')
+             + '?t=' + encodeURIComponent(r.token);
+
+    var q = qrcode(0, 'M'); q.addData(_ccQrUrl); q.make();
+    var cv = document.getElementById('ccQrCanvas'), ctx = cv.getContext('2d');
+    var n = q.getModuleCount(), quiet = 4;
+    var cell = Math.floor(cv.width / (n + quiet * 2));
+    var off  = Math.floor((cv.width - cell * n) / 2);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#0f172a';
+    for (var row = 0; row < n; row++)
+      for (var col = 0; col < n; col++)
+        if (q.isDark(row, col)) ctx.fillRect(off + col * cell, off + row * cell, cell, cell);
+
+    document.getElementById('ccQrOut').style.display = 'flex';
+    ccQrCountdown(r.expires_at);
+    st.textContent = r.minutes === 0 ? 'Link created — no time limit.'
+                                     : 'Link created — valid for ' + r.minutes + ' minutes.';
+    st.style.color = '#16a34a';
+  } catch(e) {
+    st.textContent = e.message || 'Error'; st.style.color = '#ef4444';
+  }
+  btn.disabled = false;
+}
+
+/* Counts down on screen so nobody sends a link that has already died. */
+function ccQrCountdown(expiresAt) {
+  var el = document.getElementById('ccQrExp');
+  if (_ccQrTimer) { clearInterval(_ccQrTimer); _ccQrTimer = null; }
+  if (!expiresAt) { el.textContent = 'No time limit'; return; }
+  var end = new Date(expiresAt).getTime();
+  function tick() {
+    var left = Math.round((end - Date.now()) / 1000);
+    if (left <= 0) {
+      el.textContent = 'Expired — generate a new one';
+      el.style.color = '#dc2626';
+      clearInterval(_ccQrTimer); _ccQrTimer = null;
+      return;
+    }
+    el.style.color = '';
+    el.textContent = 'Expires in ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+  }
+  tick();
+  _ccQrTimer = setInterval(tick, 1000);
+}
+
+/* Saved or sent, it leaves as a card rather than a bare square — the customer
+   gets it on its own, with no page around it to say what it is. */
+function ccQrCard() {
+  return CamboQrCard.build({
+    url:        _ccQrUrl,
+    stripTitle: _ccQrName,
+    stripSub:   _ccQrPhone,
+    line1:      'ស្កេនកូដនេះដើម្បីមើលប្រវត្តិ',
+    line2:      'បានបង់រួច និងចំនួននៅសល់របស់អ្នក',
+    note:       CamboQrCard.validityNote(_ccQrMin)
+  });
+}
+
+async function ccQrBlob() {
+  var cv = await ccQrCard();
+  return new Promise(function (res) { cv.toBlob(function (b) { res(b); }, 'image/png'); });
+}
+
+async function ccQrSave() {
+  var b = await ccQrBlob(); if (!b) return;
+  var url = URL.createObjectURL(b);
+  var a = document.createElement('a');
+  a.href = url; a.download = CamboQrCard.fileName(_ccQrName);
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+
+async function ccQrShare() {
+  var b = await ccQrBlob(); if (!b) return;
+  var f = new File([b], CamboQrCard.fileName(_ccQrName), { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [f] }) && navigator.share) {
+    try { await navigator.share({ files: [f], text: _ccQrUrl }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
+  ccQrSave();
+}
+
+async function ccQrCopy() {
+  if (!_ccQrUrl) return;
+  try { await navigator.clipboard.writeText(_ccQrUrl); ccToast('Link copied'); }
+  catch(e) { window.prompt('Copy this link:', _ccQrUrl); }
+}
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && document.getElementById('ccQrOv').classList.contains('on')) ccQrClose();
+});
 
 /* ══ Tab 2 — who opened their own history ══
    The customer side of Control User: one row per borrower, showing whether they
@@ -776,6 +1025,7 @@ function ccvRender() {
       + '<td class="cc-times">' + (has ? Number(v.visits) : '<span class="cc-none">—</span>') + '</td>'
       + '<td>' + locCell + '</td>'
       + gpsCell
+      + ccQrCell(l, safeK)
       + '</tr>';
 
     if (isOpen) row += '<tr><td class="cc-detail-td" colspan="12">' + ccvDetail(l, v) + '</td></tr>';
