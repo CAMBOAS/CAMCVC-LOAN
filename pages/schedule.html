@@ -207,6 +207,12 @@
       * { color:#000 !important }
     }
     .sc-p-title { text-align:center; font-size:15pt; font-weight:800; margin-bottom:2px }
+    /* The heading must not be left stranded at the foot of a page with its
+       table overleaf, and the signatures must not be orphaned either. */
+    @media print {
+      #scPrintHead { break-after:avoid; page-break-after:avoid }
+      #scPrintFoot { break-inside:avoid; page-break-inside:avoid }
+    }
     .sc-p-sub   { text-align:center; font-size:10pt; margin-bottom:9px }
     .sc-p-grid  { display:grid; grid-template-columns:repeat(3,1fr); gap:2px 14px; font-size:9pt; margin-bottom:8px }
     .sc-p-grid div { padding:1px 0 }
@@ -386,6 +392,10 @@
 
       <div class="sc-kpis" id="scKpis"></div>
 
+      <!-- Printed above the table: on paper the reader needs to know whose loan
+           this is before they start reading instalments. Hidden on screen. -->
+      <div class="sc-print" id="scPrintHead"></div>
+
       <div class="glass-card" style="border-radius:14px;overflow:hidden;padding:0">
         <div class="sc-tbl-wrap" id="scTblWrap">
           <table class="sc-tbl">
@@ -427,8 +437,8 @@
         time it is opened, so a saved schedule can never disagree with its own arithmetic.</span>
       </div>
 
-      <!-- the paper version -->
-      <div class="sc-print" id="scPrint"></div>
+      <!-- Signatures belong under what is being signed for -->
+      <div class="sc-print" id="scPrintFoot"></div>
 
     </div><!-- /.sc-wrap -->
   </main>
@@ -956,7 +966,8 @@ function scDraw() {
     document.getElementById('scRateHint').textContent = '';
     document.getElementById('scKpis').innerHTML = '';
     document.getElementById('scFoot').textContent = '';
-    document.getElementById('scPrint').innerHTML = '';
+    document.getElementById('scPrintHead').innerHTML = '';
+    document.getElementById('scPrintFoot').innerHTML = '';
     return;
   }
   scErr('');
@@ -1085,7 +1096,7 @@ function scTogglePaid(n, box) {
 function scPrintable(f, s) {
   var c = f.currency;
   var g = function(k, v) { return '<div><b>' + esc(k) + ':</b> ' + esc(v || '—') + '</div>'; };
-  document.getElementById('scPrint').innerHTML =
+  document.getElementById('scPrintHead').innerHTML =
       '<div class="sc-p-title">តារាងកាលវិភាគសងប្រាក់</div>'
     + '<div class="sc-p-sub">Loan Repayment Schedule' + (f.branch ? ' — ' + esc(f.branch) : '') + '</div>'
     + '<div class="sc-p-grid">'
@@ -1104,8 +1115,10 @@ function scPrintable(f, s) {
     +   g('មន្ត្រី / Officer', f.officer)
     +   g('ទូរស័ព្ទ / Phone', f.officer_phone)
     +   g('គោលបំណង / Purpose', f.purpose)
-    + '</div>'
-    + '<div class="sc-p-sign"><div><div class="sc-p-line">ហត្ថលេខាអ្នកធ្វើតារាង</div></div>'
+    + '</div>';
+
+  document.getElementById('scPrintFoot').innerHTML =
+      '<div class="sc-p-sign"><div><div class="sc-p-line">ហត្ថលេខាអ្នកធ្វើតារាង</div></div>'
     +   '<div><div class="sc-p-line">ស្នាមមេដៃ និងឈ្មោះអតិថិជន</div></div></div>';
 }
 
