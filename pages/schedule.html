@@ -50,6 +50,9 @@
     .sc-btn:hover { border-color:rgba(124,92,255,.5) }
     .sc-btn-go { background:#7c5cff; border-color:#7c5cff; color:#fff }
     .sc-btn-go:hover { background:#6d4ef0 }
+    .sc-btn-pdf { color:#dc2626; border-color:rgba(239,68,68,.3); background:rgba(239,68,68,.06) }
+    .sc-btn-pdf:hover { background:rgba(239,68,68,.13); border-color:rgba(239,68,68,.5) }
+    [data-theme="dark"] .sc-btn-pdf { color:#f87171 }
     .sc-btn-del { color:#dc2626; border-color:rgba(239,68,68,.35) }
     .sc-btn-del:hover { background:rgba(239,68,68,.09) }
     .sc-btn:disabled { opacity:.45; cursor:default }
@@ -288,6 +291,10 @@
           <span data-i18n="btnNew">New</span>
         </button>
         <div class="sc-bar-spacer"></div>
+        <button type="button" class="sc-btn sc-btn-pdf" onclick="scPdf()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+          <span data-i18n="btnPdf">PDF</span>
+        </button>
         <button type="button" class="sc-btn" onclick="scPrint()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           <span data-i18n="btnPrint">Print</span>
@@ -537,6 +544,9 @@ var TX = {
   b365:         ['365 ថ្ងៃ/ឆ្នាំ', '365 days/year'],
   btnNew:       ['ថ្មី', 'New'],
   btnPrint:     ['បោះពុម្ព', 'Print'],
+  btnPdf:       ['PDF', 'PDF'],
+  pdfHint:      ['ក្នុងប្រអប់បោះពុម្ព សូមជ្រើស “Save as PDF” ជាទិសដៅ',
+                 'In the print dialog, choose “Save as PDF” as the destination'],
   btnDelete:    ['លុប', 'Delete'],
   btnSave:      ['រក្សាទុក', 'Save'],
   savedNone:    ['— កាលវិភាគដែលរក្សាទុក —', '— Saved schedules —'],
@@ -1141,6 +1151,39 @@ function scPrintable(f, s) {
   document.getElementById('scPrintFoot').innerHTML =
       '<div class="sc-p-sign"><div><div class="sc-p-line">ហត្ថលេខាអ្នកធ្វើតារាង</div></div>'
     +   '<div><div class="sc-p-line">ស្នាមមេដៃ និងឈ្មោះអតិថិជន</div></div></div>';
+}
+
+/* ── Saving it as a PDF ─────────────────────────────────────────────────────
+   This hands the page to the browser's own PDF writer rather than building the
+   file in script, and that is a deliberate choice, not a shortcut. A PDF
+   library in JavaScript lays out the characters it is given in the order it is
+   given them; Khmer needs shaping — vowels that move around the consonant,
+   subscripts that tuck underneath — so a generated file would carry the right
+   letters arranged wrongly. The browser draws the PDF with the same text engine
+   that drew the screen, so what is saved is what was read.
+
+   What this adds over Print is the name: the dialog offers the document title
+   as the filename, so the file arrives as the borrower and their first due date
+   rather than "Schedule — SYSTEM". */
+function scPdfName(f, s) {
+  var who  = String(f.borrower || '').trim();
+  var when = (s && s.first) ? pretty(s.first.due).replace(/-/g, '') : '';
+  var name = ['Schedule', who, when].filter(Boolean).join('-');
+  /* Keep letters and Khmer, turn everything else into a single dash */
+  return name.replace(/[^\wក-៿-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'Schedule';
+}
+
+function scPdf() {
+  var f = scForm(), s = scBuild(f);
+  if (s.err) { scToast(T(s.err), true); return; }
+  var was = document.title;
+  document.title = scPdfName(f, s);
+  scToast(T('pdfHint'));
+  /* Let the toast paint before the dialog blocks the page, and put the title
+     back however the dialog ends — printed, saved or cancelled. */
+  setTimeout(function () {
+    try { window.print(); } finally { document.title = was; }
+  }, 400);
 }
 
 function scPrint() {
