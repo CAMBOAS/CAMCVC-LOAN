@@ -704,39 +704,6 @@
           </div>
         </div>
 
-        <!-- ── Permission Matrix ── -->
-        <div class="glass-card" style="padding:0;overflow:hidden;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid rgba(148,163,184,.1)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span style="font-size:12px;font-weight:700;flex:1">Role Permissions</span>
-            <span class="perm-status" id="permStatus"></span>
-            <button class="perm-save-btn" id="permSaveBtn" onclick="savePerms()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Save
-            </button>
-          </div>
-          <div class="perm-wrap">
-            <table class="perm-tbl" id="permMatrix">
-              <thead>
-                <tr>
-                  <th class="perm-th-left" style="min-width:160px">Permission</th>
-                  <th><span class="perm-role-admin">Admin</span></th>
-                  <th>Sub Admin</th>
-                  <th>Owner</th>
-                  <th>Staff Loan</th>
-                  <th>Staff</th>
-                  <th>Moderator</th>
-                  <th>Viewer</th>
-                  <th>Tester</th>
-                </tr>
-              </thead>
-              <tbody id="permBody">
-                <tr><td colspan="9" style="text-align:center;padding:16px;color:var(--muted);font-size:12px">Loading…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
         <!-- Table -->
         <div class="glass-card um-table-card">
           <div class="um-tbl-wrap">
@@ -1269,6 +1236,39 @@
 
       <!-- ══ Panel 4: Page Access ══ -->
       <div class="st-panel" id="stPanel4">
+        <!-- ── Permission Matrix ── -->
+        <div class="glass-card" style="padding:0;overflow:hidden;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid rgba(148,163,184,.1)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span style="font-size:12px;font-weight:700;flex:1">Role Permissions</span>
+            <span class="perm-status" id="permStatus"></span>
+            <button class="perm-save-btn" id="permSaveBtn" onclick="savePerms()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save
+            </button>
+          </div>
+          <div class="perm-wrap">
+            <table class="perm-tbl" id="permMatrix">
+              <thead>
+                <tr>
+                  <th class="perm-th-left" style="min-width:160px">Permission</th>
+                  <th><span class="perm-role-admin">Admin</span></th>
+                  <th>Sub Admin</th>
+                  <th>Owner</th>
+                  <th>Staff Loan</th>
+                  <th>Staff</th>
+                  <th>Moderator</th>
+                  <th>Viewer</th>
+                  <th>Tester</th>
+                </tr>
+              </thead>
+              <tbody id="permBody">
+                <tr><td colspan="9" style="text-align:center;padding:16px;color:var(--muted);font-size:12px">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="glass-card" style="padding:0;overflow:hidden">
           <div style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid rgba(148,163,184,.1)">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.6"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -4056,6 +4056,7 @@ var _PA_PAGES = [
   { key:'activitylog',    label:'Activity Log',    note:'activity-log.html' },
   { key:'team',           label:'Team',            note:'team.html' },
   { key:'borrowerprofile',label:'Borrower Profile',note:'borrower-profile.html' },
+  { key:'journal',        label:'Journal',         note:'journal.html' },
   { key:'ccr',            label:'CCR',             note:'ccr.html' },
   { key:'schedule',       label:'Schedule',        note:'schedule.html' },
   { key:'settings',       label:'Settings',        note:'Admin only', locked:true },
@@ -4068,7 +4069,7 @@ function renderPageMatrix(access) {
     var cells = _PA_ROLES.map(function(role) {
       var isAdmin  = role === 'Admin';
       var isLocked = isAdmin || p.locked;
-      var checked  = isLocked || (Array.isArray(access[p.key]) && access[p.key].indexOf(role) !== -1);
+      var checked  = isAdmin || (!p.locked && Array.isArray(access[p.key]) && access[p.key].indexOf(role) !== -1);
       var disabled = isLocked ? 'disabled' : '';
       var title    = isAdmin ? 'Admin always has access' : (p.locked ? 'Settings is Admin only' : '');
       return '<td><span class="perm-cb-wrap"><input type="checkbox" class="perm-cb" data-page="'+_esc(p.key)+'" data-role="'+_esc(role)+'" '+(checked?'checked':'')+' '+disabled+' title="'+_esc(title)+'"></span></td>';
@@ -4085,11 +4086,16 @@ async function loadPageMatrix() {
     var res = await CamboAPI.post({ action:'page_access_get' });
     if (!res || !res.ok) throw new Error(res&&res.message||'Load failed');
     var access = res.access || {};
-    if (!res.access) {
-      _PA_PAGES.forEach(function(p) {
+    /* A page nobody has saved a rule for is open to everyone — that is what the
+       app itself falls back to. Reading a missing key as "no roles" drew the
+       row unticked and told the opposite of the truth, and saving from that
+       screen would then have made the lie real. Any page the server did not
+       mention is filled in with the same default the app uses. */
+    _PA_PAGES.forEach(function(p) {
+      if (!Array.isArray(access[p.key])) {
         access[p.key] = p.locked ? ['Admin'] : _PA_ROLES.slice();
-      });
-    }
+      }
+    });
     renderPageMatrix(access);
   } catch(e) {
     var body = document.getElementById('paBody');
