@@ -281,6 +281,7 @@ async function ensureScheduleTable() {
     updated_at    DATETIME NULL,
     KEY idx_sched_loan (loan_key)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  try { await db().query("ALTER TABLE loan_schedules ADD COLUMN freq VARCHAR(10) NOT NULL DEFAULT 'monthly'"); } catch(e) {}
   _schedTableReady = true;
 }
 
@@ -288,7 +289,7 @@ async function ensureScheduleTable() {
    named here is ignored, so a stray field can never reach the table. */
 const SCHED_TEXT = ['loan_key','borrower','co_borrower','account_no','contract_no','branch',
                     'officer','officer_phone','purpose','currency','method','disbursed_on',
-                    'first_due_on','note'];
+                    'first_due_on','note','freq'];
 const SCHED_NUM  = ['principal','annual_rate','fee_admin','fee_cbc','fee_other','late_rate','early_fee'];
 
 let _sbCcrDone = false;
@@ -2257,7 +2258,7 @@ async function handler(req, res) {
       await ensureScheduleTable();
       const [rows] = await db().query(
         `SELECT sched_key, loan_key, borrower, co_borrower, account_no, contract_no, currency,
-                principal, annual_rate, term_months, method, disbursed_on, first_due_on, paid_json,
+                principal, annual_rate, term_months, method, freq, disbursed_on, first_due_on, paid_json,
                 DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updated_utc
            FROM loan_schedules ORDER BY updated_at DESC LIMIT 500`
       );
@@ -2296,6 +2297,7 @@ async function handler(req, res) {
       row.term_months = months;
       row.basis       = Number(body.basis) === 365 ? 365 : 360;
       row.method      = row.method === 'flat' ? 'flat' : 'declining';
+      row.freq        = row.freq   === 'weekly' ? 'weekly' : 'monthly';
       row.currency    = row.currency || 'USD';
       if (!row.loan_key) row.loan_key = null;
       /* paid map: instalment number → the day it was settled */

@@ -22,6 +22,20 @@
     .sc-title { font-size:18px; font-weight:800; color:var(--text) }
     .sc-sub { font-size:11.5px; color:var(--muted); margin-top:1px }
 
+    /* ── how often it is repaid ── */
+    .sc-tabs { display:flex; gap:4px; padding:4px; border-radius:12px;
+               background:rgba(148,163,184,.1); flex-shrink:0; align-self:flex-start }
+    .sc-tab {
+      display:inline-flex; align-items:center; gap:7px; padding:8px 16px; border-radius:9px;
+      border:none; background:transparent; color:var(--muted); cursor:pointer;
+      font-family:inherit; font-size:12.5px; font-weight:700; white-space:nowrap; transition:.15s;
+    }
+    .sc-tab:hover { color:var(--text) }
+    .sc-tab svg { width:14px; height:14px }
+    .sc-tab-on { background:var(--card,#fff); color:var(--text); box-shadow:0 2px 10px rgba(0,0,0,.12) }
+    [data-theme="dark"] .sc-tab-on { background:rgba(255,255,255,.1) }
+    @media print { .sc-tabs { display:none !important } }
+
     /* ── toolbar ── */
     .sc-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex-shrink:0 }
     .sc-bar-spacer { flex:1 }
@@ -225,6 +239,17 @@
           <div class="sc-title" data-i18n="title">Schedule</div>
           <div class="sc-sub" data-i18n="sub">Every instalment, what it costs, and what is still owed</div>
         </div>
+      </div>
+
+      <div class="sc-tabs" id="scTabs">
+        <button type="button" class="sc-tab sc-tab-on" data-freq="monthly" onclick="scFreq('monthly')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+          <span data-i18n="tabMonthly">Monthly</span>
+        </button>
+        <button type="button" class="sc-tab" data-freq="weekly" onclick="scFreq('weekly')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg>
+          <span data-i18n="tabWeekly">Weekly</span>
+        </button>
       </div>
 
       <div class="sc-bar">
@@ -514,6 +539,11 @@ var TX = {
   kCostRate:    ['អត្រាថ្លៃដើម (ការប្រាក់ + កម្រៃ)', 'Cost rate (interest + fees)'],
   kTotRepay:    ['សរុបត្រូវសង', 'Total to repay'],
   perMonth:     ['ដង ប្រចាំខែ', 'x monthly'],
+  perWeek:      ['ដង ប្រចាំសប្ដាហ៍', 'x weekly'],
+  tabMonthly:   ['ប្រចាំខែ', 'Monthly'],
+  tabWeekly:    ['ប្រចាំសប្ដាហ៍', 'Weekly'],
+  instalWeeks:  ['ចំនួនដងសង (សប្ដាហ៍)', 'Instalments (weeks)'],
+  eWeeks:       ['ចំនួនដងសងត្រូវនៅចន្លោះ 1 និង 600', 'Instalments must be between 1 and 600'],
   perYear:      ['% / ឆ្នាំ', '% / year'],
   daysYear:     ['ថ្ងៃ/ឆ្នាំ', 'days/year'],
 
@@ -579,6 +609,7 @@ function scApplyLang() {
     if (v) el.textContent = v[kh ? 0 : 1];
   });
   document.getElementById('scNoteText').innerHTML = T('note');
+  scPaintFreq();   /* the instalment label depends on the rhythm, not just the language */
   var d = document.getElementById('scDenied');
   d.querySelector('div > div:first-child').textContent = T('denied');
   d.querySelector('div > div:last-child').textContent  = T('deniedSub');
@@ -677,6 +708,7 @@ function scForm() {
     annual_rate:  fnum('scRate'),
     term_months:  Math.round(fnum('scMonths')),
     method:       val('scMethod'),
+    freq:         _scFreq,
     basis:        Number(val('scBasis')) === 365 ? 365 : 360,
     disbursed_on: scGetDate('scDisb'),
     first_due_on: scGetDate('scFirst'),
@@ -686,6 +718,58 @@ function scForm() {
     late_rate:    fnum('scLate'),
     early_fee:    fnum('scEarly')
   };
+}
+
+/* ── Monthly or weekly ─────────────────────────────────────────────────────
+   The same loan, repaid on a different rhythm. Only three things actually
+   change: how far apart the due dates fall, how many instalments a year comes
+   to, and what the boxes are called. The interest is worked out the same way
+   either way — balance still owed, times the rate, for the days it was owed —
+   so a weekly schedule is not an approximation of a monthly one, it is the
+   same rule applied to shorter gaps. */
+var _scFreq = 'monthly';
+var PER_YEAR = { monthly: 12, weekly: 52 };
+
+function scPerYear() { return PER_YEAR[_scFreq] || 12; }
+
+/* Where instalment i falls, counting from the first one. */
+function scStep(first, i) {
+  return (_scFreq === 'weekly') ? new Date(first.getTime() + i * 7 * 86400000)
+                                : addMonths(first, i);
+}
+
+/* Show which rhythm is in force. Kept apart from choosing one, so opening a
+   saved schedule can match its tabs to it without re-deriving its figures. */
+function scPaintFreq() {
+  document.querySelectorAll('#scTabs .sc-tab').forEach(function (b) {
+    b.classList.toggle('sc-tab-on', b.getAttribute('data-freq') === _scFreq);
+  });
+  var lbl = document.querySelector('label[for="scMonths"]');
+  if (lbl) {
+    lbl.setAttribute('data-i18n', _scFreq === 'weekly' ? 'instalWeeks' : 'instalMonths');
+    lbl.textContent = T(_scFreq === 'weekly' ? 'instalWeeks' : 'instalMonths');
+  }
+}
+
+function scFreq(f) {
+  _scFreq = (f === 'weekly') ? 'weekly' : 'monthly';
+  scPaintFreq();
+  /* A term said in years means the same thing on either rhythm, so if they gave
+     one, it is re-read into the new count rather than left as a stale number. */
+  var y = Number(val('scYears'));
+  if (isFinite(y) && y > 0) {
+    document.getElementById('scMonths').value = Math.min(Math.max(Math.round(y * scPerYear()), 1), 600);
+  }
+  /* A first due date the filler chose was a month out; on weekly it should be a
+     week. Recomputed from the disbursement date rather than cleared — clearing
+     it left the filler declining to help, because it only ever offers dates
+     when both boxes are empty, and the schedule went blank. A date given by
+     hand is left exactly as it was. */
+  if (!_scDatesOwned) {
+    var from = dISO(scGetDate('scDisb')) || dISO(todayISO());
+    if (from) { scSetDate('scDisb', iso(from)); scSetDate('scFirst', iso(scStep(from, 1))); }
+  }
+  scDraw();
 }
 
 /* ── Dates, written the way Cambodia writes them ─────────────────────────
@@ -753,7 +837,7 @@ var _scDatesOwned = false;   /* true once a person has set a date themselves */
 function scYearsTyped() {
   var y = Number(val('scYears'));
   if (isFinite(y) && y > 0) {
-    var m = Math.round(y * 12);
+    var m = Math.round(y * scPerYear());
     document.getElementById('scMonths').value = Math.min(Math.max(m, 1), 600);
   } else if (!val('scYears')) {
     document.getElementById('scMonths').value = '';
@@ -768,7 +852,7 @@ function scMonthsTyped() {
      other on screen. 18 months reads as 1.5 years, and typing 1.5 back gives
      18 again. */
   document.getElementById('scYears').value =
-    (isFinite(m) && m > 0) ? String(Math.round((m / 12) * 100) / 100) : '';
+    (isFinite(m) && m > 0) ? String(Math.round((m / scPerYear()) * 100) / 100) : '';
   scFillDates();
   scDraw();
 }
@@ -787,7 +871,7 @@ function scFillDates() {
   var today = dISO(todayISO());
   if (!today) return;
   scSetDate('scDisb',  todayISO());
-  scSetDate('scFirst', iso(addMonths(today, 1)));
+  scSetDate('scFirst', iso(scStep(today, 1)));
 }
 
 /* ── the engine ──────────────────────────────────────────────────────────
@@ -808,11 +892,11 @@ function scBuild(f) {
   /* Flat rate charges the same interest every month on the original principal,
      no matter how much has been paid back. Declining charges only on what is
      still owed, for the days it was owed. */
-  var flatPer = r2(f.principal * rate / 12);
+  var flatPer = r2(f.principal * rate / scPerYear());
 
   var rows = [], bal = f.principal, prev = disb;
   for (var i = 1; i <= n; i++) {
-    var due  = addMonths(first, i - 1);
+    var due  = scStep(first, i - 1);
     var days = daysApart(prev, due);
     var open = bal;
     var interest = (f.method === 'flat') ? flatPer : r2(open * rate * days / f.basis);
@@ -893,7 +977,7 @@ function scKeyFacts(f, s) {
   var h = '';
   h += kfRow(T('principal'),  money(f.principal, c));
   h += kfRow(T('kNominal'),   f.annual_rate.toFixed(2) + T('perYear'));
-  h += kfRow(T('kInstal'),    f.term_months + ' ' + T('perMonth'));
+  h += kfRow(T('kInstal'),    f.term_months + ' ' + T(_scFreq === 'weekly' ? 'perWeek' : 'perMonth'));
   h += kfRow(T('method'),     f.method === 'flat' ? T('mFlat') : T('mDecl'));
   h += kfRow(T('basis'),      f.basis + ' ' + T('daysYear'));
   h += kfRow(T('kTotInt'),    money(s.totalInterest, c));
@@ -1011,7 +1095,7 @@ function scPrintable(f, s) {
     +   g('លេខកិច្ចសន្យា / Contract', f.contract_no)
     +   g('ចំនួនប្រាក់ / Principal', money(f.principal, c))
     +   g('អត្រាការប្រាក់ / Rate', f.annual_rate.toFixed(2) + '% ' + (f.method === 'flat' ? 'flat' : 'declining'))
-    +   g('រយៈពេល / Term', f.term_months + ' months')
+    +   g('រយៈពេល / Term', f.term_months + (_scFreq === 'weekly' ? ' weeks' : ' months'))
     +   g('ថ្ងៃបើកប្រាក់ / Disbursed', pretty(dISO(f.disbursed_on)))
     +   g('ថ្ងៃផុតកំណត់ / Matures', pretty(s.last.due))
     +   g('ការប្រាក់សរុប / Total interest', money(s.totalInterest, c))
@@ -1065,7 +1149,8 @@ async function scLoadSaved() {
           { day:'2-digit', month:'short', year:'numeric' }) : '';
         return '<option value="' + esc(s.sched_key) + '">'
              + esc((s.borrower || 'Untitled') + '  ·  ' + (s.currency === 'KHR' ? '៛' : '$')
-                   + num(Number(s.principal)) + '  ·  ' + s.term_months + 'm  ·  ' + when)
+                   + num(Number(s.principal)) + '  ·  ' + s.term_months
+                   + (s.freq === 'weekly' ? 'w' : 'm') + '  ·  ' + when)
              + '</option>';
       }).join('');
   sel.value = _scKey || '';
@@ -1089,6 +1174,7 @@ async function scOpen(key) {
     put('scMonths', d.term_months);
     put('scYears', d.term_months ? String(Math.round((d.term_months / 12) * 100) / 100) : '');
     put('scMethod', d.method || 'declining');
+    _scFreq = (d.freq === 'weekly') ? 'weekly' : 'monthly';
     put('scBasis', String(d.basis || 360));
     scSetDate('scDisb',  d.disbursed_on);
     scSetDate('scFirst', d.first_due_on);
@@ -1098,6 +1184,7 @@ async function scOpen(key) {
     document.getElementById('scCust').value =
       _scLoans.some(function(x){ return x.DateTime === d.loan_key; }) ? d.loan_key : '';
     _scDatesOwned = true;   /* these dates were chosen when it was saved */
+    scPaintFreq();          /* tabs and the instalment label follow what was saved */
     try { _scPaid = d.paid_json ? (JSON.parse(d.paid_json) || {}) : {}; } catch(e) { _scPaid = {}; }
     document.getElementById('scDelBtn').disabled = false;
     scDraw();
@@ -1153,6 +1240,7 @@ function scNew() {
   document.getElementById('scCust').value   = '';
   document.getElementById('scSaved').value  = '';
   document.getElementById('scDelBtn').disabled = true;
+  _scFreq = 'monthly'; scPaintFreq();
   scDraw();
   if (window.appFormSaved) appFormSaved();
 }
