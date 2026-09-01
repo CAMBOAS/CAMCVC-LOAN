@@ -739,6 +739,52 @@ async function getDataFocusMode(username) {
      empty scope_linked_to must never be treated the same as "unscoped". Scoped viewers also never
      see loans an Admin has explicitly marked "restricted" — an extra Admin-only hide on top of
      team scope. ── */
+/* ── Which team owns a saved schedule ────────────────────────────────────────
+   One built for a customer belongs to that customer's team; one typed in
+   without picking a customer belongs to the team of whoever wrote it. Loans
+   were scoped from the start and schedules were not, so every team could read,
+   overwrite and delete every other team's work. Same rule as the loans above:
+   no team of your own (Super Admin, or an assistant acting for them) means no
+   filter, a team with an empty scope list sees nothing. ── */
+function scheduleScopeSQL(_bv) {
+  const owner = teamOwnerOf(_bv);
+  if (owner === null) return { clause: '', params: [] };
+  const list = (_bv && Array.isArray(_bv.scope_linked_to)) ? _bv.scope_linked_to : [];
+  if (!list.length) return { clause: ' AND 1=0', params: [] };
+  return {
+    clause: ` AND ( (s.loan_key IS NOT NULL AND s.loan_key <> ''
+                     AND l.linked_to IN (?) AND (l.restricted = 0 OR l.restricted IS NULL))
+                 OR ((s.loan_key IS NULL OR s.loan_key = '')
+                     AND (CASE WHEN cu.role = 'Sub Admin' THEN cu.username
+                               ELSE NULLIF(cu.created_by, '') END) = ?) )`,
+    params: [list, owner]
+  };
+}
+
+/* Same question for one schedule, for the actions that take a key. */
+async function canTouchSchedule(_bv, key) {
+  const owner = teamOwnerOf(_bv);
+  if (owner === null) return true;
+  const list = (_bv && Array.isArray(_bv.scope_linked_to)) ? _bv.scope_linked_to : [];
+  if (!list.length) return false;
+  const [rows] = await db().query(
+    'SELECT loan_key, created_by FROM loan_schedules WHERE sched_key=? LIMIT 1', [key]);
+  if (!rows.length) return false;
+  const sc = rows[0];
+  if (sc.loan_key) {
+    const [l] = await db().query(
+      'SELECT linked_to, restricted FROM loans WHERE loan_key=? LIMIT 1', [sc.loan_key]);
+    if (!l.length) return false;
+    return list.indexOf(l[0].linked_to) !== -1 && !l[0].restricted;
+  }
+  if (!sc.created_by) return false;
+  const [c] = await db().query(
+    'SELECT username, role, created_by FROM users WHERE username=? LIMIT 1', [sc.created_by]);
+  if (!c.length) return false;
+  const scOwner = c[0].role === 'Sub Admin' ? c[0].username : (c[0].created_by || null);
+  return scOwner !== null && scOwner === owner;
+}
+
 function scopeFilterSQL(_bv, column) {
   var col = column || 'linked_to';
   if (teamOwnerOf(_bv) === null) return { clause: '', params: [] };
@@ -2256,11 +2302,16 @@ async function handler(req, res) {
     /* ── Saved repayment schedules ── */
     if (action === 'schedule_list') {
       await ensureScheduleTable();
+      const _ss = scheduleScopeSQL(_bv);
       const [rows] = await db().query(
-        `SELECT sched_key, loan_key, borrower, co_borrower, account_no, contract_no, currency,
-                principal, annual_rate, term_months, method, freq, disbursed_on, first_due_on, paid_json,
-                DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updated_utc
-           FROM loan_schedules ORDER BY updated_at DESC LIMIT 500`
+        `SELECT s.sched_key, s.loan_key, s.borrower, s.co_borrower, s.account_no, s.contract_no, s.currency,
+                s.principal, s.annual_rate, s.term_months, s.method, s.freq, s.disbursed_on, s.first_due_on,
+                s.paid_json, DATE_FORMAT(s.updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updated_utc
+           FROM loan_schedules s
+           LEFT JOIN loans l  ON l.loan_key  = s.loan_key
+           LEFT JOIN users cu ON cu.username = s.created_by
+          WHERE 1=1${_ss.clause}
+          ORDER BY s.updated_at DESC LIMIT 500`, _ss.params
       );
       return res.json({ ok:true, schedules: rows });
     }
@@ -2269,6 +2320,7 @@ async function handler(req, res) {
       await ensureScheduleTable();
       const key = String(body.key || '').trim();
       if (!key) return res.json({ ok:false, message:'Not found' });
+      if (!await canTouchSchedule(_bv, key)) return res.json({ ok:false, message:'Not found' });
       const [rows] = await db().query('SELECT * FROM loan_schedules WHERE sched_key=? LIMIT 1', [key]);
       if (!rows.length) return res.json({ ok:false, message:'Not found' });
       return res.json({ ok:true, schedule: rows[0] });
@@ -2277,6 +2329,15 @@ async function handler(req, res) {
     if (action === 'schedule_save') {
       await ensureScheduleTable();
       const key = String(body.key || '').trim() || ('S' + Date.now() + Math.floor(Math.random()*1000));
+      /* Writing over one that already exists has to clear the same gate as
+         reading it. A key nothing is stored under yet is a new record, so it
+         goes through — refusing there would stop schedules being created. */
+      if (String(body.key || '').trim()) {
+        const [_ex] = await db().query('SELECT 1 FROM loan_schedules WHERE sched_key=? LIMIT 1', [key]);
+        if (_ex.length && !await canTouchSchedule(_bv, key)) {
+          return res.json({ ok:false, message:'Not found' });
+        }
+      }
 
       const principal = Number(body.principal);
       const months    = Math.round(Number(body.term_months));
@@ -2325,6 +2386,7 @@ async function handler(req, res) {
       await ensureScheduleTable();
       const key = String(body.key || '').trim();
       if (!key) return res.json({ ok:false, message:'Not found' });
+      if (!await canTouchSchedule(_bv, key)) return res.json({ ok:false, message:'Not found' });
       const [r] = await db().query('DELETE FROM loan_schedules WHERE sched_key=?', [key]);
       if (!r.affectedRows) return res.json({ ok:false, message:'Not found' });
       logActivity('schedule_del', actor, _bu, key, {}).catch(()=>{});
