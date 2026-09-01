@@ -2761,17 +2761,33 @@ async function handler(req, res) {
       if (_bv.role !== 'Admin') return res.json({ ok:false, message:'Admin only', code:403 });
       const access = body.access;
       if (!access || typeof access !== 'object') return res.json({ ok:false, message:'access required' });
-      const ALL_PAGES = ['dashboard','customers','loanlist','reports','repayment','fbid','activitylog','team','borrowerprofile','settings'];
+      /* This list has to hold every page the matrix in Settings can switch
+         (_PA_PAGES in pages/settings.html). Journal, CCR and Schedule were
+         added to that matrix but never added here, so their switches were
+         thrown away on the way in while the save still answered "ok" — the
+         setting sprang back to "everyone" on the next load. */
+      const ALL_PAGES = ['dashboard','customers','loanlist','reports','repayment','fbid',
+                         'activitylog','team','borrowerprofile','journal','ccr','schedule','settings'];
+      /* Sub Admin was missing here while the matrix offered it a column, so a
+         page falling back to the default would have quietly locked them out. */
+      const ALL_ROLES = ['Admin','Sub Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
+
+      /* Say so rather than discarding it silently: a page the matrix can switch
+         but this list does not know is a bug, and a save that claims to have
+         worked hides it until someone tests the switch by hand. */
+      const unknown = Object.keys(access).filter(k => !ALL_PAGES.includes(k));
+      if (unknown.length) {
+        return res.json({ ok:false, message:'Unknown page: ' + unknown.join(', ') });
+      }
+
       for (const p of ALL_PAGES) {
-        if (!Array.isArray(access[p])) access[p] = ['Admin','Owner','Staff Loan','Staff','Moderator','Viewer','Tester'];
+        if (!Array.isArray(access[p])) access[p] = ALL_ROLES.slice();
         if (!access[p].includes('Admin')) access[p].unshift('Admin');
       }
       access.settings = ['Admin'];
       await db().query('DELETE FROM settings WHERE type LIKE "pageaccess_%"');
       for (const [key, val] of Object.entries(access)) {
-        if (ALL_PAGES.includes(key)) {
-          await db().query('INSERT INTO settings (type, value) VALUES (?, ?)', ['pageaccess_'+key, JSON.stringify(val)]);
-        }
+        await db().query('INSERT INTO settings (type, value) VALUES (?, ?)', ['pageaccess_'+key, JSON.stringify(val)]);
       }
       logActivity('page_access_update', actor, _bu, null, {}).catch(()=>{});
       return res.json({ ok:true });

@@ -199,6 +199,20 @@
   </main>
 </div>
 
+<style>
+  .jr-denied { position:fixed; inset:0; z-index:99999; display:none; align-items:center; justify-content:center;
+               background:rgba(8,12,24,.86); backdrop-filter:blur(6px); padding:18px }
+  .jr-denied.on { display:flex }
+  .jr-denied-box { background:#151d2e; border:1px solid rgba(148,163,184,.18); border-radius:18px;
+                   padding:26px 24px; max-width:340px; text-align:center; color:#e2e8f0 }
+</style>
+<div class="jr-denied" id="jrDenied">
+  <div class="jr-denied-box">
+    <div style="font-size:16px;font-weight:800;margin-bottom:8px">Not available for your role</div>
+    <div style="font-size:12.5px;color:#94a3b8;line-height:1.7">Ask an Admin if you need access to Journal.</div>
+  </div>
+</div>
+
 <script src="../assets/js/layout.js?v=45"></script>
 <script src="../assets/js/dashboard-layout.js?v=45"></script>
 <script src="../assets/js/auth.js?v=3"></script>
@@ -472,6 +486,12 @@ async function saveHourNote(dateKey, hour, content) {
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', function() {
   if (window.CamcvcAuth && !window.CamcvcAuth.check()) return;
+  /* The same gate CCR and Schedule use, so the page cannot be reached by
+     typing its address once a role has been switched off for it. */
+  if (window.appCanPage && !appCanPage('journal')) {
+    document.getElementById('jrDenied').classList.add('on');
+    return;
+  }
   loadHabits();
 });
 </script>
