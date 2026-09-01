@@ -76,7 +76,11 @@
     var el = (typeof root === 'string') ? document.querySelector(root) : (root || document.body);
     if (!el) return;
     var touched = false;
-    function mark(e) { if (e && e.isTrusted) touched = true; }
+    function mark(e) {
+      /* A search box is a way of looking, not a thing being filled in — typing
+         in one must not raise "you have unsaved details". */
+      if (e && e.isTrusted && !(e.target && e.target.hasAttribute && e.target.hasAttribute('data-no-track'))) touched = true;
+    }
     el.addEventListener('input',  mark, true);
     el.addEventListener('change', mark, true);
     window.appGuardUnsaved(function () { return touched; });

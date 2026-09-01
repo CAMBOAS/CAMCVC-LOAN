@@ -102,6 +102,35 @@
     .sc-date-btn:hover { background:rgba(124,92,255,.12); color:#7c5cff }
     .sc-date-btn svg { width:14px; height:14px }
 
+    /* ── picking one customer out of thousands ── */
+    .sc-pick { position:relative }
+    .sc-pick .sc-in { padding-right:32px }
+    .sc-pick-x {
+      position:absolute; right:5px; top:50%; transform:translateY(-50%);
+      width:22px; height:22px; padding:0; border:none; border-radius:6px; cursor:pointer;
+      background:rgba(148,163,184,.16); color:var(--muted);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .sc-pick-x:hover { background:rgba(239,68,68,.16); color:#dc2626 }
+    .sc-pick-x svg { width:12px; height:12px }
+    .sc-pick-list {
+      position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:60;
+      max-height:280px; overflow-y:auto; border-radius:11px;
+      background:var(--card,#fff); border:1px solid rgba(148,163,184,.24);
+      box-shadow:0 14px 38px rgba(0,0,0,.22);
+    }
+    [data-theme="dark"] .sc-pick-list { background:#111827 }
+    .sc-pick-row {
+      display:flex; align-items:baseline; gap:8px; padding:8px 11px; cursor:pointer;
+      border-bottom:1px solid rgba(148,163,184,.1); font-size:12.5px;
+    }
+    .sc-pick-row:last-child { border-bottom:none }
+    .sc-pick-row:hover, .sc-pick-row.on { background:rgba(124,92,255,.12) }
+    .sc-pick-nm { font-weight:700; color:var(--text) }
+    .sc-pick-meta { font-size:11px; color:var(--muted); margin-left:auto; white-space:nowrap }
+    .sc-pick-none { padding:12px; text-align:center; font-size:12px; color:var(--muted) }
+    .sc-pick-more { padding:7px 11px; font-size:11px; color:var(--muted); background:rgba(148,163,184,.07) }
+
     /* ── key facts ── */
     .sc-kf { display:flex; flex-direction:column; gap:0 }
     .sc-kf-row {
@@ -322,9 +351,18 @@
             <div class="sc-sec" data-i18n="who">Who</div>
             <div class="sc-f sc-f-wide">
               <label class="sc-lbl" for="scCust" data-i18n="custOnFile">Customer on file</label>
-              <select class="sc-in" id="scCust" onchange="scPickCustomer()">
-                <option value="" data-i18n="noCust">— not linked to a customer —</option>
-              </select>
+              <div class="sc-pick">
+                <input class="sc-in" id="scCustSearch" type="search" autocomplete="off"
+                       data-no-track data-lpignore="true" data-1p-ignore
+                       placeholder="Search a customer by name, phone or ID…"
+                       oninput="scCustFilter()" onfocus="scCustFilter()" onkeydown="scCustKey(event)">
+                <button type="button" class="sc-pick-x" id="scCustX" onclick="scCustClear()"
+                        title="Not linked to a customer" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="sc-pick-list" id="scCustList" hidden></div>
+                <input type="hidden" id="scCust">
+              </div>
             </div>
             <div class="sc-f"><label class="sc-lbl" for="scBorrower" data-i18n="borrower">Borrower</label>
               <input class="sc-in" id="scBorrower" autocomplete="off" oninput="scDraw()"></div>
@@ -486,8 +524,8 @@
      padding:11px 18px;border-radius:11px;background:#151d2e;color:#e2e8f0;font-size:12.5px;font-weight:700;
      box-shadow:0 18px 44px rgba(0,0,0,.4)"></div>
 
-<script src="../assets/js/layout.js?v=44"></script>
-<script src="../assets/js/dashboard-layout.js?v=44"></script>
+<script src="../assets/js/layout.js?v=45"></script>
+<script src="../assets/js/dashboard-layout.js?v=45"></script>
 <script src="../assets/js/auth.js?v=3"></script>
 <script src="../assets/js/api.js?v=10"></script>
 <script>
@@ -519,6 +557,9 @@ var TX = {
   fees:         ['កម្រៃ និងការពិន័យ', 'Fees and penalties'],
   custOnFile:   ['អតិថិជនក្នុងប្រព័ន្ធ', 'Customer on file'],
   noCust:       ['— មិនភ្ជាប់នឹងអតិថិជន —', '— not linked to a customer —'],
+  custSearch:   ['ស្វែងរកតាមឈ្មោះ ទូរស័ព្ទ ឬអត្តសញ្ញាណប័ណ្ណ…', 'Search a customer by name, phone or ID…'],
+  custNone:     ['រកមិនឃើញអតិថិជនណាមួយ', 'No customer matches'],
+  custMore:     ['នៅមាន N នាក់ទៀត — សូមវាយបន្ថែម', 'N more — keep typing to narrow it down'],
   borrower:     ['អ្នកខ្ចី', 'Borrower'],
   coBorrower:   ['អ្នករួមខ្ចី', 'Co-borrower'],
   acct:         ['លេខគណនី', 'Account no.'],
@@ -657,6 +698,7 @@ function scApplyLang() {
     if (v) el.textContent = v[kh ? 0 : 1];
   });
   document.getElementById('scNoteText').innerHTML = T('note');
+  document.getElementById('scCustSearch').placeholder = T('custSearch');
   scPaintFreq();   /* the instalment label depends on the rhythm, not just the language */
   var d = document.getElementById('scDenied');
   d.querySelector('div > div:first-child').textContent = T('denied');
@@ -1232,17 +1274,111 @@ function scPrint() {
 }
 
 /* ── customers ── */
-function scPickCustomer() {
-  var key = val('scCust');
-  if (!key) return;
-  var l = _scLoans.find(function(x){ return x.DateTime === key; });
+/* ── Finding one customer among thousands ───────────────────────────────────
+   A plain dropdown asks the reader to scroll a list that will one day hold
+   three thousand names. This searches instead, over the three things a
+   customer record actually holds — name, phone and national ID.
+
+   Account number is deliberately not among them: it exists only on the
+   schedule, typed by hand to match the paper, and is not stored against the
+   customer, so there would be nothing to search. */
+var _scCustHits = [], _scCustAt = -1;
+var CUST_SHOW = 40;
+
+function scCustFilter() {
+  var q = String((document.getElementById('scCustSearch') || {}).value || '').trim().toLowerCase();
+  var list = document.getElementById('scCustList');
+  if (!q) { scCustHide(); return; }
+
+  _scCustHits = _scLoans.filter(function (l) {
+    return [l.FullName, l.Phone, l.NationalID].some(function (v) {
+      return String(v || '').toLowerCase().indexOf(q) !== -1;
+    });
+  });
+  _scCustAt = -1;
+
+  if (!_scCustHits.length) {
+    list.innerHTML = '<div class="sc-pick-none">' + esc(T('custNone')) + '</div>';
+    list.hidden = false;
+    return;
+  }
+
+  var shown = _scCustHits.slice(0, CUST_SHOW);
+  list.innerHTML = shown.map(function (l, i) {
+    var meta = [l.Phone, l.NationalID].filter(Boolean).join(' · ');
+    return '<div class="sc-pick-row" data-i="' + i + '" onmousedown="scCustPick(' + i + ')">'
+         + '<span class="sc-pick-nm">' + esc(l.FullName || '—') + '</span>'
+         + (meta ? '<span class="sc-pick-meta">' + esc(meta) + '</span>' : '')
+         + '</div>';
+  }).join('')
+  + (_scCustHits.length > CUST_SHOW
+      ? '<div class="sc-pick-more">' + esc(T('custMore').replace('N', _scCustHits.length - CUST_SHOW)) + '</div>'
+      : '');
+  list.hidden = false;
+}
+
+function scCustHide() {
+  var list = document.getElementById('scCustList');
+  if (list) { list.hidden = true; list.innerHTML = ''; }
+  _scCustAt = -1;
+}
+
+/* Arrow through the matches and take one with Enter, so a name can be picked
+   without the hand leaving the keyboard. */
+function scCustKey(e) {
+  var list = document.getElementById('scCustList');
+  if (e.key === 'Escape') { scCustHide(); return; }
+  if (!list || list.hidden) return;
+  var rows = list.querySelectorAll('.sc-pick-row');
+  if (!rows.length) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    _scCustAt += (e.key === 'ArrowDown' ? 1 : -1);
+    if (_scCustAt < 0) _scCustAt = rows.length - 1;
+    if (_scCustAt >= rows.length) _scCustAt = 0;
+    rows.forEach(function (r, i) { r.classList.toggle('on', i === _scCustAt); });
+    rows[_scCustAt].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    scCustPick(_scCustAt >= 0 ? _scCustAt : 0);
+  }
+}
+
+function scCustPick(i) {
+  var l = _scCustHits[i];
   if (!l) return;
+  document.getElementById('scCust').value = l.DateTime || '';
+  document.getElementById('scCustSearch').value = l.FullName || '';
+  document.getElementById('scCustX').hidden = false;
+  scCustHide();
+
   document.getElementById('scBorrower').value = l.FullName || '';
   if (!val('scPrincipal') || Number(val('scPrincipal')) === 0) {
     if (Number(l.Money) > 0) document.getElementById('scPrincipal').value = Number(l.Money);
   }
   scDraw();
 }
+
+function scCustClear() {
+  document.getElementById('scCust').value = '';
+  document.getElementById('scCustSearch').value = '';
+  document.getElementById('scCustX').hidden = true;
+  scCustHide();
+  scDraw();
+}
+
+/* Show whichever customer a saved schedule was linked to. */
+function scCustShow(key) {
+  var l = key ? _scLoans.find(function (x) { return x.DateTime === key; }) : null;
+  document.getElementById('scCust').value = l ? key : '';
+  document.getElementById('scCustSearch').value = l ? (l.FullName || '') : '';
+  document.getElementById('scCustX').hidden = !l;
+}
+
+/* Clicking anywhere else puts the list away */
+document.addEventListener('click', function (e) {
+  if (!e.target.closest || !e.target.closest('.sc-pick')) scCustHide();
+});
 
 /* ── saved schedules ── */
 async function scLoadSaved() {
@@ -1296,8 +1432,7 @@ async function scOpen(key) {
     put('scFeeAdmin', Number(d.fee_admin)); put('scFeeCbc', Number(d.fee_cbc));
     put('scFeeOther', Number(d.fee_other)); put('scLate', Number(d.late_rate));
     put('scEarly', Number(d.early_fee));
-    document.getElementById('scCust').value =
-      _scLoans.some(function(x){ return x.DateTime === d.loan_key; }) ? d.loan_key : '';
+    scCustShow(d.loan_key);
     _scDatesOwned = true;   /* these dates were chosen when it was saved */
     scPaintFreq();          /* tabs and the instalment label follow what was saved */
     try { _scPaid = d.paid_json ? (JSON.parse(d.paid_json) || {}) : {}; } catch(e) { _scPaid = {}; }
@@ -1352,7 +1487,7 @@ function scNew() {
   document.getElementById('scCur').value    = 'USD';
   document.getElementById('scMethod').value = 'declining';
   document.getElementById('scBasis').value  = '360';
-  document.getElementById('scCust').value   = '';
+  scCustClear();
   document.getElementById('scSaved').value  = '';
   document.getElementById('scDelBtn').disabled = true;
   _scFreq = 'monthly'; scPaintFreq();
@@ -1365,13 +1500,7 @@ async function scInit() {
     var a = await CamboAPI.post({ action: 'get_all' });
     if (a && a.ok) {
       _scLoans = a.loans || [];
-      document.getElementById('scCust').innerHTML =
-        '<option value="" data-i18n="noCust">' + esc(T('noCust')) + '</option>'
-        + _scLoans.map(function(l) {
-            return '<option value="' + esc(l.DateTime) + '">'
-                 + esc((l.FullName || 'Unnamed') + (l.Phone ? '  ·  ' + l.Phone : ''))
-                 + '</option>';
-          }).join('');
+      /* Nothing to build up front any more — the box searches this list. */
     }
   } catch(e) {
     scToast(T('tNoCust'), true);
