@@ -189,6 +189,9 @@
     .sc-late-amt { font-weight:800; color:#f97316 }
     .sc-late-open { color:#ef4444 }
     .sc-waived-by { font-size:10.5px; color:var(--muted) }
+    .sc-paid-date { font-family:inherit; font-size:11.5px; padding:3px 6px; border-radius:7px;
+                    border:1px solid rgba(148,163,184,.32); background:transparent; color:var(--text) }
+    .sc-paid-date:focus { outline:2px solid rgba(124,92,255,.45); outline-offset:1px }
     .sc-late-cap-note { margin:0 0 9px; padding:7px 10px; border-radius:9px; font-size:11.5px;
                         background:rgba(249,115,22,.09); color:#c2410c; line-height:1.6 }
     [data-theme="dark"] .sc-late-cap-note { color:#fdba74 }
@@ -672,6 +675,10 @@ var TX = {
   lateGrace:    ['ថ្ងៃអនុគ្រោះ', 'Days forgiven first'],
   lateCap:      ['ពិន័យអតិបរមា', 'Late charge ceiling'],
   lateTitle:    ['ដងសងដែលយឺត', 'Late instalments'],
+  paidDateHint: ['ថ្ងៃដែលអតិថិជនសងពិតប្រាកដ — ប្ដូរបានបើអ្នកទើបធីកថ្ងៃនេះសម្រាប់ការសងកាលពីមុន',
+                 'The day the customer actually paid — change it if you ticked this today for a payment made earlier'],
+  paidDateNote: ['ថ្ងៃសងអាចកែបាន។ ការធីកប្រអប់សរសេរថ្ងៃនេះជាមុនសិន ដូច្នេះបើអ្នកទើបបញ្ចូលទិន្នន័យចាស់ សូមកែថ្ងៃសងឱ្យត្រូវ មុននឹងជឿលើការពិន័យ។',
+                 'The settled date can be edited. Ticking the box fills in today, so if you are entering older records, correct the date before trusting the charge.'],
   cSettledOn:   ['សងនៅថ្ងៃ', 'Settled on'],
   cDaysLate:    ['យឺត (ថ្ងៃ)', 'Days late'],
   cCharged:     ['គិតពិន័យ (ថ្ងៃ)', 'Days charged'],
@@ -1401,17 +1408,23 @@ function scPaintLate(f, s) {
 
   var c = f.currency, kh = scLang() === 'kh';
   var note = document.getElementById('scLateCapNote');
-  if (L.relief > 0) {
-    note.hidden = false;
-    note.textContent = T('capNote').replace('G', money(L.gross, c)).replace('C', money(L.cap, c));
-  } else { note.hidden = true; }
+  var msg  = [];
+  /* Anything settled counts on its recorded day, and that day may only be a
+     tick made long after the fact — so say so wherever a charge is shown. */
+  if (L.rows.some(function (r) { return r.paidOn; })) msg.push(T('paidDateNote'));
+  if (L.relief > 0) msg.push(T('capNote').replace('G', money(L.gross, c)).replace('C', money(L.cap, c)));
+  if (msg.length) { note.hidden = false; note.textContent = msg.join('  '); }
+  else { note.hidden = true; }
 
   document.getElementById('scLateBody').innerHTML = L.rows.map(function (r) {
     return '<tr class="' + (r.waivedBy ? 'sc-waived' : '') + '">'
       + '<td>' + r.i + '</td>'
       + '<td>' + esc(pretty(r.due)) + '</td>'
-      + '<td>' + (r.paidOn ? esc(prettyISO(r.paidOn))
-                           : '<span class="sc-late-open">' + esc(T('notSettled')) + '</span>') + '</td>'
+      + '<td>' + (r.paidOn
+            ? '<input type="date" class="sc-paid-date" value="' + esc(r.paidOn) + '"'
+              + ' onchange="scSetPaidDate(' + r.i + ', this.value)"'
+              + ' title="' + esc(T('paidDateHint')) + '">'
+            : '<span class="sc-late-open">' + esc(T('notSettled')) + '</span>') + '</td>'
       + '<td class="sc-num">' + r.daysLate + '</td>'
       + '<td class="sc-num">' + r.charged + '</td>'
       + '<td class="sc-num">' + esc(money(r.instal, c)) + '</td>'
@@ -1493,8 +1506,19 @@ function kpi(label, val, sub, colour) {
     + '<div class="sc-kpi-accent" style="background:' + colour + '"></div></div>';
 }
 
+/* Ticking records today, because that is the common case — the collector marks
+   the instalment as the money comes in. It is only a first guess though. Records
+   are often entered in batches days or weeks afterwards, and an instalment paid
+   on time in May but ticked in September would otherwise be read as four months
+   late and charged for it. scSetPaidDate is how that is corrected. */
 function scTogglePaid(n, box) {
   if (box.checked) _scPaid[n] = todayISO(); else delete _scPaid[n];
+  scDraw();
+}
+
+function scSetPaidDate(n, iso) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ''))) return;
+  _scPaid[n] = iso;
   scDraw();
 }
 
