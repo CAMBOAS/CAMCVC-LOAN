@@ -282,6 +282,10 @@ async function ensureScheduleTable() {
     KEY idx_sched_loan (loan_key)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
   try { await db().query("ALTER TABLE loan_schedules ADD COLUMN freq VARCHAR(10) NOT NULL DEFAULT 'monthly'"); } catch(e) {}
+  /* Daily lending here is negotiated as a flat sum — $100 borrowed, $5 charged —
+     rather than quoted as a percentage, so the agreed figure is stored as it was
+     agreed instead of being turned into a rate that would not survive the trip back. */
+  try { await db().query("ALTER TABLE loan_schedules ADD COLUMN fixed_interest DECIMAL(14,2) NOT NULL DEFAULT 0"); } catch(e) {}
   _schedTableReady = true;
 }
 
@@ -290,7 +294,8 @@ async function ensureScheduleTable() {
 const SCHED_TEXT = ['loan_key','borrower','co_borrower','account_no','contract_no','branch',
                     'officer','officer_phone','purpose','currency','method','disbursed_on',
                     'first_due_on','note','freq'];
-const SCHED_NUM  = ['principal','annual_rate','fee_admin','fee_cbc','fee_other','late_rate','early_fee'];
+const SCHED_NUM  = ['principal','annual_rate','fee_admin','fee_cbc','fee_other','late_rate','early_fee',
+                    'fixed_interest'];
 
 let _sbCcrDone = false;
 
@@ -2305,7 +2310,8 @@ async function handler(req, res) {
       const _ss = scheduleScopeSQL(_bv);
       const [rows] = await db().query(
         `SELECT s.sched_key, s.loan_key, s.borrower, s.co_borrower, s.account_no, s.contract_no, s.currency,
-                s.principal, s.annual_rate, s.term_months, s.method, s.freq, s.disbursed_on, s.first_due_on,
+                s.principal, s.annual_rate, s.fixed_interest, s.term_months, s.method, s.freq,
+                s.disbursed_on, s.first_due_on,
                 s.paid_json, DATE_FORMAT(s.updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updated_utc
            FROM loan_schedules s
            LEFT JOIN loans l  ON l.loan_key  = s.loan_key
@@ -2357,8 +2363,8 @@ async function handler(req, res) {
       for (const f of SCHED_NUM)  { const n = Number(body[f]); row[f] = isFinite(n) && n >= 0 ? n : 0; }
       row.term_months = months;
       row.basis       = Number(body.basis) === 365 ? 365 : 360;
-      row.method      = row.method === 'flat' ? 'flat' : 'declining';
-      row.freq        = row.freq   === 'weekly' ? 'weekly' : 'monthly';
+      row.method      = (row.method === 'flat' || row.method === 'fixed') ? row.method : 'declining';
+      row.freq        = (row.freq === 'weekly' || row.freq === 'daily') ? row.freq : 'monthly';
       row.currency    = row.currency || 'USD';
       if (!row.loan_key) row.loan_key = null;
       /* paid map: instalment number → the day it was settled */
