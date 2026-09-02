@@ -189,6 +189,9 @@
     .sc-late-amt { font-weight:800; color:#f97316 }
     .sc-late-open { color:#ef4444 }
     .sc-waived-by { font-size:10.5px; color:var(--muted) }
+    .sc-late-cap-note { margin:0 0 9px; padding:7px 10px; border-radius:9px; font-size:11.5px;
+                        background:rgba(249,115,22,.09); color:#c2410c; line-height:1.6 }
+    [data-theme="dark"] .sc-late-cap-note { color:#fdba74 }
     .sc-mid, .sc-tbl thead th.sc-mid { text-align:center }
     .sc-no { font-variant-numeric:tabular-nums; color:var(--muted); font-size:11px }
     .sc-due { font-weight:700; white-space:nowrap }
@@ -544,6 +547,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5"/><path d="M12 16h.01"/></svg>
           <span data-i18n="lateTitle">Late instalments</span>
         </div>
+        <div class="sc-late-cap-note" id="scLateCapNote" hidden></div>
         <div class="sc-tbl-wrap">
           <table class="sc-tbl sc-late-tbl">
             <thead>
@@ -678,6 +682,10 @@ var TX = {
   waivedBy:     ['លើកលែងដោយ W', 'waived by W'],
   lateDue:      ['ការពិន័យត្រូវបង់', 'Late charges due'],
   lateWaived:   ['បានលើកលែង', 'Waived'],
+  lateGross:    ['ការពិន័យពិតប្រាកដ', 'Charges earned'],
+  lateRelief:   ['កាត់ដោយពិដាន C', 'Reduced by the C ceiling'],
+  capNote:      ['ការពិន័យពិតប្រាកដគឺ G តែពិដានដែលអ្នកកំណត់គឺ C ដូច្នេះលើសពីនោះត្រូវបានកាត់ចេញ។ ជួរនីមួយៗខាងក្រោមបង្ហាញចំនួនពិតរបស់វា ហើយការកាត់បង្ហាញនៅជួរចុងក្រោយ។',
+                 'The charges earned come to G, but the ceiling you set is C, so the excess is taken off. Each row below shows what it actually earned, and the reduction is shown at the foot.'],
   kpiLateFee:   ['ការពិន័យ', 'Late charges'],
   subLateN:     ['ដងសងយឺត N', 'N instalment(s) ran late'],
   subWaived:    ['លើកលែង X', 'X waived'],
@@ -1374,22 +1382,15 @@ function scLateRows(f, s) {
                paidOn: paidOn, daysLate: daysLate, charged: charged,
                fee: fee, waivedBy: waivedBy });
   });
-  /* The ceiling applies to what is actually owed, so waiving a charge does not
-     use up room under it. Charges are trimmed from the newest back, leaving the
-     oldest ones whole — those are the ones that will be discussed first. */
+  /* Every row keeps the charge it actually earned. The ceiling is then shown as
+     one deduction underneath, the way an invoice shows a discount, because the
+     first version spread the reduction back through the rows and left a row
+     reading "60 days charged … 0.00" with nothing on screen to explain it. A
+     reader could only conclude the arithmetic was broken. */
   var cap = f.late_cap || 0;
-  if (cap > 0 && total > cap) {
-    var over = r2(total - cap);
-    for (var k = out.length - 1; k >= 0 && over > 0; k--) {
-      if (out[k].waivedBy) continue;
-      var cut = Math.min(out[k].fee, over);
-      out[k].fee = r2(out[k].fee - cut);
-      out[k].capped = true;
-      over = r2(over - cut);
-    }
-    total = cap;
-  }
-  return { rows: out, total: total, waived: waivedTotal, capped: cap > 0 && cap <= total };
+  var relief = (cap > 0 && total > cap) ? r2(total - cap) : 0;
+  return { rows: out, gross: total, relief: relief, total: r2(total - relief),
+           waived: waivedTotal, cap: cap };
 }
 
 function scPaintLate(f, s) {
@@ -1399,6 +1400,12 @@ function scPaintLate(f, s) {
   card.hidden = false;
 
   var c = f.currency, kh = scLang() === 'kh';
+  var note = document.getElementById('scLateCapNote');
+  if (L.relief > 0) {
+    note.hidden = false;
+    note.textContent = T('capNote').replace('G', money(L.gross, c)).replace('C', money(L.cap, c));
+  } else { note.hidden = true; }
+
   document.getElementById('scLateBody').innerHTML = L.rows.map(function (r) {
     return '<tr class="' + (r.waivedBy ? 'sc-waived' : '') + '">'
       + '<td>' + r.i + '</td>'
@@ -1416,13 +1423,21 @@ function scPaintLate(f, s) {
       + '</tr>';
   }).join('');
 
-  document.getElementById('scLateFoot').innerHTML =
-      '<tr><td colspan="6" style="text-align:right;font-weight:800">' + esc(T('lateDue')) + '</td>'
-    + '<td class="sc-num"><span class="sc-late-amt">' + esc(money(L.total, c)) + '</span></td><td></td></tr>'
-    + (L.waived > 0
-        ? '<tr><td colspan="6" style="text-align:right;color:var(--muted)">' + esc(T('lateWaived')) + '</td>'
-          + '<td class="sc-num" style="color:var(--muted)">' + esc(money(L.waived, c)) + '</td><td></td></tr>'
-        : '');
+  function footRow(label, amount, cls) {
+    return '<tr><td colspan="6" style="text-align:right' + (cls === 'sum' ? ';font-weight:800' : ';color:var(--muted)') + '">'
+         + esc(label) + '</td><td class="sc-num"'
+         + (cls === 'sum' ? '><span class="sc-late-amt">' : ' style="color:var(--muted)">')
+         + esc(amount) + (cls === 'sum' ? '</span>' : '') + '</td><td></td></tr>';
+  }
+  var foot = '';
+  /* Only worth a subtotal line when something is taken off it. */
+  if (L.relief > 0) {
+    foot += footRow(T('lateGross'), money(L.gross, c));
+    foot += footRow(T('lateRelief').replace('C', money(L.cap, c)), '− ' + money(L.relief, c));
+  }
+  if (L.waived > 0) foot += footRow(T('lateWaived'), money(L.waived, c));
+  foot += footRow(T('lateDue'), money(L.total, c), 'sum');
+  document.getElementById('scLateFoot').innerHTML = foot;
 }
 
 /* Forgiving a charge is a decision, so it is recorded against whoever made it. */
