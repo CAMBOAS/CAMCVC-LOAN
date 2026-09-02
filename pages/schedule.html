@@ -609,6 +609,8 @@ var TX = {
   mDecl:        ['តាមសមតុល្យថយចុះ', 'Declining balance'],
   mFlat:        ['អត្រាថេរ', 'Flat rate'],
   mFixed:       ['ចំនួនព្រមព្រៀង', 'Agreed amount'],
+  agreedNote:   ['ការប្រាក់នេះជាចំនួនដែលបានព្រមព្រៀង មិនមែនគិតតាមភាគរយទេ ដូច្នេះប្រអប់ភាគរយខាងលើមិនប៉ះពាល់ដល់តួលេខនេះឡើយ។',
+                 'This interest is the sum that was agreed, not a rate, so the percentage boxes above do not affect these figures.'],
   fixedInt:     ['ការប្រាក់ជាចំនួនព្រមព្រៀង', 'Interest as an agreed amount'],
   perPay:       ['ចំនួនក្នុងមួយដង', 'Amount per instalment'],
   b360:         ['360 ថ្ងៃ/ឆ្នាំ', '360 days/year'],
@@ -1184,11 +1186,16 @@ function kfRow(k, v, cls) {
 function scKeyFacts(f, s) {
   var c = f.currency;
   var h = '';
+  var agreed = (f.method === 'fixed');
   h += kfRow(T('principal'),  money(f.principal, c));
-  h += kfRow(T('kNominal'),   f.annual_rate.toFixed(2) + T('perYear'));
+  /* On an agreed amount the percentage boxes are not what is being charged, so
+     showing a nominal rate here would state a figure the borrower never agreed
+     to. The sum they did agree to goes in its place. */
+  h += agreed ? kfRow(T('fixedInt'), money(f.fixed_interest, c))
+              : kfRow(T('kNominal'), f.annual_rate.toFixed(2) + T('perYear'));
   h += kfRow(T('kInstal'),    f.term_months + ' ' + T(_scFreq === 'daily' ? 'perDay'
                                                   : _scFreq === 'weekly' ? 'perWeek' : 'perMonth'));
-  h += kfRow(T('method'),     f.method === 'flat' ? T('mFlat') : T('mDecl'));
+  h += kfRow(T('method'),     agreed ? T('mFixed') : f.method === 'flat' ? T('mFlat') : T('mDecl'));
   h += kfRow(T('basis'),      f.basis + ' ' + T('daysYear'));
   h += kfRow(T('kTotInt'),    money(s.totalInterest, c));
   if (s.totalFees > 0) {
@@ -1199,13 +1206,18 @@ function scKeyFacts(f, s) {
   }
   h += kfRow(T('kFirstInst'), money(s.first.total, c) + '  ·  ' + pretty(s.first.due));
   h += kfRow(T('kLastInst'),  money(s.last.total, c)  + '  ·  ' + pretty(s.last.due));
-  h += kfRow(T('kTermRate'),
+  /* Same reason: a term rate built from the unused percentage would be fiction.
+     The cost rate stays either way — it is worked out from the interest actually
+     charged, so on an agreed amount it is the one honest answer to "what rate is
+     this really?" */
+  if (!agreed) h += kfRow(T('kTermRate'),
         (f.annual_rate * (f.term_months / scPerYear())).toFixed(2) + '%');
   h += kfRow(T('kCostRate'),  s.costRate.toFixed(2) + T('perYear'));
   h += kfRow(T('kTotRepay'),  money(s.totalPayable, c), 'sc-kf-sum');
   document.getElementById('scKeyFacts').innerHTML = h;
 
-  document.getElementById('scRateHint').textContent = T('termRateNote') + ' ' + T('costHint')
+  document.getElementById('scRateHint').textContent =
+      (agreed ? T('agreedNote') + ' ' : T('termRateNote') + ' ') + T('costHint')
     .replace('I', num(s.totalInterest)).replace('F', num(s.totalFees))
     .replace('A', num(s.avgBal)).replace('Y', s.years.toFixed(2))
     .replace('R', f.annual_rate.toFixed(2) + '%');
