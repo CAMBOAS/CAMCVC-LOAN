@@ -286,6 +286,19 @@ async function ensureScheduleTable() {
      rather than quoted as a percentage, so the agreed figure is stored as it was
      agreed instead of being turned into a rate that would not survive the trip back. */
   try { await db().query("ALTER TABLE loan_schedules ADD COLUMN fixed_interest DECIMAL(14,2) NOT NULL DEFAULT 0"); } catch(e) {}
+  /* A late charge is negotiated with the borrower like everything else here, so
+     it belongs to the loan rather than to a setting applied to everyone. Three
+     parts: how it is worked out, how much, and how many days are forgiven first.
+     late_rate holds the amount — currency per day, or percent per day, according
+     to late_kind — and was an unused "%/year" box before this. */
+  try { await db().query("ALTER TABLE loan_schedules ADD COLUMN late_kind VARCHAR(10) NOT NULL DEFAULT 'none'"); } catch(e) {}
+  try { await db().query("ALTER TABLE loan_schedules ADD COLUMN late_grace INT NOT NULL DEFAULT 0"); } catch(e) {}
+  /* Every overdue instalment runs its own daily clock, so on a short daily loan
+     left unpaid the charges outgrow the loan itself within a month. This is the
+     ceiling; 0 means no ceiling, which is the old behaviour. */
+  try { await db().query("ALTER TABLE loan_schedules ADD COLUMN late_cap DECIMAL(14,2) NOT NULL DEFAULT 0"); } catch(e) {}
+  /* Which instalments an Admin has forgiven, as {instalment: who}. */
+  try { await db().query("ALTER TABLE loan_schedules ADD COLUMN waived_json TEXT"); } catch(e) {}
   _schedTableReady = true;
 }
 
@@ -293,9 +306,9 @@ async function ensureScheduleTable() {
    named here is ignored, so a stray field can never reach the table. */
 const SCHED_TEXT = ['loan_key','borrower','co_borrower','account_no','contract_no','branch',
                     'officer','officer_phone','purpose','currency','method','disbursed_on',
-                    'first_due_on','note','freq'];
+                    'first_due_on','note','freq','late_kind'];
 const SCHED_NUM  = ['principal','annual_rate','fee_admin','fee_cbc','fee_other','late_rate','early_fee',
-                    'fixed_interest'];
+                    'fixed_interest','late_grace','late_cap'];
 
 let _sbCcrDone = false;
 
@@ -2312,7 +2325,8 @@ async function handler(req, res) {
         `SELECT s.sched_key, s.loan_key, s.borrower, s.co_borrower, s.account_no, s.contract_no, s.currency,
                 s.principal, s.annual_rate, s.fixed_interest, s.term_months, s.method, s.freq,
                 s.disbursed_on, s.first_due_on,
-                s.paid_json, DATE_FORMAT(s.updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updated_utc
+                s.paid_json, s.late_kind, s.late_rate, s.late_grace, s.waived_json,
+                DATE_FORMAT(s.updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updated_utc
            FROM loan_schedules s
            LEFT JOIN loans l  ON l.loan_key  = s.loan_key
            LEFT JOIN users cu ON cu.username = s.created_by
@@ -2364,6 +2378,8 @@ async function handler(req, res) {
       row.term_months = months;
       row.basis       = Number(body.basis) === 365 ? 365 : 360;
       row.method      = (row.method === 'flat' || row.method === 'fixed') ? row.method : 'declining';
+      row.late_kind   = (row.late_kind === 'fixed' || row.late_kind === 'percent') ? row.late_kind : 'none';
+      row.late_grace  = Math.min(Math.max(Math.round(Number(row.late_grace) || 0), 0), 365);
       row.freq        = (row.freq === 'weekly' || row.freq === 'daily') ? row.freq : 'monthly';
       row.currency    = row.currency || 'USD';
       if (!row.loan_key) row.loan_key = null;
@@ -2375,6 +2391,17 @@ async function handler(req, res) {
         if (n >= 1 && n <= months && dateOk(src[k])) paid[n] = String(src[k]);
       }
       row.paid_json = JSON.stringify(paid);
+
+      /* waived map: instalment number → who forgave its late charge. Kept beside
+         the paid map so a forgiven charge is a recorded decision with a name on
+         it, not a number quietly reduced. */
+      const waived = {};
+      const wsrc = body.waived && typeof body.waived === 'object' ? body.waived : {};
+      for (const k of Object.keys(wsrc).slice(0, 600)) {
+        const n = Math.round(Number(k));
+        if (n >= 1 && n <= months) waived[n] = String(wsrc[k] || _bu).slice(0, 60);
+      }
+      row.waived_json = JSON.stringify(waived);
 
       const cols = Object.keys(row);
       const set  = cols.map(c => c + '=VALUES(' + c + ')').filter(c => !c.startsWith('sched_key'));

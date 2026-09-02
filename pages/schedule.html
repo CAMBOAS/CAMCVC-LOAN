@@ -179,6 +179,16 @@
        has to be headed from the right or the label floats away from its own
        numbers. */
     .sc-tbl thead th.sc-num { text-align:right }
+
+    /* The late table is the same table in a warmer key — it is a warning, not
+       an error, and it should not shout over the schedule above it. */
+    .sc-late-card { margin-top:12px; border-color:rgba(249,115,22,.28) }
+    .sc-late-tbl { min-width:720px }
+    .sc-late-tbl tbody tr.sc-waived { opacity:.55 }
+    .sc-late-tbl tbody tr.sc-waived .sc-late-amt { text-decoration:line-through }
+    .sc-late-amt { font-weight:800; color:#f97316 }
+    .sc-late-open { color:#ef4444 }
+    .sc-waived-by { font-size:10.5px; color:var(--muted) }
     .sc-mid, .sc-tbl thead th.sc-mid { text-align:center }
     .sc-no { font-variant-numeric:tabular-nums; color:var(--muted); font-size:11px }
     .sc-due { font-weight:700; white-space:nowrap }
@@ -460,8 +470,20 @@
               <input class="sc-in" id="scFeeCbc" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
             <div class="sc-f"><label class="sc-lbl" for="scFeeOther" data-i18n="feeOther">Other fees</label>
               <input class="sc-in" id="scFeeOther" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
-            <div class="sc-f"><label class="sc-lbl" for="scLate" data-i18n="lateRate">Late interest %/year</label>
+            <div class="sc-f"><label class="sc-lbl" for="scLateKind" data-i18n="lateKind">Late charge</label>
+              <select class="sc-in" id="scLateKind" onchange="scDraw()">
+                <option value="none" data-i18n="lkNone">None</option>
+                <option value="fixed" data-i18n="lkFixed">Fixed per day late</option>
+                <option value="percent" data-i18n="lkPct">% of the instalment, per day</option>
+              </select></div>
+            <div class="sc-f"><label class="sc-lbl" for="scLate" data-i18n="lateAmt">Late charge amount</label>
               <input class="sc-in" id="scLate" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scGrace" data-i18n="lateGrace">Days forgiven first</label>
+              <input class="sc-in" id="scGrace" type="number" step="1" min="0" max="365" value="0" oninput="scDraw()"
+                     title="A borrower a day or two late is not charged"></div>
+            <div class="sc-f"><label class="sc-lbl" for="scLateCap" data-i18n="lateCap">Late charge ceiling</label>
+              <input class="sc-in" id="scLateCap" type="number" step="0.01" min="0" value="0" oninput="scDraw()"
+                     title="Total late charges never exceed this. 0 means no ceiling."></div>
             <div class="sc-f"><label class="sc-lbl" for="scEarly" data-i18n="earlyFee">Early-payoff fee %</label>
               <input class="sc-in" id="scEarly" type="number" step="0.01" min="0" value="0" oninput="scDraw()"></div>
           </div>
@@ -513,6 +535,33 @@
           </table>
         </div>
         <div class="sc-foot" id="scFoot"></div>
+      </div>
+
+      <!-- Which instalments ran late, and what that came to. Hidden entirely
+           when nothing is late, so a healthy loan is not given a red box. -->
+      <div class="glass-card sc-card sc-late-card" id="scLateCard" hidden>
+        <div class="sc-card-hd">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5"/><path d="M12 16h.01"/></svg>
+          <span data-i18n="lateTitle">Late instalments</span>
+        </div>
+        <div class="sc-tbl-wrap">
+          <table class="sc-tbl sc-late-tbl">
+            <thead>
+              <tr>
+                <th style="width:52px" data-i18n="cNo">#</th>
+                <th data-i18n="cDue">Due date</th>
+                <th data-i18n="cSettledOn">Settled on</th>
+                <th class="sc-num" data-i18n="cDaysLate">Days late</th>
+                <th class="sc-num" data-i18n="cCharged">Days charged</th>
+                <th class="sc-num" data-i18n="cInstalAmt">Instalment</th>
+                <th class="sc-num" data-i18n="cLateFee">Late charge</th>
+                <th class="sc-mid" data-i18n="cWaive">Waive</th>
+              </tr>
+            </thead>
+            <tbody id="scLateBody"></tbody>
+            <tfoot id="scLateFoot"></tfoot>
+          </table>
+        </div>
       </div>
 
       <div class="sc-note">
@@ -611,6 +660,27 @@ var TX = {
   mFixed:       ['ចំនួនព្រមព្រៀង', 'Agreed amount'],
   agreedNote:   ['ការប្រាក់នេះជាចំនួនដែលបានព្រមព្រៀង មិនមែនគិតតាមភាគរយទេ ដូច្នេះប្រអប់ភាគរយខាងលើមិនប៉ះពាល់ដល់តួលេខនេះឡើយ។',
                  'This interest is the sum that was agreed, not a rate, so the percentage boxes above do not affect these figures.'],
+  lateKind:     ['ការពិន័យយឺត', 'Late charge'],
+  lkNone:       ['គ្មាន', 'None'],
+  lkFixed:      ['ចំនួនថេរ ក្នុងមួយថ្ងៃយឺត', 'Fixed per day late'],
+  lkPct:        ['% នៃដងសង ក្នុងមួយថ្ងៃ', '% of the instalment, per day'],
+  lateAmt:      ['ចំនួនពិន័យ', 'Late charge amount'],
+  lateGrace:    ['ថ្ងៃអនុគ្រោះ', 'Days forgiven first'],
+  lateCap:      ['ពិន័យអតិបរមា', 'Late charge ceiling'],
+  lateTitle:    ['ដងសងដែលយឺត', 'Late instalments'],
+  cSettledOn:   ['សងនៅថ្ងៃ', 'Settled on'],
+  cDaysLate:    ['យឺត (ថ្ងៃ)', 'Days late'],
+  cCharged:     ['គិតពិន័យ (ថ្ងៃ)', 'Days charged'],
+  cInstalAmt:   ['ដងសង', 'Instalment'],
+  cLateFee:     ['ការពិន័យ', 'Late charge'],
+  cWaive:       ['លើកលែង', 'Waive'],
+  notSettled:   ['មិនទាន់សង', 'not settled'],
+  waivedBy:     ['លើកលែងដោយ W', 'waived by W'],
+  lateDue:      ['ការពិន័យត្រូវបង់', 'Late charges due'],
+  lateWaived:   ['បានលើកលែង', 'Waived'],
+  kpiLateFee:   ['ការពិន័យ', 'Late charges'],
+  subLateN:     ['ដងសងយឺត N', 'N instalment(s) ran late'],
+  subWaived:    ['លើកលែង X', 'X waived'],
   fixedInt:     ['ការប្រាក់ជាចំនួនព្រមព្រៀង', 'Interest as an agreed amount'],
   perPay:       ['ចំនួនក្នុងមួយដង', 'Amount per instalment'],
   b360:         ['360 ថ្ងៃ/ឆ្នាំ', '360 days/year'],
@@ -748,7 +818,7 @@ function scSavedLabel() {
     : T('savedNone');
 }
 
-var _scLoans = [], _scSaved = [], _scKey = '', _scPaid = {}, _scToastT = null;
+var _scLoans = [], _scSaved = [], _scKey = '', _scPaid = {}, _scWaived = {}, _scToastT = null;
 
 var KH_DAY = ['អាទិត្យ','ចន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍'];
 var EN_DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -790,6 +860,9 @@ function dISO(s) {
 function iso(t) {
   return t.getUTCFullYear() + '-' + String(t.getUTCMonth()+1).padStart(2,'0') + '-' + String(t.getUTCDate()).padStart(2,'0');
 }
+/* The paid map holds ISO strings; the table shows dd-mm-yyyy like everything else. */
+function prettyISO(iso) { var d = dISO(iso); return d ? pretty(d) : String(iso || ''); }
+
 function pretty(t) {
   return String(t.getUTCDate()).padStart(2,'0') + '-' + String(t.getUTCMonth()+1).padStart(2,'0') + '-' + t.getUTCFullYear();
 }
@@ -825,6 +898,9 @@ function scForm() {
     principal:    fnum('scPrincipal'),
     annual_rate:  fnum('scRate'),
     fixed_interest: fnum('scFixed'),
+    late_kind:    val('scLateKind') || 'none',
+    late_grace:   Math.round(fnum('scGrace')),
+    late_cap:     fnum('scLateCap'),
     term_months:  Math.round(fnum('scMonths')),
     method:       val('scMethod'),
     freq:         _scFreq,
@@ -1174,6 +1250,7 @@ function scDraw() {
   scKeyFacts(f, s);
   scTable(f, s);
   scKpis(f, s);
+  scPaintLate(f, s);
   scPrintable(f, s);
 }
 
@@ -1269,6 +1346,98 @@ function scTable(f, s) {
     + (s.totalFees > 0 ? T('footFees').replace('F', money(s.totalFees, c)) : '');
 }
 
+/* ── What a late instalment costs ────────────────────────────────────────────
+   Two kinds of lateness count, and both matter to the borrower. One is still
+   unpaid and the clock is running to today. The other was paid, but paid after
+   its date — the money is in, and the charge for the delay still stands. The
+   paid map records the day each instalment was settled, which is what makes the
+   second kind knowable at all.
+
+   Days forgiven come off the front, so a borrower a day or two behind is not
+   charged. A forgiven instalment keeps its row, showing what was waived and by
+   whom, rather than disappearing as though it had never been late. */
+function scLateRows(f, s) {
+  var kind  = f.late_kind, rate = f.late_rate || 0, grace = f.late_grace || 0;
+  var today = todayISO(), out = [], total = 0, waivedTotal = 0;
+  s.rows.forEach(function (r) {
+    var paidOn   = _scPaid[r.i] || '';
+    var upTo     = paidOn || today;
+    var daysLate = Math.round((dISO(upTo) - dISO(r.iso)) / 86400000);
+    if (!(daysLate > 0)) return;
+    var charged = Math.max(0, daysLate - grace);
+    var fee = (kind === 'fixed')   ? r2(rate * charged)
+            : (kind === 'percent') ? r2(r.total * (rate / 100) * charged)
+            : 0;
+    var waivedBy = _scWaived[r.i] || '';
+    if (waivedBy) waivedTotal = r2(waivedTotal + fee); else total = r2(total + fee);
+    out.push({ i: r.i, iso: r.iso, due: r.due, instal: r.total,
+               paidOn: paidOn, daysLate: daysLate, charged: charged,
+               fee: fee, waivedBy: waivedBy });
+  });
+  /* The ceiling applies to what is actually owed, so waiving a charge does not
+     use up room under it. Charges are trimmed from the newest back, leaving the
+     oldest ones whole — those are the ones that will be discussed first. */
+  var cap = f.late_cap || 0;
+  if (cap > 0 && total > cap) {
+    var over = r2(total - cap);
+    for (var k = out.length - 1; k >= 0 && over > 0; k--) {
+      if (out[k].waivedBy) continue;
+      var cut = Math.min(out[k].fee, over);
+      out[k].fee = r2(out[k].fee - cut);
+      out[k].capped = true;
+      over = r2(over - cut);
+    }
+    total = cap;
+  }
+  return { rows: out, total: total, waived: waivedTotal, capped: cap > 0 && cap <= total };
+}
+
+function scPaintLate(f, s) {
+  var L = scLateRows(f, s), card = document.getElementById('scLateCard');
+  if (!card) return;
+  if (!L.rows.length) { card.hidden = true; return; }
+  card.hidden = false;
+
+  var c = f.currency, kh = scLang() === 'kh';
+  document.getElementById('scLateBody').innerHTML = L.rows.map(function (r) {
+    return '<tr class="' + (r.waivedBy ? 'sc-waived' : '') + '">'
+      + '<td>' + r.i + '</td>'
+      + '<td>' + esc(pretty(r.due)) + '</td>'
+      + '<td>' + (r.paidOn ? esc(prettyISO(r.paidOn))
+                           : '<span class="sc-late-open">' + esc(T('notSettled')) + '</span>') + '</td>'
+      + '<td class="sc-num">' + r.daysLate + '</td>'
+      + '<td class="sc-num">' + r.charged + '</td>'
+      + '<td class="sc-num">' + esc(money(r.instal, c)) + '</td>'
+      + '<td class="sc-num"><span class="sc-late-amt">' + esc(money(r.fee, c)) + '</span>'
+      + (r.waivedBy ? '<div class="sc-waived-by">' + esc(T('waivedBy').replace('W', r.waivedBy)) + '</div>' : '')
+      + '</td>'
+      + '<td class="sc-mid"><input type="checkbox" data-late="' + r.i + '"'
+      + (r.waivedBy ? ' checked' : '') + ' onchange="scWaiveToggle(this)"></td>'
+      + '</tr>';
+  }).join('');
+
+  document.getElementById('scLateFoot').innerHTML =
+      '<tr><td colspan="6" style="text-align:right;font-weight:800">' + esc(T('lateDue')) + '</td>'
+    + '<td class="sc-num"><span class="sc-late-amt">' + esc(money(L.total, c)) + '</span></td><td></td></tr>'
+    + (L.waived > 0
+        ? '<tr><td colspan="6" style="text-align:right;color:var(--muted)">' + esc(T('lateWaived')) + '</td>'
+          + '<td class="sc-num" style="color:var(--muted)">' + esc(money(L.waived, c)) + '</td><td></td></tr>'
+        : '');
+}
+
+/* Forgiving a charge is a decision, so it is recorded against whoever made it. */
+function scWaiveToggle(box) {
+  var n = Number(box.getAttribute('data-late'));
+  if (box.checked) {
+    var me = null;
+    try { me = JSON.parse(localStorage.getItem('appAuth') || 'null'); } catch (e) {}
+    _scWaived[n] = (me && (me.name || me.u)) || 'admin';
+  } else {
+    delete _scWaived[n];
+  }
+  scDraw();
+}
+
 function scKpis(f, s) {
   var c = f.currency, today = todayISO();
   var paidAmt = 0, paidN = 0, lateAmt = 0, lateN = 0, next = null;
@@ -1290,7 +1459,16 @@ function scKpis(f, s) {
           lateN ? '#ef4444' : '#64748b')
     + kpi(T('kpiNext'), next ? money(next.total, c) : '—',
           next ? pretty(next.due) + '  ·  ' + (kh ? KH_DAY[next.due.getUTCDay()] : EN_DAY[next.due.getUTCDay()])
-               : T('subDone'), '#0ea5e9');
+               : T('subDone'), '#0ea5e9')
+    + (function () {
+        var L = scLateRows(f, s);
+        if (!L.rows.length) return '';
+        return kpi(T('kpiLateFee'),
+                   L.total > 0 ? money(L.total, c) : '—',
+                   T('subLateN').replace('N', L.rows.length)
+                     + (L.waived > 0 ? '  ·  ' + T('subWaived').replace('X', money(L.waived, c)) : ''),
+                   L.total > 0 ? '#f97316' : '#64748b');
+      })();
 }
 function kpi(label, val, sub, colour) {
   return '<div class="glass-card sc-kpi">'
@@ -1540,7 +1718,10 @@ async function scOpen(key) {
     scCustShow(d.loan_key);
     _scDatesOwned = true;   /* these dates were chosen when it was saved */
     scPaintFreq();          /* tabs and the instalment label follow what was saved */
-    try { _scPaid = d.paid_json ? (JSON.parse(d.paid_json) || {}) : {}; } catch(e) { _scPaid = {}; }
+    try { _scPaid   = d.paid_json   ? (JSON.parse(d.paid_json)   || {}) : {}; } catch(e) { _scPaid   = {}; }
+    try { _scWaived = d.waived_json ? (JSON.parse(d.waived_json) || {}) : {}; } catch(e) { _scWaived = {}; }
+    document.getElementById('scLateKind').value = d.late_kind || 'none';
+    put('scGrace', Number(d.late_grace)); put('scLateCap', Number(d.late_cap));
     document.getElementById('scDelBtn').disabled = false;
     scDraw();
     if (window.appFormSaved) appFormSaved();
@@ -1555,7 +1736,8 @@ async function scSave() {
   if (!f.borrower) { scToast(T('tNeedName'), true); return; }
   try {
     f.key  = _scKey;
-    f.paid = _scPaid;
+    f.paid   = _scPaid;
+    f.waived = _scWaived;
     f.action = 'schedule_save';
     var r = await CamboAPI.post(f);
     if (!r || !r.ok) throw new Error((r && r.message) || T('tNoSave'));
@@ -1580,13 +1762,14 @@ async function scDelete() {
 }
 
 function scNew() {
-  _scKey = ''; _scPaid = {};
+  _scKey = ''; _scPaid = {}; _scWaived = {};
   ['scBorrower','scCo','scAcct','scContract','scBranch','scPurpose','scOfficer','scOffPhone',
    'scPrincipal','scRate','scRateM','scYears','scMonths','scDisb','scFirst']
     .forEach(function(id){ document.getElementById(id).value = ''; });
   _scDatesOwned = false;
-  ['scFeeAdmin','scFeeCbc','scFeeOther','scLate','scEarly','scFixed']
+  ['scFeeAdmin','scFeeCbc','scFeeOther','scLate','scEarly','scFixed','scGrace','scLateCap']
     .forEach(function(id){ document.getElementById(id).value = '0'; });
+  document.getElementById('scLateKind').value = 'none';
   document.getElementById('scPerPay').value = '';
   /* The three pickers keep their defaults — a dropdown has to hold something,
      and USD / declining / 360 is a starting point, not somebody's data. */
