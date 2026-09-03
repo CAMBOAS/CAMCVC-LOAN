@@ -21,3 +21,7 @@ MySQL.txt
 Note*.txt
 *credential*
 *password*
+
+# Sealed backups and anything unpacked from them — still customer data.
+*.enc
+Backup-unlocked*/
