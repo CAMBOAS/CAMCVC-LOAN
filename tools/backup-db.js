@@ -20,15 +20,20 @@ for (const line of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8
 }
 const mysql = require(path.join(process.cwd(), 'node_modules', 'mysql2', 'promise'));
 
-const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+const stamp  = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const outDir = process.argv[2] || path.join('backups', stamp);
+const dbUrl  = process.argv[3] || process.env.MYSQL_URL;
 
 (async () => {
-  if (!process.env.MYSQL_URL) { console.error('MYSQL_URL missing from .env.local'); process.exit(1); }
+  if (!dbUrl) {
+    console.error('No connection string. Either set MYSQL_URL in .env.local, or pass one:');
+    console.error('  node tools/backup-db.js backups/sale "mysql://user:pass@host:port/railway"');
+    process.exit(1);
+  }
 
   let pool;
   try {
-    pool = mysql.createPool({ uri: process.env.MYSQL_URL, dateStrings: true, connectTimeout: 20000 });
+    pool = mysql.createPool({ uri: dbUrl, dateStrings: true, connectTimeout: 20000 });
     await pool.query('SELECT 1');
   } catch (e) {
     console.error('Cannot reach the database:', e.code || e.message);
@@ -54,7 +59,8 @@ const outDir = process.argv[2] || path.join('backups', stamp);
 
   fs.writeFileSync(path.join(outDir, 'schema.sql'), schema, 'utf8');
   fs.writeFileSync(path.join(outDir, 'manifest.json'),
-    JSON.stringify({ takenAt: new Date().toISOString(), host: (process.env.MYSQL_URL.match(/@([^:/]+)/) || [])[1] || '',
+    JSON.stringify({ takenAt: new Date().toISOString(),
+                     host: (dbUrl.match(/@([^:/]+)/) || [])[1] || '',
                      tables: counts }, null, 2), 'utf8');
 
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
