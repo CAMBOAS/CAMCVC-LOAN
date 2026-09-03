@@ -33,7 +33,11 @@ const dbUrl  = process.argv[3] || process.env.MYSQL_URL;
 
   let pool;
   try {
-    pool = mysql.createPool({ uri: dbUrl, dateStrings: true, connectTimeout: 20000 });
+    /* Same TLS setting the app itself uses, so what is tested here is what the
+       app will meet. Hosted MySQL increasingly refuses plaintext outright —
+       TiDB Cloud among them — and Railway accepted it either way. */
+    pool = mysql.createPool({ uri: dbUrl, dateStrings: true, connectTimeout: 20000,
+                              ssl: { rejectUnauthorized: false } });
     await pool.query('SELECT 1');
   } catch (e) {
     console.error('Cannot reach the database:', e.code || e.message);

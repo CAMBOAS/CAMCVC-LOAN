@@ -18,15 +18,24 @@ const mysql = require(path.join(process.cwd(), 'node_modules', 'mysql2', 'promis
 
 const dir   = process.argv[2];
 const force = process.argv.includes('--force');
-if (!dir) { console.error('Usage: node tools/restore-db.js <backup folder> [--force]'); process.exit(1); }
+/* Same third-argument form as backup-db.js, so a restore into a brand new host
+   does not mean editing .env.local before you know the host even works. */
+const dbUrl = process.argv.find((a, i) => i > 2 && /^mysql:\/\//.test(a)) || process.env.MYSQL_URL;
+if (!dir) {
+  console.error('Usage: node tools/restore-db.js <backup folder> [mysql://...] [--force]');
+  process.exit(1);
+}
 if (!fs.existsSync(path.join(dir, 'manifest.json'))) { console.error('No manifest.json in ' + dir); process.exit(1); }
+if (!dbUrl) { console.error('No connection string: set MYSQL_URL or pass one.'); process.exit(1); }
 
 const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
 
 (async () => {
-  const pool = mysql.createPool({ uri: process.env.MYSQL_URL, dateStrings: true,
+  /* TLS to match the app, which sets it too — hosted MySQL often refuses
+     plaintext, TiDB Cloud among them. */
+  const pool = mysql.createPool({ uri: dbUrl, dateStrings: true, ssl: { rejectUnauthorized: false },
                                   connectTimeout: 20000, multipleStatements: true });
-  console.log('restoring into ' + ((process.env.MYSQL_URL.match(/@([^:/]+)/) || [])[1] || '?'));
+  console.log('restoring into ' + ((dbUrl.match(/@([^:/]+)/) || [])[1] || '?'));
   console.log('backup taken ' + manifest.takenAt + ' from ' + manifest.host);
   console.log('');
 
