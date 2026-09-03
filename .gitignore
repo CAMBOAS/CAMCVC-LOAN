@@ -9,3 +9,9 @@ Thumbs.db
 
 .vercel
 .env*
+
+# Database copies. These hold real customer records — names, phone numbers,
+# addresses, loan amounts — and must never reach the repository.
+backups/
+*.sql
+*.dump
