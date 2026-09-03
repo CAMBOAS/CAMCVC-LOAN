@@ -15,3 +15,9 @@ Thumbs.db
 backups/
 *.sql
 *.dump
+
+# Credential notes kept alongside the project — plain-text connection strings.
+MySQL.txt
+Note*.txt
+*credential*
+*password*

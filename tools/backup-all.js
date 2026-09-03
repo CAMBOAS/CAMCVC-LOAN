@@ -25,6 +25,13 @@ for (const line of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(
   if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
 }
 
+/* Where the copies land — read after .env.local, not before, or the setting in
+   that file never gets a say. Set BACKUP_DIR to a folder Google Drive syncs and
+   every run reaches the cloud on its own, which matters here: a backup that
+   exists only on one desk is one dead disk away from the week this project just
+   had. Falls back to backups/ beside the code, which is gitignored. */
+const OUT_ROOT = process.env.BACKUP_DIR || path.join(ROOT, 'backups');
+
 const TARGETS = [
   { name: 'loan', url: process.env.MYSQL_URL },
   { name: 'sale', url: process.env.SALE_MYSQL_URL },
@@ -36,7 +43,7 @@ const log = (m) => console.log('[' + new Date().toISOString().slice(0, 19) + '] 
 let failed = 0;
 for (const t of TARGETS) {
   if (!t.url) { log(t.name + ': no connection string in .env.local, skipped'); continue; }
-  const out = path.join(ROOT, 'backups', t.name + '-' + stamp);
+  const out = path.join(OUT_ROOT, t.name + '-' + stamp);
   try {
     log(t.name + ': starting');
     const res = execFileSync(process.execPath,
@@ -59,7 +66,7 @@ for (const t of TARGETS) {
      the newest. That would have deleted the wrong copies once fourteen had built
      up — silently, and only months from now. */
   try {
-    const dir  = path.join(ROOT, 'backups');
+    const dir  = OUT_ROOT;
     const mine = fs.readdirSync(dir)
       .filter(d => d.startsWith(t.name + '-') && fs.statSync(path.join(dir, d)).isDirectory())
       .map(d => ({ d, at: fs.statSync(path.join(dir, d)).mtimeMs }))
