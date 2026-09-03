@@ -69,9 +69,18 @@ const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'ut
 
     const cols = Object.keys(rows[0]);
     const sql  = 'INSERT INTO `' + table + '` (' + cols.map(c => '`' + c + '`').join(',') + ') VALUES ?';
+
+    /* A json column comes back from mysql2 as a real array or object, not as
+       text. Handed straight back into a multi-row insert it is read as a row
+       constructor — "(a, b)" where a single value belongs — and the server
+       rejects the statement. It has to go back as the text it is stored as.
+       Buffers are left alone; those are binary columns and travel correctly. */
+    const cell = v => (v !== null && typeof v === 'object' && !Buffer.isBuffer(v))
+      ? JSON.stringify(v) : v;
+
     /* In batches, so one huge table does not exceed max_allowed_packet. */
     for (let i = 0; i < rows.length; i += 200) {
-      const slice = rows.slice(i, i + 200).map(r => cols.map(c => r[c]));
+      const slice = rows.slice(i, i + 200).map(r => cols.map(c => cell(r[c])));
       await pool.query(sql, [slice]);
     }
     const [[c]] = await pool.query('SELECT COUNT(*) n FROM `' + table + '`');
