@@ -14,9 +14,17 @@
 const fs   = require('fs');
 const path = require('path');
 
-for (const line of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').split(/\r?\n/)) {
-  const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-  if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+/* .env.local is where the connection string lives on a developer's machine. It
+   is deliberately not in the repository, so anywhere else — a CI runner, most
+   of all — it simply is not there, and a missing file is not a problem when the
+   string was handed over on the command line instead. */
+try {
+  for (const line of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+} catch (e) {
+  if (e.code !== 'ENOENT') throw e;
 }
 const mysql = require(path.join(process.cwd(), 'node_modules', 'mysql2', 'promise'));
 

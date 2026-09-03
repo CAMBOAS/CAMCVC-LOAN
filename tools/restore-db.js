@@ -10,9 +10,15 @@
 const fs   = require('fs');
 const path = require('path');
 
-for (const line of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').split(/\r?\n/)) {
-  const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-  if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+/* Not in the repository, so not on a CI runner. A connection string given on
+   the command line does not need it. */
+try {
+  for (const line of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+} catch (e) {
+  if (e.code !== 'ENOENT') throw e;
 }
 const mysql = require(path.join(process.cwd(), 'node_modules', 'mysql2', 'promise'));
 

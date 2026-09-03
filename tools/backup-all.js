@@ -20,9 +20,19 @@ const { execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 const KEEP = Number(process.env.BACKUP_KEEP || 14);   /* copies per target */
 
-for (const line of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r?\n/)) {
-  const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-  if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+/* This one genuinely needs the file — it is where the list of what to back up
+   lives. Say so in a sentence rather than letting a stack trace explain it to
+   whoever is reading a failed scheduled task at the wrong end of the day. */
+try {
+  for (const line of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+} catch (e) {
+  if (e.code !== 'ENOENT') throw e;
+  console.error('No .env.local in ' + ROOT);
+  console.error('It holds MYSQL_URL and SALE_MYSQL_URL, which say what to back up.');
+  process.exit(1);
 }
 
 /* Where the copies land — read after .env.local, not before, or the setting in
