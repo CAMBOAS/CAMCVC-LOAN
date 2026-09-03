@@ -1,0 +1,67 @@
+name: Database backup
+
+# Runs on GitHub's machines, not on anyone's desk. The scheduled backup on the
+# office computer only happens on days that computer is switched on, which is
+# not a property you want in the thing that saves you.
+on:
+  schedule:
+    - cron: '30 18 * * *'      # 01:30 Cambodia time, daily
+  workflow_dispatch:            # and on demand, from the Actions tab
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install the MySQL driver
+        run: npm install mysql2 --no-save --no-audit --no-fund
+
+      - name: Copy both databases out
+        env:
+          LOAN_URL: ${{ secrets.MYSQL_URL }}
+          SALE_URL: ${{ secrets.SALE_MYSQL_URL }}
+        run: |
+          set -e
+          test -n "$LOAN_URL" || { echo "secret MYSQL_URL is not set"; exit 1; }
+          test -n "$SALE_URL" || { echo "secret SALE_MYSQL_URL is not set"; exit 1; }
+          node tools/backup-db.js out/loan "$LOAN_URL"
+          node tools/backup-db.js out/sale "$SALE_URL"
+
+      # Everything below travels through GitHub's storage, so it is sealed
+      # first. These files hold names, phone numbers and addresses for about
+      # 3,500 people and have no business being readable there.
+      - name: Seal it
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -e
+          test -n "$BACKUP_PASSPHRASE" || { echo "secret BACKUP_PASSPHRASE is not set"; exit 1; }
+          tar czf plain.tar.gz out
+          node tools/crypt-file.js enc plain.tar.gz "backup-$(date -u +%Y-%m-%dT%H-%M-%SZ).enc"
+          rm -rf out plain.tar.gz          # nothing readable left for the upload step
+
+      - name: Check the seal actually opens
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -e
+          # A backup nobody has tried to restore is a guess. Open it here, on
+          # every run, so a broken one is caught now rather than on the day it
+          # is needed.
+          node tools/crypt-file.js dec backup-*.enc check.tar.gz
+          tar tzf check.tar.gz | head -5
+          rows=$(tar xzf check.tar.gz -O out/sale/manifest.json | grep -o '"customers": *[0-9]*' | grep -o '[0-9]*')
+          echo "customers in the sealed copy: $rows"
+          test "$rows" -gt 3000 || { echo "that is fewer rows than expected"; exit 1; }
+          rm -f check.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: database-backup
+          path: backup-*.enc
+          retention-days: 90
