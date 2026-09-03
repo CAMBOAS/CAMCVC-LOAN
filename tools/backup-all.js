@@ -1,0 +1,76 @@
+/**
+ * Back up every database this business depends on, in one go, and drop the
+ * copies that have aged out.
+ *
+ *   node tools/backup-all.js
+ *
+ * Written to be run unattended by Windows Task Scheduler. It reads its targets
+ * from .env.local — MYSQL_URL for the loan system, SALE_MYSQL_URL for the sales
+ * one — so credentials stay in the one file that is already gitignored, and no
+ * connection string is ever typed into a scheduled command where it would sit
+ * in plain sight in the task definition.
+ *
+ * Exits non-zero if any target failed, so a scheduled run that goes wrong is
+ * visible as a failure rather than a silent success.
+ */
+const fs   = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
+
+const ROOT = path.resolve(__dirname, '..');
+const KEEP = Number(process.env.BACKUP_KEEP || 14);   /* copies per target */
+
+for (const line of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r?\n/)) {
+  const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+  if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+}
+
+const TARGETS = [
+  { name: 'loan', url: process.env.MYSQL_URL },
+  { name: 'sale', url: process.env.SALE_MYSQL_URL },
+];
+
+const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+const log = (m) => console.log('[' + new Date().toISOString().slice(0, 19) + '] ' + m);
+
+let failed = 0;
+for (const t of TARGETS) {
+  if (!t.url) { log(t.name + ': no connection string in .env.local, skipped'); continue; }
+  const out = path.join(ROOT, 'backups', t.name + '-' + stamp);
+  try {
+    log(t.name + ': starting');
+    const res = execFileSync(process.execPath,
+      [path.join(ROOT, 'tools', 'backup-db.js'), out, t.url],
+      { cwd: ROOT, encoding: 'utf8', timeout: 15 * 60 * 1000 });
+    const tail = res.trim().split('\n').pop();
+    log(t.name + ': ' + tail);
+  } catch (e) {
+    failed++;
+    log(t.name + ': FAILED — ' + String(e.stderr || e.message).trim().split('\n').pop());
+    continue;
+  }
+
+  /* Age out the old copies, newest kept. Only ever removes folders carrying this
+     target's prefix, so nothing else in backups/ is touched.
+
+     Ordered by the date on the folder, not by its name: the copies taken by hand
+     during the Railway rescue are stamped 20260903-140620 while these are stamped
+     2026-09-03T09-50-10, and sorted as text the older ones come out looking like
+     the newest. That would have deleted the wrong copies once fourteen had built
+     up — silently, and only months from now. */
+  try {
+    const dir  = path.join(ROOT, 'backups');
+    const mine = fs.readdirSync(dir)
+      .filter(d => d.startsWith(t.name + '-') && fs.statSync(path.join(dir, d)).isDirectory())
+      .map(d => ({ d, at: fs.statSync(path.join(dir, d)).mtimeMs }))
+      .sort((a, b) => a.at - b.at)
+      .map(x => x.d);
+    for (const old of mine.slice(0, Math.max(0, mine.length - KEEP))) {
+      fs.rmSync(path.join(dir, old), { recursive: true, force: true });
+      log(t.name + ': removed old copy ' + old);
+    }
+  } catch (e) { log(t.name + ': could not tidy old copies — ' + e.message); }
+}
+
+log(failed ? failed + ' target(s) failed' : 'all targets backed up');
+process.exit(failed ? 1 : 0);
