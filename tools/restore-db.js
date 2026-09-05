@@ -10,38 +10,86 @@
 const fs   = require('fs');
 const path = require('path');
 
+/* Anchored to the project, not to wherever the command was typed. A PowerShell
+   window opens in the user's home directory, and from there process.cwd() sends
+   both of these looking in C:/Users/<name> — the failure then reads as a
+   missing mysql2 rather than as a wrong starting directory. */
+const ROOT = path.resolve(__dirname, '..');
+
 /* Not in the repository, so not on a CI runner. A connection string given on
    the command line does not need it. */
 try {
-  for (const line of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').split(/\r?\n/)) {
+  for (const line of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
     if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
 } catch (e) {
   if (e.code !== 'ENOENT') throw e;
 }
-const mysql = require(path.join(process.cwd(), 'node_modules', 'mysql2', 'promise'));
+const mysql = require(path.join(ROOT, 'node_modules', 'mysql2', 'promise'));
 
-const dir   = process.argv[2];
-const force = process.argv.includes('--force');
-/* Same third-argument form as backup-db.js, so a restore into a brand new host
-   does not mean editing .env.local before you know the host even works. */
-const dbUrl = process.argv.find((a, i) => i > 2 && /^mysql:\/\//.test(a)) || process.env.MYSQL_URL;
+/* Named flags as well as a URL, for the same reason import-sql.js grew them: a
+   generated password holding "@" or "/" splits mysql://user:pass@host at the
+   wrong character, and the error that follows blames the host. */
+const flag = (name) => {
+  const i = process.argv.indexOf('--' + name);
+  return i !== -1 ? process.argv[i + 1] : undefined;
+};
+const TAKES_VALUE = ['host', 'port', 'user', 'password', 'database'];
+const positional = process.argv.slice(2).filter((a, i, all) =>
+  !a.startsWith('--') &&
+  !(i > 0 && TAKES_VALUE.includes(String(all[i - 1]).replace(/^--/, ''))));
+
+const dir    = positional[0];
+const force  = process.argv.includes('--force');
+const dbUrl  = positional.find(a => /^mysql:\/\//.test(a)) || process.env.MYSQL_URL;
+const host   = flag('host');
+const dbName = flag('database');
+
 if (!dir) {
   console.error('Usage: node tools/restore-db.js <backup folder> [mysql://...] [--force]');
+  console.error('   or: node tools/restore-db.js <backup folder> --host H --user U --password P --database D');
   process.exit(1);
 }
 if (!fs.existsSync(path.join(dir, 'manifest.json'))) { console.error('No manifest.json in ' + dir); process.exit(1); }
-if (!dbUrl) { console.error('No connection string: set MYSQL_URL or pass one.'); process.exit(1); }
+if (!dbUrl && !host) { console.error('No connection details: set MYSQL_URL, pass a URL, or give --host.'); process.exit(1); }
+
+const base = host
+  ? { host, port: Number(flag('port') || 4000), user: flag('user'), password: flag('password') }
+  : { uri: dbUrl };
+const TLS = { rejectUnauthorized: false };
 
 const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
 
 (async () => {
+  /* The backup carries CREATE TABLE but never CREATE DATABASE, so restoring
+     into a name that does not exist yet fails at connect time with
+     ER_BAD_DB_ERROR — before anything has been read — and the message sounds
+     like the host is down. Make the database first, then connect to it. */
+  if (dbName) {
+    try {
+      const c = await mysql.createConnection({ ...base, ssl: TLS, connectTimeout: 20000 });
+      await c.query('CREATE DATABASE IF NOT EXISTS `' + dbName + '` DEFAULT CHARACTER SET utf8mb4');
+      await c.end();
+    } catch (e) {
+      /* Whoever is reading this is usually mid-recovery. A stack trace is the
+         wrong thing to hand them; say which of the three things went wrong. */
+      console.error('Cannot connect: ' + (
+        e.code === 'ER_ACCESS_DENIED_ERROR' ? 'wrong user or password' :
+        e.code === 'ENOTFOUND'              ? 'no such host — check --host' :
+        (e.code || e.message)));
+      console.error('Nothing was written.');
+      process.exit(1);
+    }
+  }
+
   /* TLS to match the app, which sets it too — hosted MySQL often refuses
      plaintext, TiDB Cloud among them. */
-  const pool = mysql.createPool({ uri: dbUrl, dateStrings: true, ssl: { rejectUnauthorized: false },
+  const pool = mysql.createPool({ ...base, ...(dbName ? { database: dbName } : {}),
+                                  dateStrings: true, ssl: TLS,
                                   connectTimeout: 20000, multipleStatements: true });
-  console.log('restoring into ' + ((dbUrl.match(/@([^:/]+)/) || [])[1] || '?'));
+  console.log('restoring into ' + (host || (String(dbUrl).match(/@([^:/]+)/) || [])[1] || '?') +
+              (dbName ? ' / ' + dbName : ''));
   console.log('backup taken ' + manifest.takenAt + ' from ' + manifest.host);
   console.log('');
 

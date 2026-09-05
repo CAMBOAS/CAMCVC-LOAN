@@ -14,19 +14,25 @@
 const fs   = require('fs');
 const path = require('path');
 
+/* Anchored to the project, not to wherever the command was typed. A PowerShell
+   window opens in the user's home directory, and from there process.cwd() sends
+   both of these looking in C:/Users/<name> — the failure then reads as a
+   missing mysql2 rather than as a wrong starting directory. */
+const ROOT = path.resolve(__dirname, '..');
+
 /* .env.local is where the connection string lives on a developer's machine. It
    is deliberately not in the repository, so anywhere else — a CI runner, most
    of all — it simply is not there, and a missing file is not a problem when the
    string was handed over on the command line instead. */
 try {
-  for (const line of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').split(/\r?\n/)) {
+  for (const line of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
     if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
 } catch (e) {
   if (e.code !== 'ENOENT') throw e;
 }
-const mysql = require(path.join(process.cwd(), 'node_modules', 'mysql2', 'promise'));
+const mysql = require(path.join(ROOT, 'node_modules', 'mysql2', 'promise'));
 
 const stamp  = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const outDir = process.argv[2] || path.join('backups', stamp);
